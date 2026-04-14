@@ -1,0 +1,217 @@
+{
+  "theme": {
+    "archetype": "4 (Swiss & High-Contrast) adapted for E-commerce Mobile",
+    "mode": "light",
+    "colors": {
+      "primary": "#8833FF",
+      "primary_hover": "#7022DD",
+      "primary_light": "#EFE6FF",
+      "background": "#FFFFFF",
+      "surface": "#F9F9FB",
+      "surface_alt": "#F3F4F6",
+      "text_primary": "#0A0A0A",
+      "text_secondary": "#52525B",
+      "text_tertiary": "#A1A1AA",
+      "border": "#E4E4E7",
+      "border_light": "#F4F4F5",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "error": "#EF4444",
+      "star": "#FACC15"
+    }
+  },
+  "typography": {
+    "strategy": "Clean, system-native typography. Use Inter for English and Cairo for Arabic if custom fonts are added, otherwise use system fonts with precise weights. Letter spacing is critical for premium feel.",
+    "sizes": {
+      "h1": { "fontSize": 32, "lineHeight": 40, "fontWeight": "800", "letterSpacing": -0.5 },
+      "h2": { "fontSize": 24, "lineHeight": 32, "fontWeight": "700", "letterSpacing": -0.3 },
+      "h3": { "fontSize": 20, "lineHeight": 28, "fontWeight": "600", "letterSpacing": -0.2 },
+      "h4": { "fontSize": 18, "lineHeight": 24, "fontWeight": "600", "letterSpacing": -0.1 },
+      "body_large": { "fontSize": 16, "lineHeight": 24, "fontWeight": "400", "letterSpacing": 0 },
+      "body": { "fontSize": 14, "lineHeight": 20, "fontWeight": "400", "letterSpacing": 0 },
+      "body_medium": { "fontSize": 14, "lineHeight": 20, "fontWeight": "500", "letterSpacing": 0 },
+      "small": { "fontSize": 12, "lineHeight": 16, "fontWeight": "500", "letterSpacing": 0.2 },
+      "tiny": { "fontSize": 10, "lineHeight": 14, "fontWeight": "600", "letterSpacing": 0.5, "textTransform": "uppercase" }
+    }
+  },
+  "layout_and_spacing": {
+    "strategy": "Mobile-first responsive grids. Generous padding to prevent clutter. Crucial: Use start/end properties instead of left/right for RTL support.",
+    "spacing": {
+      "xs": 4,
+      "sm": 8,
+      "md": 12,
+      "lg": 16,
+      "xl": 24,
+      "2xl": 32,
+      "3xl": 48
+    },
+    "rtl_guidelines": [
+      "Use 'paddingStart' and 'paddingEnd' instead of 'paddingLeft' and 'paddingRight'.",
+      "Use 'marginStart' and 'marginEnd' instead of 'marginLeft' and 'marginRight'.",
+      "Use 'borderTopStartRadius', 'borderTopEndRadius', etc.",
+      "Use 'flexDirection: row' (React Native handles RTL flipping automatically).",
+      "Text alignment should ideally be 'auto' or 'flex-start' to respect RTL layout naturally."
+    ]
+  },
+  "components": {
+    "buttons": {
+      "primary": {
+        "backgroundColor": "#8833FF",
+        "borderRadius": 14,
+        "paddingVertical": 16,
+        "paddingHorizontal": 24,
+        "alignItems": "center",
+        "justifyContent": "center",
+        "flexDirection": "row",
+        "shadowColor": "#8833FF",
+        "shadowOffset": { "width": 0, "height": 4 },
+        "shadowOpacity": 0.15,
+        "shadowRadius": 12,
+        "elevation": 3
+      },
+      "secondary": {
+        "backgroundColor": "#F9F9FB",
+        "borderRadius": 14,
+        "paddingVertical": 16,
+        "paddingHorizontal": 24,
+        "alignItems": "center",
+        "justifyContent": "center",
+        "borderWidth": 1,
+        "borderColor": "#E4E4E7"
+      },
+      "outline": {
+        "backgroundColor": "transparent",
+        "borderRadius": 14,
+        "paddingVertical": 14,
+        "paddingHorizontal": 24,
+        "alignItems": "center",
+        "justifyContent": "center",
+        "borderWidth": 1.5,
+        "borderColor": "#8833FF"
+      }
+    },
+    "cards": {
+      "product_card": {
+        "backgroundColor": "#FFFFFF",
+        "borderRadius": 16,
+        "padding": 12,
+        "borderWidth": 1,
+        "borderColor": "#F4F4F5",
+        "overflow": "hidden"
+      },
+      "category_card": {
+        "backgroundColor": "#F9F9FB",
+        "borderRadius": 12,
+        "padding": 16,
+        "alignItems": "center",
+        "justifyContent": "center"
+      }
+    },
+    "inputs": {
+      "default": {
+        "backgroundColor": "#F9F9FB",
+        "borderRadius": 12,
+        "paddingHorizontal": 16,
+        "paddingVertical": 14,
+        "borderWidth": 1,
+        "borderColor": "#E4E4E7",
+        "fontSize": 16,
+        "color": "#0A0A0A",
+        "textAlign": "auto"
+      },
+      "focused": {
+        "borderColor": "#8833FF",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "bottom_tab": {
+      "backgroundColor": "#FFFFFF",
+      "borderTopWidth": 1,
+      "borderTopColor": "#F4F4F5",
+      "height": 70,
+      "paddingBottom": 20,
+      "paddingTop": 10,
+      "activeTintColor": "#8833FF",
+      "inactiveTintColor": "#A1A1AA"
+    },
+    "badges": {
+      "default": {
+        "backgroundColor": "#EFE6FF",
+        "borderRadius": 100,
+        "paddingHorizontal": 8,
+        "paddingVertical": 4
+      }
+    }
+  },
+  "icons": {
+    "library": "@expo/vector-icons (Feather or Ionicons preferred for minimal look)",
+    "strokeWidth": 2,
+    "sizes": {
+      "small": 16,
+      "default": 24,
+      "large": 32
+    }
+  },
+  "testing": {
+    "attributes": [
+      "All interactive elements (TouchableOpacity, TextInput) MUST include 'testID' attribute (React Native equivalent of data-testid).",
+      "Use kebab-case, role-based naming (e.g., testID='login-submit-button')."
+    ]
+  },
+  "media": {
+    "banners": [
+      {
+        "url": "https://static.prod-images.emergentagent.com/jobs/1b8cc0c8-b963-4a1c-bce2-669eb6f422fe/images/e874d8f809b3aaef7868dce4ab57f3c50ea7e11c675912acf52fd5c8d55aa860.png",
+        "category": "home_banner_1",
+        "description": "High-end promotional banner featuring floating smartphones and laptops."
+      },
+      {
+        "url": "https://static.prod-images.emergentagent.com/jobs/1b8cc0c8-b963-4a1c-bce2-669eb6f422fe/images/0286d868506d9e717ac406005d8b87d3400d9c4ab4f6359abe8041f602b223fa.png",
+        "category": "home_banner_2",
+        "description": "Premium promotional banner for smartwatches and earbuds."
+      }
+    ],
+    "products": [
+      {
+        "url": "https://images.unsplash.com/photo-1615655406736-b37c4fabf923?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjBzbWFydHBob25lJTIwaXNvbGF0ZWR8ZW58MHx8fHwxNzc2MTkwNDQ1fDA&ixlib=rb-4.1.0&q=85",
+        "category": "phone_1",
+        "description": "Smartphone on dark surface"
+      },
+      {
+        "url": "https://images.pexels.com/photos/6373185/pexels-photo-6373185.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "phone_2",
+        "description": "White smartphone isolated mockup"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1622131815526-eaae1e615381?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjBsYXB0b3AlMjBkZXNrfGVufDB8fHx8MTc3NjE5MDQ0NXww&ixlib=rb-4.1.0&q=85",
+        "category": "laptop_1",
+        "description": "Modern black laptop"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1571973947322-612e31b82c08?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBsYXB0b3AlMjBkZXNrfGVufDB8fHx8MTc3NjE5MDQ0NXww&ixlib=rb-4.1.0&q=85",
+        "category": "laptop_2",
+        "description": "Macbook Pro on desk"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1584585696759-1df9872e1eca?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTJ8MHwxfHNlYXJjaHwyfHxoZWFkcGhvbmVzJTIwZWxlY3Ryb25pY3N8ZW58MHx8fHwxNzc2MTkwNDQ1fDA&ixlib=rb-4.1.0&q=85",
+        "category": "accessory_1",
+        "description": "Black Sony headphones"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1545572624-da202f9eb4f9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTJ8MHwxfHNlYXJjaHwzfHxoZWFkcGhvbmVzJTIwZWxlY3Ryb25pY3N8ZW58MHx8fHwxNzc2MTkwNDQ1fDA&ixlib=rb-4.1.0&q=85",
+        "category": "accessory_2",
+        "description": "White earbuds"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Build a React Native app using Expo.",
+    "Do NOT use HTML, Tailwind, or Shadcn. Use React Native components (View, Text, Image, ScrollView, TouchableOpacity, FlatList) and StyleSheet.create().",
+    "App must support RTL (Arabic) natively. DO NOT hardcode left/right paddings/margins. Use 'marginStart', 'marginEnd', 'paddingStart', 'paddingEnd'.",
+    "Primary brand color is #8833FF.",
+    "All interactive components MUST have testID props corresponding to their functionality (e.g. testID='login-button').",
+    "Implement bottom tab navigation utilizing the specified active/inactive colors.",
+    "Use safe area insets to handle notches and navigation bars.",
+    "Do NOT use external images other than the ones provided in the media section of this JSON. Create realistic mock data using these URLs."
+  ]
+}
