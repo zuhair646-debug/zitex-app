@@ -1,40 +1,57 @@
-# Tech Store App - Complete PRD
+# Tech Store App - Complete PRD (Final)
 
 ## Overview
-Full-featured Tech Store mobile app. React Native (Expo) + FastAPI + MongoDB. All features from PDF design files implemented with English UI.
+Full-featured Tech Store mobile app. React Native Expo + FastAPI + MongoDB. 25+ screens, 40+ API endpoints. All internal flows integrated.
 
-## Complete Screen Map (20+ screens)
+## Complete Feature Map
 
-### Auth: Sign In → Sign Up → Login (JWT)
+### Auth: Sign In → Sign Up (JWT + bcrypt)
 
-### Tab 1 - Home
-Header (Notifications/Search/Store/Location/Cart) → Banner → Categories (6) → Used Devices 75% OFF → Hot Products → iPhone 16 Banner → Best Deals → Competition Progress
+### Home (Tab 1)
+Header → Banner Slider → 6 Categories → Used Devices 75% OFF → Hot Products → iPhone 16 Banner → Best Deals → Competition Progress
 
-### Tab 2 - Services (API-connected)
-Promo card + 6 services from API → **Service Detail** (price, inspection, delivery/pickup/warranty options, rating) → **Book Service** modal (device model, issue, delivery type) → Service Booking created
+### Services (Tab 2) - API Connected
+6 services from DB → Service Detail (price/inspection/warranty/delivery/pickup/rating) → Book Service → Booking created
 
-### Tab 3 - Competitions (API-connected + Draw)
-3 competitions from API → **Competition Detail** → Quiz (5 questions, 70% to qualify) → **Internal Draw** (random winner from participants) → Winners display
+### Competitions (Tab 3) - Full Internal Draw
+3 competitions from API → Detail → Quiz (5Q, 70% pass) → Draw → Winners → Participants list
 
-### Tab 4 - Social
-Stories row → Posts feed with images → Polls → Like/Comment/Bookmark/Share
+### Social (Tab 4) - API Connected + Sponsored Ads
+Posts from API → Like/Comment/Bookmark (API calls) → Sponsored posts (is_ad badge) → Polls → Stories
 
-### Tab 5 - Profile (All sub-screens connected)
-- **My Orders** → Filter (All/Processing/Completed/Canceled)
-- **Invoices** → Invoice list with INV-XXXXX format, subtotal/tax/total
-- **Favorites** → Product list with unfavorite action
-- **Warranties** → Active warranties with progress bars, days left
-- **Addresses** → Saved addresses (default badge), add/edit/delete
-- **Wallet** → Balance (50 SAR) + Points (199) + Transaction history
-- **Support** → Tickets with replies + Create new ticket modal
-- **About Store** → Riyadh/Jeddah selector, phone, address, social links
-- **Notification Settings, Language, Return Policy, Terms**
+### Profile (Tab 5) - All Sub-Screens
+Orders (filter tabs) | Invoices (auto-generated) | Favorites (API) | Warranties (progress bars) | Addresses (CRUD) | Wallet (balance+points+history) | Support (tickets+replies) | About Store (Riyadh/Jeddah)
 
-### Other Screens
-- **Notifications** (6 types) | **Product Detail** (colors/storage/specs) | **Cart** (summary/checkout) | **Search** (filter/category pills)
+### Checkout - Complete Flow
+1. Address Selection (from saved)
+2. Shipping Type (Standard 15 SAR / Express 25 SAR)
+3. Payment Method (5 options - all integration-ready):
+   - Cash on Delivery ✅
+   - Credit/Debit Card → Connect Stripe
+   - Apple Pay → Connect
+   - Mada → Connect
+   - Tamara Installments → Connect Tamara
+4. Coupon Code (WELCOME10, FLAT50, EID25)
+5. Order Notes
+6. Buy Now → Order Created
 
-## API Endpoints (30+)
-Auth, Products, Categories, Brands, Cart, Orders, Favorites, Banners, Competitions (CRUD + Draw + Quiz), Services (CRUD + Book), Wallet, Addresses, Ads, Support Tickets, Warranties, Invoices
+### Integration-Ready Endpoints (External Services)
+
+**Delivery Integration:**
+- POST /api/webhooks/delivery/update - External delivery service updates order status
+- POST /api/webhooks/delivery/assigned - Driver assigned notification
+- Order tracking with driver_name, driver_phone, location, eta
+
+**Payment Integration:**
+- POST /api/payments/create-intent - Returns supported_methods
+- POST /api/webhooks/payment/confirm - Payment confirmation
+- Supported: card, apple_pay, mada, tamara_installments, cash_on_delivery
+
+**Other APIs:**
+- Coupons: validate, 3 codes seeded
+- Reviews: add/get per product, auto-update rating
+- Social: posts/like/comment/bookmark
+- Ads: create/view/my-ads with budget/duration
 
 ## Test Credentials
 Phone: 0500000000 | Password: test1234
