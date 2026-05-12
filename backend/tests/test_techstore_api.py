@@ -5,8 +5,19 @@ Tests for: Auth, Categories, Brands, Products, Cart, Orders, Banners
 import pytest
 import requests
 import os
+from pathlib import Path
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', '').rstrip('/')
+# Read BASE_URL from frontend .env file
+frontend_env = Path('/app/frontend/.env')
+BASE_URL = ''
+if frontend_env.exists():
+    for line in frontend_env.read_text().splitlines():
+        if line.startswith('EXPO_PUBLIC_BACKEND_URL='):
+            BASE_URL = line.split('=', 1)[1].strip().strip('"')
+            break
+
+if not BASE_URL:
+    raise ValueError("EXPO_PUBLIC_BACKEND_URL not found in /app/frontend/.env")
 
 class TestHealth:
     """Basic health check"""
