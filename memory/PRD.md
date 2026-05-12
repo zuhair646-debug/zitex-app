@@ -1,59 +1,65 @@
 # Tech Store App - PRD (متجر التقنية)
 
 ## Overview
-تطبيق متجر إلكتروني للهواتف والأجهزة الذكية مبني بـ React Native (Expo) مع FastAPI Backend و MongoDB.
+Full-featured Tech Store mobile app built with React Native (Expo) + FastAPI Backend + MongoDB. Follows the PDF design files exactly with English UI.
 
-## MVP Features (Phase 1) ✅
+## Screens Implemented
 
-### Authentication
-- تسجيل دخول بالهاتف وكلمة المرور
-- إنشاء حساب جديد
-- JWT Token authentication
-- حماية المسارات (Protected Routes)
+### Auth Flow
+- **Welcome/Splash** → Sign In → Sign Up → OTP (placeholder) → Complete Profile
+- Phone + Password authentication with JWT tokens
 
-### Home Screen
-- بانرات ترويجية (Slider)
-- أقسام المنتجات (هواتف، أجهزة لوحية، حواسيب، اكسسوارات، ساعات ذكية، ألعاب)
-- منتجات مميزة (Featured Products)
-- Pull to refresh
+### Home Screen (Tab 1)
+Matching design PDF page 9 exactly:
+1. Header: Notifications bell + Search | "Riyadh Store" ▼ | "My home" ▼ | Cart with badge
+2. Banner Slider (promotional images)
+3. Categories: Phones, Tablets, Laptops, Accessories, Smartwatches, Gaming
+4. "Used Devices" Banner: 75% OFF + "Check it now"
+5. 🔥 "Hot products" section + "See all"
+6. "iPhone 16" Featured Banner + "Check out now!"
+7. 🏷️ "Best deals" section + "See all"
+8. 🏆 Competition Progress: "Pick 2 more To enter competition"
 
-### Product Details
-- صور المنتج
-- اختيار اللون والتخزين
-- المواصفات التقنية
-- التقييم والمبيعات
-- إضافة للسلة
+### Services (Tab 2)
+- Promo card: "Fix your device with us!" + "Book a service"
+- 6 services: Screen Repair, Battery Replacement, Water Damage, Software Fix, Device Inspection, Charging Port Fix
+- Each with icon, description, request count, price
 
-### Shopping Cart
-- عرض منتجات السلة
-- تعديل الكمية
-- حذف المنتجات
-- ملخص الطلب (فرعي + ضريبة + توصيل)
-- إتمام الطلب
+### Competitions (Tab 3)
+- Stats: Active (3), Joined (1), Points (199)
+- 3 competitions: Eid Special Draw, Summer Tech Giveaway, Accessories Bundle
+- Status badges: Still open, Coming soon, Ended
+- Progress bars, prizes, join count
 
-### Search & Filter
-- بحث بالاسم (عربي/إنجليزي)
-- فلترة حسب القسم
-- عرض عدد النتائج
+### Social (Tab 4)
+- Stories row with "Add story" + store stories
+- Posts feed with images, text, polls
+- Poll: "What is the best Phone this year!" with vote percentages
+- Like, Comment, Bookmark, Share actions
 
-### Settings/Profile
-- عرض بيانات المستخدم
-- المحفظة (نقاط + رصيد)
-- قائمة الإعدادات (طلبات، فواتير، مفضلة، عناوين، دعم فني)
-- تسجيل الخروج
+### Profile (Tab 5)
+- User info with avatar, name, phone
+- Wallet card: Points + Balance (SAR)
+- Menu: My Orders, Invoices, Favorites, Addresses, Wallet
+- Settings: About Store, Support, Notification Settings, Language
+- Legal: Return Policy, Terms & Conditions
+- Sign Out
 
-## Navigation
-- 5 Bottom Tabs: الرئيسية، الخدمات، المسابقات، السوشل، حسابي
+### Other Screens
+- **Notifications**: 6 types (Product, Service, Competition, Points, Social, Support) + Clear all / Mark all as read
+- **Product Detail**: Image, rating, colors, storage, specs, reviews, "Add to Cart" / "Buy now"
+- **Shopping Cart**: Items, quantity controls, order summary (Subtotal + Tax 15% + Delivery), "Place Order"
+- **Search**: Search bar, category filter pills, 2-column product grid, "No results found" state
+
+## Bottom Navigation
+Home | Services | Contests | Social | Profile
 
 ## Tech Stack
-- **Frontend**: React Native / Expo SDK 54 / Expo Router
-- **Backend**: FastAPI / Python
-- **Database**: MongoDB / Motor (async)
-- **Auth**: JWT + bcrypt
+- Frontend: React Native / Expo SDK 54 / Expo Router
+- Backend: FastAPI / Python / Motor (async MongoDB)
+- Database: MongoDB
+- Auth: JWT + bcrypt
 
-## Upcoming Phases
-- Phase 2: الخدمات والصيانة
-- Phase 3: المسابقات والسحوبات
-- Phase 4: السوشل ميديا
-- Phase 5: نظام الإعلانات
-- Phase 6: لوحة التحكم (Dashboard)
+## Test Credentials
+- Phone: 0500000000
+- Password: test1234
