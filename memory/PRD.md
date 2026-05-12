@@ -1,63 +1,40 @@
-# Tech Store App - PRD
+# Tech Store App - Complete PRD
 
 ## Overview
-Full-featured Tech Store mobile app built with React Native (Expo) + FastAPI Backend + MongoDB. Matches PDF design files exactly with English UI.
+Full-featured Tech Store mobile app. React Native (Expo) + FastAPI + MongoDB. All features from PDF design files implemented with English UI.
 
-## All Screens Implemented
+## Complete Screen Map (20+ screens)
 
-### Auth Flow
-- Sign In (Phone + Password) → Sign Up → Login with JWT tokens
+### Auth: Sign In → Sign Up → Login (JWT)
 
-### Home Screen (Tab 1) - Matching PDF design
-1. Header: Notifications + Search | "Riyadh Store" | "My home" | Cart(3)
-2. Banner Slider
-3. Categories: Phones, Tablets, Laptops, Accessories, Smartwatches, Gaming
-4. "Used Devices" Banner: 75% OFF
-5. Hot products section
-6. iPhone 16 Featured Banner
-7. Best deals section
-8. Competition Progress bar
+### Tab 1 - Home
+Header (Notifications/Search/Store/Location/Cart) → Banner → Categories (6) → Used Devices 75% OFF → Hot Products → iPhone 16 Banner → Best Deals → Competition Progress
 
-### Services (Tab 2)
-- Promo card + 6 repair services with prices/request counts
+### Tab 2 - Services (API-connected)
+Promo card + 6 services from API → **Service Detail** (price, inspection, delivery/pickup/warranty options, rating) → **Book Service** modal (device model, issue, delivery type) → Service Booking created
 
-### Competitions (Tab 3) - FULL INTERNAL DRAW SYSTEM
-- Competitions loaded from API (3 seeded: Eid Draw, Summer Giveaway, Accessories Bundle)
-- Competition Detail screen: Info, dates, participants, prizes
-- Answer & Win Quiz: Multiple choice (70% to qualify)
-- Internal Draw Mechanism: Random winner selection from participants
-- Winners display with "Get the gift" button
-- Participants list with names and phone numbers
+### Tab 3 - Competitions (API-connected + Draw)
+3 competitions from API → **Competition Detail** → Quiz (5 questions, 70% to qualify) → **Internal Draw** (random winner from participants) → Winners display
 
-### Social (Tab 4)
-- Stories row + Posts feed + Polls + Like/Comment/Bookmark
+### Tab 4 - Social
+Stories row → Posts feed with images → Polls → Like/Comment/Bookmark/Share
 
-### Profile (Tab 5)
-- User info + Wallet card → Connected sub-screens
+### Tab 5 - Profile (All sub-screens connected)
+- **My Orders** → Filter (All/Processing/Completed/Canceled)
+- **Invoices** → Invoice list with INV-XXXXX format, subtotal/tax/total
+- **Favorites** → Product list with unfavorite action
+- **Warranties** → Active warranties with progress bars, days left
+- **Addresses** → Saved addresses (default badge), add/edit/delete
+- **Wallet** → Balance (50 SAR) + Points (199) + Transaction history
+- **Support** → Tickets with replies + Create new ticket modal
+- **About Store** → Riyadh/Jeddah selector, phone, address, social links
+- **Notification Settings, Language, Return Policy, Terms**
 
-### Sub-Screens (All Connected)
-- **Orders**: Filter tabs (All/Processing/Completed/Canceled), order cards with status
-- **Wallet**: Balance card (50 SAR) + Points card (199) + Transaction history
-- **Addresses**: Saved addresses (My home default, Office), Edit/Delete, Add new
-- **About Store**: Store info, Riyadh/Jeddah selector, phone, address, social links
-- **Notifications**: 6 notification types + Clear all / Mark all as read
-- **Product Detail**: Image, colors, storage, specs, reviews, Add to Cart / Buy now
-- **Shopping Cart**: Items, quantity, Order Summary, Place Order
-- **Search**: Search bar, category filter pills, product grid
+### Other Screens
+- **Notifications** (6 types) | **Product Detail** (colors/storage/specs) | **Cart** (summary/checkout) | **Search** (filter/category pills)
 
-### Paid Ads System (Backend)
-- GET /api/ads - Active ads
-- POST /api/ads - Create new ad (title, description, type, budget, duration)
-- GET /api/ads/my - My submitted ads
-- 3 seeded ads: iPhone 16 Pro offer, Screen Repair 50% OFF, Trade-in promotion
-
-## Navigation
-Bottom Tabs: Home | Services | Contests | Social | Profile
-
-## Tech Stack
-- Frontend: React Native / Expo SDK 54 / Expo Router
-- Backend: FastAPI / Python / Motor (async MongoDB)
-- Auth: JWT + bcrypt
+## API Endpoints (30+)
+Auth, Products, Categories, Brands, Cart, Orders, Favorites, Banners, Competitions (CRUD + Draw + Quiz), Services (CRUD + Book), Wallet, Addresses, Ads, Support Tickets, Warranties, Invoices
 
 ## Test Credentials
-- Phone: 0500000000 | Password: test1234
+Phone: 0500000000 | Password: test1234
