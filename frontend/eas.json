@@ -22,5 +22,12 @@
         "buildType": "apk"
       }
     }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "../zitex-upload-f1fcca92544c.json"
+      }
+    }
   }
 }
