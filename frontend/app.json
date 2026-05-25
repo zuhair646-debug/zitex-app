@@ -9,6 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "owner": "smart-angle",
+    "extra": {
+      "eas": {
+        "projectId": "1c052dbd-e0cd-4688-bf30-856013a7068b"
+      }
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.smartangle.zitex",
