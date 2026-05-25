@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Zitex",
+    "slug": "zitex",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "zitex",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "owner": "smart-angle",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.smartangle.zitex",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Take photos of products and receipts",
+        "NSPhotoLibraryUsageDescription": "Upload photos from your gallery",
+        "NSLocationWhenInUseUsageDescription": "Find nearby stores and delivery tracking"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#1A1A2E"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.smartangle.zitex",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#1A1A2E"
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
