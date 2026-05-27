@@ -30,6 +30,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.smartangle.zitex",
+      "versionCode": 2,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
