@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0 -- /root/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /app
+plugins: anyio-4.13.0
+collecting ... collected 14 items
+
+backend/tests/test_delivery_features.py::TestDeliverySettings::test_get_settings_returns_required_fields PASSED [  7%]
+backend/tests/test_delivery_features.py::TestUpdateDeliverySettings::test_put_then_get_returns_updated_values PASSED [ 14%]
+backend/tests/test_delivery_features.py::TestUpdateDeliverySettings::test_put_settings_requires_merchant_auth PASSED [ 21%]
+backend/tests/test_delivery_features.py::TestCalculateFee::test_standard_within_base_distance PASSED [ 28%]
+backend/tests/test_delivery_features.py::TestCalculateFee::test_standard_beyond_base_distance PASSED [ 35%]
+backend/tests/test_delivery_features.py::TestCalculateFee::test_same_day_no_zone_match PASSED [ 42%]
+backend/tests/test_delivery_features.py::TestCalculateFee::test_scheduled_no_zone_match_includes_slots PASSED [ 50%]
+backend/tests/test_delivery_features.py::TestZonePolygonMatch::test_polygon_zone_matches_point_inside PASSED [ 57%]
+backend/tests/test_delivery_features.py::TestZoneCircleMatch::test_circle_zone_matches_for_same_day PASSED [ 64%]
+backend/tests/test_delivery_features.py::TestDeliveryQuote::test_quote_returns_branch_and_fee PASSED [ 71%]
+backend/tests/test_delivery_features.py::TestOrderFlow::test_order_has_delivery_fee_and_branch PASSED [ 78%]
+backend/tests/test_delivery_features.py::TestOrderFlow::test_get_order_tracking PASSED [ 85%]
+backend/tests/test_delivery_features.py::TestMerchantSocialComments::test_create_get_and_delete_comment PASSED [ 92%]
+backend/tests/test_delivery_features.py::TestMerchantSocialComments::test_get_merchant_comments_requires_merchant_role PASSED [100%]
+
+-- generated xml file: /app/test_reports/pytest/pytest_delivery_features.xml ---
+============================== 14 passed in 5.89s ==============================

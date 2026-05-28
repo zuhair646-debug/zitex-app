@@ -151,6 +151,20 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
 
+        {/* ─── Quick Access: Group Buy + Loyalty Points ─── */}
+        <View style={s.quickRow}>
+          <TouchableOpacity style={[s.quickCard, { backgroundColor: '#FCE7F3' }]} onPress={() => router.push('/group-buys' as any)}>
+            <Ionicons name="people" size={26} color="#EC4899" />
+            <Text style={s.quickTitle}>التسوق الجماعي</Text>
+            <Text style={s.quickSub}>وفّر أكثر بالمجموعة 👥</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[s.quickCard, { backgroundColor: '#FEF3C7' }]} onPress={() => router.push('/points' as any)}>
+            <Ionicons name="medal" size={26} color="#F59E0B" />
+            <Text style={s.quickTitle}>نقاط الولاء</Text>
+            <Text style={s.quickSub}>اكسب وامنح خصومات 🎖️</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* ─── Used Devices Banner ─── */}
         <TouchableOpacity activeOpacity={0.85} style={s.usedDevicesBanner} onPress={() => router.push({ pathname: '/search', params: { condition: 'used', categoryName: 'الأجهزة المستخدمة' } })}>
           <View style={s.usedDevicesLeft}>
@@ -281,6 +295,10 @@ const s = StyleSheet.create({
   catCard: { alignItems: 'center', width: 72 },
   catIconWrap: { width: 60, height: 60, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   catLabel: { fontSize: 11, fontWeight: '500', color: '#52525B', textAlign: 'center' },
+  quickRow: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginBottom: 16 },
+  quickCard: { flex: 1, padding: 14, borderRadius: 14, alignItems: 'center' },
+  quickTitle: { fontSize: 13, fontWeight: '800', color: '#0A0A0A', marginTop: 6 },
+  quickSub: { fontSize: 10, color: '#374151', marginTop: 2, textAlign: 'center' },
 
   // Used Devices Banner
   usedDevicesBanner: { marginHorizontal: 20, borderRadius: 20, backgroundColor: '#F3F0FF', flexDirection: 'row', padding: 20, marginBottom: 20, overflow: 'hidden' },
