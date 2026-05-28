@@ -119,6 +119,7 @@ export default function RootLayout() {
         <Stack.Screen name="checkout" options={{ presentation: 'card' }} />
         <Stack.Screen name="chamber" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="merchant" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="draw" options={{ headerShown: false }} />
       </Stack>
     </AuthContext.Provider>
   );

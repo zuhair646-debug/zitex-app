@@ -15,16 +15,13 @@ export default function ChamberScreen() {
   const [showDetail, setShowDetail] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const [drawResult, setDrawResult] = useState<any>(null);
-  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
 
   const loadComps = async () => {
     try {
-      const [d, p] = await Promise.all([
-        apiCall('/api/chamber/competitions'),
-        apiCall('/api/chamber/competitions/pending'),
-      ]);
-      setComps(d);
-      setPendingApprovals(p);
+      const d = await apiCall('/api/chamber/competitions');
+      // Filter to only competitions assigned to this chamber employee (or all if not specified)
+      const myComps = d.filter((c: any) => !c.chamber_supervised || c.assigned_chamber_employee_id === user?.id);
+      setComps(myComps);
     }
     catch (e: any) { Alert.alert('Error', e.message); }
     finally { setLoading(false); }
@@ -108,30 +105,7 @@ export default function ChamberScreen() {
 
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E3A5F" />}
         showsVerticalScrollIndicator={false} contentContainerStyle={s.list}>
-        {pendingApprovals.length > 0 && (
-          <>
-            <Text style={[s.sectionTitle, { color: '#F59E0B' }]}>⏳ Pending Approval ({pendingApprovals.length})</Text>
-            {pendingApprovals.map((c: any) => (
-              <View key={c.id} style={[s.compCard, { borderColor: '#F59E0B', borderWidth: 1.5 }]}>
-                <Text style={s.compTitle}>{c.title}</Text>
-                <Text style={{ fontSize: 13, color: '#374151', marginVertical: 4 }}>{c.description}</Text>
-                <View style={s.compMeta}>
-                  <View style={s.metaItem}><Ionicons name="trophy" size={14} color="#F59E0B" /><Text style={s.metaText}>{c.prize}</Text></View>
-                  <View style={s.metaItem}><Ionicons name="people" size={14} color="#52525B" /><Text style={s.metaText}>{c.prize_count} winners</Text></View>
-                </View>
-                <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-                  <TouchableOpacity testID={`approve-${c.id}`} style={{ flex: 1, backgroundColor: '#10B981', padding: 10, borderRadius: 10, alignItems: 'center' }} onPress={() => decideApproval(c.id, c.title, 'approve')}>
-                    <Text style={{ color: 'white', fontWeight: '700' }}>✓ Approve</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity testID={`reject-${c.id}`} style={{ flex: 1, backgroundColor: '#EF4444', padding: 10, borderRadius: 10, alignItems: 'center' }} onPress={() => decideApproval(c.id, c.title, 'reject')}>
-                    <Text style={{ color: 'white', fontWeight: '700' }}>✗ Reject</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </>
-        )}
-        <Text style={s.sectionTitle}>All Competitions</Text>
+        <Text style={s.sectionTitle}>My Assigned Competitions</Text>
         {comps.map((c: any) => (
           <TouchableOpacity testID={`chamber-comp-${c.id}`} key={c.id} style={s.compCard} onPress={() => openComp(c.id)}>
             <View style={s.compHeader}>
