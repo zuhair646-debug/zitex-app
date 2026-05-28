@@ -25,6 +25,11 @@
   },
   "submit": {
     "production": {
+      "ios": {
+        "appleId": "smartag.sa@gmail.com",
+        "ascAppId": "6773073572",
+        "appleTeamId": "3ZQR97D8T4"
+      },
       "android": {
         "serviceAccountKeyPath": "../zitex-upload-f1fcca92544c.json"
       }
