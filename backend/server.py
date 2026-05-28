@@ -92,10 +92,16 @@ class CartItemInput(BaseModel):
 class OrderInput(BaseModel):
     address: str
     phone: str
-    delivery_type: str = "standard"
+    delivery_type: str = "standard"  # standard | same_day | scheduled
     payment_method: str = "cash"
     notes: Optional[str] = None
     coupon_code: Optional[str] = None
+    dest_lat: Optional[float] = None
+    dest_lng: Optional[float] = None
+    branch_id: Optional[str] = None
+    branch_lat: Optional[float] = None
+    branch_lng: Optional[float] = None
+    scheduled_slot: Optional[dict] = None  # {label, start, end}
 
 # ─── Auth Routes ───
 @api_router.post("/auth/register")
@@ -552,7 +558,36 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
                 "total": item_total
             })
     tax = round(subtotal * 0.15, 2)
-    delivery_cost = 25 if data.delivery_type == "express" else 15
+
+    # Calculate delivery cost using the new dynamic system
+    delivery_cost = 0
+    fee_info = {}
+    branch_id = data.branch_id or ""
+    branch_lat = data.branch_lat or 0
+    branch_lng = data.branch_lng or 0
+    if data.dest_lat and data.dest_lng:
+        try:
+            item_ids = [it["product_id"] for it in items]
+
+            class FakeReq:
+                async def json(self):
+                    return {"lat": data.dest_lat, "lng": data.dest_lng,
+                            "delivery_type": data.delivery_type, "item_ids": item_ids}
+            q = await delivery_quote(FakeReq())  # type: ignore
+            delivery_cost = q.get("fee", {}).get("delivery_fee", 0)
+            fee_info = q.get("fee", {})
+            if not branch_id and q.get("branch"):
+                branch_id = q["branch"].get("id", "")
+                branch_lat = q["branch"].get("lat", 0)
+                branch_lng = q["branch"].get("lng", 0)
+        except HTTPException as ex:
+            raise ex
+        except Exception:
+            delivery_cost = 15  # fallback
+    else:
+        # Legacy fallback
+        delivery_cost = 25 if data.delivery_type in ("express", "same_day") else 15
+
     total = round(subtotal + tax + delivery_cost, 2)
     order_doc = {
         "user_id": user["id"],
@@ -560,12 +595,20 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
         "subtotal": subtotal,
         "tax": tax,
         "delivery_cost": delivery_cost,
+        "delivery_fee": delivery_cost,
+        "delivery_info": fee_info,
         "total": total,
         "address": data.address,
         "phone": data.phone,
         "delivery_type": data.delivery_type,
         "payment_method": data.payment_method,
         "notes": data.notes,
+        "scheduled_slot": data.scheduled_slot,
+        "dest_lat": data.dest_lat,
+        "dest_lng": data.dest_lng,
+        "branch_id": branch_id,
+        "branch_lat": branch_lat,
+        "branch_lng": branch_lng,
         "status": "processing",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -659,8 +702,34 @@ async def get_order_tracking(order_id: str):
     order = await db.orders.find_one({"_id": ObjectId(order_id)})
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    tracking = order.get("tracking", {})
-    return {"order_id": order_id, "status": order.get("status", "processing"), "tracking": tracking}
+    out = {
+        "id": str(order["_id"]),
+        "status": order.get("status", "processing"),
+        "total": order.get("total", 0),
+        "address": order.get("address", ""),
+        "dest_lat": order.get("dest_lat") or order.get("delivery_lat"),
+        "dest_lng": order.get("dest_lng") or order.get("delivery_lng"),
+        "branch_lat": order.get("branch_lat"),
+        "branch_lng": order.get("branch_lng"),
+        "tracking": order.get("tracking", {}),
+    }
+    # Attach driver info if assigned
+    if order.get("driver_id"):
+        try:
+            d = await db.drivers.find_one({"user_id": order["driver_id"]})
+            u = await db.users.find_one({"_id": ObjectId(order["driver_id"])}) if order["driver_id"] else None
+            if d:
+                out["driver_lat"] = d.get("current_lat", 0)
+                out["driver_lng"] = d.get("current_lng", 0)
+                out["driver_last_seen"] = d.get("last_location_at", "")
+            if u:
+                out["driver_name"] = u.get("name", order.get("driver_name", ""))
+                out["driver_phone"] = u.get("phone", "")
+        except Exception:
+            pass
+    else:
+        out["driver_name"] = order.get("driver_name", "")
+    return out
 
 # ─── Delivery Integration Webhooks ───
 @api_router.post("/webhooks/delivery/update")
@@ -742,12 +811,46 @@ async def get_comments(post_id: str):
 @api_router.post("/social/posts/{post_id}/comments")
 async def add_comment(post_id: str, request: Request, user=Depends(get_current_user)):
     body = await request.json()
+    is_merchant = user.get("role") == "merchant"
     await db.social_comments.insert_one({
         "post_id": post_id, "user_id": user["id"], "user_name": user["name"],
-        "text": body.get("text", ""), "created_at": datetime.now(timezone.utc).isoformat()
+        "text": body.get("text", ""), "is_merchant_reply": is_merchant,
+        "reply_to": body.get("reply_to"),  # optional parent comment id
+        "created_at": datetime.now(timezone.utc).isoformat()
     })
     await db.social_posts.update_one({"_id": ObjectId(post_id)}, {"$inc": {"comments": 1}})
     return {"message": "Comment added"}
+
+@api_router.delete("/merchant/social/comments/{cid}")
+async def merchant_delete_comment(cid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    c = await db.social_comments.find_one({"_id": ObjectId(cid)})
+    if not c:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    await db.social_comments.delete_one({"_id": ObjectId(cid)})
+    await db.social_posts.update_one({"_id": ObjectId(c["post_id"])}, {"$inc": {"comments": -1}})
+    return {"message": "Deleted"}
+
+@api_router.get("/merchant/social/comments")
+async def merchant_recent_comments(user=Depends(get_current_user)):
+    """All recent customer comments across all posts for the merchant inbox."""
+    require_merchant(user)
+    comments = await db.social_comments.find({}).sort("created_at", -1).to_list(100)
+    # attach post info
+    post_ids = list({c["post_id"] for c in comments})
+    posts = {}
+    for pid in post_ids:
+        try:
+            p = await db.social_posts.find_one({"_id": ObjectId(pid)})
+            if p: posts[pid] = {"id": str(p["_id"]), "content": p.get("content", ""), "image_url": p.get("image_url", "")}
+        except Exception:
+            pass
+    out = []
+    for c in comments:
+        cd = serialize_doc(c)
+        cd["post"] = posts.get(c["post_id"], {"id": c["post_id"], "content": "(deleted post)"})
+        out.append(cd)
+    return out
 
 @api_router.post("/social/posts/{post_id}/bookmark")
 async def bookmark_post(post_id: str, user=Depends(get_current_user)):
@@ -1218,6 +1321,21 @@ def haversine_km(lat1, lon1, lat2, lon2):
     a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlam/2)**2
     return 2 * R * math.asin(math.sqrt(a))
 
+def point_in_polygon(lat, lng, polygon):
+    """Ray-casting point-in-polygon. polygon = [[lat,lng], ...]"""
+    if not polygon or len(polygon) < 3:
+        return False
+    inside = False
+    n = len(polygon)
+    j = n - 1
+    for i in range(n):
+        yi, xi = polygon[i][0], polygon[i][1]
+        yj, xj = polygon[j][0], polygon[j][1]
+        if ((yi > lat) != (yj > lat)) and (lng < (xj - xi) * (lat - yi) / ((yj - yi) or 1e-12) + xi):
+            inside = not inside
+        j = i
+    return inside
+
 def require_driver(user):
     if user.get("role") != "driver":
         raise HTTPException(status_code=403, detail="Driver access only")
@@ -1271,7 +1389,16 @@ async def get_delivery_settings():
     s = await db.settings.find_one({"key": "delivery"})
     if not s:
         s = {"base_fee": 10, "base_distance_km": 10, "per_km_rate": 1.2,
-             "free_delivery_threshold": 0, "max_distance_km": 50}
+             "free_delivery_threshold": 0, "max_distance_km": 50,
+             "same_day_enabled": True, "same_day_flat_price": 30,
+             "scheduled_enabled": True, "scheduled_flat_price": 20,
+             "scheduled_slots": [
+                 {"label": "صباحاً 9 - 12", "start": "09:00", "end": "12:00"},
+                 {"label": "ظهراً 12 - 4", "start": "12:00", "end": "16:00"},
+                 {"label": "مساءً 4 - 8", "start": "16:00", "end": "20:00"},
+                 {"label": "ليلاً 8 - 11", "start": "20:00", "end": "23:00"},
+             ],
+             "zones": []}
     s.pop("_id", None); s.pop("key", None)
     return s
 
@@ -1288,33 +1415,125 @@ async def calculate_delivery_fee(request: Request):
     distance_km = body.get("distance_km", 0)
     customer_lat = body.get("lat", 0)
     customer_lng = body.get("lng", 0)
-    delivery_type = body.get("delivery_type", "standard")  # "same_day" | "standard"
+    delivery_type = body.get("delivery_type", "standard")  # "same_day" | "scheduled" | "standard"
     s = await db.settings.find_one({"key": "delivery"}) or {}
-    # Check if customer point falls in any zone (highest-priority zone applies)
+
+    # Check zones — polygon first, then circle, only if delivery_type matches (or zone allows all)
     zones = s.get("zones", [])
     for z in zones:
-        if z.get("delivery_type") and z.get("delivery_type") != delivery_type:
+        z_type = z.get("delivery_type", "any")
+        if z_type != "any" and z_type != delivery_type:
             continue
-        if customer_lat and customer_lng and z.get("center_lat"):
+        matched = False
+        polygon = z.get("polygon", [])  # [[lat,lng], ...]
+        if polygon and len(polygon) >= 3 and customer_lat and customer_lng:
+            if point_in_polygon(customer_lat, customer_lng, polygon):
+                matched = True
+        elif customer_lat and customer_lng and z.get("center_lat"):
             d = haversine_km(customer_lat, customer_lng, z.get("center_lat", 0), z.get("center_lng", 0))
             if d <= z.get("radius_km", 0):
-                return {"distance_km": round(d, 2), "delivery_fee": z.get("fixed_price", 0),
-                        "zone_name": z.get("name", ""), "delivery_type": delivery_type, "in_zone": True}
+                matched = True
+        if matched:
+            return {
+                "distance_km": round(distance_km, 2) if distance_km else 0,
+                "delivery_fee": z.get("fixed_price", 0),
+                "zone_name": z.get("name", ""),
+                "delivery_type": delivery_type,
+                "in_zone": True,
+                "estimated_minutes": z.get("eta_minutes", 60 if delivery_type == "same_day" else 30),
+            }
+
     # Same-day flat rate if no zone match
     if delivery_type == "same_day":
+        if not s.get("same_day_enabled", True):
+            raise HTTPException(status_code=400, detail="Same-day delivery is not available")
         fee = s.get("same_day_flat_price", 30)
-        return {"distance_km": distance_km, "delivery_fee": fee, "delivery_type": "same_day", "in_zone": False}
+        return {"distance_km": distance_km, "delivery_fee": fee, "delivery_type": "same_day",
+                "in_zone": False, "estimated_minutes": 90}
+
+    # Scheduled flat rate if no zone match
+    if delivery_type == "scheduled":
+        if not s.get("scheduled_enabled", True):
+            raise HTTPException(status_code=400, detail="Scheduled delivery is not available")
+        fee = s.get("scheduled_flat_price", 20)
+        return {"distance_km": distance_km, "delivery_fee": fee, "delivery_type": "scheduled",
+                "in_zone": False, "scheduled_slots": s.get("scheduled_slots", [])}
+
     # Standard: distance-based
     base_fee = s.get("base_fee", 10)
     base_dist = s.get("base_distance_km", 10)
     per_km = s.get("per_km_rate", 1.2)
+    max_dist = s.get("max_distance_km", 50)
+    if distance_km > max_dist:
+        raise HTTPException(status_code=400, detail=f"Out of delivery range (max {max_dist} km)")
     if distance_km <= base_dist:
         fee = base_fee
     else:
         fee = base_fee + (distance_km - base_dist) * per_km
     return {"distance_km": distance_km, "delivery_fee": round(fee, 2),
             "base_fee": base_fee, "base_distance_km": base_dist, "per_km_rate": per_km,
-            "delivery_type": "standard", "in_zone": False}
+            "delivery_type": "standard", "in_zone": False, "estimated_minutes": 45}
+
+# ─── Smart delivery quote (handles items, branch availability, alternative branch) ───
+@api_router.post("/delivery/quote")
+async def delivery_quote(request: Request):
+    """Compute full quote: nearest branch, fee, branch-fallback if out-of-stock."""
+    body = await request.json()
+    lat = body.get("lat", 0)
+    lng = body.get("lng", 0)
+    delivery_type = body.get("delivery_type", "standard")
+    item_ids = body.get("item_ids", [])  # list of product ids needed in branch stock
+
+    # 1. Get all branches sorted by distance
+    bs = await db.branches.find({"published": True}).to_list(50)
+    if not bs:
+        raise HTTPException(status_code=400, detail="No branches available")
+    for b in bs:
+        b["_dist"] = haversine_km(lat, lng, b.get("lat", 0), b.get("lng", 0))
+    bs.sort(key=lambda x: x["_dist"])
+
+    # 2. Find first branch that has ALL requested items in stock
+    chosen = None
+    alternative = None
+    if item_ids:
+        for b in bs:
+            stock_map = b.get("stock", {}) or {}
+            all_available = all(stock_map.get(str(iid), 1) > 0 for iid in item_ids)
+            if all_available:
+                chosen = b
+                break
+        if not chosen:
+            # No branch has all items — pick the one with most items in stock
+            def avail_count(b):
+                sm = b.get("stock", {}) or {}
+                return sum(1 for iid in item_ids if sm.get(str(iid), 1) > 0)
+            bs.sort(key=lambda x: (-avail_count(x), x["_dist"]))
+            chosen = bs[0]
+            alternative = {
+                "reason": "Some items not available in nearest branch",
+                "available_count": avail_count(chosen),
+                "total_requested": len(item_ids),
+            }
+    else:
+        chosen = bs[0]
+
+    # 3. Calculate fee from chosen branch
+    distance_km = chosen["_dist"]
+    fake_request_body = {"distance_km": distance_km, "lat": lat, "lng": lng, "delivery_type": delivery_type}
+
+    class FakeReq:
+        async def json(self): return fake_request_body
+    fee_result = await calculate_delivery_fee(FakeReq())  # type: ignore
+
+    chosen["id"] = str(chosen.pop("_id"))
+    chosen["distance_km"] = round(distance_km, 2)
+    chosen.pop("_dist", None)
+
+    return {
+        "branch": chosen,
+        "fee": fee_result,
+        "alternative_note": alternative,
+    }
 
 # ─── Drivers CRUD (merchant) ───
 class DriverInput(BaseModel):
@@ -1490,18 +1709,17 @@ async def save_user_location(request: Request, user=Depends(get_current_user)):
         "default_address": body.get("address", "")}})
     return {"message": "Location saved"}
 
-@api_router.get("/orders/{oid}/tracking")
-async def order_tracking(oid: str, user=Depends(get_current_user)):
+@api_router.get("/orders/{oid}/tracking-driver")
+async def order_tracking_driver(oid: str, user=Depends(get_current_user)):
+    """Lightweight: just driver coords. Used internally if needed."""
     o = await db.orders.find_one({"_id": ObjectId(oid)})
     if not o: raise HTTPException(status_code=404, detail="Not found")
-    o["id"] = str(o.pop("_id"))
     if o.get("driver_id"):
         d = await db.drivers.find_one({"user_id": o["driver_id"]})
         if d:
-            o["driver_lat"] = d.get("current_lat", 0)
-            o["driver_lng"] = d.get("current_lng", 0)
-            o["driver_last_seen"] = d.get("last_location_at", "")
-    return o
+            return {"driver_lat": d.get("current_lat", 0), "driver_lng": d.get("current_lng", 0),
+                    "last_seen": d.get("last_location_at", "")}
+    return {"driver_lat": None, "driver_lng": None}
 
 # ─── Auto-assign order to nearest driver ───
 @api_router.post("/merchant/orders/{oid}/mark-ready")

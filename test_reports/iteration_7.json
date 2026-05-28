@@ -1,0 +1,67 @@
+{
+  "summary": "Backend-only testing of the new Zitex delivery system (settings, calculate-fee with same-day/scheduled/polygon/circle zones, branch quote, order with same_day flat fee, order tracking) and merchant social comments management (list with attached post info, delete with comment-count decrement, role guards). 14/14 pytest cases passed (100%).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/orders/{order_id}/tracking",
+        "issue": "Endpoint has NO auth dependency — anyone with a valid order_id can fetch tracking incl. address, dest_lat/lng, branch coordinates, driver name & phone. Consider requiring auth or at minimum a short-lived signed token shared via SMS."
+      },
+      {
+        "endpoint": "POST /api/delivery/calculate-fee",
+        "issue": "When delivery_type='standard' and distance_km > max_distance_km (default 50) the endpoint raises 400 'Out of delivery range'. Frontend should handle this gracefully (no test failure, just noting for UX)."
+      },
+      {
+        "endpoint": "PUT /api/merchant/delivery/settings",
+        "issue": "No Pydantic model — any JSON body is accepted and persisted verbatim (including extra/garbage fields). Consider a DeliverySettingsInput model for validation."
+      },
+      {
+        "endpoint": "GET /api/delivery/settings",
+        "issue": "Defaults are returned when no document exists but they are NOT persisted, so after merchant PUTs partial settings any missing keys are silently dropped from subsequent GETs. Consider merging defaults on GET or seeding on first boot."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_delivery_features.py",
+    "/app/test_reports/pytest/pytest_delivery_features.xml",
+    "/app/test_reports/pytest/test_delivery_features_output.log"
+  ],
+  "action_items": [
+    "Consider securing GET /api/orders/{id}/tracking with at least user-or-driver auth (currently public).",
+    "Consider adding a Pydantic DeliverySettingsInput model on PUT /api/merchant/delivery/settings to validate zone shape (polygon vs circle, fixed_price >= 0, delivery_type enum).",
+    "Optional: persist default delivery settings on first boot so partial PUTs don't drop fields silently."
+  ],
+  "critical_code_review_comments": [
+    "✓ GET /api/delivery/settings returns full default object with base_fee=10, base_distance_km=10, per_km_rate=1.2, same_day_flat_price=30, scheduled_flat_price=20, 4 scheduled_slots, zones=[].",
+    "✓ PUT /api/merchant/delivery/settings persists full payload incl. polygon + circle zones; merchant role guard works (customer gets 403).",
+    "✓ POST /api/delivery/calculate-fee standard: distance_km=5 → fee=10 (base), distance_km=15 → fee=16 (10 + 5*1.2).",
+    "✓ POST /api/delivery/calculate-fee same_day no zone → fee=30 flat; scheduled no zone → fee=20 + scheduled_slots array returned.",
+    "✓ Polygon zone match: rectangle [[24.7,46.6],[24.75,46.6],[24.75,46.7],[24.7,46.7]] with point (24.72,46.65) returns delivery_fee=50, in_zone=true, zone_name set.",
+    "✓ Circle zone match: center (24.7136,46.6753) radius 2km with delivery_type='same_day' matches point (24.72,46.68) returning fixed_price=15.",
+    "✓ POST /api/delivery/quote returns {branch:{id,name,distance_km,...}, fee:{delivery_fee,...}, alternative_note:null when item_ids=[]}.",
+    "✓ POST /api/orders (customer same_day, dest_lat/lng set): persists delivery_fee=30, delivery_cost=30, branch_id, dest_lat=24.72, dest_lng=46.68, delivery_type='same_day', status='processing'.",
+    "✓ GET /api/orders/{id}/tracking returns id, status, total, address, dest_lat, dest_lng, branch_lat, branch_lng (no auth required — see minor issue).",
+    "✓ POST /api/social/posts/{pid}/comments adds comment + increments post.comments; GET /api/merchant/social/comments returns list with post info attached (id + content); DELETE /api/merchant/social/comments/{cid} removes the comment and decrements post.comments back to original value.",
+    "✓ Role enforcement: customer hitting /api/merchant/social/comments or PUT /api/merchant/delivery/settings receives 403.",
+    "✓ Both Arabic & English labels supported in scheduled_slots (label, label_en) — PUT preserved them on round-trip.",
+    "⚠ NOTE: /api/orders/{id}/tracking is PUBLIC. Anyone who guesses an order_id can read the customer's address and GPS coordinates."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_delivery_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "not tested (backend-only request)"
+  },
+  "seed_data_creation": "Tests are idempotent: settings are reset to documented defaults before/after each test class; test comment uses 'TEST_' prefix and is deleted at end of test; cart is cleared before order creation; if no branches exist a 'TEST_Main Branch' is created at (24.7136, 46.6753) — this is the documented Zitex Riyadh branch used elsewhere.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 10 review-requested delivery & social-comment backend features verified end-to-end against the public preview URL. Test file /app/backend/tests/test_delivery_features.py covers: delivery settings GET/PUT, calculate-fee (4 cases incl. zones), polygon & circle zone matching, delivery quote, full order creation with same_day delivery, order tracking, and merchant comment inbox + delete. Merchant creds 0509999999/merchant2025 verified working (note: not yet recorded in /app/memory/test_credentials.md — only customer + chamber are documented there). The only flagged concerns are (1) GET /api/orders/{id}/tracking is unauthenticated, (2) PUT delivery/settings accepts unvalidated JSON, (3) defaults aren't persisted so partial PUTs drop fields. None of these block functionality.",
+  "rca_of_issue": "No bugs found. All endpoints behave per spec. Minor design observations in backend_issues.minor & action_items."
+}
