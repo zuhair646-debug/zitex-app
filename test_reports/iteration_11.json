@@ -1,0 +1,37 @@
+{
+  "summary": "Tested NEW backend features: Employees Management (CRUD + permissions) and Store Support Info (public GET + merchant PUT). All 15 pytest tests passed (100%). Verified: public GET /api/store/support returns all 11 fields, merchant PUT updates and persists, customer blocked from /merchant/employees & /merchant/store/support (403), employee creation with validation of permission keys (invalid perms → 400 Arabic message), employee login returns role='employee' + token, employee with 'social' perm can POST /merchant/social/posts via require_merchant (which now allows role='employee'), employee without 'settings' perm is blocked from PUT support (403), employee blocked from DELETE /merchant/employees with 'Owner only', merchant LIST shows employee, UPDATE permissions=['all'] persists, GET /merchant/employee-perms returns Arabic labels, DELETE removes employee. Tested against local backend (frontend EXPO_PUBLIC_BACKEND_URL=https://api-production-df2ce.up.railway.app does not have the new endpoints deployed yet — only localhost:8001 has the latest code).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/store/support (production)", "issue": "Production railway backend does not yet have the new endpoints (returns 404). Tests ran against localhost:8001 only. Once deployed, retest against EXPO_PUBLIC_BACKEND_URL."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_employees_support.py",
+    "/app/test_reports/pytest/employees_support.xml"
+  ],
+  "action_items": [
+    "Deploy latest backend code to production (https://api-production-df2ce.up.railway.app) so the new /api/store/support and /api/merchant/employees endpoints become reachable from the mobile app."
+  ],
+  "critical_code_review_comments": [
+    "require_employee_perm raises HTTPException only when role is neither merchant nor employee — this is correct behavior but means non-merchant non-employee callers get 403 with permission text rather than role text. Acceptable.",
+    "update_employee uses ObjectId(eid) without try/except — an invalid eid string would yield 500. Consider validating ObjectId.",
+    "delete_employee silently succeeds (returns 'تم الحذف') even if no document matched (wrong merchant_id or bad id). Consider checking deleted_count and returning 404 when 0.",
+    "create_employee returns 200 by FastAPI default — POST creation typically should return 201. Minor."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_employees_support.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "N/A (backend-only request)"},
+  "seed_data_creation": "Test creates and deletes employee with phone 0500777777 (cleanup fixture removes before/after).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Test file /app/backend/tests/test_employees_support.py covers all employees + support endpoints. Run with TEST_BACKEND_URL=http://localhost:8001 since production URL lags behind. 15/15 passing.",
+  "rca_of_issue": "N/A - no bugs found in new features."
+}

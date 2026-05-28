@@ -30,6 +30,13 @@ const SECTION_GROUPS = [
     ],
   },
   {
+    title: '👨‍💼 الموظفون والإعدادات',
+    items: [
+      { id: 'employees', title: 'الموظفون', icon: 'people-circle', color: '#EF4444', route: '/merchant/employees' },
+      { id: 'support-settings', title: 'الدعم الفني', icon: 'headset', color: '#10B981', route: '/merchant/support-settings' },
+    ],
+  },
+  {
     title: '🚚 التوصيل',
     items: [
       { id: 'branches', title: 'الفروع', icon: 'storefront', color: '#06B6D4', route: '/merchant/branches' },

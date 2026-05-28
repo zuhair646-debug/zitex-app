@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions, RefreshControl, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,9 +17,30 @@ export default function HomeScreen() {
   const [hotProducts, setHotProducts] = useState<any[]>([]);
   const [bestDeals, setBestDeals] = useState<any[]>([]);
   const [topCompetition, setTopCompetition] = useState<any>(null);
+  const [nearestBranch, setNearestBranch] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bannerIdx, setBannerIdx] = useState(0);
+
+  // Prompt for location on first launch if not set
+  useEffect(() => {
+    if (user && !user.default_lat) {
+      const timer = setTimeout(() => {
+        // Auto-redirect to setup-location once
+        AsyncStorage.getItem('location_prompted').then(v => {
+          if (!v) {
+            AsyncStorage.setItem('location_prompted', '1');
+            router.push('/setup-location' as any);
+          }
+        });
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+    // Load nearest branch info if user has location
+    if (user?.default_lat && user?.default_lng) {
+      apiCall(`/api/branches/nearest?lat=${user.default_lat}&lng=${user.default_lng}`).then(setNearestBranch).catch(() => {});
+    }
+  }, [user]);
 
   const loadData = async () => {
     try {

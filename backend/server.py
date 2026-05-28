@@ -902,12 +902,155 @@ async def bookmark_post(post_id: str, user=Depends(get_current_user)):
 # MERCHANT / ADMIN PANEL  (role = "merchant")
 # ═══════════════════════════════════════════════════
 def require_merchant(user):
-    if user.get("role") != "merchant":
+    if user.get("role") not in ("merchant", "employee"):
         raise HTTPException(status_code=403, detail="Merchant access only")
+
+def require_employee_perm(user, perm: str):
+    """Check if user (merchant or employee) has the given permission."""
+    if user.get("role") == "merchant":
+        return True
+    if user.get("role") == "employee":
+        perms = user.get("permissions", [])
+        if "all" in perms or perm in perms:
+            return True
+    raise HTTPException(status_code=403, detail=f"يتطلب صلاحية: {perm}")
 
 def require_chamber(user):
     if user.get("role") != "chamber":
         raise HTTPException(status_code=403, detail="Chamber access only")
+
+# ─── Support / Store Contact Info (public) ───
+@api_router.get("/store/support")
+async def get_support_info():
+    s = await db.settings.find_one({"key": "support"})
+    if not s:
+        s = {
+            "phone": "0500000000",
+            "whatsapp": "966500000000",
+            "email": "support@zitex.sa",
+            "instagram": "zitex_official",
+            "twitter": "zitex_official",
+            "tiktok": "",
+            "snapchat": "",
+            "telegram": "",
+            "address": "الرياض، المملكة العربية السعودية",
+            "working_hours": "السبت - الخميس: 9 ص - 11 م",
+            "contact_via_social_first": True,
+        }
+    s.pop("_id", None); s.pop("key", None)
+    return s
+
+@api_router.put("/merchant/store/support")
+async def update_support_info(request: Request, user=Depends(get_current_user)):
+    require_merchant(user)
+    require_employee_perm(user, "settings")
+    body = await request.json()
+    await db.settings.update_one({"key": "support"}, {"$set": {**body, "key": "support"}}, upsert=True)
+    return {"message": "Updated"}
+
+# ─── Employee Management ───
+# Available permission keys (used by merchant when assigning):
+EMPLOYEE_PERMS = ["all", "products", "orders", "social", "competitions", "services",
+                  "branches", "drivers", "delivery", "banners", "customers", "settings", "support"]
+
+class EmployeeInput(BaseModel):
+    phone: str
+    name: str
+    password: str
+    department: str = "general"
+    permissions: List[str] = []
+    salary_monthly: float = 0
+
+@api_router.get("/merchant/employees")
+async def list_employees(user=Depends(get_current_user)):
+    require_merchant(user)
+    if user.get("role") != "merchant":
+        raise HTTPException(status_code=403, detail="Owner only")
+    employees = await db.users.find({"role": "employee", "merchant_id": user["id"]}).to_list(200)
+    return [{
+        "id": str(e["_id"]),
+        "name": e.get("name", ""),
+        "phone": e.get("phone", ""),
+        "department": e.get("department", ""),
+        "permissions": e.get("permissions", []),
+        "salary_monthly": e.get("salary_monthly", 0),
+        "active": e.get("active", True),
+        "created_at": e.get("created_at", ""),
+    } for e in employees]
+
+@api_router.post("/merchant/employees")
+async def create_employee(data: EmployeeInput, user=Depends(get_current_user)):
+    require_merchant(user)
+    if user.get("role") != "merchant":
+        raise HTTPException(status_code=403, detail="Owner only")
+    if await db.users.count_documents({"phone": data.phone}) > 0:
+        raise HTTPException(status_code=400, detail="رقم الجوال مسجل مسبقاً")
+    # Validate perms
+    invalid = [p for p in data.permissions if p not in EMPLOYEE_PERMS]
+    if invalid:
+        raise HTTPException(status_code=400, detail=f"صلاحيات غير صالحة: {invalid}")
+    doc = {
+        "phone": data.phone, "name": data.name,
+        "password_hash": hash_password(data.password),
+        "role": "employee", "merchant_id": user["id"],
+        "department": data.department, "permissions": data.permissions,
+        "salary_monthly": data.salary_monthly,
+        "active": True, "points": 0, "wallet_balance": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    r = await db.users.insert_one(doc)
+    return {"id": str(r.inserted_id), "message": "تم إنشاء الموظف", "available_perms": EMPLOYEE_PERMS}
+
+@api_router.put("/merchant/employees/{eid}")
+async def update_employee(eid: str, request: Request, user=Depends(get_current_user)):
+    require_merchant(user)
+    if user.get("role") != "merchant":
+        raise HTTPException(status_code=403, detail="Owner only")
+    body = await request.json()
+    update = {}
+    if "name" in body: update["name"] = body["name"]
+    if "department" in body: update["department"] = body["department"]
+    if "permissions" in body:
+        invalid = [p for p in body["permissions"] if p not in EMPLOYEE_PERMS]
+        if invalid: raise HTTPException(status_code=400, detail=f"Invalid perms: {invalid}")
+        update["permissions"] = body["permissions"]
+    if "salary_monthly" in body: update["salary_monthly"] = body["salary_monthly"]
+    if "active" in body: update["active"] = body["active"]
+    if "password" in body and body["password"]:
+        update["password_hash"] = hash_password(body["password"])
+    await db.users.update_one({"_id": ObjectId(eid), "merchant_id": user["id"]}, {"$set": update})
+    return {"message": "تم التحديث"}
+
+@api_router.delete("/merchant/employees/{eid}")
+async def delete_employee(eid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    if user.get("role") != "merchant":
+        raise HTTPException(status_code=403, detail="Owner only")
+    await db.users.delete_one({"_id": ObjectId(eid), "merchant_id": user["id"]})
+    return {"message": "تم الحذف"}
+
+@api_router.get("/merchant/employee-perms")
+async def list_available_perms(user=Depends(get_current_user)):
+    require_merchant(user)
+    return {
+        "permissions": EMPLOYEE_PERMS,
+        "labels": {
+            "all": "كل الصلاحيات",
+            "products": "المنتجات",
+            "orders": "الطلبات",
+            "social": "السوشال ميديا",
+            "competitions": "المسابقات",
+            "services": "الخدمات والصيانة",
+            "branches": "الفروع",
+            "drivers": "السائقون",
+            "delivery": "إعدادات التوصيل",
+            "banners": "البانرات",
+            "customers": "العملاء",
+            "settings": "الإعدادات",
+            "support": "الدعم الفني",
+        }
+    }
+
 
 # ─── Merchant: Dashboard Stats ───
 @api_router.get("/merchant/stats")

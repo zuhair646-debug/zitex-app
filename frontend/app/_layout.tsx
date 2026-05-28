@@ -110,6 +110,9 @@ export default function RootLayout() {
       // Allow merchant to navigate to customer-facing screens explicitly (like product, search, cart)
       // BUT redirect from (tabs) home which means landing page
       if (inTabs) router.replace('/merchant');
+    } else if (role === 'employee' && segments[0] !== 'merchant') {
+      // Employees use same merchant panel but with restricted perms
+      if (inTabs) router.replace('/merchant');
     } else if (role === 'driver' && segments[0] !== 'driver') {
       if (inTabs) router.replace('/driver');
     } else if (role === 'chamber' && segments[0] !== 'chamber') {

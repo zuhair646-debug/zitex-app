@@ -1,124 +1,98 @@
-import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Modal, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import { useT } from '../src/i18n';
 
 export default function SupportScreen() {
   const router = useRouter();
   const { apiCall } = useAuth();
-  const [tickets, setTickets] = useState<any[]>([]);
+  const { t, lang } = useT();
+  const [info, setInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showNew, setShowNew] = useState(false);
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
-  const [category, setCategory] = useState('general');
 
-  const load = async () => { try { const d = await apiCall('/api/support/tickets'); setTickets(d); } catch {} finally { setLoading(false); } };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    apiCall('/api/store/support').then(setInfo).catch(() => {}).finally(() => setLoading(false));
+  }, []);
 
-  const createTicket = async () => {
-    if (!subject || !message) { Alert.alert('Error', 'Please fill all fields'); return; }
-    try {
-      await apiCall('/api/support/tickets', { method: 'POST', body: JSON.stringify({ subject, message, category }) });
-      setShowNew(false); setSubject(''); setMessage('');
-      load();
-    } catch (e: any) { Alert.alert('Error', e.message); }
+  const openLink = async (url: string) => {
+    try { await Linking.openURL(url); } catch { Alert.alert(t('common.error'), 'تعذر فتح الرابط'); }
   };
 
-  const statusColor = (s: string) => s === 'open' ? '#F59E0B' : s === 'resolved' ? '#10B981' : '#6B7280';
+  if (loading || !info) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
+
+  const channels = [
+    { id: 'whatsapp', label: 'واتساب', sub: info.whatsapp, icon: 'logo-whatsapp', color: '#25D366', url: info.whatsapp ? `https://wa.me/${info.whatsapp}` : '' },
+    { id: 'phone', label: lang === 'ar' ? 'اتصال هاتفي' : 'Phone', sub: info.phone, icon: 'call', color: '#3B82F6', url: info.phone ? `tel:${info.phone}` : '' },
+    { id: 'email', label: lang === 'ar' ? 'البريد الإلكتروني' : 'Email', sub: info.email, icon: 'mail', color: '#EF4444', url: info.email ? `mailto:${info.email}` : '' },
+    { id: 'instagram', label: 'Instagram', sub: info.instagram, icon: 'logo-instagram', color: '#E1306C', url: info.instagram ? `https://instagram.com/${info.instagram.replace('@','')}` : '' },
+    { id: 'twitter', label: 'X (Twitter)', sub: info.twitter, icon: 'logo-twitter', color: '#000000', url: info.twitter ? `https://twitter.com/${info.twitter.replace('@','')}` : '' },
+    { id: 'tiktok', label: 'TikTok', sub: info.tiktok, icon: 'logo-tiktok', color: '#000000', url: info.tiktok ? `https://tiktok.com/@${info.tiktok.replace('@','')}` : '' },
+    { id: 'snapchat', label: 'Snapchat', sub: info.snapchat, icon: 'logo-snapchat', color: '#FFFC00', url: info.snapchat ? `https://snapchat.com/add/${info.snapchat.replace('@','')}` : '' },
+    { id: 'telegram', label: 'Telegram', sub: info.telegram, icon: 'paper-plane', color: '#0088CC', url: info.telegram ? `https://t.me/${info.telegram.replace('@','')}` : '' },
+  ].filter(c => c.sub);
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity testID="sup-back" style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Support</Text>
-        <TouchableOpacity testID="new-ticket-btn" style={s.addBtn} onPress={() => setShowNew(true)}><Ionicons name="add" size={22} color="#8833FF" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <Text style={s.title}>🎧 {lang === 'ar' ? 'الدعم الفني' : 'Customer Support'}</Text>
+        <View style={{ width: 22 }} />
       </View>
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
-        tickets.length === 0 ? (
-          <View style={s.empty}><Ionicons name="headset-outline" size={48} color="#A1A1AA" /><Text style={s.emptyTitle}>No tickets</Text>
-            <TouchableOpacity style={s.newBtn} onPress={() => setShowNew(true)}><Text style={s.newBtnText}>Create Ticket</Text></TouchableOpacity></View>
-        ) : (
-          <ScrollView contentContainerStyle={s.list}>
-            {tickets.map(t => (
-              <View key={t.id} style={s.card}>
-                <View style={s.cardTop}>
-                  <View style={[s.catBadge, { backgroundColor: t.category === 'orders' ? '#DBEAFE' : '#EFE6FF' }]}>
-                    <Text style={[s.catText, { color: t.category === 'orders' ? '#3B82F6' : '#8833FF' }]}>{t.category}</Text>
-                  </View>
-                  <View style={[s.statusDot, { backgroundColor: statusColor(t.status) }]} /><Text style={[s.statusText, { color: statusColor(t.status) }]}>{t.status}</Text>
-                </View>
-                <Text style={s.ticketSubject}>{t.subject}</Text>
-                <Text style={s.ticketMsg} numberOfLines={2}>{t.message}</Text>
-                {t.replies?.length > 0 && (
-                  <View style={s.replyBox}>
-                    <Text style={s.replyAuthor}>{t.replies[t.replies.length - 1].user_name}</Text>
-                    <Text style={s.replyText} numberOfLines={2}>{t.replies[t.replies.length - 1].message}</Text>
-                  </View>
-                )}
-                <Text style={s.date}>{t.created_at?.split('T')[0]}</Text>
-              </View>
-            ))}
-          </ScrollView>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <View style={s.hero}>
+          <Ionicons name="headset" size={36} color="white" />
+          <Text style={s.heroTitle}>{lang === 'ar' ? 'كيف يمكننا مساعدتك؟' : 'How can we help you?'}</Text>
+          <Text style={s.heroSub}>{info.working_hours}</Text>
+        </View>
+
+        {info.contact_via_social_first && (
+          <View style={s.tipBox}>
+            <Ionicons name="information-circle" size={18} color="#3B82F6" />
+            <Text style={s.tipText}>{lang === 'ar' ? 'للرد السريع، تواصل عبر السوشال ميديا أو الواتساب' : 'For fastest reply, contact via WhatsApp or social media'}</Text>
+          </View>
         )}
 
-      <Modal visible={showNew} animationType="slide" transparent>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.modalWrap}>
-          <View style={s.modal}>
-            <View style={s.modalHeader}><Text style={s.modalTitle}>New Ticket</Text><TouchableOpacity onPress={() => setShowNew(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity></View>
-            <View style={s.catRow}>
-              {['general', 'orders', 'services', 'technical'].map(c => (
-                <TouchableOpacity key={c} style={[s.catPill, category === c && s.catPillActive]} onPress={() => setCategory(c)}>
-                  <Text style={[s.catPillText, category === c && s.catPillTextActive]}>{c}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TextInput testID="ticket-subject" style={s.input} placeholder="Subject" value={subject} onChangeText={setSubject} />
-            <TextInput testID="ticket-message" style={[s.input, s.textArea]} placeholder="Describe your issue..." value={message} onChangeText={setMessage} multiline numberOfLines={4} textAlignVertical="top" />
-            <TouchableOpacity testID="submit-ticket-btn" style={s.submitBtn} onPress={createTicket}><Text style={s.submitText}>Submit Ticket</Text></TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        <Text style={s.section}>{lang === 'ar' ? 'وسائل التواصل' : 'Contact Channels'}</Text>
+        <View style={s.grid}>
+          {channels.map(c => (
+            <TouchableOpacity key={c.id} style={[s.card, { borderColor: c.color + '40' }]} onPress={() => openLink(c.url)}>
+              <View style={[s.iconBox, { backgroundColor: c.color + '20' }]}>
+                <Ionicons name={c.icon as any} size={24} color={c.color} />
+              </View>
+              <Text style={s.cardLabel}>{c.label}</Text>
+              <Text style={s.cardSub} numberOfLines={1}>{c.sub}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {info.address && (<>
+          <Text style={s.section}>📍 {lang === 'ar' ? 'العنوان' : 'Address'}</Text>
+          <View style={s.addrBox}><Text style={s.addrText}>{info.address}</Text></View>
+        </>)}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
-  title: { flex: 1, fontSize: 22, fontWeight: '800', color: '#0A0A0A' },
-  addBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center' },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#0A0A0A' },
-  newBtn: { backgroundColor: '#8833FF', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24 },
-  newBtnText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
-  list: { paddingHorizontal: 20, paddingBottom: 40 },
-  card: { backgroundColor: '#F9F9FB', borderRadius: 16, padding: 16, marginBottom: 12 },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  catBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8 },
-  catText: { fontSize: 11, fontWeight: '600' },
-  statusDot: { width: 8, height: 8, borderRadius: 4, marginStart: 'auto' },
-  statusText: { fontSize: 12, fontWeight: '500' },
-  ticketSubject: { fontSize: 15, fontWeight: '600', color: '#0A0A0A', marginBottom: 4 },
-  ticketMsg: { fontSize: 13, color: '#52525B', lineHeight: 20, marginBottom: 8 },
-  replyBox: { backgroundColor: '#FFF', borderRadius: 10, padding: 10, borderLeftWidth: 3, borderLeftColor: '#8833FF', marginBottom: 8 },
-  replyAuthor: { fontSize: 12, fontWeight: '600', color: '#8833FF', marginBottom: 2 },
-  replyText: { fontSize: 12, color: '#52525B' },
-  date: { fontSize: 11, color: '#A1A1AA' },
-  modalWrap: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modal: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#0A0A0A' },
-  catRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  catPill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7' },
-  catPillActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
-  catPillText: { fontSize: 12, fontWeight: '500', color: '#52525B' },
-  catPillTextActive: { color: '#FFF' },
-  input: { backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, marginBottom: 12, borderWidth: 1, borderColor: '#E4E4E7' },
-  textArea: { height: 100 },
-  submitBtn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  submitText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  safe: { flex: 1, backgroundColor: '#F9FAFB' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
+  title: { fontSize: 17, fontWeight: '800' },
+  hero: { backgroundColor: '#8833FF', padding: 24, borderRadius: 18, alignItems: 'center', marginBottom: 14 },
+  heroTitle: { color: 'white', fontSize: 18, fontWeight: '800', marginTop: 8 },
+  heroSub: { color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 4 },
+  tipBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#DBEAFE', padding: 10, borderRadius: 10, marginBottom: 14 },
+  tipText: { fontSize: 12, color: '#1E40AF', fontWeight: '600', flex: 1 },
+  section: { fontSize: 15, fontWeight: '800', color: '#0A0A0A', marginTop: 6, marginBottom: 10 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  card: { width: '47%', backgroundColor: 'white', padding: 14, borderRadius: 14, alignItems: 'center', borderWidth: 1.5 },
+  iconBox: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  cardLabel: { fontSize: 13, fontWeight: '700', color: '#0A0A0A' },
+  cardSub: { fontSize: 11, color: '#6B7280', marginTop: 2 },
+  addrBox: { backgroundColor: 'white', padding: 14, borderRadius: 10, marginTop: 4 },
+  addrText: { fontSize: 13, color: '#374151' },
 });
