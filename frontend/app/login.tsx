@@ -26,6 +26,8 @@ export default function LoginScreen() {
         router.replace('/chamber');
       } else if (role === 'merchant') {
         router.replace('/merchant');
+      } else if (role === 'driver') {
+        router.replace('/driver');
       } else {
         router.replace('/(tabs)');
       }
