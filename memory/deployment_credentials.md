@@ -41,14 +41,29 @@
 ## Backend (Railway)
 ## ═══════════════════════════════════════
 - **Live URL:** `https://api-production-df2ce.up.railway.app`
-- **MongoDB:** Hosted on Railway (managed)
+- **Railway Account:** zuhair770000@gmail.com (User ID: 0c17dbb1-45bf-4c4b-9195-630673899dc2)
+- **Railway Token:** `dc53264f-0ea6-439a-aad7-a652801f2487`
+- **Workspace ID:** `839a9814-45f9-45bb-84b0-803d251462bd`
+- **Project ID (zitex):** `501a2e06-bfcc-41b1-8ea7-6b0b7f0b141f`
+- **Service ID (api):** `21667c79-f537-44fd-a59d-3b55dae67963`
+- **Environment ID (production):** `fc9bcb35-cc9f-47db-91b6-dc585917e522`
+- **Backend GitHub repo (Railway connected):** `zuhair646-debug/zitex-backend`
+- **MongoDB:** Hosted on Railway (managed - service ID: beeee698-1fd5-4559-83da-838ec1ab0a9c)
+
+### Railway Manual Deploy (when auto-deploy doesn't trigger):
+```bash
+curl -X POST "https://backboard.railway.com/graphql/v2" \
+  -H "Authorization: Bearer dc53264f-0ea6-439a-aad7-a652801f2487" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"mutation { serviceInstanceDeployV2(serviceId: \"21667c79-f537-44fd-a59d-3b55dae67963\", environmentId: \"fc9bcb35-cc9f-47db-91b6-dc585917e522\", commitSha: \"<LATEST_COMMIT>\") }"}'
+```
 
 ## ═══════════════════════════════════════
 ## Current Version State (last updated)
 ## ═══════════════════════════════════════
 - **App Version:** 1.0.0
-- **iOS buildNumber:** Last successful submit = 2 (next should be 3)
-- **Android versionCode:** Last successful submit = 3 (next should be 4)
+- **iOS buildNumber:** Last successful submit = 4 (next should be 5)
+- **Android versionCode:** Last successful submit = 5 (next should be 6)
 
 ## ═══════════════════════════════════════
 ## Standard Deploy Workflow
