@@ -11,6 +11,7 @@ type User = {
   phone: string;
   email: string;
   city: string;
+  role?: string;
   points: number;
   wallet_balance: number;
 } | null;
@@ -117,6 +118,7 @@ export default function RootLayout() {
         <Stack.Screen name="support" options={{ presentation: 'card' }} />
         <Stack.Screen name="checkout" options={{ presentation: 'card' }} />
         <Stack.Screen name="chamber" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="merchant" options={{ presentation: 'fullScreenModal' }} />
       </Stack>
     </AuthContext.Provider>
   );

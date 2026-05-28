@@ -21,8 +21,11 @@ export default function LoginScreen() {
       await login(phone, password);
       // Check user role after login
       const userData = await apiCall('/api/auth/me');
-      if (userData?.user?.role === 'chamber') {
+      const role = userData?.user?.role;
+      if (role === 'chamber') {
         router.replace('/chamber');
+      } else if (role === 'merchant') {
+        router.replace('/merchant');
       } else {
         router.replace('/(tabs)');
       }

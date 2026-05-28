@@ -14,6 +14,14 @@ const POSTS = [
 ];
 
 const formatNum = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : String(n);
+const timeAgo = (iso?: string) => {
+  if (!iso) return '';
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return 'now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+};
 
 export default function SocialScreen() {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -78,11 +86,11 @@ export default function SocialScreen() {
               <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#8833FF" /></View>
               <View style={s.postAuthorInfo}>
                 <Text style={s.postAuthor}>{post.author}</Text>
-                <Text style={s.postTime}>{post.time}</Text>
+                <Text style={s.postTime}>{post.time || timeAgo(post.created_at)}</Text>
               </View>
               <View style={s.postViews}>
                 <Ionicons name="eye-outline" size={14} color="#A1A1AA" />
-                <Text style={s.viewsText}>{formatNum(post.views)}</Text>
+                <Text style={s.viewsText}>{formatNum(post.views || 0)}</Text>
               </View>
               <TouchableOpacity><Ionicons name="ellipsis-horizontal" size={20} color="#A1A1AA" /></TouchableOpacity>
             </View>
@@ -91,11 +99,12 @@ export default function SocialScreen() {
 
             {post.image && <Image source={{ uri: post.image }} style={s.postImage} />}
 
-            {post.type === 'poll' && post.pollOptions && (
+            {post.type === 'poll' && (post.poll_options || post.pollOptions) && (
               <View style={s.pollSection}>
-                {post.pollOptions.map((opt, i) => {
-                  const totalVotes = post.pollOptions!.reduce((a, b) => a + b.votes, 0);
-                  const pct = Math.round((opt.votes / totalVotes) * 100);
+                {(post.poll_options || post.pollOptions).map((opt: any, i: number) => {
+                  const opts = post.poll_options || post.pollOptions;
+                  const totalVotes = opts.reduce((a: number, b: any) => a + (b.votes || 0), 0) || 1;
+                  const pct = Math.round(((opt.votes || 0) / totalVotes) * 100);
                   return (
                     <TouchableOpacity key={i} style={s.pollOption}>
                       <View style={s.pollBarBg}><View style={[s.pollBarFill, { width: `${pct}%` }]} /></View>
