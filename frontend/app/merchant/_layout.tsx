@@ -14,6 +14,9 @@ export default function MerchantLayout() {
       <Stack.Screen name="banners" />
       <Stack.Screen name="customers" />
       <Stack.Screen name="bookings" />
+      <Stack.Screen name="branches" />
+      <Stack.Screen name="drivers" />
+      <Stack.Screen name="delivery-settings" />
     </Stack>
   );
 }

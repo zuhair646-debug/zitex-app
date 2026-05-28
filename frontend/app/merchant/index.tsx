@@ -30,9 +30,12 @@ export default function MerchantDashboard() {
     { id: 'services', title: 'Services', icon: 'construct', color: '#10B981', route: '/merchant/services' },
     { id: 'bookings', title: 'Bookings', icon: 'calendar', color: '#F59E0B', route: '/merchant/bookings', badge: stats?.pending_bookings },
     { id: 'social', title: 'Social Posts', icon: 'megaphone', color: '#EC4899', route: '/merchant/social' },
-    { id: 'competitions', title: 'Competitions', icon: 'trophy', color: '#F97316', route: '/merchant/competitions', badge: stats?.rejected_competitions },
+    { id: 'competitions', title: 'Competitions', icon: 'trophy', color: '#F97316', route: '/merchant/competitions' },
+    { id: 'branches', title: 'Branches', icon: 'storefront', color: '#06B6D4', route: '/merchant/branches' },
+    { id: 'drivers', title: 'Drivers', icon: 'car', color: '#14B8A6', route: '/merchant/drivers' },
+    { id: 'delivery-settings', title: 'Delivery Pricing', icon: 'pricetag', color: '#A855F7', route: '/merchant/delivery-settings' },
     { id: 'banners', title: 'Banners', icon: 'image', color: '#6366F1', route: '/merchant/banners' },
-    { id: 'customers', title: 'Customers', icon: 'people', color: '#06B6D4', route: '/merchant/customers' },
+    { id: 'customers', title: 'Customers', icon: 'people', color: '#0EA5E9', route: '/merchant/customers' },
   ];
 
   if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
