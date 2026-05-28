@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0 -- /root/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /app
+plugins: anyio-4.13.0
+collecting ... collected 10 items
+
+backend/tests/test_chamber_features.py::TestChamberAuth::test_chamber_login_returns_chamber_role PASSED [ 10%]
+backend/tests/test_chamber_features.py::TestChamberAuth::test_regular_user_login_returns_user_role PASSED [ 20%]
+backend/tests/test_chamber_features.py::TestChamberEndpoints::test_chamber_get_competitions_with_participant_counts PASSED [ 30%]
+backend/tests/test_chamber_features.py::TestChamberEndpoints::test_chamber_get_competition_full_detail PASSED [ 40%]
+backend/tests/test_chamber_features.py::TestChamberEndpoints::test_chamber_perform_draw_records_drawn_by PASSED [ 50%]
+backend/tests/test_chamber_features.py::TestChamberEndpoints::test_regular_user_cannot_access_chamber_competitions PASSED [ 60%]
+backend/tests/test_chamber_features.py::TestChamberEndpoints::test_regular_user_cannot_access_chamber_competition_full PASSED [ 70%]
+backend/tests/test_chamber_features.py::TestChamberEndpoints::test_regular_user_cannot_perform_chamber_draw PASSED [ 80%]
+backend/tests/test_chamber_features.py::TestChamberEndpoints::test_unauthenticated_cannot_access_chamber_endpoints PASSED [ 90%]
+backend/tests/test_chamber_features.py::TestChamberDrawHistory::test_multiple_draws_increment_draw_number PASSED [100%]
+
+------- generated xml file: /app/test_reports/pytest/pytest_chamber.xml --------
+============================== 10 passed in 4.46s ==============================
