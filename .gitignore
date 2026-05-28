@@ -7,3 +7,4 @@ dist/
 zitex-upload-*.json
 .metro-cache/
 frontend/.metro-cache/
+memory/deployment_credentials.md
