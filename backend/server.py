@@ -1091,23 +1091,40 @@ async def merchant_update_booking_status(bid: str, request: Request, user=Depend
 
 # ─── Merchant: Social Posts CRUD ───
 class SocialPostInput(BaseModel):
-    text: str
-    image: str = ""
-    type: str = "post"  # post | poll
-    poll_options: List[dict] = []
+    text: str = ""
+    image: str = ""  # url or base64 data URI
+    images: List[str] = []  # for multi-image posts
+    type: str = "post"  # post | poll | question | event | story
+    poll_options: List[dict] = []  # [{text, votes}]
+    question: str = ""  # for type=question
+    event_date: str = ""  # ISO for type=event
+    event_location: str = ""
 
 @api_router.post("/merchant/social/posts")
 async def merchant_create_post(data: SocialPostInput, user=Depends(get_current_user)):
     require_merchant(user)
+    if not data.text and not data.image and not data.images and data.type == "post":
+        raise HTTPException(status_code=400, detail="Post must have text or image")
     doc = {
         "author": user.get("name", "Store"),
         "author_id": user["id"],
-        "text": data.text, "image": data.image, "type": data.type,
+        "text": data.text,
+        "image": data.image,
+        "images": data.images or ([data.image] if data.image else []),
+        "type": data.type,
         "likes": 0, "comments": 0, "views": 0,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     if data.type == "poll":
-        doc["poll_options"] = data.poll_options
+        doc["poll_options"] = [{"text": o.get("text", ""), "votes": 0} for o in data.poll_options]
+    if data.type == "question":
+        doc["question"] = data.question or data.text
+    if data.type == "event":
+        doc["event_date"] = data.event_date
+        doc["event_location"] = data.event_location
+    if data.type == "story":
+        # Stories expire after 24h
+        doc["expires_at"] = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
     r = await db.social_posts.insert_one(doc)
     return {"id": str(r.inserted_id), "message": "Post published"}
 
@@ -1118,6 +1135,41 @@ async def merchant_delete_post(pid: str, user=Depends(get_current_user)):
     await db.social_comments.delete_many({"post_id": pid})
     await db.social_likes.delete_many({"post_id": pid})
     return {"message": "Deleted"}
+
+# Poll voting
+@api_router.post("/social/posts/{pid}/vote")
+async def vote_poll(pid: str, request: Request, user=Depends(get_current_user)):
+    body = await request.json()
+    option_index = body.get("option_index", 0)
+    # Prevent double voting
+    existing = await db.social_votes.find_one({"post_id": pid, "user_id": user["id"]})
+    if existing:
+        if existing.get("option_index") == option_index:
+            return {"message": "Already voted", "option_index": option_index}
+        # Switch vote
+        old_idx = existing.get("option_index", 0)
+        await db.social_posts.update_one(
+            {"_id": ObjectId(pid)},
+            {"$inc": {f"poll_options.{old_idx}.votes": -1, f"poll_options.{option_index}.votes": 1}}
+        )
+        await db.social_votes.update_one({"_id": existing["_id"]}, {"$set": {"option_index": option_index}})
+    else:
+        await db.social_votes.insert_one({"post_id": pid, "user_id": user["id"], "option_index": option_index})
+        await db.social_posts.update_one(
+            {"_id": ObjectId(pid)},
+            {"$inc": {f"poll_options.{option_index}.votes": 1}}
+        )
+    return {"message": "Vote recorded", "option_index": option_index}
+
+# Get stories (non-expired)
+@api_router.get("/social/stories")
+async def get_stories():
+    now = datetime.now(timezone.utc).isoformat()
+    stories = await db.social_posts.find({
+        "type": "story",
+        "$or": [{"expires_at": {"$gt": now}}, {"expires_at": {"$exists": False}}]
+    }).sort("created_at", -1).to_list(20)
+    return [serialize_doc(s) for s in stories]
 
 # ─── Merchant: Customers list ───
 @api_router.get("/merchant/customers")
@@ -1920,6 +1972,43 @@ async def seed_data():
             "created_at": datetime.now(timezone.utc).isoformat()
         })
         logger.info("Seeded Merchant account")
+
+    # Seed Driver account
+    driver_user = await db.users.find_one({"phone": "0540001111"})
+    if not driver_user:
+        res = await db.users.insert_one({
+            "phone": "0540001111", "password_hash": hash_password("driver1234"),
+            "name": "محمد السائق", "email": "driver@zitex.sa",
+            "city": "Riyadh", "gender": "M", "role": "driver",
+            "points": 0, "wallet_balance": 0,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        uid = str(res.inserted_id)
+        await db.drivers.insert_one({
+            "user_id": uid, "name": "محمد السائق", "phone": "0540001111",
+            "vehicle_info": "Toyota Hilux 2022", "payment_model": "commission",
+            "commission_type": "fixed", "merchant_commission_value": 5,
+            "salary_monthly": 0, "bonus_threshold_orders": 20, "bonus_per_extra_order": 2,
+            "online": False, "current_lat": 0, "current_lng": 0,
+            "wallet_balance": 0, "total_deliveries": 0, "today_deliveries": 0,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        logger.info("Seeded Driver account: 0540001111/driver1234")
+    else:
+        # Ensure password is correct (idempotent)
+        await db.users.update_one({"_id": driver_user["_id"]},
+            {"$set": {"password_hash": hash_password("driver1234"), "role": "driver"}})
+        # Ensure driver doc exists
+        if await db.drivers.count_documents({"user_id": str(driver_user["_id"])}) == 0:
+            await db.drivers.insert_one({
+                "user_id": str(driver_user["_id"]), "name": driver_user.get("name", "محمد السائق"),
+                "phone": "0540001111", "vehicle_info": "Toyota Hilux 2022",
+                "payment_model": "commission", "commission_type": "fixed",
+                "merchant_commission_value": 5, "online": False, "wallet_balance": 0,
+                "total_deliveries": 0, "today_deliveries": 0,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        logger.info("Driver account verified: 0540001111/driver1234")
 
     # Seed competitions
     if await db.competitions.count_documents({}) == 0:

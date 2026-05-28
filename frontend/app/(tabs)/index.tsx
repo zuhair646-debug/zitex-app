@@ -15,22 +15,26 @@ export default function HomeScreen() {
   const [categories, setCategories] = useState<any[]>([]);
   const [hotProducts, setHotProducts] = useState<any[]>([]);
   const [bestDeals, setBestDeals] = useState<any[]>([]);
+  const [topCompetition, setTopCompetition] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bannerIdx, setBannerIdx] = useState(0);
 
   const loadData = async () => {
     try {
-      const [b, c, hp, bd] = await Promise.all([
+      const [b, c, hp, bd, comps] = await Promise.all([
         apiCall('/api/banners'),
         apiCall('/api/categories'),
         apiCall('/api/products?sort=popular&limit=6'),
         apiCall('/api/products?sort=newest&limit=6'),
+        apiCall('/api/competitions').catch(() => []),
       ]);
       setBanners(b);
       setCategories(c);
       setHotProducts(hp.products || []);
       setBestDeals(bd.products || []);
+      const live = (Array.isArray(comps) ? comps : []).find((x: any) => x.status === 'open' || x.status === 'live');
+      setTopCompetition(live || (Array.isArray(comps) && comps[0]) || null);
     } catch (e) { console.log(e); } finally { setLoading(false); }
   };
 
@@ -148,19 +152,19 @@ export default function HomeScreen() {
         </View>
 
         {/* ─── Used Devices Banner ─── */}
-        <View style={s.usedDevicesBanner}>
+        <TouchableOpacity activeOpacity={0.85} style={s.usedDevicesBanner} onPress={() => router.push({ pathname: '/search', params: { condition: 'used', categoryName: 'الأجهزة المستخدمة' } })}>
           <View style={s.usedDevicesLeft}>
             <View style={s.offBadge}><Text style={s.offBadgeText}>75% OFF</Text></View>
             <Text style={s.usedDevicesTitle}>Used Devices</Text>
             <Text style={s.usedDevicesDesc}>Get like new devices in{'\n'}low price</Text>
-            <TouchableOpacity testID="check-used-btn" style={s.checkNowBtn}>
+            <View style={s.checkNowBtn}>
               <Text style={s.checkNowText}>Check it now</Text>
-            </TouchableOpacity>
+            </View>
           </View>
           <View style={s.usedDevicesRight}>
             <Image source={{ uri: hotProducts[0]?.images?.[0] }} style={s.usedDevicesImg} />
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* ─── Hot Products ─── */}
         <View style={s.section}>
@@ -179,15 +183,15 @@ export default function HomeScreen() {
         </View>
 
         {/* ─── Featured iPhone Banner ─── */}
-        <View style={s.featuredBanner}>
+        <TouchableOpacity activeOpacity={0.85} style={s.featuredBanner} onPress={() => hotProducts[0] ? router.push(`/product/${hotProducts[0].id}`) : router.push('/search')}>
           <View style={s.featuredContent}>
             <Text style={s.featuredTitle}>iPhone 16</Text>
-            <TouchableOpacity testID="check-out-featured" style={s.checkOutBtn}>
+            <View style={s.checkOutBtn}>
               <Text style={s.checkOutText}>Check out now!</Text>
-            </TouchableOpacity>
+            </View>
           </View>
           <Image source={{ uri: hotProducts[0]?.images?.[0] || '' }} style={s.featuredImg} />
-        </View>
+        </TouchableOpacity>
 
         {/* ─── Best Deals ─── */}
         <View style={s.section}>
@@ -206,21 +210,33 @@ export default function HomeScreen() {
         </View>
 
         {/* ─── Competition Progress ─── */}
-        <View style={s.competitionBanner}>
-          <View style={s.competitionLeft}>
-            <View style={s.trophyWrap}>
-              <Ionicons name="trophy" size={28} color="#8833FF" />
-              <View style={s.trophyBadge}><Text style={s.trophyBadgeText}>3</Text></View>
-            </View>
-          </View>
-          <View style={s.competitionContent}>
-            <Text style={s.competitionText}>Pick 2 more To enter competition</Text>
-            <View style={s.progressBar}>
-              <View style={[s.progressFill, { width: '80%' }]} />
-            </View>
-            <Text style={s.progressText}>199/250</Text>
-          </View>
-        </View>
+        {topCompetition && (() => {
+          const joined = topCompetition.joined_count || 0;
+          const max = topCompetition.max_participants || topCompetition.target || 250;
+          const pct = Math.min(100, Math.round((joined / max) * 100));
+          const daysLeft = topCompetition.end_date ? Math.max(0, Math.ceil((new Date(topCompetition.end_date).getTime() - Date.now()) / 86400000)) : null;
+          return (
+            <TouchableOpacity activeOpacity={0.85} style={s.competitionBanner} onPress={() => router.push(`/competition/${topCompetition.id || topCompetition._id}` as any)}>
+              <View style={s.competitionLeft}>
+                <View style={s.trophyWrap}>
+                  <Ionicons name="trophy" size={28} color="#8833FF" />
+                  {daysLeft != null && daysLeft <= 30 && <View style={s.trophyBadge}><Text style={s.trophyBadgeText}>{daysLeft}d</Text></View>}
+                </View>
+              </View>
+              <View style={s.competitionContent}>
+                <Text style={s.competitionText} numberOfLines={1}>🏆 {topCompetition.title || 'مسابقة جديدة'}</Text>
+                <Text style={s.competitionPrize} numberOfLines={1}>{topCompetition.prize || 'جوائز قيمة'}</Text>
+                <View style={s.progressBar}>
+                  <View style={[s.progressFill, { width: `${pct}%` }]} />
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={s.progressText}>{joined}/{max} مشارك</Text>
+                  <Text style={[s.progressText, { color: '#8833FF', fontWeight: '700' }]}>اضغط للتفاصيل ←</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })()}
 
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -313,7 +329,8 @@ const s = StyleSheet.create({
   trophyBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   trophyBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
   competitionContent: { flex: 1 },
-  competitionText: { fontSize: 13, fontWeight: '600', color: '#0A0A0A', marginBottom: 8 },
+  competitionText: { fontSize: 13, fontWeight: '700', color: '#0A0A0A', marginBottom: 2 },
+  competitionPrize: { fontSize: 11, color: '#8833FF', marginBottom: 6, fontWeight: '600' },
   progressBar: { height: 8, backgroundColor: '#E4E4E7', borderRadius: 4, marginBottom: 4 },
   progressFill: { height: '100%', backgroundColor: '#8833FF', borderRadius: 4 },
   progressText: { fontSize: 12, color: '#52525B', fontWeight: '600', textAlign: 'right' },

@@ -1,0 +1,64 @@
+{
+  "summary": "Backend-only testing of NEW Zitex social/auth features (iteration 8). 13/13 pytest cases passed (100%) against the public preview URL. Verified: (1) driver seeded account login + role=driver, (2) merchant CRUD for post/poll/question/event/story types with correct field initialization, (3) story expires_at ~24h in future, (4) /api/social/stories returns ONLY non-expired stories and includes newly created one, (5) poll voting: first vote increments correctly, switching vote DECREASES old option by 1 and INCREASES new option by 1 (no double counting), repeated identical vote returns 'Already voted' and does not increment, (6) multi-images array preserved end-to-end (length=3), (7) empty text+no-image POST returns 400, (8) customer role guard blocked from merchant endpoint.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/social/posts",
+        "issue": "Returns ALL post types together (post/poll/question/event/story). Story-type docs are NOT filtered out here even when expired — only /api/social/stories enforces the 24h expiry. If the main feed should hide stories, add a $or filter excluding type=='story' or expired stories."
+      },
+      {
+        "endpoint": "POST /api/social/posts/{pid}/vote",
+        "issue": "No validation that pid exists or that option_index is within poll_options range. Sending option_index=99 silently increments a non-existent index field via $inc (creates poll_options.99.votes=1). Consider bounds-checking against the post's poll_options length and returning 400/404 on invalid input."
+      },
+      {
+        "endpoint": "POST /api/merchant/social/posts (type=poll)",
+        "issue": "Empty poll_options ([]) is accepted with type=poll. A poll with zero options is meaningless. Recommend requiring len(poll_options) >= 2 when type=='poll'."
+      },
+      {
+        "endpoint": "POST /api/merchant/social/posts (type=event)",
+        "issue": "event_date is stored as a free-form string ('2025-08-20 19:00'), not validated as ISO datetime. Recommend parsing to datetime and rejecting invalid formats, otherwise frontend Date() parsing may misbehave on some platforms."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_social_new_features.py",
+    "/app/test_reports/pytest/pytest_social_new_features.xml",
+    "/app/test_reports/pytest/test_social_new_features_output.log"
+  ],
+  "action_items": [
+    "Add /app/memory/test_credentials.md entries for Merchant (0509999999/merchant2025) and Driver (0540001111/driver1234) — only Customer + Chamber are documented today.",
+    "(Optional, minor) Validate option_index range and pid existence in POST /api/social/posts/{pid}/vote to prevent silent creation of non-existent poll_options indices.",
+    "(Optional, minor) Reject type=poll with fewer than 2 poll_options on POST /api/merchant/social/posts.",
+    "(Optional, minor) Parse event_date to ISO datetime and reject invalid formats."
+  ],
+  "critical_code_review_comments": [
+    "✓ Seed for driver is idempotent: on subsequent boots it resets password_hash and role and ensures the drivers collection row exists (server.py:1977-2011).",
+    "✓ POST /api/merchant/social/posts initializes poll_options votes=0 (server.py:1118-1119), expires_at=+24h ISO for stories (server.py:1125-1127), and stores event_date/event_location for events (server.py:1122-1124).",
+    "✓ POST /api/social/posts/{pid}/vote correctly handles three cases: first vote ($inc +1), switch ($inc -1 old, +1 new + update vote doc), already voted (early return 'Already voted'). Verified end-to-end via GET /social/posts vote-count deltas.",
+    "✓ GET /api/social/stories filters to type=='story' AND (expires_at>now OR not exists). Returns only non-expired stories. Newly created story present in list.",
+    "✓ Multi-images: when 'images' provided, doc stores the array verbatim; when only legacy 'image' provided, images falls back to [image]. Length-3 array preserved on round-trip.",
+    "✓ Empty-body validation: text=='' AND no image AND no images AND type=='post' returns 400 'Post must have text or image'.",
+    "✓ Role guard: customer token receives 403 on POST /api/merchant/social/posts.",
+    "⚠ Minor: option_index in /vote is not bounds-checked (see backend_issues.minor).",
+    "⚠ Minor: GET /api/social/posts returns ALL types including expired stories — only the /stories endpoint enforces expiry."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_social_new_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "not tested (backend-only request per review)"
+  },
+  "seed_data_creation": "Tests create posts with 'TEST_' prefix via the merchant endpoint. The driver account is seeded by server startup (server.py:1976-2011) and verified idempotent. No manual DB seeding required.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 6 review-requested NEW social/auth features verified end-to-end against the public preview URL with 13/13 pytest cases passing in /app/backend/tests/test_social_new_features.py. Covers: driver login + role, all 5 merchant post types (post/poll/question/event/story) with their type-specific fields, /api/social/stories filtering, poll voting full lifecycle (first vote → switch → already voted) with vote-count delta verification, multi-images persistence, empty-body 400 validation, and customer role-guard 403. Minor non-blocking observations recorded in backend_issues.minor (no bounds-check on option_index, /social/posts not filtering stories, no poll_options length requirement, event_date free-form string). No retest needed.",
+  "rca_of_issue": "No bugs found. Previous iteration's driver-login failure has been resolved by the new idempotent driver seeder at server.py:1976-2011, which both inserts the user when missing and resets password_hash/role on subsequent boots so the documented credentials always work."
+}

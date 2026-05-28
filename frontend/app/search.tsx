@@ -10,12 +10,13 @@ const CARD_W = (width - 56) / 2;
 
 export default function SearchScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ category?: string; categoryName?: string }>();
+  const params = useLocalSearchParams<{ category?: string; categoryName?: string; condition?: string }>();
   const { apiCall } = useAuth();
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCat, setSelectedCat] = useState(params.category || '');
+  const [conditionFilter, setConditionFilter] = useState(params.condition || '');
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
 
@@ -31,9 +32,12 @@ export default function SearchScreen() {
       if (query) url += `&search=${encodeURIComponent(query)}`;
       const catId = cat !== undefined ? cat : selectedCat;
       if (catId) url += `&category=${catId}`;
+      if (conditionFilter) url += `&condition=${conditionFilter}`;
       const data = await apiCall(url);
-      setProducts(data.products);
-      setTotal(data.total);
+      // Client-side fallback filter on condition (in case backend doesn't filter)
+      const filtered = conditionFilter ? (data.products || []).filter((p: any) => p.condition === conditionFilter) : (data.products || []);
+      setProducts(filtered);
+      setTotal(conditionFilter ? filtered.length : (data.total || filtered.length));
     } catch (e) { console.log(e); } finally { setLoading(false); }
   };
 
