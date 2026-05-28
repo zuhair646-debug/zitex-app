@@ -15,13 +15,11 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!phone || !password) { setError('Please fill all fields'); return; }
+    if (!phone || !password) { setError('يرجى ملء جميع الحقول'); return; }
     setLoading(true); setError('');
     try {
-      await login(phone, password);
-      // Check user role after login
-      const userData = await apiCall('/api/auth/me');
-      const role = userData?.user?.role;
+      const userData = await login(phone, password);
+      const role = userData?.role;
       if (role === 'chamber') {
         router.replace('/chamber');
       } else if (role === 'merchant') {
@@ -32,7 +30,11 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
       }
     } catch (e: any) {
-      setError(e.message || 'Login error');
+      const msg = e.message || 'تعذر تسجيل الدخول';
+      // Translate common backend errors to Arabic
+      if (msg.includes('credential') || msg.includes('Invalid')) setError('رقم الجوال أو كلمة المرور غير صحيحة');
+      else if (msg.includes('Network')) setError('تعذر الاتصال بالخادم - تحقق من الإنترنت');
+      else setError(msg);
     } finally { setLoading(false); }
   };
 

@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState, createContext, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
@@ -20,7 +20,7 @@ type AuthContextType = {
   user: User;
   token: string | null;
   loading: boolean;
-  login: (phone: string, password: string) => Promise<void>;
+  login: (phone: string, password: string) => Promise<any>;
   register: (phone: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -34,6 +34,8 @@ export default function RootLayout() {
   const [user, setUser] = useState<User>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const segments = useSegments();
 
   const apiCall = async (path: string, options: RequestInit = {}) => {
     const headers: any = { 'Content-Type': 'application/json', ...options.headers };
@@ -71,6 +73,7 @@ export default function RootLayout() {
     await AsyncStorage.setItem('token', data.token);
     setToken(data.token);
     setUser(data.user);
+    return data.user;
   };
 
   const register = async (phone: string, password: string, name: string) => {
@@ -80,6 +83,7 @@ export default function RootLayout() {
     await AsyncStorage.setItem('token', data.token);
     setToken(data.token);
     setUser(data.user);
+    return data.user;
   };
 
   const logout = async () => {
@@ -94,6 +98,23 @@ export default function RootLayout() {
       setUser(data.user);
     } catch {}
   };
+
+  // ── Role-based auto-redirect ──
+  // Ensures merchant/driver/chamber never land in the customer (tabs) area
+  useEffect(() => {
+    if (loading || !user || !user.role) return;
+    const inTabs = segments[0] === '(tabs)';
+    const role = user.role;
+    if (role === 'merchant' && segments[0] !== 'merchant') {
+      // Allow merchant to navigate to customer-facing screens explicitly (like product, search, cart)
+      // BUT redirect from (tabs) home which means landing page
+      if (inTabs) router.replace('/merchant');
+    } else if (role === 'driver' && segments[0] !== 'driver') {
+      if (inTabs) router.replace('/driver');
+    } else if (role === 'chamber' && segments[0] !== 'chamber') {
+      if (inTabs) router.replace('/chamber');
+    }
+  }, [user, segments, loading]);
 
   return (
     <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, apiCall }}>
