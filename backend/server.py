@@ -920,25 +920,27 @@ def require_chamber(user):
         raise HTTPException(status_code=403, detail="Chamber access only")
 
 # ─── Support / Store Contact Info (public) ───
+SUPPORT_DEFAULTS = {
+    "phone": "0500000000",
+    "whatsapp": "966500000000",
+    "email": "support@zitex.sa",
+    "instagram": "zitex_official",
+    "twitter": "zitex_official",
+    "tiktok": "",
+    "snapchat": "",
+    "telegram": "",
+    "address": "الرياض، المملكة العربية السعودية",
+    "working_hours": "السبت - الخميس: 9 ص - 11 م",
+    "contact_via_social_first": True,
+}
+
 @api_router.get("/store/support")
 async def get_support_info():
-    s = await db.settings.find_one({"key": "support"})
-    if not s:
-        s = {
-            "phone": "0500000000",
-            "whatsapp": "966500000000",
-            "email": "support@zitex.sa",
-            "instagram": "zitex_official",
-            "twitter": "zitex_official",
-            "tiktok": "",
-            "snapchat": "",
-            "telegram": "",
-            "address": "الرياض، المملكة العربية السعودية",
-            "working_hours": "السبت - الخميس: 9 ص - 11 م",
-            "contact_via_social_first": True,
-        }
+    s = await db.settings.find_one({"key": "support"}) or {}
     s.pop("_id", None); s.pop("key", None)
-    return s
+    # Merge stored values over defaults so every field is always present
+    merged = {**SUPPORT_DEFAULTS, **s}
+    return merged
 
 @api_router.put("/merchant/store/support")
 async def update_support_info(request: Request, user=Depends(get_current_user)):
@@ -2568,6 +2570,85 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ─── Employee Permission Enforcement Middleware ───
+# Maps URL path segments to permission keys. Owner (role="merchant") always allowed.
+# Employees must have either "all" or the specific perm to access /api/merchant/* routes.
+_PERM_MAP = [
+    ("/api/merchant/products",      "products"),
+    ("/api/merchant/orders",        "orders"),
+    ("/api/merchant/social",        "social"),
+    ("/api/merchant/competitions",  "competitions"),
+    ("/api/merchant/services",      "services"),
+    ("/api/merchant/bookings",      "services"),
+    ("/api/merchant/branches",      "branches"),
+    ("/api/merchant/drivers",       "drivers"),
+    ("/api/merchant/delivery",      "delivery"),
+    ("/api/merchant/banners",       "banners"),
+    ("/api/merchant/customers",     "customers"),
+    ("/api/merchant/store/support", "settings"),
+    ("/api/merchant/support",       "support"),
+    ("/api/merchant/employees",     "_owner_only"),  # only owner
+    ("/api/merchant/employee-perms","_owner_only"),
+    ("/api/merchant/chamber-employees","_owner_only"),
+]
+
+@app.middleware("http")
+async def enforce_employee_perms(request: Request, call_next):
+    path = request.url.path
+    # Only enforce on /api/merchant/* paths
+    if not path.startswith("/api/merchant/") and path != "/api/merchant":
+        return await call_next(request)
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return await call_next(request)  # let endpoint handle 401
+    try:
+        payload = jwt.decode(auth[7:], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user = await db.users.find_one({"_id": ObjectId(payload["sub"])})
+    except Exception:
+        return await call_next(request)  # let endpoint handle invalid auth
+    if not user or user.get("role") != "employee":
+        return await call_next(request)
+    # Resolve required perm (longest prefix match)
+    required = None
+    best_len = 0
+    for prefix, perm in _PERM_MAP:
+        if path.startswith(prefix) and len(prefix) > best_len:
+            required = perm
+            best_len = len(prefix)
+    perms = user.get("permissions", [])
+    if required == "_owner_only":
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=403, content={"detail": "هذه العملية للمالك فقط"})
+    if required and "all" not in perms and required not in perms:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=403, content={"detail": f"يتطلب صلاحية: {required}"})
+    return await call_next(request)
+
+
+# ─── Add GET endpoint for merchant social posts (gated by 'social' perm via middleware) ───
+@api_router.get("/merchant/social/posts")
+async def merchant_list_posts(user=Depends(get_current_user)):
+    require_merchant(user)
+    posts = await db.social_posts.find({}).sort("created_at", -1).to_list(200)
+    return [{
+        "id": str(p["_id"]),
+        "type": p.get("type", "post"),
+        "text": p.get("text", ""),
+        "image": p.get("image"),
+        "images": p.get("images", []),
+        "author": p.get("author", "Zitex"),
+        "likes": p.get("likes", 0),
+        "comments": p.get("comments", 0),
+        "views": p.get("views", 0),
+        "poll_options": p.get("poll_options", []),
+        "event_date": p.get("event_date"),
+        "event_location": p.get("event_location"),
+        "created_at": p.get("created_at", ""),
+    } for p in posts]
+
+# Need to re-include router so new endpoint is registered
+app.include_router(api_router)
 
 @app.on_event("startup")
 async def startup():

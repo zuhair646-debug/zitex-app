@@ -5,3 +5,5 @@ __pycache__/
 dist/
 .cache/
 zitex-upload-*.json
+.metro-cache/
+frontend/.metro-cache/
