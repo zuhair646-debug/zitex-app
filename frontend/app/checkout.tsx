@@ -19,15 +19,43 @@ export default function CheckoutScreen() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
+  const [deliveryFee, setDeliveryFee] = useState(0);
+  const [nearestBranch, setNearestBranch] = useState<any>(null);
+  const [userLat, setUserLat] = useState(0);
+  const [userLng, setUserLng] = useState(0);
 
   useEffect(() => {
     (async () => {
       try {
-        const [a, c] = await Promise.all([apiCall('/api/addresses'), apiCall('/api/cart')]);
+        const [a, c, me] = await Promise.all([apiCall('/api/addresses'), apiCall('/api/cart'), apiCall('/api/auth/me')]);
         setAddresses(a); setCart(c);
+        const lat = me?.user?.default_lat || 0;
+        const lng = me?.user?.default_lng || 0;
+        setUserLat(lat); setUserLng(lng);
+        if (lat && lng) {
+          try {
+            const nb = await apiCall(`/api/branches/nearest?lat=${lat}&lng=${lng}`);
+            setNearestBranch(nb.branch);
+            const fee = await apiCall('/api/delivery/calculate-fee', { method: 'POST', body: JSON.stringify({ distance_km: nb.distance_km || 0, lat, lng, delivery_type: 'standard' }) });
+            setDeliveryFee(fee.delivery_fee || 0);
+          } catch {}
+        }
       } catch {} finally { setLoading(false); }
     })();
   }, []);
+
+  // Recalculate fee when delivery type changes
+  useEffect(() => {
+    if (userLat && userLng) {
+      (async () => {
+        try {
+          const dist = nearestBranch?.distance_km || 0;
+          const fee = await apiCall('/api/delivery/calculate-fee', { method: 'POST', body: JSON.stringify({ distance_km: dist, lat: userLat, lng: userLng, delivery_type: deliveryType === 'express' ? 'same_day' : 'standard' }) });
+          setDeliveryFee(fee.delivery_fee || 0);
+        } catch {}
+      })();
+    }
+  }, [deliveryType]);
 
   const applyCoupon = async () => {
     if (!couponCode) return;
@@ -55,7 +83,7 @@ export default function CheckoutScreen() {
   };
 
   const subtotal = cart.reduce((a, i) => a + ((i.product?.discount_price || i.product?.price || 0) * i.quantity), 0);
-  const deliveryCost = deliveryType === 'express' ? 25 : 15;
+  const deliveryCost = deliveryFee || (deliveryType === 'express' ? 25 : 15);
   const tax = Math.round(subtotal * 0.15);
   const total = subtotal + tax + deliveryCost - couponDiscount;
 
