@@ -794,7 +794,13 @@ async def payment_webhook(request: Request):
 # ─── Social Posts ───
 @api_router.get("/social/posts")
 async def get_social_posts():
-    posts = await db.social_posts.find({}).sort("created_at", -1).to_list(30)
+    now = datetime.now(timezone.utc).isoformat()
+    # Filter out expired stories from main feed
+    query = {"$or": [
+        {"type": {"$ne": "story"}},
+        {"type": "story", "$or": [{"expires_at": {"$gt": now}}, {"expires_at": {"$exists": False}}]}
+    ]}
+    posts = await db.social_posts.find(query).sort("created_at", -1).to_list(30)
     return [serialize_doc(p) for p in posts]
 
 @api_router.post("/social/posts/{post_id}/like")
@@ -1116,6 +1122,8 @@ async def merchant_create_post(data: SocialPostInput, user=Depends(get_current_u
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     if data.type == "poll":
+        if not data.poll_options or len(data.poll_options) < 2:
+            raise HTTPException(status_code=400, detail="Poll must have at least 2 options")
         doc["poll_options"] = [{"text": o.get("text", ""), "votes": 0} for o in data.poll_options]
     if data.type == "question":
         doc["question"] = data.question or data.text
@@ -1141,6 +1149,13 @@ async def merchant_delete_post(pid: str, user=Depends(get_current_user)):
 async def vote_poll(pid: str, request: Request, user=Depends(get_current_user)):
     body = await request.json()
     option_index = body.get("option_index", 0)
+    # Validate bounds
+    post = await db.social_posts.find_one({"_id": ObjectId(pid)})
+    if not post or post.get("type") != "poll":
+        raise HTTPException(status_code=404, detail="Poll not found")
+    options = post.get("poll_options", [])
+    if not isinstance(option_index, int) or option_index < 0 or option_index >= len(options):
+        raise HTTPException(status_code=400, detail="Invalid option_index")
     # Prevent double voting
     existing = await db.social_votes.find_one({"post_id": pid, "user_id": user["id"]})
     if existing:
