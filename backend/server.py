@@ -166,7 +166,13 @@ async def get_products(category: Optional[str] = None, brand: Optional[str] = No
     if brand:
         query["brand_id"] = brand
     if condition:
-        query["condition"] = condition
+        # "used" matches any used variant (used, used_3months, used_6months, etc.)
+        if condition == "used":
+            query["condition"] = {"$regex": "^used", "$options": "i"}
+        elif condition == "new":
+            query["condition"] = "new"
+        else:
+            query["condition"] = condition
     if search:
         query["$or"] = [
             {"name_ar": {"$regex": search, "$options": "i"}},
@@ -1857,6 +1863,8 @@ async def seed_data():
 
     # Products
     if await db.products.count_documents({}) == 0:
+        DEFAULT_NEW_WARRANTY = {"warranty_days": 365, "warranty_type": "الوكيل الرسمي"}
+        DEFAULT_USED_WARRANTY = {"warranty_days": 90, "warranty_type": "ضمان المتجر"}
         products = [
             {
                 "name_ar": "آيفون 15 برو ماكس", "name_en": "iPhone 15 Pro Max",

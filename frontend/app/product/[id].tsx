@@ -157,8 +157,8 @@ export default function ProductDetailScreen() {
             </View>
 
             <View style={styles.availItem}>
-              <Ionicons name={product.condition === 'used' ? 'refresh-circle' : 'sparkles'} size={20} color={product.condition === 'used' ? '#F59E0B' : '#10B981'} />
-              <Text style={styles.availText}>الحالة: {product.condition === 'used' ? 'مستعمل (Used)' : 'جديد (New)'}</Text>
+              <Ionicons name={product.condition && product.condition !== 'new' ? 'refresh-circle' : 'sparkles'} size={20} color={product.condition && product.condition !== 'new' ? '#F59E0B' : '#10B981'} />
+              <Text style={styles.availText}>الحالة: {product.condition === 'new' || !product.condition ? 'جديد (New)' : product.condition === 'used_3months' ? 'مستعمل - 3 أشهر' : product.condition === 'used_6months' ? 'مستعمل - 6 أشهر' : 'مستعمل (Used)'}</Text>
             </View>
 
             {product.warranty_days > 0 || product.warranty ? (

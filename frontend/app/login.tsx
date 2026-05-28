@@ -53,26 +53,26 @@ export default function LoginScreen() {
           {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
 
           <View style={styles.inputWrap}>
-            <TextInput testID="login-phone-input" style={styles.input} placeholder="Phone number" placeholderTextColor="#A1A1AA" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+            <TextInput testID="login-phone-input" style={styles.input} placeholder="رقم الجوال" placeholderTextColor="#A1A1AA" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
           </View>
 
           <View style={styles.inputWrap}>
-            <TextInput testID="login-password-input" style={styles.input} placeholder="Password" placeholderTextColor="#A1A1AA" value={password} onChangeText={setPassword} secureTextEntry={!showPass} />
+            <TextInput testID="login-password-input" style={styles.input} placeholder="كلمة المرور" placeholderTextColor="#A1A1AA" value={password} onChangeText={setPassword} secureTextEntry={!showPass} />
             <TouchableOpacity testID="toggle-password-btn" onPress={() => setShowPass(!showPass)} style={styles.eyeBtn}>
               <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={20} color="#A1A1AA" />
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.forgotLink}><Text style={styles.forgotText}>Forget password!</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.forgotLink}><Text style={styles.forgotText}>نسيت كلمة المرور؟</Text></TouchableOpacity>
 
           <TouchableOpacity testID="login-submit-button" style={styles.btn} onPress={handleLogin} disabled={loading}>
-            {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnText}>Sign in</Text>}
+            {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnText}>تسجيل الدخول</Text>}
           </TouchableOpacity>
 
           <View style={styles.bottomRow}>
-            <Text style={styles.bottomText}>You don't have account?</Text>
+            <Text style={styles.bottomText}>ليس لديك حساب؟</Text>
             <TouchableOpacity testID="go-to-register-btn" onPress={() => router.push('/register')}>
-              <Text style={styles.linkText}>Sign Up</Text>
+              <Text style={styles.linkText}>إنشاء حساب</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
