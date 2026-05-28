@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions, Modal, RefreshControl, ActivityIndicator, TextInput, Alert, FlatList, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions, Modal, RefreshControl, ActivityIndicator, TextInput, Alert, FlatList, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,6 +25,7 @@ export default function SocialScreen() {
   const [voted, setVoted] = useState<Record<string, number>>({});
   const [posts, setPosts] = useState<any[]>([]);
   const [stories, setStories] = useState<any[]>([]);
+  const [storeInfo, setStoreInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [storyOpen, setStoryOpen] = useState<any>(null);
@@ -36,13 +37,15 @@ export default function SocialScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [postsData, storiesData] = await Promise.all([
+      const [postsData, storiesData, supportData] = await Promise.all([
         apiCall('/api/social/posts'),
         apiCall('/api/social/stories').catch(() => []),
+        apiCall('/api/store/support').catch(() => null),
       ]);
       // Filter out stories from main feed (they're already in stories row)
       setPosts((postsData || []).filter((p: any) => p.type !== 'story'));
       setStories(storiesData || []);
+      setStoreInfo(supportData);
     } catch (e) { console.log(e); } finally { setLoading(false); setRefreshing(false); }
   }, []);
 
@@ -73,6 +76,24 @@ export default function SocialScreen() {
   const openThread = async (postId: string) => {
     setThreadPostId(postId);
     try { const d = await apiCall(`/api/social/posts/${postId}/comments`); setThreadComments(d); } catch {}
+  };
+
+  const openContact = async (type: 'whatsapp' | 'phone' | 'email' | 'instagram' | 'tiktok' | 'snapchat' | 'twitter' | 'telegram') => {
+    if (!storeInfo) return;
+    const v = storeInfo[type];
+    if (!v) { Alert.alert('غير متوفر', `لم يضف المتجر ${type} بعد`); return; }
+    let url = '';
+    switch (type) {
+      case 'whatsapp': url = `https://wa.me/${String(v).replace(/[^0-9]/g, '')}`; break;
+      case 'phone':    url = `tel:${v}`; break;
+      case 'email':    url = `mailto:${v}`; break;
+      case 'instagram':url = `https://instagram.com/${String(v).replace('@','')}`; break;
+      case 'tiktok':   url = `https://tiktok.com/@${String(v).replace('@','')}`; break;
+      case 'snapchat': url = `https://snapchat.com/add/${String(v).replace('@','')}`; break;
+      case 'twitter':  url = `https://twitter.com/${String(v).replace('@','')}`; break;
+      case 'telegram': url = `https://t.me/${String(v).replace('@','')}`; break;
+    }
+    try { await Linking.openURL(url); } catch { Alert.alert('خطأ', 'تعذر فتح الرابط'); }
   };
   const sendComment = async () => {
     if (!threadText.trim() || !threadPostId) return;
@@ -202,6 +223,63 @@ export default function SocialScreen() {
                     <Ionicons name={bookmarked.has(postId) ? 'bookmark' : 'bookmark-outline'} size={20} color={bookmarked.has(postId) ? '#8833FF' : '#52525B'} />
                   </TouchableOpacity>
                 </View>
+
+                {/* Contact merchant bar — one-tap channels */}
+                {storeInfo && (storeInfo.whatsapp || storeInfo.phone || storeInfo.email || storeInfo.instagram || storeInfo.tiktok || storeInfo.snapchat || storeInfo.twitter || storeInfo.telegram) && (
+                  <View style={s.contactBar}>
+                    <Text style={s.contactLabel}>💬 تواصل مع المتجر:</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                      {storeInfo.whatsapp && (
+                        <TouchableOpacity style={[s.chip, { backgroundColor: '#25D366' }]} onPress={() => openContact('whatsapp')}>
+                          <Ionicons name="logo-whatsapp" size={14} color="white" />
+                          <Text style={s.chipText}>WhatsApp</Text>
+                        </TouchableOpacity>
+                      )}
+                      {storeInfo.phone && (
+                        <TouchableOpacity style={[s.chip, { backgroundColor: '#3B82F6' }]} onPress={() => openContact('phone')}>
+                          <Ionicons name="call" size={14} color="white" />
+                          <Text style={s.chipText}>اتصال</Text>
+                        </TouchableOpacity>
+                      )}
+                      {storeInfo.email && (
+                        <TouchableOpacity style={[s.chip, { backgroundColor: '#EF4444' }]} onPress={() => openContact('email')}>
+                          <Ionicons name="mail" size={14} color="white" />
+                          <Text style={s.chipText}>Email</Text>
+                        </TouchableOpacity>
+                      )}
+                      {storeInfo.instagram && (
+                        <TouchableOpacity style={[s.chip, { backgroundColor: '#E1306C' }]} onPress={() => openContact('instagram')}>
+                          <Ionicons name="logo-instagram" size={14} color="white" />
+                          <Text style={s.chipText}>Instagram</Text>
+                        </TouchableOpacity>
+                      )}
+                      {storeInfo.tiktok && (
+                        <TouchableOpacity style={[s.chip, { backgroundColor: '#000' }]} onPress={() => openContact('tiktok')}>
+                          <Ionicons name="logo-tiktok" size={14} color="white" />
+                          <Text style={s.chipText}>TikTok</Text>
+                        </TouchableOpacity>
+                      )}
+                      {storeInfo.snapchat && (
+                        <TouchableOpacity style={[s.chip, { backgroundColor: '#FFC000' }]} onPress={() => openContact('snapchat')}>
+                          <Ionicons name="logo-snapchat" size={14} color="white" />
+                          <Text style={[s.chipText, { color: '#000' }]}>Snapchat</Text>
+                        </TouchableOpacity>
+                      )}
+                      {storeInfo.twitter && (
+                        <TouchableOpacity style={[s.chip, { backgroundColor: '#000' }]} onPress={() => openContact('twitter')}>
+                          <Ionicons name="logo-twitter" size={14} color="white" />
+                          <Text style={s.chipText}>X / Twitter</Text>
+                        </TouchableOpacity>
+                      )}
+                      {storeInfo.telegram && (
+                        <TouchableOpacity style={[s.chip, { backgroundColor: '#0088CC' }]} onPress={() => openContact('telegram')}>
+                          <Ionicons name="paper-plane" size={14} color="white" />
+                          <Text style={s.chipText}>Telegram</Text>
+                        </TouchableOpacity>
+                      )}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
             );
           })}
@@ -296,6 +374,11 @@ const s = StyleSheet.create({
   actionItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   actionCount: { fontSize: 12, color: '#52525B', fontWeight: '500' },
   empty: { textAlign: 'center', color: '#A1A1AA', marginTop: 40 },
+
+  contactBar: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F4F4F5' },
+  contactLabel: { fontSize: 11, color: '#71717A', fontWeight: '700', marginBottom: 6 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
+  chipText: { color: 'white', fontSize: 11, fontWeight: '700' },
 
   storyViewer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center' },
   storyClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 8 },

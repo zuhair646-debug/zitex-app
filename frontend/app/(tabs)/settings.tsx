@@ -1,14 +1,19 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { useRouter } from 'expo-router';
-import { useT } from '../../src/i18n';
+import { useT, LANGUAGES } from '../../src/i18n';
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const { t, lang, setLang } = useT();
+  const [langModal, setLangModal] = useState(false);
+  const [langSearch, setLangSearch] = useState('');
+
+  const currentLang = LANGUAGES.find(l => l.code === lang);
 
   const handleLogout = () => {
     Alert.alert(t('auth.logout'), '', [
@@ -17,12 +22,16 @@ export default function SettingsScreen() {
     ]);
   };
 
-  const toggleLang = () => {
-    Alert.alert(t('settings.changeLanguage'), '', [
-      { text: 'العربية', onPress: () => setLang('ar') },
-      { text: 'English', onPress: () => setLang('en') },
-      { text: t('common.cancel'), style: 'cancel' },
-    ]);
+  const filteredLangs = LANGUAGES.filter(l => {
+    if (!langSearch) return true;
+    const q = langSearch.toLowerCase();
+    return l.name.toLowerCase().includes(q) || l.nativeName.toLowerCase().includes(q) || l.code.includes(q);
+  });
+
+  const pickLang = async (code: any) => {
+    await setLang(code);
+    setLangModal(false);
+    setLangSearch('');
   };
 
   const MenuItem = ({ icon, label, onPress, color, badge }: { icon: string; label: string; onPress?: () => void; color?: string; badge?: string }) => (
@@ -84,7 +93,7 @@ export default function SettingsScreen() {
         <View style={styles.menuSection}>
           <MenuItem icon="storefront" label={lang === 'ar' ? 'عن المتجر' : 'About Store'} color="#3366FF" onPress={() => router.push('/about-store')} />
           <MenuItem icon="headset" label={lang === 'ar' ? 'الدعم' : 'Support'} color="#10B981" onPress={() => router.push('/support')} />
-          <MenuItem icon="language" label={t('settings.language')} color="#9333EA" badge={lang === 'ar' ? 'العربية' : 'English'} onPress={toggleLang} />
+          <MenuItem icon="language" label={t('settings.language')} color="#9333EA" badge={`${currentLang?.flag || ''} ${currentLang?.nativeName || ''}`} onPress={() => setLangModal(true)} />
         </View>
 
         <View style={styles.menuSection}>
@@ -99,6 +108,34 @@ export default function SettingsScreen() {
 
         <View style={{ height: 32 }} />
       </ScrollView>
+
+      {/* Language Picker Modal */}
+      <Modal visible={langModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setLangModal(false)}>
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.langHeader}>
+            <TouchableOpacity onPress={() => setLangModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+            <Text style={styles.langTitle}>🌐 {t('settings.changeLanguage')}</Text>
+            <View style={{ width: 24 }} />
+          </View>
+          <View style={styles.searchBox}>
+            <Ionicons name="search" size={18} color="#A1A1AA" />
+            <TextInput style={styles.searchInput} value={langSearch} onChangeText={setLangSearch} placeholder={lang === 'ar' ? 'ابحث عن لغة...' : 'Search language...'} placeholderTextColor="#A1A1AA" />
+          </View>
+          <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+            {filteredLangs.map(l => (
+              <TouchableOpacity key={l.code} style={[styles.langRow, lang === l.code && styles.langRowActive]} onPress={() => pickLang(l.code)}>
+                <Text style={styles.langFlag}>{l.flag}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.langNative}>{l.nativeName}</Text>
+                  <Text style={styles.langEng}>{l.name}</Text>
+                </View>
+                {lang === l.code && <Ionicons name="checkmark-circle" size={22} color="#8833FF" />}
+              </TouchableOpacity>
+            ))}
+            {filteredLangs.length === 0 && <Text style={styles.noResult}>{lang === 'ar' ? 'لا توجد نتائج' : 'No results'}</Text>}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -125,4 +162,14 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 11, color: '#8833FF', fontWeight: '600' },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, paddingVertical: 16, borderRadius: 14, backgroundColor: '#FEF2F2', gap: 8 },
   logoutText: { fontSize: 16, fontWeight: '600', color: '#EF4444' },
+  langHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#F4F4F5' },
+  langTitle: { fontSize: 17, fontWeight: '800', color: '#0A0A0A' },
+  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginVertical: 12, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#F4F4F5', borderRadius: 12 },
+  searchInput: { flex: 1, fontSize: 14, color: '#0A0A0A', padding: 0 },
+  langRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#F9F9FB' },
+  langRowActive: { backgroundColor: '#EFE6FF' },
+  langFlag: { fontSize: 28 },
+  langNative: { fontSize: 16, fontWeight: '700', color: '#0A0A0A' },
+  langEng: { fontSize: 12, color: '#71717A', marginTop: 1 },
+  noResult: { textAlign: 'center', color: '#A1A1AA', marginTop: 40, fontSize: 14 },
 });

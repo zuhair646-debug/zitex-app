@@ -1,0 +1,43 @@
+{
+  "summary": "Re-verified merchant employees & store support endpoints with /app/backend/tests/test_employees_support_v2.py (12 ordered tests). 9/12 passed. 3 failed exposing real backend bugs: (1) GET /api/store/support returns only the keys persisted in DB instead of always returning the full 11-field contract (missing fields after a partial PUT). (2) /api/merchant/social/posts has no GET handler (only POST/DELETE) so the spec's step #9 returns 405. (3) employee permission gating is broken: /api/merchant/products (and almost all other /api/merchant/* endpoints) call only require_merchant() and never require_employee_perm(), so an employee with permissions=['social','banners'] could still list/create/update/delete products (test got 200 instead of 403). The PUT /merchant/store/support is the ONLY endpoint that actually enforces per-permission checks.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/merchant/products (and all other /api/merchant/* except PUT /merchant/store/support)", "issue": "Employee role bypasses permission check. require_merchant() only verifies role is merchant OR employee – it never consults user.permissions. An employee with perms=['social'] can hit /merchant/products, /merchant/orders, /merchant/branches, etc. and got 200 in tests. require_employee_perm() exists at server.py:908 but is invoked only once (line 946). Apply require_employee_perm(user,'<perm>') after require_merchant on every merchant endpoint.", "priority": "CRITICAL"},
+      {"endpoint": "GET /api/store/support", "issue": "Does not merge defaults with stored settings. After a partial PUT (e.g., only whatsapp/email/contact_via_social_first), subsequent GET returns ONLY those 3 fields. Spec requires all 11 fields (whatsapp, phone, email, instagram, twitter, tiktok, snapchat, telegram, address, working_hours, contact_via_social_first) to always be present. Fix server.py:923-941 – build a defaults dict and merge stored values into it before returning.", "priority": "HIGH"},
+      {"endpoint": "GET /api/merchant/social/posts", "issue": "Endpoint not implemented (only POST at line 1298 and DELETE at 1328). Spec step #9 expects an employee with 'social' perm to GET this list, but the server returns 405 Method Not Allowed. Either add a GET handler returning the merchant's posts, or correct the spec/UI to call /api/social/posts instead.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "PUT /api/merchant/store/support", "issue": "Body is accepted as raw dict (await request.json()) without Pydantic validation – any arbitrary keys are persisted into the settings doc, which is also why partial updates leave stale state."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_employees_support_v2.py",
+    "/app/test_reports/pytest/employees_support_v2.xml"
+  ],
+  "action_items": [
+    "Add require_employee_perm(user, <perm>) call after require_merchant(user) on every /api/merchant/* endpoint (products→'products', orders→'orders', social/posts→'social', banners→'banners', branches→'branches', drivers/delivery→'drivers'/'delivery', customers→'customers', settings/store→'settings').",
+    "Refactor GET /api/store/support (server.py:923) to always start with the full defaults dict and overlay stored settings on top so all 11 fields are guaranteed in the response.",
+    "Implement GET /api/merchant/social/posts that returns posts for the current merchant (gated by require_employee_perm 'social'), OR adjust the iteration spec/frontend to use the public GET /api/social/posts.",
+    "Optionally promote the support PUT body to a Pydantic model (SupportInfoInput) to whitelist fields and avoid stale partial-doc state."
+  ],
+  "critical_code_review_comments": [
+    "server.py:904-916 – require_merchant treats merchant and employee identically; combined with the fact that require_employee_perm is invoked exactly once in the whole file, the employee permission model is effectively unused (only role gating works).",
+    "server.py:923-941 – defaults are only used when no settings doc exists. After the first PUT (which upserts $set: body) the doc lacks fields not in body, so the GET response shrinks. Always merge.",
+    "server.py:947 – upsert uses {**body, 'key':'support'} without restricting to known keys; junk fields end up in DB."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_employees_support_v2.py (new)"
+  ],
+  "success_rate": {"backend": "75% (9/12)", "frontend": "n/a"},
+  "seed_data_creation": "Employee with phone 0500099999 / emp1234 was created and then deleted during the run (idempotent cleanup fixture). No leftover state expected.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "After fixes, rerun: pytest /app/backend/tests/test_employees_support_v2.py -v. Pay particular attention to test_09 (need GET handler) and test_10 (must return 403 because employee lacks 'products' perm). Also re-confirm test_02 returns all 11 support fields even after multiple partial PUTs.",
+  "rca_of_issue": "Test 02 failure RCA: A previous PUT (from this or prior test runs) wrote only a subset of keys into settings collection; the GET endpoint returns that partial doc verbatim instead of layering it over a complete defaults template. Test 09 RCA: no GET route registered for /api/merchant/social/posts – FastAPI returns 405 because POST/DELETE exist on the same path. Test 10 RCA: GET /api/merchant/products at server.py:1123 calls require_merchant(user) which permits role=='employee' regardless of user['permissions'], so an employee whose perms are ['social','banners'] is allowed through. Mitigation: enforce require_employee_perm(user,'products') on all product endpoints (and equivalent on every other /merchant/* route)."
+}
