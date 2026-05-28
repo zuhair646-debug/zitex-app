@@ -3,15 +3,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { useRouter } from 'expo-router';
+import { useT } from '../../src/i18n';
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const { t, lang, setLang } = useT();
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Confirm', style: 'destructive', onPress: async () => { await logout(); router.replace('/login'); } },
+    Alert.alert(t('auth.logout'), '', [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.confirm'), style: 'destructive', onPress: async () => { await logout(); router.replace('/login'); } },
+    ]);
+  };
+
+  const toggleLang = () => {
+    Alert.alert(t('settings.changeLanguage'), '', [
+      { text: 'العربية', onPress: () => setLang('ar') },
+      { text: 'English', onPress: () => setLang('en') },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   };
 
@@ -31,7 +41,7 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Text style={styles.pageTitle}>My Account</Text>
+        <Text style={styles.pageTitle}>{t('common.profile')}</Text>
 
         {/* Profile Card */}
         <TouchableOpacity testID="profile-card" style={styles.profileCard}>
@@ -45,44 +55,46 @@ export default function SettingsScreen() {
           <Ionicons name="chevron-forward" size={20} color="#A1A1AA" />
         </TouchableOpacity>
 
-        {/* Wallet */}
-        <View style={styles.walletCard}>
+        {/* Wallet + Points */}
+        <TouchableOpacity style={styles.walletCard} onPress={() => router.push('/points' as any)}>
           <View style={styles.walletItem}>
             <Text style={styles.walletValue}>{user?.points || 0}</Text>
-            <Text style={styles.walletLabel}>Points</Text>
+            <Text style={styles.walletLabel}>{t('points.title')}</Text>
           </View>
           <View style={styles.walletDivider} />
           <View style={styles.walletItem}>
-            <Text style={styles.walletValue}>{user?.wallet_balance || 0} SAR</Text>
-            <Text style={styles.walletLabel}>Balance</Text>
+            <Text style={styles.walletValue}>{user?.wallet_balance || 0} {t('common.currency')}</Text>
+            <Text style={styles.walletLabel}>{t('cart.total')}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
-        {/* Menu */}
+        {/* Quick actions */}
         <View style={styles.menuSection}>
-          <MenuItem icon="cart" label="My Orders" onPress={() => router.push('/orders')} />
-          <MenuItem icon="receipt" label="Invoices" onPress={() => router.push('/invoices')} />
-          <MenuItem icon="heart" label="Favorites" onPress={() => router.push('/favorites')} />
-          <MenuItem icon="shield-checkmark" label="Warranties" onPress={() => router.push('/warranties')} />
-          <MenuItem icon="location" label="Addresses" onPress={() => router.push('/addresses')} />
-          <MenuItem icon="wallet" label="Wallet" onPress={() => router.push('/wallet')} />
-        </View>
-
-        <View style={styles.menuSection}>
-          <MenuItem icon="storefront" label="About Store" color="#3366FF" onPress={() => router.push('/about-store')} />
-          <MenuItem icon="headset" label="Support" color="#10B981" onPress={() => router.push('/support')} />
-          <MenuItem icon="notifications" label="Notification Settings" color="#F59E0B" />
-          <MenuItem icon="language" label="Language" color="#9333EA" badge="English" />
+          <MenuItem icon="cart" label={t('orders.title')} onPress={() => router.push('/orders')} />
+          <MenuItem icon="people" label={t('gb.title')} color="#EC4899" onPress={() => router.push('/group-buys' as any)} />
+          <MenuItem icon="medal" label={t('points.title')} color="#F59E0B" onPress={() => router.push('/points' as any)} />
+          <MenuItem icon="notifications" label={t('notif.title')} color="#3B82F6" onPress={() => router.push('/notifications' as any)} />
+          <MenuItem icon="heart" label="Favorites / المفضلة" onPress={() => router.push('/favorites')} />
+          <MenuItem icon="shield-checkmark" label={t('product.warranty')} onPress={() => router.push('/warranties')} />
+          <MenuItem icon="location" label={lang === 'ar' ? 'العناوين' : 'Addresses'} onPress={() => router.push('/addresses')} />
+          <MenuItem icon="receipt" label={lang === 'ar' ? 'الفواتير' : 'Invoices'} onPress={() => router.push('/invoices')} />
+          <MenuItem icon="wallet" label={lang === 'ar' ? 'المحفظة' : 'Wallet'} onPress={() => router.push('/wallet')} />
         </View>
 
         <View style={styles.menuSection}>
-          <MenuItem icon="document-text" label="Return Policy" color="#52525B" />
-          <MenuItem icon="shield-checkmark" label="Terms & Conditions" color="#52525B" />
+          <MenuItem icon="storefront" label={lang === 'ar' ? 'عن المتجر' : 'About Store'} color="#3366FF" onPress={() => router.push('/about-store')} />
+          <MenuItem icon="headset" label={lang === 'ar' ? 'الدعم' : 'Support'} color="#10B981" onPress={() => router.push('/support')} />
+          <MenuItem icon="language" label={t('settings.language')} color="#9333EA" badge={lang === 'ar' ? 'العربية' : 'English'} onPress={toggleLang} />
+        </View>
+
+        <View style={styles.menuSection}>
+          <MenuItem icon="document-text" label={lang === 'ar' ? 'سياسة الإرجاع' : 'Return Policy'} color="#52525B" />
+          <MenuItem icon="shield-checkmark" label={lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'} color="#52525B" />
         </View>
 
         <TouchableOpacity testID="logout-button" style={styles.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-          <Text style={styles.logoutText}>Sign Out</Text>
+          <Text style={styles.logoutText}>{t('auth.logout')}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 32 }} />

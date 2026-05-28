@@ -2,6 +2,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState, createContext, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
+import { I18nProvider } from '../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -117,6 +118,7 @@ export default function RootLayout() {
   }, [user, segments, loading]);
 
   return (
+    <I18nProvider>
     <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, apiCall }}>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
@@ -142,7 +144,10 @@ export default function RootLayout() {
         <Stack.Screen name="merchant" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="driver" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="draw" options={{ headerShown: false }} />
+        <Stack.Screen name="group-buys" options={{ presentation: 'card' }} />
+        <Stack.Screen name="points" options={{ presentation: 'card' }} />
       </Stack>
     </AuthContext.Provider>
+    </I18nProvider>
   );
 }

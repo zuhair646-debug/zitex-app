@@ -1,0 +1,45 @@
+{
+  "summary": "Iteration-10 backend testing of NEW Zitex features: Loyalty Points (earn+redeem+history), Group Buy CRUD (list/join/merchant create/delete), Notifications (list/read/read-all/push-token), Order-status auto-notify, and merchant-only permission checks. All 15 executed tests passed (1 skipped on duplicate-join because customer was already a participant from a prior run — expected idempotent behavior). Tests run against local backend (http://localhost:8001) because frontend EXPO_PUBLIC_BACKEND_URL still points to an older Railway deploy that does NOT include these new endpoints.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/me", "issue": "Returns wrapped {\"user\": {...}} object — inconsistent with /api/profile and earn-time order response which return flat user/order objects. Frontend code reading me.wallet_balance directly will see undefined."},
+      {"endpoint": "/api/orders (POST)", "issue": "points_earned key is omitted when subtotal < 10 SAR (i.e. earned == 0). Spec says response should include the field; consider always returning 0 for stable contracts."},
+      {"endpoint": "/api/group-buys/{gid}/join", "issue": "Arabic error string is \"انضممت مسبقاً\" but review request expected substring \"joined مسبقاً\". Functionally fine, but test scripts comparing the English token need to use the Arabic substring."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Frontend → backend new endpoints", "issue": "frontend/.env EXPO_PUBLIC_BACKEND_URL=https://api-production-df2ce.up.railway.app does NOT yet include the iteration-10 endpoints (/api/group-buys, /api/points/*, /api/notifications/*). Curl on Railway returns 404 for /api/group-buys. Mobile UI will fail if pointed at production until Railway is redeployed.", "affected_testIDs": []}
+    ],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_loyalty_groupbuy_notifications.py",
+    "/app/test_reports/pytest/iter10_loyalty_results.xml"
+  ],
+  "action_items": [
+    "Redeploy Railway backend (or repoint EXPO_PUBLIC_BACKEND_URL) so the mobile client can reach the new /api/group-buys, /api/points/*, /api/notifications/* and /api/push-tokens/* endpoints.",
+    "Make /api/auth/me return a flat user dict (consistent with /api/profile) OR document the {user:{...}} wrapper so frontend reads me.user.wallet_balance.",
+    "Always include points_earned in POST /api/orders response (default to 0 when subtotal < 10 SAR) for a stable contract.",
+    "If you want the 400 message string changed to match the spec verbatim (\"joined مسبقاً\"), update the HTTPException detail in /api/group-buys/{gid}/join."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 2437 lines — exceeds the 700-line recommended size. Split into modules (auth, orders, loyalty, group_buys, notifications, merchant, ...).",
+    "create_notification is fire-and-forget but is wrapped in try/except only at the call site; if the notifications collection write fails, the order still succeeds (good), but failures are only logged at warning level — fine for now.",
+    "group_buys.list_group_buys does not exclude `product_id` after enriching `product`. Minor; harmless to clients.",
+    "Notification title \"تم استلام طلبك ✅\" embeds an emoji. Substring filtering still works, but consider keeping a stable, machine-readable `data.type` key (already done) for client-side categorization.",
+    "/points/redeem allows redemption when points are exactly == requested but does not enforce a minimum (e.g. 10). Consider business rule (10 points = 1 SAR minimum unit)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_loyalty_groupbuy_notifications.py (new)"
+  ],
+  "success_rate": {"backend": "100% (15/15 executed, 1 skipped expected)", "frontend": "not tested"},
+  "seed_data_creation": "No new seed data. Created TEST_ orders and notifications via the API during execution; test order is left in DB but only carries TEST_ markers in address/notes.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run BACKEND_TEST_URL env override if you need to point pytest at a different backend; defaults to http://localhost:8001 because frontend/.env still references the old Railway deploy. The seeded group buy (id stays constant across runs) means the customer will likely already be a participant — the test_join_success test will SKIP on repeated runs, which is correct; test_join_duplicate still validates the 400 path.",
+  "rca_of_issue": "N/A — no failures. The one self-test iteration fix during development was a test-side bug: /api/auth/me wraps the user object in { user: ... } whereas the test assumed a flat shape. Fixed in test helper _wallet()."
+}

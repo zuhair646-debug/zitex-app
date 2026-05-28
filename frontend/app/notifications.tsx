@@ -1,93 +1,88 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../_layout';
-
-const NOTIF_TYPES = [
-  { type: 'product', icon: 'cube', color: '#8833FF', bg: '#EFE6FF', title: 'Product notification example' },
-  { type: 'service', icon: 'construct', color: '#F59E0B', bg: '#FEF3C7', title: 'Service notification example' },
-  { type: 'competition', icon: 'trophy', color: '#3B82F6', bg: '#DBEAFE', title: 'Competition notification example' },
-  { type: 'points', icon: 'diamond', color: '#8833FF', bg: '#EFE6FF', title: 'Points notification example' },
-  { type: 'social', icon: 'megaphone', color: '#EC4899', bg: '#FCE7F3', title: 'Social media notification example' },
-  { type: 'support', icon: 'headset', color: '#6B7280', bg: '#F3F4F6', title: 'Support notification example' },
-];
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from './_layout';
+import { useT } from '../src/i18n';
 
 export default function NotificationsScreen() {
-  const [notifications, setNotifications] = useState(NOTIF_TYPES.map((n, i) => ({ ...n, id: String(i), time: '4m ago', desc: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod.' })));
+  const router = useRouter();
+  const { apiCall } = useAuth();
+  const { t } = useT();
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const clearAll = () => setNotifications([]);
-  const markAllRead = () => {};
-  const removeNotif = (id: string) => setNotifications(prev => prev.filter(n => n.id !== id));
+  const load = useCallback(async () => {
+    try { const d = await apiCall('/api/notifications'); setItems(d); }
+    catch (e) { /* silent */ } finally { setLoading(false); setRefreshing(false); }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const markRead = async (id: string) => {
+    try { await apiCall(`/api/notifications/${id}/read`, { method: 'POST' }); load(); } catch {}
+  };
+  const markAll = async () => {
+    try { await apiCall('/api/notifications/read-all', { method: 'POST' }); load(); } catch {}
+  };
+
+  const openNotification = (n: any) => {
+    markRead(n.id);
+    const d = n.data || {};
+    if (d.type === 'order' && d.order_id) router.push(`/track-order/${d.order_id}` as any);
+    else if (d.type === 'group_buy' && d.group_buy_id) router.push('/group-buys' as any);
+    else if (d.type === 'competition' && d.competition_id) router.push(`/competition/${d.competition_id}` as any);
+  };
+
+  const timeAgo = (iso?: string) => {
+    if (!iso) return '';
+    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (diff < 60) return 'الآن';
+    if (diff < 3600) return `${Math.floor(diff / 60)} د`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} س`;
+    return `${Math.floor(diff / 86400)} ي`;
+  };
+
+  const unread = items.filter((i: any) => !i.read).length;
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={s.header}>
-          <Text style={s.title}>Notifications</Text>
-          <TouchableOpacity testID="notif-settings-btn" style={s.settingsBtn}>
-            <Ionicons name="settings-outline" size={20} color="#52525B" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={s.actions}>
-          <TouchableOpacity testID="clear-all-btn" style={s.actionBtn} onPress={clearAll}>
-            <Ionicons name="trash-outline" size={16} color="#52525B" />
-            <Text style={s.actionText}>Clear all</Text>
-          </TouchableOpacity>
-          <TouchableOpacity testID="mark-read-btn" style={s.actionBtn} onPress={markAllRead}>
-            <Ionicons name="checkmark-circle-outline" size={16} color="#52525B" />
-            <Text style={s.actionText}>Mark all as read</Text>
-          </TouchableOpacity>
-        </View>
-
-        {notifications.length === 0 ? (
-          <View style={s.empty}>
-            <Ionicons name="notifications-off-outline" size={48} color="#A1A1AA" />
-            <Text style={s.emptyTitle}>No notifications</Text>
-            <Text style={s.emptyDesc}>You're all caught up!</Text>
-          </View>
-        ) : (
-          notifications.map((n) => (
-            <View key={n.id} style={s.notifCard}>
-              <View style={[s.notifIcon, { backgroundColor: n.bg }]}>
-                <Ionicons name={n.icon as any} size={24} color={n.color} />
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <Text style={s.title}>🔔 {t('notif.title')} {unread > 0 && <Text style={{ color: '#EF4444' }}>({unread})</Text>}</Text>
+        {unread > 0 ? <TouchableOpacity onPress={markAll}><Text style={s.markAll}>✓ تم</Text></TouchableOpacity> : <View style={{ width: 22 }} />}
+      </View>
+      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> : (
+        <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 14 }}>
+          {items.length === 0 && <Text style={s.empty}>{t('notif.empty')}</Text>}
+          {items.map(n => (
+            <TouchableOpacity key={n.id} style={[s.card, !n.read && s.cardUnread]} onPress={() => openNotification(n)}>
+              {!n.read && <View style={s.dot} />}
+              <View style={{ flex: 1 }}>
+                <Text style={s.nTitle}>{n.title}</Text>
+                <Text style={s.nBody}>{n.body}</Text>
+                <Text style={s.nTime}>{timeAgo(n.created_at)}</Text>
               </View>
-              <View style={s.notifContent}>
-                <Text style={s.notifTitle}>{n.title}</Text>
-                <Text style={s.notifDesc} numberOfLines={2}>{n.desc}</Text>
-                <Text style={s.notifTime}>{n.time}</Text>
-              </View>
-              <TouchableOpacity testID={`view-notif-${n.id}`} style={s.viewBtn}>
-                <Ionicons name="eye-outline" size={16} color="#FFF" />
-                <Text style={s.viewText}>View</Text>
-              </TouchableOpacity>
-            </View>
-          ))
-        )}
-        <View style={{ height: 100 }} />
-      </ScrollView>
+              <Ionicons name="chevron-back" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  title: { fontSize: 24, fontWeight: '800', color: '#0A0A0A' },
-  settingsBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
-  actions: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginBottom: 16 },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F9F9FB', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#E4E4E7' },
-  actionText: { fontSize: 12, color: '#52525B', fontWeight: '500' },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 8 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#0A0A0A' },
-  emptyDesc: { fontSize: 14, color: '#52525B' },
-  notifCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginBottom: 12, padding: 14, backgroundColor: '#F9F9FB', borderRadius: 16 },
-  notifIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginEnd: 12 },
-  notifContent: { flex: 1, marginEnd: 10 },
-  notifTitle: { fontSize: 13, fontWeight: '600', color: '#0A0A0A', marginBottom: 3 },
-  notifDesc: { fontSize: 11, color: '#52525B', lineHeight: 16, marginBottom: 3 },
-  notifTime: { fontSize: 10, color: '#A1A1AA' },
-  viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#8833FF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  viewText: { fontSize: 11, color: '#FFF', fontWeight: '600' },
+  safe: { flex: 1, backgroundColor: '#F9FAFB' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
+  title: { fontSize: 17, fontWeight: '800' },
+  markAll: { color: '#8833FF', fontWeight: '700', fontSize: 13 },
+  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 8, gap: 10 },
+  cardUnread: { backgroundColor: '#EFE6FF' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
+  nTitle: { fontSize: 14, fontWeight: '800', color: '#0A0A0A' },
+  nBody: { fontSize: 12, color: '#374151', marginTop: 2 },
+  nTime: { fontSize: 11, color: '#9CA3AF', marginTop: 4 },
 });

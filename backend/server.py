@@ -622,6 +622,26 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
     await db.cart_items.delete_many({"user_id": user["id"]})
     order_doc["id"] = str(result.inserted_id)
     order_doc.pop("_id", None)
+
+    # ─── Loyalty: award points (1 point per 10 SAR spent) ───
+    points_earned = int(subtotal / 10)
+    if points_earned > 0:
+        await db.users.update_one({"_id": ObjectId(user["id"])}, {"$inc": {"points": points_earned}})
+        await db.points_history.insert_one({
+            "user_id": user["id"], "delta": points_earned,
+            "reason": f"طلب #{order_doc['id'][-8:]}", "order_id": order_doc["id"],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        order_doc["points_earned"] = points_earned
+
+    # ─── Push Notification: order received ───
+    try:
+        await create_notification(user["id"], "تم استلام طلبك ✅",
+                                   f"طلب #{order_doc['id'][-8:]} قيد التحضير الآن",
+                                   {"type": "order", "order_id": order_doc["id"], "status": "processing"})
+    except Exception as e:
+        logger.warning(f"Notification failed: {e}")
+
     return order_doc
 
 # ─── Profile ───
@@ -1073,10 +1093,30 @@ async def merchant_update_order_status(oid: str, request: Request, user=Depends(
     require_merchant(user)
     body = await request.json()
     new_status = body.get("status", "")
-    if new_status not in ["pending", "processing", "shipped", "delivered", "cancelled"]:
+    if new_status not in ["pending", "processing", "ready_for_pickup", "shipped", "assigned", "picked_up", "delivered", "cancelled"]:
         raise HTTPException(status_code=400, detail="Invalid status")
+    order = await db.orders.find_one({"_id": ObjectId(oid)})
+    if not order: raise HTTPException(status_code=404, detail="Order not found")
     await db.orders.update_one({"_id": ObjectId(oid)}, {"$set": {"status": new_status,
                                                                    "status_updated_at": datetime.now(timezone.utc).isoformat()}})
+    # Notify customer about status change
+    STATUS_MSG = {
+        "processing":       ("⏳ جاري تحضير طلبك",      "Your order is being prepared"),
+        "ready_for_pickup": ("📦 طلبك جاهز للاستلام",   "Your order is ready for pickup"),
+        "shipped":          ("🚚 تم شحن طلبك",          "Your order has been shipped"),
+        "assigned":         ("🛵 تم تعيين سائق لطلبك",  "A driver has been assigned"),
+        "picked_up":        ("🛵 السائق في طريقه إليك", "The driver is on the way"),
+        "delivered":        ("✅ تم توصيل طلبك",         "Your order was delivered"),
+        "cancelled":        ("❌ تم إلغاء طلبك",         "Your order was cancelled"),
+    }
+    if new_status in STATUS_MSG and order.get("user_id"):
+        title_ar, _ = STATUS_MSG[new_status]
+        try:
+            await create_notification(order["user_id"], title_ar,
+                                       f"طلب #{oid[-8:]} - الحالة: {new_status}",
+                                       {"type": "order", "order_id": oid, "status": new_status})
+        except Exception as e:
+            logger.warning(f"Notification failed: {e}")
     return {"message": "Status updated"}
 
 # ─── Merchant: Service Bookings Management ───
@@ -1207,6 +1247,170 @@ async def merchant_list_customers(user=Depends(get_current_user)):
     return result
 
 # ─── Merchant: Competitions CRUD (NEW: types + permit + assigned employee) ───
+async def create_notification(user_id: str, title: str, body: str, data: dict = None):
+    """Save in-app notification + optionally trigger push."""
+    doc = {
+        "user_id": user_id, "title": title, "body": body,
+        "data": data or {}, "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.notifications.insert_one(doc)
+    # Future: send to Expo push token if user has registered one
+    # token = await db.push_tokens.find_one({"user_id": user_id})
+    # if token: await send_expo_push(token["token"], title, body, data)
+    return True
+
+@api_router.get("/notifications")
+async def list_notifications(user=Depends(get_current_user)):
+    items = await db.notifications.find({"user_id": user["id"]}).sort("created_at", -1).to_list(100)
+    return [serialize_doc(n) for n in items]
+
+@api_router.post("/notifications/{nid}/read")
+async def mark_notification_read(nid: str, user=Depends(get_current_user)):
+    await db.notifications.update_one({"_id": ObjectId(nid), "user_id": user["id"]}, {"$set": {"read": True}})
+    return {"message": "Marked read"}
+
+@api_router.post("/notifications/read-all")
+async def mark_all_read(user=Depends(get_current_user)):
+    await db.notifications.update_many({"user_id": user["id"], "read": False}, {"$set": {"read": True}})
+    return {"message": "All marked read"}
+
+@api_router.post("/push-tokens/register")
+async def register_push_token(request: Request, user=Depends(get_current_user)):
+    body = await request.json()
+    token = body.get("token", "")
+    if not token: raise HTTPException(status_code=400, detail="Token required")
+    await db.push_tokens.update_one(
+        {"user_id": user["id"]},
+        {"$set": {"user_id": user["id"], "token": token, "platform": body.get("platform", "expo"),
+                  "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "Push token registered"}
+
+# ─── Loyalty Points ───
+@api_router.get("/points/me")
+async def my_points(user=Depends(get_current_user)):
+    u = await db.users.find_one({"_id": ObjectId(user["id"])}) or {}
+    history = await db.points_history.find({"user_id": user["id"]}).sort("created_at", -1).to_list(50)
+    return {
+        "balance": u.get("points", 0),
+        "tier": "ذهبي" if u.get("points", 0) >= 500 else "فضي" if u.get("points", 0) >= 100 else "برونزي",
+        "next_tier_at": 500 if u.get("points", 0) < 500 else None,
+        "history": [serialize_doc(h) for h in history],
+        "value_sar": round(u.get("points", 0) * 0.1, 2),  # 10 points = 1 SAR
+        "earn_rate": "1 نقطة لكل 10 ر.س",
+    }
+
+@api_router.post("/points/redeem")
+async def redeem_points(request: Request, user=Depends(get_current_user)):
+    """Redeem points for wallet balance: 10 points = 1 SAR"""
+    body = await request.json()
+    points = int(body.get("points", 0))
+    if points <= 0: raise HTTPException(status_code=400, detail="Invalid amount")
+    u = await db.users.find_one({"_id": ObjectId(user["id"])}) or {}
+    if u.get("points", 0) < points:
+        raise HTTPException(status_code=400, detail="رصيد النقاط غير كافٍ")
+    sar = round(points * 0.1, 2)
+    await db.users.update_one({"_id": ObjectId(user["id"])},
+        {"$inc": {"points": -points, "wallet_balance": sar}})
+    await db.points_history.insert_one({
+        "user_id": user["id"], "delta": -points,
+        "reason": f"استبدال بـ {sar} ر.س للمحفظة",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Redeemed", "sar_credited": sar}
+
+# ─── Group Buy ───
+class GroupBuyInput(BaseModel):
+    product_id: str
+    title: str
+    description: str = ""
+    min_participants: int = 10
+    max_participants: int = 100
+    group_price: float  # the discounted price when min is reached
+    end_date: str  # ISO
+
+@api_router.get("/group-buys")
+async def list_group_buys():
+    """Public: list active group buys."""
+    now = datetime.now(timezone.utc).isoformat()
+    items = await db.group_buys.find({
+        "status": "active",
+        "end_date": {"$gt": now}
+    }).sort("created_at", -1).to_list(50)
+    out = []
+    for g in items:
+        g = serialize_doc(g)
+        try:
+            p = await db.products.find_one({"_id": ObjectId(g["product_id"])})
+            if p:
+                g["product"] = {"id": str(p["_id"]), "name_ar": p.get("name_ar", ""), "name_en": p.get("name_en", ""),
+                                "image": (p.get("images") or [None])[0], "original_price": p.get("price", 0)}
+        except Exception:
+            pass
+        g["participant_count"] = await db.group_buy_participants.count_documents({"group_buy_id": g["id"]})
+        g["progress_pct"] = min(100, int(g["participant_count"] / max(1, g["min_participants"]) * 100))
+        out.append(g)
+    return out
+
+@api_router.post("/merchant/group-buys")
+async def create_group_buy(data: GroupBuyInput, user=Depends(get_current_user)):
+    require_merchant(user)
+    doc = {
+        "product_id": data.product_id,
+        "title": data.title, "description": data.description,
+        "min_participants": data.min_participants, "max_participants": data.max_participants,
+        "group_price": data.group_price, "end_date": data.end_date,
+        "status": "active",
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    r = await db.group_buys.insert_one(doc)
+    return {"id": str(r.inserted_id), "message": "Group buy created"}
+
+@api_router.delete("/merchant/group-buys/{gid}")
+async def delete_group_buy(gid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    await db.group_buys.delete_one({"_id": ObjectId(gid)})
+    await db.group_buy_participants.delete_many({"group_buy_id": gid})
+    return {"message": "Deleted"}
+
+@api_router.post("/group-buys/{gid}/join")
+async def join_group_buy(gid: str, user=Depends(get_current_user)):
+    g = await db.group_buys.find_one({"_id": ObjectId(gid)})
+    if not g: raise HTTPException(status_code=404, detail="غير موجود")
+    if g.get("status") != "active": raise HTTPException(status_code=400, detail="انتهى التسوق الجماعي")
+    # Check if already joined
+    existing = await db.group_buy_participants.find_one({"group_buy_id": gid, "user_id": user["id"]})
+    if existing: raise HTTPException(status_code=400, detail="انضممت مسبقاً")
+    count = await db.group_buy_participants.count_documents({"group_buy_id": gid})
+    if count >= g.get("max_participants", 100):
+        raise HTTPException(status_code=400, detail="اكتمل العدد القصوى")
+    await db.group_buy_participants.insert_one({
+        "group_buy_id": gid, "user_id": user["id"], "user_name": user.get("name", ""),
+        "joined_at": datetime.now(timezone.utc).isoformat()
+    })
+    new_count = count + 1
+    # Notify when min reached
+    if new_count == g.get("min_participants", 10):
+        participants = await db.group_buy_participants.find({"group_buy_id": gid}).to_list(200)
+        for p in participants:
+            try:
+                await create_notification(p["user_id"], "🎉 وصل التسوق الجماعي للحد الأدنى!",
+                                           f"{g['title']} - السعر {g['group_price']} ر.س متاح الآن!",
+                                           {"type": "group_buy", "group_buy_id": gid})
+            except Exception:
+                pass
+    return {"message": "تم الانضمام", "participant_count": new_count,
+            "min_reached": new_count >= g.get("min_participants", 10)}
+
+@api_router.get("/group-buys/{gid}/participants")
+async def gb_participants(gid: str):
+    items = await db.group_buy_participants.find({"group_buy_id": gid}).to_list(200)
+    return [serialize_doc(p) for p in items]
+
+
 class CompetitionInput(BaseModel):
     title: str
     description: str = ""
