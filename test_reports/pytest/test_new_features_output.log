@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0 -- /root/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /app/backend
+plugins: anyio-4.13.0
+collecting ... collected 14 items
+
+tests/test_new_features.py::TestCompetitions::test_get_competitions PASSED [  7%]
+tests/test_new_features.py::TestCompetitions::test_get_competition_by_id PASSED [ 14%]
+tests/test_new_features.py::TestCompetitions::test_get_participants PASSED [ 21%]
+tests/test_new_features.py::TestCompetitions::test_answer_quiz PASSED    [ 28%]
+tests/test_new_features.py::TestCompetitions::test_competition_draw PASSED [ 35%]
+tests/test_new_features.py::TestWallet::test_get_wallet PASSED           [ 42%]
+tests/test_new_features.py::TestWallet::test_wallet_without_auth PASSED  [ 50%]
+tests/test_new_features.py::TestAddresses::test_get_addresses PASSED     [ 57%]
+tests/test_new_features.py::TestAddresses::test_add_address PASSED       [ 64%]
+tests/test_new_features.py::TestAddresses::test_delete_address PASSED    [ 71%]
+tests/test_new_features.py::TestAds::test_get_ads PASSED                 [ 78%]
+tests/test_new_features.py::TestAds::test_create_ad PASSED               [ 85%]
+tests/test_new_features.py::TestAds::test_get_my_ads PASSED              [ 92%]
+tests/test_new_features.py::TestOrders::test_get_orders PASSED           [100%]
+
+----- generated xml file: /app/test_reports/pytest/pytest_new_features.xml -----
+============================== 14 passed in 6.57s ==============================

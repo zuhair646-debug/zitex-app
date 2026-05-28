@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0 -- /root/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /app/backend
+plugins: anyio-4.13.0
+collecting ... collected 14 items
+
+tests/test_services_features.py::TestServices::test_get_services PASSED  [  7%]
+tests/test_services_features.py::TestServices::test_get_service_by_id PASSED [ 14%]
+tests/test_services_features.py::TestServices::test_book_service PASSED  [ 21%]
+tests/test_services_features.py::TestServices::test_get_my_service_bookings PASSED [ 28%]
+tests/test_services_features.py::TestWarranties::test_get_warranties PASSED [ 35%]
+tests/test_services_features.py::TestWarranties::test_warranties_without_auth PASSED [ 42%]
+tests/test_services_features.py::TestInvoices::test_get_invoices PASSED  [ 50%]
+tests/test_services_features.py::TestInvoices::test_invoices_without_auth PASSED [ 57%]
+tests/test_services_features.py::TestSupportTickets::test_get_support_tickets PASSED [ 64%]
+tests/test_services_features.py::TestSupportTickets::test_create_support_ticket PASSED [ 71%]
+tests/test_services_features.py::TestSupportTickets::test_reply_to_ticket PASSED [ 78%]
+tests/test_services_features.py::TestSupportTickets::test_support_tickets_without_auth PASSED [ 85%]
+tests/test_services_features.py::TestFavorites::test_get_favorites PASSED [ 92%]
+tests/test_services_features.py::TestFavorites::test_toggle_favorite PASSED [100%]
+
+------- generated xml file: /app/test_reports/pytest/pytest_services.xml -------
+============================== 14 passed in 6.75s ==============================
