@@ -38,6 +38,15 @@
 - Note: JSON key NOT in GitHub (security). Recreate locally if needed from user input.
 
 ## ═══════════════════════════════════════
+## Google Maps API
+## ═══════════════════════════════════════
+- **API Key:** `AIzaSyDEQ58ECgaiL1XXWguUecTRKsPMxO6wMZE`
+- **APIs to enable in Google Cloud Console:**
+  - Maps SDK for Android, Maps SDK for iOS
+  - Geocoding API, Distance Matrix API, Directions API
+- Used for: customer location picker, distance calc, live tracking, branch geocoding
+
+## ═══════════════════════════════════════
 ## Cloudinary (Video/Image Storage)
 ## ═══════════════════════════════════════
 - **Cloud Name:** `dyujjjvb2`
