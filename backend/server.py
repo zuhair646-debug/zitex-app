@@ -698,10 +698,15 @@ async def get_order_detail(order_id: str, user=Depends(get_current_user)):
     return serialize_doc(order)
 
 @api_router.get("/orders/{order_id}/tracking")
-async def get_order_tracking(order_id: str):
+async def get_order_tracking(order_id: str, user=Depends(get_current_user)):
     order = await db.orders.find_one({"_id": ObjectId(order_id)})
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    # Authorize: customer owns it, OR assigned driver, OR merchant
+    role = user.get("role")
+    uid = user.get("id")
+    if role not in ("merchant", "chamber") and order.get("user_id") != uid and order.get("driver_id") != uid:
+        raise HTTPException(status_code=403, detail="Forbidden")
     out = {
         "id": str(order["_id"]),
         "status": order.get("status", "processing"),
