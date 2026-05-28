@@ -38,6 +38,15 @@
 - Note: JSON key NOT in GitHub (security). Recreate locally if needed from user input.
 
 ## ═══════════════════════════════════════
+## Cloudinary (Video/Image Storage)
+## ═══════════════════════════════════════
+- **Cloud Name:** `dyujjjvb2`
+- **API Key:** `481658855999211`
+- **API Secret:** `PcLD2c2kSvdDvefY36aeKX3tfac`
+- **CLOUDINARY_URL:** `cloudinary://481658855999211:PcLD2c2kSvdDvefY36aeKX3tfac@dyujjjvb2`
+- **Account:** zuhair (Free tier: 25GB)
+
+## ═══════════════════════════════════════
 ## Backend (Railway)
 ## ═══════════════════════════════════════
 - **Live URL:** `https://api-production-df2ce.up.railway.app`
