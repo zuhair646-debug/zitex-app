@@ -1,0 +1,57 @@
+{
+  "summary": "Comprehensive customer-flow QA for Zitex. Backend: 24/24 pytest cases pass (1 skipped due to warranty data gap). Frontend: login→home routing works, banners/tabs/social/competitions/profile/cart all render. Found 2 CRITICAL bugs that block customer experience: (1) Used Devices filter returns 0 results because backend strict matches condition='used' but seed data uses 'used_3months'; (2) product detail page mislabels used_3months products as 'جديد (New)' due to strict equality check.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/products?condition=used", "issue": "Returns 0 results although DB has used_3months products. Either filter should accept any condition starting with 'used' or seed data should be normalized. This breaks the Used Devices banner flow entirely.", "priority": "CRITICAL"}
+    ],
+    "minor": [
+      {"endpoint": "GET /api/users/me/profile", "issue": "Endpoint specified in QA spec returns 404. Frontend works via /api/auth/me + /api/wallet, but spec compliance is missing. Either add alias route or update spec."},
+      {"endpoint": "GET /api/products/{id}", "issue": "Response is missing warranty_days/warranty_type fields on all seeded products, so product detail page always falls back to 'بدون ضمان'. Add fields to seed data."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "product/[id].tsx line 161", "issue": "الحالة label uses strict product.condition === 'used' check; products with condition 'used_3months' (and presumably 'used_6months') are incorrectly labeled 'جديد (New)'. Use product.condition !== 'new' or startsWith('used').", "testID": "n/a", "priority": "CRITICAL"},
+      {"component": "(tabs)/index.tsx featured banner swiper", "issue": "Top featured banner area renders as empty grey rectangle on first paint — banner images either fail to load or are not seeded properly. Pagination dots show 2 pages.", "testID": "n/a", "priority": "MINOR"},
+      {"component": "login.tsx", "issue": "Main CTA reads 'Sign in' (English) on otherwise Arabic UI ('أهلاً بك في Zitex', Forget password!, Sign Up). Inconsistent localization.", "testID": "login-btn", "priority": "MINOR"}
+    ],
+    "integration_issues": [
+      {"flow": "Home → Used Devices banner → /search?condition=used", "issue": "Banner navigation works but search page shows 'No results found' even though used products exist in DB. Caused by backend strict filter (see backend critical).", "affected_testIDs": []}
+    ],
+    "design_issues": [
+      {"screen": "Home", "issues": ["Top hero/featured banner placeholder shows as plain grey block until images load — affects first impression"]},
+      {"screen": "Login", "issues": ["Mixed Arabic/English: title + subtitle in Arabic but button + 'Forget password!' label remain English"]}
+    ],
+    "react_native_issues": [
+      {"component": "Global styles", "issue": "Multiple 'shadow*' style props deprecation warnings in console — should migrate to boxShadow per RN web warnings."},
+      {"component": "Product image", "issue": "Image: style.resizeMode is deprecated. Please use props.resizeMode (console warning)."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_customer_flow.py",
+    "/app/test_reports/pytest/customer_flow.xml"
+  ],
+  "action_items": [
+    "FIX (CRITICAL): /app/frontend/app/product/[id].tsx line 160-161 — change `product.condition === 'used'` to `product.condition !== 'new'` (or `String(product.condition).startsWith('used')`) so used_3months/used_6months render correctly.",
+    "FIX (CRITICAL): Backend product list filter — make `?condition=used` match any value starting with 'used' (used_3months, used_6months, used_1year). Currently only exact 'used' is matched, so Used Devices banner produces empty results.",
+    "FIX (MINOR): Seed warranty_days/warranty_type on products (currently all show 'بدون ضمان').",
+    "FIX (MINOR): Localize the login Sign-in button + Forget password! label to Arabic, or set i18n for both languages.",
+    "FIX (MINOR): Investigate empty featured banner swiper on home — verify /api/banners seeds and image URLs are valid.",
+    "OPTIONAL: Implement /api/users/me/profile alias to /api/auth/me + wallet to satisfy spec.",
+    "OPTIONAL: Migrate shadow* style props to boxShadow and Image resizeMode to props (RN web deprecations)."
+  ],
+  "critical_code_review_comments": [
+    "Strict equality for enum-like fields (condition) is brittle when DB stores granular values. Centralize a helper isUsed(condition) and use across UI (home, product detail, search).",
+    "product detail file uses payment badges as static markup; OK for MVP but should come from /api/payment-methods to avoid drift.",
+    "server.py is 2225 lines — should be split into routers (auth, products, social, orders, competitions) for maintainability."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_customer_flow.py (new comprehensive customer-flow suite)"
+  ],
+  "success_rate": {"backend": "100% (24/24 passed, 1 skipped data-gap)", "frontend": "~80% (login/home/tabs/social/contests/profile/product detail/cart work; Used Devices filter + condition label broken)"},
+  "seed_data_creation": "Created TEST_customer_flow_post and TEST_poll_q posts via merchant-token in social tests; not cleaned up (will appear in social feed until manually removed).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Two critical bugs need fixing before retest: (1) product detail strict condition check, (2) backend used filter. After fix, re-run pytest /app/backend/tests/test_customer_flow.py and re-verify the Used Devices banner → search page shows products and product detail of iPhone 14 (Used) shows 'مستعمل (Used)'. Also remove the TEST_ social posts I left.",
+  "rca_of_issue": "Bug 1 (Used Devices empty): Backend product list endpoint compares condition exactly. Seed inserts variants ('used_3months') instead of generic 'used'. Frontend Used Devices banner correctly navigates with ?condition=used. Fix: relax server-side filter to match any condition LIKE 'used%' OR normalize seed values. Bug 2 (Used product shown as New): /app/frontend/app/product/[id].tsx line 160-161 uses strict === 'used'. Same condition='used_3months' value bypasses the check and falls through to 'جديد (New)'. Fix: change to `product.condition !== 'new'` (same convention already used on line 72 for the corner badge)."
+}

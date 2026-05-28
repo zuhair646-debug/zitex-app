@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -44,9 +44,10 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.logoWrap}>
             <View style={styles.logoCircle}>
-              <Ionicons name="phone-portrait-outline" size={40} color="#8833FF" />
+              <Image source={require('../assets/images/icon.png')} style={styles.logoImg} />
             </View>
-            <Text style={styles.title}>Sign in</Text>
+            <Text style={styles.title}>أهلاً بك في Zitex</Text>
+            <Text style={styles.subtitle}>سجّل دخولك للمتابعة</Text>
           </View>
 
           {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
@@ -85,7 +86,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24 },
   logoWrap: { alignItems: 'center', marginBottom: 40 },
-  logoCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  logoCircle: { width: 110, height: 110, borderRadius: 28, backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', marginBottom: 16, overflow: 'hidden', shadowColor: '#FFD700', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
+  logoImg: { width: 110, height: 110, resizeMode: 'cover' },
   title: { fontSize: 28, fontWeight: '800', color: '#0A0A0A', marginBottom: 8 },
   subtitle: { fontSize: 16, color: '#52525B' },
   errorBox: { backgroundColor: '#FEF2F2', borderRadius: 12, padding: 12, marginBottom: 16 },

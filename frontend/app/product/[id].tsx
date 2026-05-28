@@ -147,15 +147,56 @@ export default function ProductDetailScreen() {
             </View>
           )}
 
-          {/* Availability */}
+          {/* Availability + Warranty + Shipping + Payment */}
           <View style={styles.availSection}>
+            <Text style={styles.optionTitle}>المعلومات والضمان</Text>
+
             <View style={styles.availItem}>
               <Ionicons name={product.in_stock ? 'checkmark-circle' : 'close-circle'} size={20} color={product.in_stock ? '#10B981' : '#EF4444'} />
-              <Text style={styles.availText}>{product.in_stock ? 'In Stock' : 'Out of Stock'}</Text>
+              <Text style={styles.availText}>{product.in_stock ? 'متوفر في المخزون' : 'غير متوفر'}</Text>
             </View>
+
             <View style={styles.availItem}>
-              <Ionicons name="car" size={20} color="#8833FF" />
-              <Text style={styles.availText}>Delivery Available</Text>
+              <Ionicons name={product.condition === 'used' ? 'refresh-circle' : 'sparkles'} size={20} color={product.condition === 'used' ? '#F59E0B' : '#10B981'} />
+              <Text style={styles.availText}>الحالة: {product.condition === 'used' ? 'مستعمل (Used)' : 'جديد (New)'}</Text>
+            </View>
+
+            {product.warranty_days > 0 || product.warranty ? (
+              <View style={styles.availItem}>
+                <Ionicons name="shield-checkmark" size={20} color="#10B981" />
+                <Text style={styles.availText}>ضمان {product.warranty_days || 365} يوم{product.warranty_type ? ` - ${product.warranty_type}` : ''}</Text>
+              </View>
+            ) : (
+              <View style={styles.availItem}>
+                <Ionicons name="information-circle" size={20} color="#9CA3AF" />
+                <Text style={styles.availText}>بدون ضمان</Text>
+              </View>
+            )}
+
+            <View style={styles.divider} />
+
+            <Text style={styles.subTitle}>طرق التوصيل المتاحة</Text>
+            <View style={styles.shipItem}>
+              <Ionicons name="flash" size={18} color="#F59E0B" />
+              <Text style={styles.shipText}>توصيل نفس اليوم (90 دقيقة)</Text>
+            </View>
+            <View style={styles.shipItem}>
+              <Ionicons name="calendar" size={18} color="#3B82F6" />
+              <Text style={styles.shipText}>توصيل مجدول (اختر الوقت المناسب)</Text>
+            </View>
+            <View style={styles.shipItem}>
+              <Ionicons name="cube" size={18} color="#8833FF" />
+              <Text style={styles.shipText}>توصيل عادي (2-3 أيام)</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <Text style={styles.subTitle}>وسائل الدفع المتاحة</Text>
+            <View style={styles.payRow}>
+              <View style={styles.payBadge}><Ionicons name="cash" size={16} color="#10B981" /><Text style={styles.payText}>الدفع عند الاستلام</Text></View>
+              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="card" size={16} color="#6B7280" /><Text style={styles.payTextSoon}>بطاقة</Text></View>
+              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="logo-apple" size={16} color="#6B7280" /><Text style={styles.payTextSoon}>Apple Pay</Text></View>
+              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="time" size={16} color="#6B7280" /><Text style={styles.payTextSoon}>تمارا</Text></View>
             </View>
           </View>
         </View>
@@ -216,9 +257,18 @@ const styles = StyleSheet.create({
   specRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F4F4F5' },
   specKey: { fontSize: 13, color: '#52525B', fontWeight: '500' },
   specVal: { fontSize: 13, color: '#0A0A0A', fontWeight: '600' },
-  availSection: { flexDirection: 'row', gap: 20, marginBottom: 20 },
-  availItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  availText: { fontSize: 14, color: '#0A0A0A', fontWeight: '500' },
+  availSection: { padding: 16, backgroundColor: '#F9F9FB', borderRadius: 16, marginBottom: 20 },
+  availItem: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  availText: { fontSize: 13, color: '#0A0A0A', fontWeight: '600' },
+  subTitle: { fontSize: 13, fontWeight: '700', color: '#0A0A0A', marginTop: 4, marginBottom: 8 },
+  divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 12 },
+  shipItem: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  shipText: { fontSize: 12, color: '#374151', fontWeight: '600' },
+  payRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  payBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#D1FAE5', borderRadius: 14 },
+  payBadgeSoon: { backgroundColor: '#F3F4F6' },
+  payText: { fontSize: 11, color: '#065F46', fontWeight: '700' },
+  payTextSoon: { fontSize: 11, color: '#6B7280', fontWeight: '600' },
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingBottom: 34, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F4F4F5' },
   addToCartBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, gap: 10, shadowColor: '#8833FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
   addToCartText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
