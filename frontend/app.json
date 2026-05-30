@@ -55,7 +55,8 @@
         }
       ],
       "expo-web-browser",
-      "expo-video"
+      "expo-video",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
