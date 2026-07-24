@@ -86,7 +86,7 @@ export default function DrawScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>{comp.title}</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -95,7 +95,7 @@ export default function DrawScreen() {
           <Text style={s.meta}>{entries.length} participants • {comp.prize_count} winners</Text>
           {comp.chamber_supervised && (
             <View style={s.permitBox}>
-              <Ionicons name="shield-checkmark" size="16" color="#1E3A5F" />
+              <Ionicons name="shield-checkmark" size={16} color="#1E3A5F" />
               <Text style={s.permitText}>Permit #{comp.permit_number}</Text>
             </View>
           )}
@@ -103,7 +103,7 @@ export default function DrawScreen() {
 
         {!isAssigned && (
           <View style={s.warning}>
-            <Ionicons name="warning" size="20" color="#F59E0B" />
+            <Ionicons name="warning" size={20} color="#F59E0B" />
             <Text style={s.warningText}>You are not the assigned supervisor for this competition</Text>
           </View>
         )}
@@ -114,7 +114,7 @@ export default function DrawScreen() {
             <Text style={s.nameText}>{currentName || (finalWinners.length ? finalWinners.map(w => w.user_name).join(', ') : 'Press start to draw')}</Text>
           </View>
           {finalWinners.length > 0 && (
-            <View style={s.winnerBadge}><Ionicons name="trophy" size="20" color="#F59E0B" /><Text style={s.winnerText}>WINNER{finalWinners.length > 1 ? 'S' : ''} SELECTED</Text></View>
+            <View style={s.winnerBadge}><Ionicons name="trophy" size={20} color="#F59E0B" /><Text style={s.winnerText}>WINNER{finalWinners.length > 1 ? 'S' : ''} SELECTED</Text></View>
           )}
           <TouchableOpacity disabled={!isAssigned || drawing} onPress={startDraw} style={[s.startBtn, (!isAssigned || drawing) && { opacity: 0.4 }]}>
             {drawing ? <ActivityIndicator color="white" /> : <Text style={s.startBtnText}>{finalWinners.length ? 'Re-Draw' : '🎲 Start Draw'}</Text>}
@@ -126,7 +126,7 @@ export default function DrawScreen() {
             <Text style={s.uploadTitle}>Upload Draw Video</Text>
             <Text style={s.uploadHint}>Record the draw process on your phone and upload here. Customers will be able to view it to verify legitimacy.</Text>
             <TouchableOpacity disabled={uploading} onPress={uploadVideo} style={[s.uploadBtn, uploading && { opacity: 0.4 }]}>
-              {uploading ? <ActivityIndicator color="white" /> : <><Ionicons name="videocam" size="18" color="white" /><Text style={s.uploadBtnText}>Pick Video from Gallery</Text></>}
+              {uploading ? <ActivityIndicator color="white" /> : <><Ionicons name="videocam" size={18} color="white" /><Text style={s.uploadBtnText}>Pick Video from Gallery</Text></>}
             </TouchableOpacity>
             {comp.draw_video_url ? <Text style={s.videoOk}>✓ Video uploaded</Text> : null}
           </View>

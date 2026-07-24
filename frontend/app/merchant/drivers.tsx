@@ -32,9 +32,9 @@ export default function MerchantDrivers() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>Drivers ({drivers.length})</Text>
-        <TouchableOpacity onPress={() => setModal(true)} style={s.addBtn}><Ionicons name="add" size="22" color="white" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => setModal(true)} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -48,7 +48,7 @@ export default function MerchantDrivers() {
                 <Text style={s.payment}>{d.payment_model === 'salary' ? `Salary ${d.salary_monthly} SAR/mo` : `Commission: ${d.commission_type === 'percentage' ? d.merchant_commission_value + '%' : d.merchant_commission_value + ' SAR'} per order`}</Text>
                 <Text style={s.stats}>Total: {d.total_deliveries || 0} • Today: {d.today_deliveries || 0} • Wallet: {(d.wallet_balance || 0).toFixed(0)} SAR</Text>
               </View>
-              <TouchableOpacity onPress={() => del(d.id, d.name)}><Ionicons name="trash-outline" size="20" color="#EF4444" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => del(d.id, d.name)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
             </View>
           ))}
         </ScrollView>
@@ -56,7 +56,7 @@ export default function MerchantDrivers() {
       <Modal visible={modal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModal(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setModal(false)}><Ionicons name="close" size="24" color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
             <Text style={s.title}>New Driver</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>

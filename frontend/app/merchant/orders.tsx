@@ -35,7 +35,7 @@ export default function MerchantOrders() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>Orders ({filtered.length})</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.filterRow}>
@@ -53,7 +53,7 @@ export default function MerchantOrders() {
                 <Text style={s.orderNo}>#{o.id.slice(-8).toUpperCase()}</Text>
                 <TouchableOpacity testID={`status-${o.id}`} onPress={() => updateStatus(o.id, o.status)} style={[s.statusBadge, { backgroundColor: STATUS_COLORS[o.status] + '20' }]}>
                   <Text style={[s.statusText, { color: STATUS_COLORS[o.status] }]}>{o.status}</Text>
-                  <Ionicons name="chevron-down" size="12" color={STATUS_COLORS[o.status]} />
+                  <Ionicons name="chevron-down" size={12} color={STATUS_COLORS[o.status]} />
                 </TouchableOpacity>
               </View>
               <Text style={s.customer}>{o.customer_name || 'Customer'} • {o.customer_phone || o.phone || '-'}</Text>

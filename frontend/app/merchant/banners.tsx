@@ -30,9 +30,9 @@ export default function MerchantBanners() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>Banners ({banners.length})</Text>
-        <TouchableOpacity testID="add-banner" onPress={() => setModalOpen(true)} style={s.addBtn}><Ionicons name="add" size="22" color="white" /></TouchableOpacity>
+        <TouchableOpacity testID="add-banner" onPress={() => setModalOpen(true)} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
@@ -41,7 +41,7 @@ export default function MerchantBanners() {
               <Image source={{ uri: b.image }} style={s.img} />
               <View style={s.cardBody}>
                 <Text style={s.bTitle}>{b.title_ar || b.title_en || 'Banner'}</Text>
-                <TouchableOpacity onPress={() => del(b.id)}><Ionicons name="trash-outline" size="22" color="#EF4444" /></TouchableOpacity>
+                <TouchableOpacity onPress={() => del(b.id)}><Ionicons name="trash-outline" size={22} color="#EF4444" /></TouchableOpacity>
               </View>
             </View>
           ))}
@@ -50,7 +50,7 @@ export default function MerchantBanners() {
       <Modal visible={modalOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModalOpen(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size="24" color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
             <Text style={s.title}>New Banner</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>

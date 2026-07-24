@@ -24,9 +24,9 @@ export default function MerchantCompetitions() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>Competitions ({comps.length})</Text>
-        <TouchableOpacity testID="new-comp" onPress={() => router.push('/merchant/competition-form')} style={s.addBtn}><Ionicons name="add" size="22" color="white" /></TouchableOpacity>
+        <TouchableOpacity testID="new-comp" onPress={() => router.push('/merchant/competition-form')} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
@@ -36,7 +36,7 @@ export default function MerchantCompetitions() {
               <View key={c.id} style={s.card}>
                 <View style={s.row}>
                   <Text style={s.compTitle} numberOfLines={1}>{c.title}</Text>
-                  <TouchableOpacity onPress={() => del(c.id)}><Ionicons name="trash-outline" size="20" color="#EF4444" /></TouchableOpacity>
+                  <TouchableOpacity onPress={() => del(c.id)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
                 </View>
                 <Text style={s.prize}>{c.prize}</Text>
                 <View style={s.statRow}>

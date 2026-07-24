@@ -39,23 +39,23 @@ export default function MerchantServices() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>Services ({services.length})</Text>
-        <TouchableOpacity testID="add-svc" onPress={openCreate} style={s.addBtn}><Ionicons name="add" size="22" color="white" /></TouchableOpacity>
+        <TouchableOpacity testID="add-svc" onPress={openCreate} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           {services.map(sv => (
             <View key={sv.id} style={s.card}>
-              <View style={[s.iconBox, { backgroundColor: sv.color + '20' }]}><Ionicons name={sv.icon} size="24" color={sv.color} /></View>
+              <View style={[s.iconBox, { backgroundColor: sv.color + '20' }]}><Ionicons name={sv.icon} size={24} color={sv.color} /></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={s.name}>{sv.name}</Text>
                 <Text style={s.desc} numberOfLines={1}>{sv.desc}</Text>
                 <Text style={s.price}>{sv.price} SAR</Text>
               </View>
               <View style={{ gap: 8 }}>
-                <TouchableOpacity onPress={() => openEdit(sv)}><Ionicons name="create-outline" size="22" color="#3B82F6" /></TouchableOpacity>
-                <TouchableOpacity onPress={() => del(sv.id, sv.name)}><Ionicons name="trash-outline" size="22" color="#EF4444" /></TouchableOpacity>
+                <TouchableOpacity onPress={() => openEdit(sv)}><Ionicons name="create-outline" size={22} color="#3B82F6" /></TouchableOpacity>
+                <TouchableOpacity onPress={() => del(sv.id, sv.name)}><Ionicons name="trash-outline" size={22} color="#EF4444" /></TouchableOpacity>
               </View>
             </View>
           ))}
@@ -64,7 +64,7 @@ export default function MerchantServices() {
       <Modal visible={modalOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModalOpen(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size="24" color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
             <Text style={s.title}>{editing ? 'Edit' : 'New'} Service</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>

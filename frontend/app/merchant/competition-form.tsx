@@ -58,7 +58,7 @@ export default function CompetitionForm() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>New Competition</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -66,7 +66,7 @@ export default function CompetitionForm() {
         <View style={s.typeGrid}>
           {TYPES.map(t => (
             <TouchableOpacity key={t.id} onPress={() => setData({ ...data, competition_type: t.id })} style={[s.typeCard, data.competition_type === t.id && s.typeCardActive]}>
-              <Ionicons name={t.icon as any} size="22" color={data.competition_type === t.id ? 'white' : '#8833FF'} />
+              <Ionicons name={t.icon as any} size={22} color={data.competition_type === t.id ? 'white' : '#8833FF'} />
               <Text style={[s.typeName, data.competition_type === t.id && { color: 'white' }]}>{t.name}</Text>
               <Text style={[s.typeDesc, data.competition_type === t.id && { color: 'white' }]}>{t.desc}</Text>
             </TouchableOpacity>
@@ -144,7 +144,7 @@ export default function CompetitionForm() {
       <Modal visible={showEmpModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowEmpModal(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setShowEmpModal(false)}><Ionicons name="close" size="24" color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowEmpModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
             <Text style={s.title}>New Chamber Employee</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>

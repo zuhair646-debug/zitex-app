@@ -36,9 +36,9 @@ export default function MerchantBranches() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>Branches ({branches.length})</Text>
-        <TouchableOpacity onPress={openCreate} style={s.addBtn}><Ionicons name="add" size="22" color="white" /></TouchableOpacity>
+        <TouchableOpacity onPress={openCreate} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -52,8 +52,8 @@ export default function MerchantBranches() {
                 <Text style={s.hours}>{b.open_hours}</Text>
               </View>
               <View style={{ gap: 8 }}>
-                <TouchableOpacity onPress={() => openEdit(b)}><Ionicons name="create-outline" size="22" color="#3B82F6" /></TouchableOpacity>
-                <TouchableOpacity onPress={() => del(b.id, b.name)}><Ionicons name="trash-outline" size="22" color="#EF4444" /></TouchableOpacity>
+                <TouchableOpacity onPress={() => openEdit(b)}><Ionicons name="create-outline" size={22} color="#3B82F6" /></TouchableOpacity>
+                <TouchableOpacity onPress={() => del(b.id, b.name)}><Ionicons name="trash-outline" size={22} color="#EF4444" /></TouchableOpacity>
               </View>
             </View>
           ))}
@@ -62,7 +62,7 @@ export default function MerchantBranches() {
       <Modal visible={modal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModal(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setModal(false)}><Ionicons name="close" size="24" color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
             <Text style={s.title}>{editing ? 'Edit' : 'New'} Branch</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>

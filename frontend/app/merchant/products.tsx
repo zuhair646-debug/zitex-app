@@ -29,9 +29,9 @@ export default function MerchantProducts() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity testID="prod-back" onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity testID="prod-back" onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>Products ({products.length})</Text>
-        <TouchableOpacity testID="add-prod" onPress={() => router.push('/merchant/product-form')} style={s.addBtn}><Ionicons name="add" size="22" color="white" /></TouchableOpacity>
+        <TouchableOpacity testID="add-prod" onPress={() => router.push('/merchant/product-form')} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
@@ -47,8 +47,8 @@ export default function MerchantProducts() {
                 </View>
               </View>
               <View style={{ gap: 8 }}>
-                <TouchableOpacity testID={`edit-${p.id}`} onPress={() => router.push({ pathname: '/merchant/product-form', params: { id: p.id } })}><Ionicons name="create-outline" size="22" color="#3B82F6" /></TouchableOpacity>
-                <TouchableOpacity testID={`del-${p.id}`} onPress={() => handleDelete(p.id, p.name_ar || p.name_en)}><Ionicons name="trash-outline" size="22" color="#EF4444" /></TouchableOpacity>
+                <TouchableOpacity testID={`edit-${p.id}`} onPress={() => router.push({ pathname: '/merchant/product-form', params: { id: p.id } })}><Ionicons name="create-outline" size={22} color="#3B82F6" /></TouchableOpacity>
+                <TouchableOpacity testID={`del-${p.id}`} onPress={() => handleDelete(p.id, p.name_ar || p.name_en)}><Ionicons name="trash-outline" size={22} color="#EF4444" /></TouchableOpacity>
               </View>
             </View>
           ))}

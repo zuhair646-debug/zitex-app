@@ -45,7 +45,7 @@ export default function ProductForm() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity testID="pf-back" onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size="22" color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity testID="pf-back" onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>{id ? 'Edit Product' : 'New Product'}</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16 }}>

@@ -79,7 +79,7 @@ export default function DriverDashboard() {
           <Text style={s.welcome}>{user?.name}</Text>
           <Text style={s.role}>Driver Dashboard</Text>
         </View>
-        <TouchableOpacity onPress={() => { stopLocationBeacon(); logout(); router.replace('/login'); }}><Ionicons name="log-out-outline" size="22" color="#EF4444" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => { stopLocationBeacon(); logout(); router.replace('/login'); }}><Ionicons name="log-out-outline" size={22} color="#EF4444" /></TouchableOpacity>
       </View>
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
         <View style={[s.statusCard, { backgroundColor: profile?.online ? '#10B981' : '#6B7280' }]}>
@@ -106,7 +106,7 @@ export default function DriverDashboard() {
             )}
             {tab === 'active' && (
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                <TouchableOpacity style={[s.smBtn, { backgroundColor: '#3B82F6' }]} onPress={() => navigate(o.address_lat, o.address_lng, o.address)}><Ionicons name="navigate" size="14" color="white" /><Text style={s.smBtnText}>Navigate</Text></TouchableOpacity>
+                <TouchableOpacity style={[s.smBtn, { backgroundColor: '#3B82F6' }]} onPress={() => navigate(o.address_lat, o.address_lng, o.address)}><Ionicons name="navigate" size={14} color="white" /><Text style={s.smBtnText}>Navigate</Text></TouchableOpacity>
                 {o.status === 'assigned' && <TouchableOpacity style={[s.smBtn, { backgroundColor: '#F59E0B' }]} onPress={() => pickup(o.id)}><Text style={s.smBtnText}>Picked Up</Text></TouchableOpacity>}
                 {o.status === 'picked_up' && <TouchableOpacity style={[s.smBtn, { backgroundColor: '#10B981' }]} onPress={() => deliver(o.id)}><Text style={s.smBtnText}>Delivered</Text></TouchableOpacity>}
               </View>
