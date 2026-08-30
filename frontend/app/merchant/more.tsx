@@ -26,6 +26,8 @@ export default function MerchantMore() {
   const admin = [
     { icon: 'people', title: 'العملاء', subtitle: 'قاعدة عملائك وسجلاتهم', route: '/merchant/customers' },
     { icon: 'people-circle', title: 'الموظفون', subtitle: 'الأدوار والصلاحيات', route: '/merchant/employees' },
+    { icon: 'shield-checkmark', title: 'الأدوار والصلاحيات', subtitle: 'أدوار جاهزة + مخصصة', route: '/merchant/roles' },
+    { icon: 'pulse', title: 'الفريق - مباشر', subtitle: 'الحضور والنشاط', route: '/merchant/team' },
     { icon: 'headset', title: 'إعدادات الدعم', subtitle: 'قنوات التواصل مع العملاء', route: '/merchant/support-settings' },
   ] as const;
 

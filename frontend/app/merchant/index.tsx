@@ -15,20 +15,37 @@ export default function MerchantHome() {
   const { user, apiCall, logout } = useAuth();
   const [stats, setStats] = useState<any>(null);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [attendance, setAttendance] = useState<any>({ checked_in: false });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [s, o] = await Promise.all([
+      const [s, o, att] = await Promise.all([
         apiCall('/api/merchant/stats').catch(() => null),
         apiCall('/api/merchant/orders?limit=5').catch(() => []),
+        apiCall('/api/employee/attendance-status').catch(() => ({ checked_in: false })),
       ]);
       setStats(s);
       setRecentOrders(Array.isArray(o) ? o.slice(0, 5) : []);
+      setAttendance(att || { checked_in: false });
     } catch (e) { console.log(e); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
+
+  const toggleAttendance = async () => {
+    try {
+      if (attendance.checked_in) {
+        const r = await apiCall('/api/employee/check-out', { method: 'POST' });
+        setAttendance({ checked_in: false });
+        alert(`✅ تم تسجيل الانصراف — ${r.duration_minutes} دقيقة`);
+      } else {
+        await apiCall('/api/employee/check-in', { method: 'POST' });
+        setAttendance({ checked_in: true, check_in: new Date().toISOString(), duration_minutes: 0 });
+        alert('✅ تم تسجيل الحضور');
+      }
+    } catch (e: any) { alert(e.message); }
+  };
 
   useEffect(() => { load(); }, [load]);
 
@@ -83,6 +100,22 @@ export default function MerchantHome() {
               </View>
             </View>
           </LinearGradient>
+
+          {/* Time Clock Card */}
+          <TouchableOpacity style={styles.clockCard} onPress={toggleAttendance} activeOpacity={0.85}>
+            <View style={[styles.clockIcon, { backgroundColor: attendance.checked_in ? colors.successSoft : colors.brandTertiary }]}>
+              <Ionicons name={attendance.checked_in ? 'stop-circle' : 'play-circle'} size={26} color={attendance.checked_in ? colors.success : colors.brand} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.clockTitle}>{attendance.checked_in ? '🟢 أنت مسجّل حضورك' : 'سجّل حضورك'}</Text>
+              <Text style={styles.clockSubtitle}>
+                {attendance.checked_in
+                  ? `منذ ${attendance.duration_minutes || 0} دقيقة — اضغط للانصراف`
+                  : 'اضغط لبدء يوم العمل'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-back" size={18} color={colors.onSurfaceTertiary} />
+          </TouchableOpacity>
 
           {/* Stats Grid */}
           <View style={styles.statsGrid}>
@@ -196,6 +229,15 @@ const styles = StyleSheet.create({
   heroPillText: { ...typography.labelSmall, color: colors.onBrandPrimary, fontWeight: '700' },
 
   statsGrid: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  clockCard: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    marginHorizontal: spacing.lg, marginBottom: spacing.md,
+    padding: spacing.md, backgroundColor: colors.surfaceSecondary,
+    borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border,
+  },
+  clockIcon: { width: 48, height: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  clockTitle: { ...typography.titleSmall, color: colors.onSurface },
+  clockSubtitle: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
   quickRow: { paddingHorizontal: spacing.lg, gap: spacing.md, paddingBottom: spacing.sm },
 
   orderCard: {

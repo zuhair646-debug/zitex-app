@@ -84,6 +84,8 @@ export default function MerchantLayout() {
       <Tabs.Screen name="delivery-settings" options={{ href: null }} />
       <Tabs.Screen name="employees" options={{ href: null }} />
       <Tabs.Screen name="support-settings" options={{ href: null }} />
+      <Tabs.Screen name="roles" options={{ href: null }} />
+      <Tabs.Screen name="team" options={{ href: null }} />
     </Tabs>
   );
 }

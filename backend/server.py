@@ -953,7 +953,170 @@ async def update_support_info(request: Request, user=Depends(get_current_user)):
 # ─── Employee Management ───
 # Available permission keys (used by merchant when assigning):
 EMPLOYEE_PERMS = ["all", "products", "orders", "social", "competitions", "services",
-                  "branches", "drivers", "delivery", "banners", "customers", "settings", "support"]
+                  "branches", "drivers", "delivery", "banners", "customers", "settings", "support",
+                  "pos", "inventory", "invoices", "tasks", "tickets_reply", "roles_manage"]
+
+PERM_LABELS = {
+    "all": "كل الصلاحيات (Admin)",
+    "products": "المنتجات", "orders": "الطلبات", "social": "السوشال ميديا",
+    "competitions": "المسابقات", "services": "الخدمات", "branches": "الفروع",
+    "drivers": "السائقون", "delivery": "التوصيل", "banners": "البانرات",
+    "customers": "العملاء", "settings": "إعدادات المتجر", "support": "الدعم الفني",
+    "pos": "نقاط البيع POS", "inventory": "المخزون", "invoices": "الفواتير",
+    "tasks": "المهام", "tickets_reply": "الرد على التذاكر", "roles_manage": "إدارة الأدوار",
+}
+
+# ─── Roles (Custom + Preset) ───
+class RoleInput(BaseModel):
+    name: str
+    description: str = ""
+    permissions: List[str]
+    color: str = "#D4AF37"
+
+@api_router.get("/merchant/roles")
+async def list_roles(user=Depends(get_current_user)):
+    require_merchant(user)
+    roles = await db.roles.find({"merchant_id": user["id"]}).to_list(100)
+    result = [{
+        "id": str(r["_id"]), "name": r.get("name"),
+        "description": r.get("description", ""), "permissions": r.get("permissions", []),
+        "color": r.get("color", "#D4AF37"), "employees_count": r.get("employees_count", 0),
+        "is_preset": r.get("is_preset", False),
+    } for r in roles]
+    # Add preset roles if not created yet
+    preset_names = {r["name"] for r in result}
+    presets = [
+        {"id": "preset_social", "name": "موظف سوشال ميديا", "description": "منشورات فقط", "permissions": ["social"], "color": "#3B82F6", "is_preset": True, "employees_count": 0},
+        {"id": "preset_marketing", "name": "مسؤول تسويق", "description": "سوشال + مسابقات + بانرات", "permissions": ["social", "competitions", "banners"], "color": "#EC4899", "is_preset": True, "employees_count": 0},
+        {"id": "preset_inventory", "name": "أمين مخزون", "description": "المخزون فقط", "permissions": ["inventory", "products"], "color": "#10B981", "is_preset": True, "employees_count": 0},
+        {"id": "preset_cashier", "name": "كاشير", "description": "نقاط البيع والفواتير", "permissions": ["pos", "invoices", "orders"], "color": "#F59E0B", "is_preset": True, "employees_count": 0},
+        {"id": "preset_manager", "name": "مدير فرع", "description": "إدارة فرع كاملة", "permissions": ["orders", "products", "inventory", "customers", "invoices", "pos"], "color": "#8B5CF6", "is_preset": True, "employees_count": 0},
+    ]
+    for p in presets:
+        if p["name"] not in preset_names: result.append(p)
+    return result
+
+@api_router.post("/merchant/roles")
+async def create_role(data: RoleInput, user=Depends(get_current_user)):
+    require_merchant(user)
+    doc = {**data.model_dump(), "merchant_id": user["id"], "employees_count": 0, "is_preset": False,
+           "created_at": datetime.now(timezone.utc).isoformat()}
+    r = await db.roles.insert_one(doc)
+    return {"id": str(r.inserted_id)}
+
+@api_router.put("/merchant/roles/{rid}")
+async def update_role(rid: str, data: RoleInput, user=Depends(get_current_user)):
+    require_merchant(user)
+    if not ObjectId.is_valid(rid): raise HTTPException(status_code=400, detail="Invalid role id")
+    await db.roles.update_one({"_id": ObjectId(rid), "merchant_id": user["id"]}, {"$set": data.model_dump()})
+    return {"message": "Updated"}
+
+@api_router.delete("/merchant/roles/{rid}")
+async def delete_role(rid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    if not ObjectId.is_valid(rid): raise HTTPException(status_code=400, detail="Invalid role id")
+    await db.roles.delete_one({"_id": ObjectId(rid), "merchant_id": user["id"]})
+    return {"message": "Deleted"}
+
+# ─── Time Tracking (Check-in / Check-out) ───
+@api_router.post("/employee/check-in")
+async def check_in(user=Depends(get_current_user)):
+    if user.get("role") not in ("employee", "merchant"):
+        raise HTTPException(status_code=403, detail="Employees or merchant only")
+    # Prevent double check-in
+    open_log = await db.time_logs.find_one({"employee_id": user["id"], "check_out": None})
+    if open_log:
+        return {"message": "أنت مسجّل حضورك بالفعل", "log_id": str(open_log["_id"]),
+                "check_in": open_log.get("check_in")}
+    doc = {"employee_id": user["id"], "employee_name": user.get("name", ""),
+           "merchant_id": user.get("merchant_id", user["id"]),
+           "check_in": datetime.now(timezone.utc).isoformat(), "check_out": None,
+           "duration_minutes": 0}
+    r = await db.time_logs.insert_one(doc)
+    await log_activity(user, "check_in", None, None)
+    return {"message": "تم تسجيل الحضور", "log_id": str(r.inserted_id), "check_in": doc["check_in"]}
+
+@api_router.post("/employee/check-out")
+async def check_out(user=Depends(get_current_user)):
+    if user.get("role") not in ("employee", "merchant"):
+        raise HTTPException(status_code=403)
+    log = await db.time_logs.find_one({"employee_id": user["id"], "check_out": None})
+    if not log:
+        raise HTTPException(status_code=400, detail="لا يوجد تسجيل حضور مفتوح")
+    now = datetime.now(timezone.utc)
+    ci = datetime.fromisoformat(log["check_in"].replace("Z", "+00:00")) if isinstance(log["check_in"], str) else log["check_in"]
+    dur_min = int((now - ci).total_seconds() / 60)
+    await db.time_logs.update_one({"_id": log["_id"]},
+                                  {"$set": {"check_out": now.isoformat(), "duration_minutes": dur_min}})
+    await log_activity(user, "check_out", None, None)
+    return {"message": "تم تسجيل الانصراف", "duration_minutes": dur_min}
+
+@api_router.get("/employee/attendance-status")
+async def attendance_status(user=Depends(get_current_user)):
+    open_log = await db.time_logs.find_one({"employee_id": user["id"], "check_out": None})
+    if not open_log: return {"checked_in": False}
+    ci = datetime.fromisoformat(open_log["check_in"].replace("Z", "+00:00")) if isinstance(open_log["check_in"], str) else open_log["check_in"]
+    now = datetime.now(timezone.utc)
+    dur = int((now - ci).total_seconds() / 60)
+    return {"checked_in": True, "check_in": open_log["check_in"], "duration_minutes": dur}
+
+# ─── Activity Logging Helper ───
+async def log_activity(user, action: str, entity: str = None, entity_id: str = None, meta: dict = None):
+    try:
+        doc = {
+            "employee_id": user["id"], "employee_name": user.get("name", ""),
+            "merchant_id": user.get("merchant_id", user["id"]),
+            "action": action, "entity": entity, "entity_id": entity_id,
+            "meta": meta or {}, "at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db.activity_logs.insert_one(doc)
+    except Exception:
+        pass
+
+# ─── Merchant: Team Overview (Attendance + Activity) ───
+@api_router.get("/merchant/team/overview")
+async def team_overview(user=Depends(get_current_user)):
+    require_merchant(user)
+    if user.get("role") != "merchant":
+        raise HTTPException(status_code=403, detail="Owner only")
+
+    employees = await db.users.find({"role": "employee", "merchant_id": user["id"]}).to_list(200)
+    result = []
+    now = datetime.now(timezone.utc)
+    for emp in employees:
+        eid = str(emp["_id"])
+        open_log = await db.time_logs.find_one({"employee_id": eid, "check_out": None})
+        online = bool(open_log)
+        current_session = 0
+        if open_log:
+            ci = datetime.fromisoformat(open_log["check_in"].replace("Z", "+00:00")) if isinstance(open_log["check_in"], str) else open_log["check_in"]
+            current_session = int((now - ci).total_seconds() / 60)
+        # Total hours today
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        total_today = 0
+        async for log in db.time_logs.find({"employee_id": eid, "check_in": {"$gte": today_start}}):
+            total_today += log.get("duration_minutes", 0) or current_session
+        # Last activity
+        last_act = await db.activity_logs.find_one({"employee_id": eid}, sort=[("at", -1)])
+        result.append({
+            "id": eid, "name": emp.get("name"), "phone": emp.get("phone"),
+            "job_title": emp.get("job_title", ""), "department": emp.get("department"),
+            "branch_ids": emp.get("branch_ids", []),
+            "online": online, "current_session_minutes": current_session,
+            "total_today_minutes": total_today,
+            "last_action": last_act.get("action") if last_act else None,
+            "last_action_at": last_act.get("at") if last_act else None,
+        })
+    return result
+
+@api_router.get("/merchant/employees/{eid}/activity")
+async def employee_activity(eid: str, limit: int = 50, user=Depends(get_current_user)):
+    require_merchant(user)
+    if user.get("role") != "merchant":
+        raise HTTPException(status_code=403)
+    logs = await db.activity_logs.find({"employee_id": eid}).sort("at", -1).to_list(limit)
+    return [{"id": str(l["_id"]), "action": l.get("action"), "entity": l.get("entity"),
+             "at": l.get("at"), "meta": l.get("meta", {})} for l in logs]
 
 class EmployeeInput(BaseModel):
     phone: str
