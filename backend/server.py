@@ -962,6 +962,9 @@ class EmployeeInput(BaseModel):
     department: str = "general"
     permissions: List[str] = []
     salary_monthly: float = 0
+    branch_ids: List[str] = []       # branches assigned to this employee
+    role_id: str = ""                # optional custom role reference
+    job_title: str = ""              # e.g. "كاشير", "مسؤول تسويق"
 
 @api_router.get("/merchant/employees")
 async def list_employees(user=Depends(get_current_user)):
@@ -976,6 +979,9 @@ async def list_employees(user=Depends(get_current_user)):
         "department": e.get("department", ""),
         "permissions": e.get("permissions", []),
         "salary_monthly": e.get("salary_monthly", 0),
+        "branch_ids": e.get("branch_ids", []),
+        "job_title": e.get("job_title", ""),
+        "role_id": e.get("role_id", ""),
         "active": e.get("active", True),
         "created_at": e.get("created_at", ""),
     } for e in employees]
@@ -997,6 +1003,9 @@ async def create_employee(data: EmployeeInput, user=Depends(get_current_user)):
         "role": "employee", "merchant_id": user["id"],
         "department": data.department, "permissions": data.permissions,
         "salary_monthly": data.salary_monthly,
+        "branch_ids": data.branch_ids,
+        "role_id": data.role_id,
+        "job_title": data.job_title,
         "active": True, "points": 0, "wallet_balance": 0,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -1776,6 +1785,86 @@ class BranchInput(BaseModel):
     phone: str = ""
     open_hours: str = "9:00 AM - 11:00 PM"
     published: bool = True
+    # Advanced
+    email: str = ""
+    manager_id: str = ""      # employee_id of branch manager
+    city: str = ""
+    district: str = ""
+    is_main: bool = False     # Main branch (headquarters)
+    working_days: List[str] = ["sat", "sun", "mon", "tue", "wed", "thu"]  # closed = fri by default
+    branch_code: str = ""     # e.g. "RUH-01" for internal reference
+
+# ─── Merchant list branches (all, not just published) ───
+@api_router.get("/merchant/branches")
+async def merchant_list_branches(user=Depends(get_current_user)):
+    require_merchant(user)
+    bs = await db.branches.find({}).sort("is_main", -1).to_list(200)
+    return [serialize_doc(b) for b in bs]
+
+# ─── Branch statistics (aggregated) ───
+@api_router.get("/merchant/branches/{bid}/stats")
+async def branch_stats(bid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    # Employees assigned
+    emp_count = await db.users.count_documents({"role": "employee", "branch_ids": bid})
+    # Orders in this branch
+    total_orders = await db.orders.count_documents({"branch_id": bid})
+    pending_orders = await db.orders.count_documents({"branch_id": bid, "status": {"$in": ["pending", "processing", "ready"]}})
+    # Revenue this month
+    from datetime import datetime, timedelta
+    month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    revenue_cursor = db.orders.aggregate([
+        {"$match": {"branch_id": bid, "status": "delivered", "created_at": {"$gte": month_start}}},
+        {"$group": {"_id": None, "total": {"$sum": "$total"}}}
+    ])
+    revenue = 0
+    async for r in revenue_cursor: revenue = r.get("total", 0)
+    return {
+        "employees": emp_count,
+        "total_orders": total_orders,
+        "pending_orders": pending_orders,
+        "revenue_month": revenue,
+    }
+
+# ─── Branch inventory (products with branch-specific stock) ───
+@api_router.get("/merchant/branches/{bid}/inventory")
+async def branch_inventory(bid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    inventory = await db.branch_inventory.find({"branch_id": bid}).to_list(500)
+    # Enrich with product info
+    result = []
+    for inv in inventory:
+        p = await db.products.find_one({"_id": ObjectId(inv["product_id"])}) if ObjectId.is_valid(inv.get("product_id", "")) else None
+        if p:
+            result.append({
+                "id": str(inv["_id"]),
+                "product_id": inv["product_id"],
+                "product_name": p.get("name_ar") or p.get("name_en"),
+                "product_image": (p.get("images") or [None])[0],
+                "quantity": inv.get("quantity", 0),
+                "min_alert": inv.get("min_alert", 5),
+                "inventory_type": inv.get("inventory_type", "both"),  # store/app/both
+                "last_updated": inv.get("last_updated"),
+            })
+    return result
+
+@api_router.put("/merchant/branches/{bid}/inventory/{pid}")
+async def set_branch_inventory(bid: str, pid: str, request: Request, user=Depends(get_current_user)):
+    require_merchant(user)
+    body = await request.json()
+    from datetime import datetime
+    await db.branch_inventory.update_one(
+        {"branch_id": bid, "product_id": pid},
+        {"$set": {
+            "branch_id": bid, "product_id": pid,
+            "quantity": int(body.get("quantity", 0)),
+            "min_alert": int(body.get("min_alert", 5)),
+            "inventory_type": body.get("inventory_type", "both"),
+            "last_updated": datetime.utcnow().isoformat(),
+        }},
+        upsert=True,
+    )
+    return {"message": "Updated"}
 
 @api_router.get("/branches")
 async def list_branches():
@@ -1795,13 +1884,24 @@ async def nearest_branch(lat: float, lng: float):
 @api_router.post("/merchant/branches")
 async def create_branch(data: BranchInput, user=Depends(get_current_user)):
     require_merchant(user)
-    r = await db.branches.insert_one(data.model_dump())
-    return {"id": str(r.inserted_id)}
+    doc = data.model_dump()
+    # Auto-generate branch code if empty
+    if not doc.get("branch_code"):
+        count = await db.branches.count_documents({})
+        doc["branch_code"] = f"BR-{count+1:03d}"
+    # If this is set as main, unset others
+    if doc.get("is_main"):
+        await db.branches.update_many({"is_main": True}, {"$set": {"is_main": False}})
+    r = await db.branches.insert_one(doc)
+    return {"id": str(r.inserted_id), "branch_code": doc["branch_code"]}
 
 @api_router.put("/merchant/branches/{bid}")
 async def update_branch(bid: str, data: BranchInput, user=Depends(get_current_user)):
     require_merchant(user)
-    await db.branches.update_one({"_id": ObjectId(bid)}, {"$set": data.model_dump()})
+    doc = data.model_dump()
+    if doc.get("is_main"):
+        await db.branches.update_many({"_id": {"$ne": ObjectId(bid)}, "is_main": True}, {"$set": {"is_main": False}})
+    await db.branches.update_one({"_id": ObjectId(bid)}, {"$set": doc})
     return {"message": "Updated"}
 
 @api_router.delete("/merchant/branches/{bid}")

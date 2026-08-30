@@ -19,27 +19,33 @@ export default function MerchantEmployees() {
   const router = useRouter();
   const { apiCall } = useAuth();
   const [items, setItems] = useState<any[]>([]);
+  const [branchesAll, setBranchesAll] = useState<any[]>([]);
   const [perms, setPerms] = useState<{ permissions: string[]; labels: Record<string,string> }>({ permissions: [], labels: {} });
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ name: '', phone: '', password: '', department: 'general', permissions: [] as string[], salary_monthly: '0', active: true });
+  const [form, setForm] = useState({ name: '', phone: '', password: '', department: 'general', permissions: [] as string[], salary_monthly: '0', active: true, branch_ids: [] as string[], job_title: '' });
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [list, permsData] = await Promise.all([
+      const [list, permsData, brs] = await Promise.all([
         apiCall('/api/merchant/employees'),
-        apiCall('/api/merchant/employee-perms')
+        apiCall('/api/merchant/employee-perms'),
+        apiCall('/api/merchant/branches').catch(() => []),
       ]);
-      setItems(list); setPerms(permsData);
+      setItems(list); setPerms(permsData); setBranchesAll(Array.isArray(brs) ? brs : []);
     } catch (e: any) { Alert.alert('خطأ', e.message); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const openNew = () => { setEditing(null); setForm({ name: '', phone: '', password: '', department: 'general', permissions: [], salary_monthly: '0', active: true }); setModalOpen(true); };
-  const openEdit = (e: any) => { setEditing(e); setForm({ name: e.name, phone: e.phone, password: '', department: e.department || 'general', permissions: e.permissions || [], salary_monthly: String(e.salary_monthly || 0), active: e.active !== false }); setModalOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ name: '', phone: '', password: '', department: 'general', permissions: [], salary_monthly: '0', active: true, branch_ids: [], job_title: '' }); setModalOpen(true); };
+  const openEdit = (e: any) => { setEditing(e); setForm({ name: e.name, phone: e.phone, password: '', department: e.department || 'general', permissions: e.permissions || [], salary_monthly: String(e.salary_monthly || 0), active: e.active !== false, branch_ids: e.branch_ids || [], job_title: e.job_title || '' }); setModalOpen(true); };
+
+  const toggleBranch = (bid: string) => setForm(f => ({
+    ...f, branch_ids: f.branch_ids.includes(bid) ? f.branch_ids.filter(x => x !== bid) : [...f.branch_ids, bid]
+  }));
 
   const togglePerm = (p: string) => {
     setForm(f => {
@@ -58,7 +64,7 @@ export default function MerchantEmployees() {
     if (!editing && !form.password) { Alert.alert('مطلوب', 'كلمة المرور مطلوبة للموظف الجديد'); return; }
     setSaving(true);
     try {
-      const body: any = { name: form.name, department: form.department, permissions: form.permissions, salary_monthly: parseFloat(form.salary_monthly) || 0, active: form.active };
+      const body: any = { name: form.name, department: form.department, permissions: form.permissions, salary_monthly: parseFloat(form.salary_monthly) || 0, active: form.active, branch_ids: form.branch_ids, job_title: form.job_title };
       if (form.password) body.password = form.password;
       if (editing) {
         await apiCall(`/api/merchant/employees/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) });
@@ -122,8 +128,28 @@ export default function MerchantEmployees() {
             <TextInput style={s.input} value={form.phone} onChangeText={t => setForm(f => ({ ...f, phone: t }))} placeholder="05xxxxxxxx" keyboardType="phone-pad" editable={!editing} />
             <Text style={s.lbl}>كلمة المرور {editing && '(اتركها فارغة للإبقاء على الحالية)'}</Text>
             <TextInput style={s.input} value={form.password} onChangeText={t => setForm(f => ({ ...f, password: t }))} placeholder="********" secureTextEntry />
+            <Text style={s.lbl}>المسمى الوظيفي</Text>
+            <TextInput style={s.input} value={form.job_title} onChangeText={t => setForm(f => ({ ...f, job_title: t }))} placeholder="مثال: كاشير، مسؤول تسويق" />
             <Text style={s.lbl}>الراتب الشهري (ر.س)</Text>
             <TextInput style={s.input} keyboardType="numeric" value={form.salary_monthly} onChangeText={t => setForm(f => ({ ...f, salary_monthly: t }))} />
+
+            <Text style={s.section}>🏢 الفروع المُعيّن لها</Text>
+            <Text style={s.hint}>اختر فرعاً واحداً أو أكثر — إذا لم تختر شيئاً يُعتبر الموظف مركزيًا (كل الفروع)</Text>
+            {branchesAll.length === 0 ? (
+              <Text style={[s.hint, { color: '#F59E0B', marginTop: 8 }]}>⚠️ لم تُنشئ فروعاً بعد — اذهب إلى قسم الفروع أولاً</Text>
+            ) : (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {branchesAll.map(b => {
+                  const active = form.branch_ids.includes(b.id);
+                  return (
+                    <TouchableOpacity key={b.id} style={[s.permCard, active && s.permActive]} onPress={() => toggleBranch(b.id)}>
+                      <Ionicons name={active ? 'checkmark-circle' : 'business-outline'} size={16} color={active ? '#8833FF' : '#9CA3AF'} />
+                      <Text style={[s.permLbl, active && s.permLblActive]}>{b.name}{b.is_main ? ' ⭐' : ''}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
 
             <Text style={s.section}>🏢 القسم</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
