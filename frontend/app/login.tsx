@@ -15,10 +15,12 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!phone || !password) { setError('يرجى ملء جميع الحقول'); return; }
+    const p = phone.trim();
+    const pw = password.trim();
+    if (!p || !pw) { setError('يرجى ملء جميع الحقول'); return; }
     setLoading(true); setError('');
     try {
-      const userData = await login(phone, password);
+      const userData = await login(p, pw);
       const role = userData?.role;
       if (role === 'chamber') {
         router.replace('/chamber');

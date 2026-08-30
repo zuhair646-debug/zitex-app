@@ -225,53 +225,53 @@ export default function SocialScreen() {
                 </View>
 
                 {/* Contact merchant bar — one-tap channels */}
-                {storeInfo && (storeInfo.whatsapp || storeInfo.phone || storeInfo.email || storeInfo.instagram || storeInfo.tiktok || storeInfo.snapchat || storeInfo.twitter || storeInfo.telegram) && (
+                {!!(storeInfo && (storeInfo.whatsapp || storeInfo.phone || storeInfo.email || storeInfo.instagram || storeInfo.tiktok || storeInfo.snapchat || storeInfo.twitter || storeInfo.telegram)) && (
                   <View style={s.contactBar}>
                     <Text style={s.contactLabel}>💬 تواصل مع المتجر:</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                      {storeInfo.whatsapp && (
+                      {!!storeInfo.whatsapp && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#25D366' }]} onPress={() => openContact('whatsapp')}>
                           <Ionicons name="logo-whatsapp" size={14} color="white" />
                           <Text style={s.chipText}>WhatsApp</Text>
                         </TouchableOpacity>
                       )}
-                      {storeInfo.phone && (
+                      {!!storeInfo.phone && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#3B82F6' }]} onPress={() => openContact('phone')}>
                           <Ionicons name="call" size={14} color="white" />
                           <Text style={s.chipText}>اتصال</Text>
                         </TouchableOpacity>
                       )}
-                      {storeInfo.email && (
+                      {!!storeInfo.email && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#EF4444' }]} onPress={() => openContact('email')}>
                           <Ionicons name="mail" size={14} color="white" />
                           <Text style={s.chipText}>Email</Text>
                         </TouchableOpacity>
                       )}
-                      {storeInfo.instagram && (
+                      {!!storeInfo.instagram && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#E1306C' }]} onPress={() => openContact('instagram')}>
                           <Ionicons name="logo-instagram" size={14} color="white" />
                           <Text style={s.chipText}>Instagram</Text>
                         </TouchableOpacity>
                       )}
-                      {storeInfo.tiktok && (
+                      {!!storeInfo.tiktok && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#000' }]} onPress={() => openContact('tiktok')}>
                           <Ionicons name="logo-tiktok" size={14} color="white" />
                           <Text style={s.chipText}>TikTok</Text>
                         </TouchableOpacity>
                       )}
-                      {storeInfo.snapchat && (
+                      {!!storeInfo.snapchat && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#FFC000' }]} onPress={() => openContact('snapchat')}>
                           <Ionicons name="logo-snapchat" size={14} color="white" />
                           <Text style={[s.chipText, { color: '#000' }]}>Snapchat</Text>
                         </TouchableOpacity>
                       )}
-                      {storeInfo.twitter && (
+                      {!!storeInfo.twitter && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#000' }]} onPress={() => openContact('twitter')}>
                           <Ionicons name="logo-twitter" size={14} color="white" />
                           <Text style={s.chipText}>X / Twitter</Text>
                         </TouchableOpacity>
                       )}
-                      {storeInfo.telegram && (
+                      {!!storeInfo.telegram && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#0088CC' }]} onPress={() => openContact('telegram')}>
                           <Ionicons name="paper-plane" size={14} color="white" />
                           <Text style={s.chipText}>Telegram</Text>

@@ -101,3 +101,93 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Zitex — comprehensive native mobile app for a Tech Store (iOS/Android). Includes e-commerce checkout, social feed, competition draws, delivery system, Chamber of Commerce portal, and a Merchant Multi-Tenant SaaS ERP (branches, roles, inventory, POS, HR). Current phase: integrate POS + Invoices UI into merchant navigation, fix driver login and social.tsx text warnings."
+
+backend:
+  - task: "POS Invoice Create / List / Get endpoints"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "POST /api/pos/invoice, GET /api/pos/invoices, GET /api/pos/invoice/{iid}. Verifies items subtotal, VAT (15%), decrements branch_inventory. Needs backend testing with merchant token (0509999999/merchant2025)."
+  - task: "Auth Login trim whitespace fix"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added .strip() to phone and password to handle whitespace. Test with driver (0540001111/driver1234), merchant (0509999999/merchant2025), chamber (0550000000/chamber2025). Also verify with trailing/leading whitespace."
+
+frontend:
+  - task: "POS screen + Invoices screen registered and reachable"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/merchant/_layout.tsx, /app/frontend/app/merchant/more.tsx, /app/frontend/app/merchant/index.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added hidden routes for pos+invoices in Tabs layout, quick-actions on merchant dashboard, and 'المبيعات والفواتير' section in More. Manual screenshot verified POS screen loads with product search + branch chips. Please test full flow: open POS → search product → add to cart → checkout → verify invoice appears in /merchant/invoices."
+  - task: "social.tsx text-string warning fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/app/(tabs)/social.tsx"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Wrapped storeInfo conditional with !!() to prevent empty-string leak in JSX. Verify no 'Text strings must be rendered' warning appears when opening the Social tab."
+        - working: false
+          agent: "testing"
+          comment: "Outer conditional fixed but 8 inner {storeInfo.X && ...} conditionals still leak empty strings. 15 warnings still fire."
+        - working: true
+          agent: "main"
+          comment: "Wrapped all 8 inner conditionals (whatsapp/phone/email/instagram/tiktok/snapchat/twitter/telegram) with !!()."
+
+  - task: "POS invoice ownership check (security)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "GET /api/pos/invoice/{iid} had no ownership check — any merchant could read another merchant's invoice by ObjectId."
+        - working: true
+          agent: "main"
+          comment: "Added merchant_id ownership check + role check + employee permission check (all / invoices_view_all)."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.3.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "POS Invoice Create / List / Get endpoints"
+    - "Auth Login trim whitespace fix"
+    - "POS screen + Invoices screen registered and reachable"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Phase C (POS + Invoices) navigation is now fully wired. Also fixed auth login whitespace bug (likely cause of driver login failing in production). social.tsx warning also fixed. Please verify: (1) POS end-to-end invoice creation, (2) login works for all three roles including with padded whitespace, (3) no text warnings on Social tab. Credentials: Merchant 0509999999/merchant2025, Driver 0540001111/driver1234, Chamber 0550000000/chamber2025."

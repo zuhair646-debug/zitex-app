@@ -135,6 +135,8 @@ export default function MerchantHome() {
           <SectionHeader title="إجراءات سريعة" />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickRow} style={{ flexGrow: 0 }}>
             <ActionCard icon="add-circle" label="إضافة منتج" onPress={() => router.push('/merchant/product-form')} />
+            <ActionCard icon="cart" label="نقطة البيع POS" onPress={() => router.push('/merchant/pos')} />
+            <ActionCard icon="receipt" label="الفواتير" onPress={() => router.push('/merchant/invoices')} />
             <ActionCard icon="megaphone" label="منشور جديد" onPress={() => router.push('/merchant/social')} />
             <ActionCard icon="trophy" label="إنشاء مسابقة" onPress={() => router.push('/merchant/competition-form')} />
             <ActionCard icon="image" label="إضافة بانر" onPress={() => router.push('/merchant/banners')} />

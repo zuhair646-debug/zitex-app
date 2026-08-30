@@ -9,6 +9,11 @@ export default function MerchantMore() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
+  const sales = [
+    { icon: 'cart', title: 'نقطة البيع POS', subtitle: 'شاشة كاشير سريعة لإصدار الفواتير', route: '/merchant/pos' },
+    { icon: 'receipt', title: 'الفواتير', subtitle: 'سجل الفواتير ومبيعات اليوم', route: '/merchant/invoices' },
+  ] as const;
+
   const marketing = [
     { icon: 'megaphone', title: 'السوشال ميديا', subtitle: 'منشورات، استطلاعات، حالات', route: '/merchant/social' },
     { icon: 'trophy', title: 'المسابقات والسحوبات', subtitle: 'إنشاء وإدارة السحوبات', route: '/merchant/competitions' },
@@ -63,6 +68,7 @@ export default function MerchantMore() {
         </View>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+          <Section label="المبيعات والفواتير" items={sales as any} />
           <Section label="التسويق" items={marketing as any} />
           <Section label="العمليات" items={operations as any} />
           <Section label="الإدارة" items={admin as any} />
@@ -72,7 +78,7 @@ export default function MerchantMore() {
             <ListItem icon="log-out" title="تسجيل الخروج" onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zitex Merchant v1.1.0</Text>
+          <Text style={styles.version}>Zitex Merchant v1.3.0</Text>
         </ScrollView>
       </SafeAreaView>
     </View>

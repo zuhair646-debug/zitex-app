@@ -1,0 +1,44 @@
+{
+  "summary": "Verified session changes: POS backend endpoints, auth/login trim fix, POS + Invoices frontend flow, multi-role login redirects, and social.tsx text-node warnings. Backend: 12/12 passing (1 skip). All POS endpoints work — POST /api/pos/invoice creates INV-000001-style numbered invoice with correct 15% VAT (subtotal*1.15 = total, verified within 0.01 tolerance), GET /api/pos/invoices lists newly created invoice, GET /api/pos/invoice/{id} returns full details, customer/anonymous is 403/401, empty items → 400. Auth trim fix confirmed — merchant/driver/chamber/customer all log in successfully, whitespace-padded credentials ('  0540001111  ' / '  driver1234  ') now succeed (200), invalid password returns 401 with Arabic detail. Frontend (Playwright 390x844): merchant login → dashboard shows both 'نقطة البيع POS' and 'الفواتير' quick actions; POS screen renders header 'نقاط البيع POS', branch chips (2 branches), search input, product cards with prices; tapping product adds to cart, cart bar appears with total, 'إنهاء البيع' opens checkout modal with subtotal/ضريبة 15%/الإجمالي/4 payment method chips/'إصدار الفاتورة'; issuing invoice succeeds — /merchant/invoices now shows INV-000001 and INV-000002 with totals 5747.70 & 2873.85 ر.س and 'كاش' badge. Multi-role redirects all work: 0540001111→/driver, 0550000000→/chamber, 0509999999→/merchant, 0500000000→/. HOWEVER, social.tsx text-node warning fix is INCOMPLETE — 15 'Unexpected text node' console errors still fire when scrolling the customer /social feed. Root cause: only the OUTER conditional on line 228 was wrapped with !!(); the 8 inner conditionals (`{storeInfo.whatsapp && ...}`, `{storeInfo.phone && ...}`, etc. lines 232-279) still render empty string when the corresponding field is '' (falsy but not boolean), producing stray text nodes inside the <ScrollView>/<View>. Also note that at line 195 inside <Text style={s.eventText}>, the expression `{post.event_date} {post.event_location && `...`}` is inside <Text> so that particular one is safe.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "app/(tabs)/social.tsx", "issue": "15× 'Unexpected text node: . A text node cannot be a child of a <View>.' still fires on customer /social feed. The session's fix on line 228 wrapped only the outer conditional with !!(); the 8 inner conditionals (storeInfo.whatsapp && ..., storeInfo.phone && ..., storeInfo.email && ..., storeInfo.instagram && ..., storeInfo.tiktok && ..., storeInfo.snapchat && ..., storeInfo.twitter && ..., storeInfo.telegram && ...) on lines 232-279 still render the empty string when the field is '' (falsy string). Change each `{storeInfo.X && (...)}` to `{!!storeInfo.X && (...)}` or gate with typeof check. Reference: /app/frontend/app/(tabs)/social.tsx:232,238,244,250,256,262,268,274."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_pos_and_auth.py",
+    "/app/test_reports/pytest/pos_auth_results.xml"
+  ],
+  "action_items": [
+    "FIX (Frontend, LOW-MED): In /app/frontend/app/(tabs)/social.tsx lines 232, 238, 244, 250, 256, 262, 268, 274 convert each `{storeInfo.<field> && (...)}` to `{!!storeInfo.<field> && (...)}` (or `{storeInfo.<field> ? (...) : null}`) so an empty-string field does not render a stray text node. Retest the customer /social scroll — expect 0 text-node warnings.",
+    "OPTIONAL (Backend): Consider exposing GET /api/merchant/branch-inventory/{branch_id} publicly to merchants so testing agent can verify inventory decrement automatically (currently returned non-200 during automated test and was skipped)."
+  ],
+  "critical_code_review_comments": [
+    "POST /api/pos/invoice: invoice_number is derived from `db.invoices.count_documents({})` — this is NOT unique across merchants (all merchants share the same INV-000001 counter) and is vulnerable to race conditions on concurrent inserts. Consider per-merchant counter or use ObjectId + separate sequence collection.",
+    "POST /api/pos/invoice: no stock validation before decrement; branch_inventory quantity can go negative. Consider `$inc` guarded by `{quantity: {$gte: qty}}` and rollback if not matched.",
+    "GET /api/pos/invoice/{iid}: serialize_doc returns raw invoice but there's NO ownership check (merchant_id / employee_id) — any authenticated merchant/employee could fetch another merchant's invoice by guessing ObjectId. Add filter `{'_id': ObjectId(iid), 'merchant_id': user.get('merchant_id', user['id'])}`.",
+    "auth/login now correctly strips leading/trailing whitespace from both phone and password. Good fix.",
+    "InvoiceInput uses `discount: float = 0` at line-item and top-level — top-level subtotal calculation subtracts line discount inside sum(), then subtracts data.discount from total. Verify UI aligns with this semantic (currently POS screen sends discount:0 for all items and no top-level discount, so fine).",
+    "POS screen `useCallback(load, [])` has empty deps but references `apiCall` — since apiCall is stable in the AuthProvider this works, but adding to deps would be cleaner.",
+    "POS `checkout()` reads `r.total.toFixed(2)` directly — if the API ever returns null/undefined this crashes; consider `(r.total ?? 0).toFixed(2)`."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pos_and_auth.py (new — 12 tests, 1 skip)"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 pytest, 1 skip due to branch-inventory endpoint access)",
+    "frontend": "95% — POS flow ✅, invoice creation ✅ (INV-000001/2 visible on /merchant/invoices), multi-role login ✅ (driver/chamber/merchant/customer all redirect correctly). social.tsx text-node fix INCOMPLETE — 15 warnings still fire."
+  },
+  "seed_data_creation": "Two TEST invoices created via POS UI (INV-000001, INV-000002) and one TEST invoice via pytest under merchant 0509999999. All are marked with 'TEST_' prefix in customer_name / notes so they can be cleaned up if desired.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "POS backend + frontend are green. Auth trim fix is verified. The only remaining item is the social.tsx text-node warning: main agent must fix the 8 inner conditionals on lines 232-279 as listed in action_items. After that, re-run only the customer /social scroll (login 0500000000/test1234 → /social → scroll) and verify console shows 0 'Unexpected text node' errors. Backend test file /app/backend/tests/test_pos_and_auth.py can be re-run at any time via `pytest /app/backend/tests/test_pos_and_auth.py -v`. Two invoices are now persisted for the merchant — subsequent invoice-list tests will see them cumulatively.",
+  "rca_of_issue": "social.tsx text-node warning: JSX expression `{storeInfo.whatsapp && (...)}` evaluates to the string '' (empty string) when `storeInfo.whatsapp === ''`, and React renders '' as a text node. In native RN this triggers 'Text strings must be rendered within a <Text> component'; on RN-Web it manifests as 'Unexpected text node: . A text node cannot be a child of a <View>.' The session's fix wrapped only the outermost condition on line 228 with `!!(...)`, but the eight inner social-channel conditionals (lines 232-279) were left as raw truthy-string checks. Fix: coerce each inner check to boolean via `!!` or use ternary `? : null`. Reproduction: login as customer 0500000000/test1234 → tap Social tab → scroll — 15 warnings fire because at least one seeded post has a partial storeInfo where some channels are '' and others are set."
+}

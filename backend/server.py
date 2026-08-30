@@ -130,8 +130,10 @@ async def register(data: RegisterInput):
 
 @api_router.post("/auth/login")
 async def login(data: LoginInput):
-    user = await db.users.find_one({"phone": data.phone})
-    if not user or not verify_password(data.password, user["password_hash"]):
+    phone = (data.phone or "").strip()
+    password = (data.password or "").strip()
+    user = await db.users.find_one({"phone": phone})
+    if not user or not verify_password(password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
     user["id"] = str(user.pop("_id"))
     user.pop("password_hash")
@@ -2911,6 +2913,100 @@ async def merchant_list_posts(user=Depends(get_current_user)):
     } for p in posts]
 
 # Need to re-include router so new endpoint is registered
+
+# ─── Invoices & POS ───
+class InvoiceItem(BaseModel):
+    product_id: str
+    name: str
+    price: float
+    quantity: int
+    discount: float = 0
+
+class InvoiceInput(BaseModel):
+    items: List[InvoiceItem]
+    customer_name: str = ""
+    customer_phone: str = ""
+    payment_method: str = "cash"    # cash / card / stc_pay / bank_transfer
+    branch_id: str = ""
+    discount: float = 0
+    vat_percent: float = 15
+    notes: str = ""
+    send_via: str = "whatsapp"      # whatsapp / email / none
+
+@api_router.post("/pos/invoice")
+async def create_invoice(data: InvoiceInput, user=Depends(get_current_user)):
+    from datetime import datetime, timezone
+    if user.get("role") not in ("merchant", "employee"):
+        raise HTTPException(status_code=403)
+    if not data.items:
+        raise HTTPException(status_code=400, detail="لا توجد منتجات")
+    subtotal = sum((it.price * it.quantity) - it.discount for it in data.items)
+    vat = subtotal * (data.vat_percent / 100) if data.vat_percent else 0
+    total = subtotal + vat - data.discount
+    count = await db.invoices.count_documents({})
+    inv_number = f"INV-{count+1:06d}"
+    doc = {
+        "invoice_number": inv_number,
+        "items": [it.model_dump() for it in data.items],
+        "customer_name": data.customer_name, "customer_phone": data.customer_phone,
+        "payment_method": data.payment_method, "branch_id": data.branch_id,
+        "subtotal": subtotal, "discount": data.discount,
+        "vat_percent": data.vat_percent, "vat_amount": vat, "total": total,
+        "notes": data.notes, "send_via": data.send_via,
+        "employee_id": user["id"], "employee_name": user.get("name", ""),
+        "merchant_id": user.get("merchant_id", user["id"]),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "status": "paid",
+    }
+    r = await db.invoices.insert_one(doc)
+    # Reduce branch inventory
+    if data.branch_id:
+        for it in data.items:
+            await db.branch_inventory.update_one(
+                {"branch_id": data.branch_id, "product_id": it.product_id},
+                {"$inc": {"quantity": -it.quantity}}
+            )
+    await log_activity(user, "pos_sale", "invoice", str(r.inserted_id),
+                       {"total": total, "items_count": len(data.items)})
+    return {"id": str(r.inserted_id), "invoice_number": inv_number, "total": total, "vat_amount": vat}
+
+@api_router.get("/pos/invoices")
+async def list_invoices(user=Depends(get_current_user), limit: int = 100):
+    if user.get("role") not in ("merchant", "employee"):
+        raise HTTPException(status_code=403)
+    mid = user.get("merchant_id", user["id"])
+    q = {"merchant_id": mid}
+    # Employees see only their own invoices unless they have all permission
+    if user.get("role") == "employee" and "all" not in user.get("permissions", []) and "invoices_view_all" not in user.get("permissions", []):
+        q["employee_id"] = user["id"]
+    invs = await db.invoices.find(q).sort("created_at", -1).to_list(limit)
+    return [{
+        "id": str(i["_id"]), "invoice_number": i.get("invoice_number"),
+        "customer_name": i.get("customer_name"), "customer_phone": i.get("customer_phone"),
+        "total": i.get("total"), "payment_method": i.get("payment_method"),
+        "items_count": len(i.get("items", [])), "created_at": i.get("created_at"),
+        "employee_name": i.get("employee_name"), "branch_id": i.get("branch_id"),
+    } for i in invs]
+
+@api_router.get("/pos/invoice/{iid}")
+async def get_invoice(iid: str, user=Depends(get_current_user)):
+    if not ObjectId.is_valid(iid): raise HTTPException(400)
+    if user.get("role") not in ("merchant", "employee"):
+        raise HTTPException(status_code=403)
+    inv = await db.invoices.find_one({"_id": ObjectId(iid)})
+    if not inv: raise HTTPException(404)
+    # Ownership check: merchant/employee can only see their tenant's invoices
+    mid = user.get("merchant_id", user["id"])
+    if inv.get("merchant_id") != mid:
+        raise HTTPException(status_code=403, detail="ليست فاتورتك")
+    # Employees see only own invoices unless they have all/invoices_view_all
+    if user.get("role") == "employee":
+        perms = user.get("permissions", [])
+        if "all" not in perms and "invoices_view_all" not in perms and inv.get("employee_id") != user["id"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بعرض هذه الفاتورة")
+    return serialize_doc(inv)
+
+
 app.include_router(api_router)
 
 @app.on_event("startup")
