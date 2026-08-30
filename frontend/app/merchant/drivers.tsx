@@ -14,7 +14,7 @@ export default function MerchantDrivers() {
   const [form, setForm] = useState<any>({ name: '', phone: '', password: 'driver1234', vehicle_info: '', payment_model: 'commission', salary_monthly: '0', bonus_threshold_orders: '20', bonus_per_extra_order: '2', commission_type: 'fixed', merchant_commission_value: '5' });
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/merchant/drivers'); setDrivers(d); } catch (e: any) { Alert.alert('Error', e.message); } finally { setLoading(false); }
+    try { const d = await apiCall('/api/merchant/drivers'); setDrivers(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -25,28 +25,28 @@ export default function MerchantDrivers() {
       await apiCall('/api/merchant/drivers', { method: 'POST', body: JSON.stringify(body) });
       Alert.alert('Created', `Driver login: ${form.phone} / ${form.password}`);
       setModal(false); load();
-    } catch (e: any) { Alert.alert('Error', e.message); }
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
   };
-  const del = (id: string, n: string) => Alert.alert('Delete?', `Delete "${n}"?`, [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/drivers/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('Error', e.message); } } }]);
+  const del = (id: string, n: string) => Alert.alert('حذف؟', `حذف "${n}"؟`, [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/drivers/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } }]);
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Drivers ({drivers.length})</Text>
+        <Text style={s.title}>السائقون ({drivers.length})</Text>
         <TouchableOpacity onPress={() => setModal(true)} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView contentContainerStyle={{ padding: 16 }}>
-          {drivers.length === 0 && <Text style={s.empty}>No drivers yet. Tap + to add.</Text>}
+          {drivers.length === 0 && <Text style={s.empty}>لا يوجد سائقون بعد. اضغط + لإضافة سائق.</Text>}
           {drivers.map(d => (
             <View key={d.id} style={s.card}>
               <View style={[s.statusDot, { backgroundColor: d.online ? '#10B981' : '#9CA3AF' }]} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={s.name}>{d.name}</Text>
-                <Text style={s.phone}>{d.phone} • {d.vehicle_info || 'No vehicle'}</Text>
-                <Text style={s.payment}>{d.payment_model === 'salary' ? `Salary ${d.salary_monthly} SAR/mo` : `Commission: ${d.commission_type === 'percentage' ? d.merchant_commission_value + '%' : d.merchant_commission_value + ' SAR'} per order`}</Text>
-                <Text style={s.stats}>Total: {d.total_deliveries || 0} • Today: {d.today_deliveries || 0} • Wallet: {(d.wallet_balance || 0).toFixed(0)} SAR</Text>
+                <Text style={s.phone}>{d.phone} • {d.vehicle_info || 'لا توجد مركبة'}</Text>
+                <Text style={s.payment}>{d.payment_model === 'salary' ? `راتب ${d.salary_monthly} ر.س / شهرياً` : `عمولة: ${d.commission_type === 'percentage' ? d.merchant_commission_value + '%' : d.merchant_commission_value + ' ر.س'} لكل طلب`}</Text>
+                <Text style={s.stats}>الإجمالي: {d.total_deliveries || 0} • اليوم: {d.today_deliveries || 0} • المحفظة: {(d.wallet_balance || 0).toFixed(0)} ر.س</Text>
               </View>
               <TouchableOpacity onPress={() => del(d.id, d.name)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
             </View>
@@ -57,38 +57,38 @@ export default function MerchantDrivers() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <Text style={s.title}>New Driver</Text>
+            <Text style={s.title}>سائق جديد</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            <Text style={s.label}>Name *</Text><TextInput style={s.input} value={form.name} onChangeText={t => setForm({ ...form, name: t })} />
-            <Text style={s.label}>Phone *</Text><TextInput style={s.input} value={form.phone} onChangeText={t => setForm({ ...form, phone: t })} keyboardType="phone-pad" />
-            <Text style={s.label}>Login Password *</Text><TextInput style={s.input} value={form.password} onChangeText={t => setForm({ ...form, password: t })} secureTextEntry />
-            <Text style={s.label}>Vehicle Info</Text><TextInput style={s.input} value={form.vehicle_info} onChangeText={t => setForm({ ...form, vehicle_info: t })} placeholder="Toyota Hilux 2022" />
-            <Text style={s.label}>Payment Model</Text>
+            <Text style={s.label}>الاسم *</Text><TextInput style={s.input} value={form.name} onChangeText={t => setForm({ ...form, name: t })} />
+            <Text style={s.label}>رقم الجوال *</Text><TextInput style={s.input} value={form.phone} onChangeText={t => setForm({ ...form, phone: t })} keyboardType="phone-pad" />
+            <Text style={s.label}>كلمة مرور الدخول *</Text><TextInput style={s.input} value={form.password} onChangeText={t => setForm({ ...form, password: t })} secureTextEntry />
+            <Text style={s.label}>معلومات المركبة</Text><TextInput style={s.input} value={form.vehicle_info} onChangeText={t => setForm({ ...form, vehicle_info: t })} placeholder="Toyota Hilux 2022" />
+            <Text style={s.label}>نموذج الدفع</Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity style={[s.opt, form.payment_model === 'commission' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'commission' })}><Text style={[s.optText, form.payment_model === 'commission' && s.optTextActive]}>Per-Order Commission</Text></TouchableOpacity>
-              <TouchableOpacity style={[s.opt, form.payment_model === 'salary' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'salary' })}><Text style={[s.optText, form.payment_model === 'salary' && s.optTextActive]}>Monthly Salary</Text></TouchableOpacity>
+              <TouchableOpacity style={[s.opt, form.payment_model === 'commission' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'commission' })}><Text style={[s.optText, form.payment_model === 'commission' && s.optTextActive]}>عمولة لكل طلب</Text></TouchableOpacity>
+              <TouchableOpacity style={[s.opt, form.payment_model === 'salary' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'salary' })}><Text style={[s.optText, form.payment_model === 'salary' && s.optTextActive]}>راتب شهري</Text></TouchableOpacity>
             </View>
             {form.payment_model === 'commission' && (<>
-              <Text style={s.label}>Commission Type</Text>
+              <Text style={s.label}>نوع العمولة</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TouchableOpacity style={[s.opt, form.commission_type === 'fixed' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'fixed' })}><Text style={[s.optText, form.commission_type === 'fixed' && s.optTextActive]}>Fixed Amount</Text></TouchableOpacity>
-                <TouchableOpacity style={[s.opt, form.commission_type === 'percentage' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'percentage' })}><Text style={[s.optText, form.commission_type === 'percentage' && s.optTextActive]}>Percentage</Text></TouchableOpacity>
+                <TouchableOpacity style={[s.opt, form.commission_type === 'fixed' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'fixed' })}><Text style={[s.optText, form.commission_type === 'fixed' && s.optTextActive]}>مبلغ ثابت</Text></TouchableOpacity>
+                <TouchableOpacity style={[s.opt, form.commission_type === 'percentage' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'percentage' })}><Text style={[s.optText, form.commission_type === 'percentage' && s.optTextActive]}>نسبة مئوية</Text></TouchableOpacity>
               </View>
-              <Text style={s.label}>Merchant takes ({form.commission_type === 'percentage' ? '%' : 'SAR'} per order)</Text>
+              <Text style={s.label}>حصة التاجر ({form.commission_type === 'percentage' ? '%' : 'ر.س'} لكل طلب)</Text>
               <TextInput style={s.input} keyboardType="numeric" value={form.merchant_commission_value} onChangeText={t => setForm({ ...form, merchant_commission_value: t })} />
-              <Text style={s.hint}>Rest goes to driver wallet</Text>
+              <Text style={s.hint}>الباقي يذهب لمحفظة السائق</Text>
             </>)}
             {form.payment_model === 'salary' && (<>
-              <Text style={s.label}>Monthly Salary (SAR)</Text>
+              <Text style={s.label}>الراتب الشهري (ر.س)</Text>
               <TextInput style={s.input} keyboardType="numeric" value={form.salary_monthly} onChangeText={t => setForm({ ...form, salary_monthly: t })} placeholder="3000" />
-              <Text style={s.label}>Bonus threshold (orders/day)</Text>
+              <Text style={s.label}>حد المكافأة (طلبات/يوم)</Text>
               <TextInput style={s.input} keyboardType="numeric" value={form.bonus_threshold_orders} onChangeText={t => setForm({ ...form, bonus_threshold_orders: t })} />
-              <Text style={s.label}>Bonus per extra order (SAR)</Text>
+              <Text style={s.label}>مكافأة الطلب الإضافي (ر.س)</Text>
               <TextInput style={s.input} keyboardType="numeric" value={form.bonus_per_extra_order} onChangeText={t => setForm({ ...form, bonus_per_extra_order: t })} />
-              <Text style={s.hint}>Above threshold, driver earns extra per order</Text>
+              <Text style={s.hint}>فوق الحد، يكسب السائق مكافأة لكل طلب إضافي</Text>
             </>)}
-            <TouchableOpacity style={s.saveBtn} onPress={save}><Text style={s.saveText}>Create Driver</Text></TouchableOpacity>
+            <TouchableOpacity style={s.saveBtn} onPress={save}><Text style={s.saveText}>إضافة السائق</Text></TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
       </Modal>

@@ -131,18 +131,22 @@ export default function MerchantBranches() {
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                         <Text style={s.cardName}>{b.name}</Text>
                         {b.is_main && <Badge label="الرئيسي" tone="gold" />}
-                        {b.branch_code && <Badge label={b.branch_code} tone="info" />}
+                        {!!b.branch_code && <Badge label={b.branch_code} tone="info" />}
                         {!b.published && <Badge label="مغلق" tone="error" />}
                       </View>
-                      <Text style={s.cardAddress} numberOfLines={2}>
-                        <Ionicons name="location" size={11} color={colors.onSurfaceSecondary} /> {b.address}
-                        {b.city ? ` • ${b.city}` : ''}
-                      </Text>
-                      {b.phone && (
-                        <Text style={s.cardMeta}>
-                          <Ionicons name="call" size={11} color={colors.onSurfaceSecondary} /> {b.phone}
-                          {b.open_hours ? `  •  ${b.open_hours}` : ''}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                        <Ionicons name="location" size={11} color={colors.onSurfaceSecondary} />
+                        <Text style={s.cardAddress} numberOfLines={2}>
+                          {b.address}{b.city ? ` • ${b.city}` : ''}
                         </Text>
+                      </View>
+                      {b.phone && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                          <Ionicons name="call" size={11} color={colors.onSurfaceSecondary} />
+                          <Text style={s.cardMeta}>
+                            {b.phone}{b.open_hours ? `  •  ${b.open_hours}` : ''}
+                          </Text>
+                        </View>
                       )}
                     </View>
                   </View>

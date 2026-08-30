@@ -95,7 +95,7 @@ export default function MerchantRoles() {
                       <Text style={s.name}>{r.name}</Text>
                       {r.is_preset && <Badge label="جاهز" tone="info" />}
                     </View>
-                    {r.description && <Text style={s.desc} numberOfLines={2}>{r.description}</Text>}
+                    {!!r.description && <Text style={s.desc} numberOfLines={2}>{r.description}</Text>}
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
                       {r.permissions.slice(0, 4).map((p: string) => (
                         <Badge key={p} label={PERMS.find(x => x.key === p)?.label || p} tone="default" />

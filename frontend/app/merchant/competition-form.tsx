@@ -40,7 +40,7 @@ export default function CompetitionForm() {
       Alert.alert('Success', `Employee created. ID: ${r.id}`);
       setShowEmpModal(false); setNewEmp({ name: '', phone: '', password: '', email: '' });
       loadEmps();
-    } catch (e: any) { Alert.alert('Error', e.message); }
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
   };
 
   const submit = async () => {
@@ -52,7 +52,7 @@ export default function CompetitionForm() {
       const body = { ...data, prize_count: parseInt(data.prize_count) || 1, spend_requirement: parseFloat(data.spend_requirement) || 0, max_participants: parseInt(data.max_participants) || 1000 };
       await apiCall('/api/merchant/competitions', { method: 'POST', body: JSON.stringify(body) });
       Alert.alert('Success', 'Competition published', [{ text: 'OK', onPress: () => router.back() }]);
-    } catch (e: any) { Alert.alert('Error', e.message); } finally { setLoading(false); }
+    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); }
   };
 
   return (

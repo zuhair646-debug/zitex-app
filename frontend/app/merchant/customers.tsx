@@ -13,7 +13,7 @@ export default function MerchantCustomers() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/merchant/customers'); setCustomers(d); } catch (e: any) { Alert.alert('Error', e.message); } finally { setLoading(false); setRefreshing(false); }
+    try { const d = await apiCall('/api/merchant/customers'); setCustomers(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -21,7 +21,7 @@ export default function MerchantCustomers() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Customers ({customers.length})</Text>
+        <Text style={s.title}>العملاء ({customers.length})</Text>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>

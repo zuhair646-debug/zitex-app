@@ -15,23 +15,23 @@ export default function MerchantBanners() {
   const [form, setForm] = useState<any>({ title_ar: '', title_en: '', image: '', type: 'normal', published: true, order: 1 });
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/banners'); setBanners(d); } catch (e: any) { Alert.alert('Error', e.message); } finally { setLoading(false); setRefreshing(false); }
+    try { const d = await apiCall('/api/banners'); setBanners(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
   const save = async () => {
     if (!form.image) { Alert.alert('Required', 'Image URL required'); return; }
     try { await apiCall('/api/merchant/banners', { method: 'POST', body: JSON.stringify({ ...form, order: parseInt(form.order) || 1 }) }); setForm({ title_ar: '', title_en: '', image: '', type: 'normal', published: true, order: 1 }); setModalOpen(false); load(); }
-    catch (e: any) { Alert.alert('Error', e.message); }
+    catch (e: any) { Alert.alert('خطأ', e.message); }
   };
 
-  const del = (id: string) => Alert.alert('Delete Banner?', '', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/banners/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('Error', e.message); } } }]);
+  const del = (id: string) => Alert.alert('حذف البانر؟', '', [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/banners/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } }]);
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Banners ({banners.length})</Text>
+        <Text style={s.title}>البانرات ({banners.length})</Text>
         <TouchableOpacity testID="add-banner" onPress={() => setModalOpen(true)} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :

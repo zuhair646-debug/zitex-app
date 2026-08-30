@@ -101,8 +101,8 @@ export default function CartScreen() {
                   <Image source={{ uri: p.images?.[0] }} style={styles.cartImg} />
                   <View style={styles.cartInfo}>
                     <Text style={styles.cartName} numberOfLines={2}>{p.name_en}</Text>
-                    {item.color && <Text style={styles.cartOption}>{item.color}</Text>}
-                    {item.storage && <Text style={styles.cartOption}>{item.storage}</Text>}
+                    {!!item.color && <Text style={styles.cartOption}>{item.color}</Text>}
+                    {!!item.storage && <Text style={styles.cartOption}>{item.storage}</Text>}
                     <Text style={styles.cartPrice}>{price} ر.س</Text>
                     <View style={styles.qtyRow}>
                       <TouchableOpacity testID={`qty-minus-${item.id}`} style={styles.qtyBtn} onPress={() => updateQty(item.id, item.quantity - 1)}>

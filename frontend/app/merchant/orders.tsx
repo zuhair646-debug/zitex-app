@@ -22,7 +22,7 @@ export default function MerchantOrders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<OrderFilter>('new');
+  const [filter, setFilter] = useState<OrderFilter>('all');
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/merchant/orders'); setOrders(Array.isArray(d) ? d : []); }

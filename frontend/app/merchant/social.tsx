@@ -205,7 +205,7 @@ export default function MerchantSocial() {
                       : <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
                           {p.images.map((u: string, i: number) => <Image key={i} source={{ uri: u }} style={[s.img, { width: 240, marginRight: 8 }]} />)}
                         </ScrollView>
-                  ) : (p.image && <Image source={{ uri: p.image }} style={s.img} />)}
+                  ) : (!!p.image && <Image source={{ uri: p.image }} style={s.img} />)}
 
                   {isPoll && (p.poll_options || []).map((o: any, i: number) => {
                     const pct = totalVotes ? Math.round((o.votes || 0) / totalVotes * 100) : 0;
@@ -223,15 +223,15 @@ export default function MerchantSocial() {
                       <Text style={s.eventText}>{p.event_date} • {p.event_location || ''}</Text>
                     </View>
                   )}
-                  {isStory && p.expires_at && <Text style={s.expiry}>⏱ تنتهي: {new Date(p.expires_at).toLocaleString('ar')}</Text>}
+                  {isStory && !!p.expires_at && <Text style={s.expiry}>⏱ تنتهي: {new Date(p.expires_at).toLocaleString('ar')}</Text>}
 
                   <View style={s.statsRow}>
-                    <Text style={s.stat}><Ionicons name="heart" size={13} color="#EF4444" /> {p.likes || 0}</Text>
+                    <View style={s.stat}><Ionicons name="heart" size={13} color="#EF4444" /><Text style={s.statText}> {p.likes || 0}</Text></View>
                     <TouchableOpacity style={s.commentsBtn} onPress={() => openThread(p.id || p._id)}>
                       <Ionicons name="chatbubble" size={13} color="#3B82F6" />
                       <Text style={s.commentsBtnText}>التعليقات ({p.comments || 0})</Text>
                     </TouchableOpacity>
-                    <Text style={s.stat}><Ionicons name="eye" size={13} color="#6B7280" /> {p.views || 0}</Text>
+                    <View style={s.stat}><Ionicons name="eye" size={13} color="#6B7280" /><Text style={s.statText}> {p.views || 0}</Text></View>
                   </View>
                 </View>
               );
@@ -424,7 +424,8 @@ const s = StyleSheet.create({
   text: { fontSize: 13, color: '#374151', marginBottom: 8 },
   img: { width: '100%', height: 180, borderRadius: 8, backgroundColor: '#F3F4F6' },
   statsRow: { flexDirection: 'row', gap: 12, marginTop: 8, alignItems: 'center' },
-  stat: { fontSize: 12, color: '#6B7280' },
+  stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  statText: { fontSize: 12, color: '#6B7280' },
   commentsBtn: { flexDirection: 'row', gap: 4, alignItems: 'center', backgroundColor: '#EFF6FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14 },
   commentsBtnText: { color: '#3B82F6', fontSize: 12, fontWeight: '700' },
   pollRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 8, padding: 8, marginVertical: 3, overflow: 'hidden' },

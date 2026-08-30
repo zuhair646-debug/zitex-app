@@ -16,13 +16,13 @@ export default function MerchantBookings() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/merchant/bookings'); setBookings(d); } catch (e: any) { Alert.alert('Error', e.message); } finally { setLoading(false); setRefreshing(false); }
+    try { const d = await apiCall('/api/merchant/bookings'); setBookings(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
   const updateStatus = (id: string, current: string) => {
     Alert.alert('Update Status', '', [
-      ...STATUSES.filter(s => s !== current).map(s => ({ text: s, onPress: async () => { try { await apiCall(`/api/merchant/bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: s }) }); load(); } catch (e: any) { Alert.alert('Error', e.message); } } })),
+      ...STATUSES.filter(s => s !== current).map(s => ({ text: s, onPress: async () => { try { await apiCall(`/api/merchant/bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: s }) }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } })),
       { text: 'Cancel', style: 'cancel' as const },
     ]);
   };
@@ -31,7 +31,7 @@ export default function MerchantBookings() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Service Bookings ({bookings.length})</Text>
+        <Text style={s.title}>حجوزات الخدمات ({bookings.length})</Text>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>

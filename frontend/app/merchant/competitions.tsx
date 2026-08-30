@@ -15,11 +15,11 @@ export default function MerchantCompetitions() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/merchant/competitions'); setComps(d); } catch (e: any) { Alert.alert('Error', e.message); } finally { setLoading(false); setRefreshing(false); }
+    try { const d = await apiCall('/api/merchant/competitions'); setComps(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const del = (id: string) => Alert.alert('Delete Competition?', 'This cannot be undone', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/competitions/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('Error', e.message); } } }]);
+  const del = (id: string) => Alert.alert('حذف المسابقة؟', 'لا يمكن التراجع', [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/competitions/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } }]);
 
   return (
     <SafeAreaView style={s.safe}>

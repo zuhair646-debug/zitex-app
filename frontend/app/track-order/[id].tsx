@@ -48,7 +48,7 @@ export default function TrackOrder() {
           <Text style={s.orderNo}>#{order.id?.slice(-8).toUpperCase()}</Text>
           <Text style={s.orderStatus}>{STATUS_AR[order.status] || order.status}</Text>
           <Text style={s.orderTotal}>{order.total?.toFixed(2)} ر.س</Text>
-          {order.eta_minutes && <Text style={s.eta}>الوصول المتوقع: {order.eta_minutes} دقيقة</Text>}
+          {!!order.eta_minutes && <Text style={s.eta}>الوصول المتوقع: {order.eta_minutes} دقيقة</Text>}
         </View>
 
         {showMap && (

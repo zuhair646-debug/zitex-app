@@ -143,7 +143,7 @@ export default function MerchantProducts() {
                     <View style={{ flexDirection: 'row', gap: spacing.xs, marginTop: 4, flexWrap: 'wrap' }}>
                       {p.featured && <Badge label="⭐ مميز" tone="gold" />}
                       {(p.stock_quantity ?? 999) < 5 && p.in_stock && <Badge label={`متبقي ${p.stock_quantity}`} tone="warning" />}
-                      {p.category && <Badge label={p.category} tone="info" />}
+                      {!!p.category && <Badge label={p.category} tone="info" />}
                     </View>
                   </View>
                 </View>

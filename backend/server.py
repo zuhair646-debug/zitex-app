@@ -2610,6 +2610,86 @@ async def seed_data():
         })
         logger.info("Seeded Merchant account")
 
+    # Fetch merchant id for use in seeded branches/employees below
+    merchant_user = await db.users.find_one({"phone": "0509999999"})
+    merchant_id = str(merchant_user["_id"]) if merchant_user else None
+
+    # Seed default Branches (only if none exist for this merchant)
+    if merchant_id and await db.branches.count_documents({}) == 0:
+        await db.branches.insert_many([
+            {
+                "name": "الفرع الرئيسي - الرياض العليا", "address": "شارع الملك فهد، حي العليا",
+                "lat": 24.7136, "lng": 46.6753, "phone": "0114000001",
+                "open_hours": "9:00 AM - 11:00 PM", "published": True,
+                "email": "riyadh@zitex.sa", "manager_id": "", "city": "الرياض",
+                "district": "العليا", "is_main": True,
+                "working_days": ["sat", "sun", "mon", "tue", "wed", "thu"],
+                "branch_code": "RUH-01", "merchant_id": merchant_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "name": "فرع جدة - التحلية", "address": "شارع التحلية، حي الروضة",
+                "lat": 21.5433, "lng": 39.1728, "phone": "0126000002",
+                "open_hours": "10:00 AM - 12:00 AM", "published": True,
+                "email": "jeddah@zitex.sa", "manager_id": "", "city": "جدة",
+                "district": "الروضة", "is_main": False,
+                "working_days": ["sat", "sun", "mon", "tue", "wed", "thu"],
+                "branch_code": "JED-01", "merchant_id": merchant_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "name": "فرع الدمام - الشاطئ", "address": "شارع الأمير محمد بن فهد",
+                "lat": 26.4207, "lng": 50.0888, "phone": "0138000003",
+                "open_hours": "9:00 AM - 11:00 PM", "published": True,
+                "email": "dammam@zitex.sa", "manager_id": "", "city": "الدمام",
+                "district": "الشاطئ", "is_main": False,
+                "working_days": ["sat", "sun", "mon", "tue", "wed", "thu"],
+                "branch_code": "DMM-01", "merchant_id": merchant_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+        ])
+        logger.info("Seeded 3 default branches (Riyadh, Jeddah, Dammam)")
+
+    # Seed default Employees (only if none exist for this merchant)
+    if merchant_id and await db.users.count_documents({"role": "employee", "merchant_id": merchant_id}) == 0:
+        # Get branch IDs to link employees
+        branches_all = await db.branches.find({}).to_list(50)
+        b_ids = [str(b["_id"]) for b in branches_all]
+        default_employees = [
+            {
+                "phone": "0530000001", "name": "أحمد الكاشير",
+                "password_hash": hash_password("emp1234"),
+                "role": "employee", "merchant_id": merchant_id,
+                "department": "sales", "permissions": ["pos", "invoices", "orders", "customers"],
+                "salary_monthly": 4500, "branch_ids": b_ids[:1] if b_ids else [],
+                "role_id": "preset_cashier", "job_title": "كاشير",
+                "active": True, "points": 0, "wallet_balance": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "phone": "0530000002", "name": "سارة مسؤولة التسويق",
+                "password_hash": hash_password("emp1234"),
+                "role": "employee", "merchant_id": merchant_id,
+                "department": "marketing", "permissions": ["social", "competitions", "banners"],
+                "salary_monthly": 6500, "branch_ids": b_ids[:2] if len(b_ids) >= 2 else b_ids,
+                "role_id": "preset_marketing", "job_title": "مسؤول تسويق",
+                "active": True, "points": 0, "wallet_balance": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "phone": "0530000003", "name": "خالد مدير الفرع",
+                "password_hash": hash_password("emp1234"),
+                "role": "employee", "merchant_id": merchant_id,
+                "department": "management", "permissions": ["orders", "products", "inventory", "customers", "invoices", "pos"],
+                "salary_monthly": 9000, "branch_ids": [b_ids[1]] if len(b_ids) >= 2 else b_ids,
+                "role_id": "preset_manager", "job_title": "مدير فرع جدة",
+                "active": True, "points": 0, "wallet_balance": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+        ]
+        await db.users.insert_many(default_employees)
+        logger.info("Seeded 3 default employees (Cashier, Marketing, Branch Manager)")
+
     # Seed Driver account
     driver_user = await db.users.find_one({"phone": "0540001111"})
     if not driver_user:

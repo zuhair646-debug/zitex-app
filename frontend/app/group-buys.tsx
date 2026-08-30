@@ -61,7 +61,7 @@ export default function GroupBuysScreen() {
             return (
               <View key={g.id} style={s.card}>
                 <View style={{ flexDirection: 'row' }}>
-                  {product.image && <Image source={{ uri: product.image }} style={s.img} />}
+                  {!!product.image && <Image source={{ uri: product.image }} style={s.img} />}
                   <View style={{ flex: 1, marginLeft: 10 }}>
                     <Text style={s.gTitle}>{g.title}</Text>
                     <Text style={s.gProduct} numberOfLines={1}>{lang === 'ar' ? product.name_ar : product.name_en}</Text>

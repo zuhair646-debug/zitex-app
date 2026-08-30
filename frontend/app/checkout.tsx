@@ -171,7 +171,7 @@ export default function CheckoutScreen() {
             <Ionicons name={paymentMethod === pm.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={paymentMethod === pm.id ? '#8833FF' : '#A1A1AA'} />
             <Ionicons name={pm.icon as any} size={20} color="#52525B" />
             <Text style={s.payLabel}>{pm.label}</Text>
-            {pm.tag && <View style={s.payTag}><Text style={s.payTagText}>{pm.tag}</Text></View>}
+            {!!pm.tag && <View style={s.payTag}><Text style={s.payTagText}>{pm.tag}</Text></View>}
           </TouchableOpacity>
         ))}
 

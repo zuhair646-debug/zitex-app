@@ -66,7 +66,7 @@ export default function SupportSettings() {
               <Text style={s.fLabel}>{f.label}</Text>
             </View>
             <TextInput style={s.input} value={String(data[f.key] || '')} onChangeText={t => setData({ ...data, [f.key]: t })} placeholder={f.placeholder} autoCapitalize="none" />
-            {f.sub && <Text style={s.sub}>{f.sub}</Text>}
+            {!!f.sub && <Text style={s.sub}>{f.sub}</Text>}
           </View>
         ))}
       </ScrollView>

@@ -96,7 +96,7 @@ export default function SearchScreen() {
             <TouchableOpacity testID={`search-product-${p.id}`} key={p.id} style={styles.productCard}
               onPress={() => router.push(`/product/${p.id}`)}>
               <Image source={{ uri: p.images?.[0] }} style={styles.productImg} />
-              {p.discount_price && <View style={styles.discBadge}><Text style={styles.discText}>خصم</Text></View>}
+              {!!p.discount_price && <View style={styles.discBadge}><Text style={styles.discText}>خصم</Text></View>}
               {p.condition !== 'new' && <View style={styles.usedBadge}><Text style={styles.usedText}>مستعمل</Text></View>}
               <Text style={styles.productName} numberOfLines={2}>{p.name_en}</Text>
               <View style={styles.ratingRow}>
@@ -104,7 +104,7 @@ export default function SearchScreen() {
                 <Text style={styles.ratingVal}>{p.rating}</Text>
               </View>
               <Text style={styles.price}>{p.discount_price || p.price} ر.س</Text>
-              {p.discount_price && <Text style={styles.oldPrice}>{p.price} ر.س</Text>}
+              {!!p.discount_price && <Text style={styles.oldPrice}>{p.price} ر.س</Text>}
             </TouchableOpacity>
           ))}
         </ScrollView>

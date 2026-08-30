@@ -89,8 +89,8 @@ export default function ProductDetailScreen() {
           {/* Price */}
           <View style={styles.priceSection}>
             <Text style={styles.price}>{price} ر.س</Text>
-            {product.discount_price && <Text style={styles.oldPrice}>{product.price} ر.س</Text>}
-            {product.discount_price && (
+            {!!product.discount_price && <Text style={styles.oldPrice}>{product.price} ر.س</Text>}
+            {!!product.discount_price && (
               <View style={styles.saveBadge}>
                 <Text style={styles.saveText}>Save {product.price - product.discount_price} SAR</Text>
               </View>

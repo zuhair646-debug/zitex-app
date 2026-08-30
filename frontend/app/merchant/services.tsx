@@ -15,7 +15,7 @@ export default function MerchantServices() {
   const [form, setForm] = useState<any>({ name: '', desc: '', price: '', warranty_days: '90', icon: 'construct', color: '#8833FF', published: true, warranty_available: true });
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/services'); setServices(d); } catch (e: any) { Alert.alert('Error', e.message); } finally { setLoading(false); }
+    try { const d = await apiCall('/api/services'); setServices(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -29,11 +29,11 @@ export default function MerchantServices() {
       if (editing) await apiCall(`/api/merchant/services/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiCall('/api/merchant/services', { method: 'POST', body: JSON.stringify(body) });
       setModalOpen(false); load();
-    } catch (e: any) { Alert.alert('Error', e.message); }
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
   };
 
   const del = (id: string, name: string) => {
-    Alert.alert('Delete', `Delete "${name}"?`, [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/services/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('Error', e.message); } } }]);
+    Alert.alert('حذف', `حذف "${name}"؟`, [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/services/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } }]);
   };
 
   return (

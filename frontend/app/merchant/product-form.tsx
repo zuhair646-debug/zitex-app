@@ -27,7 +27,7 @@ export default function ProductForm() {
           const p = await apiCall(`/api/products/${id}`);
           setData({ ...p, price: String(p.price), discount_price: p.discount_price ? String(p.discount_price) : '', images: p.images?.length ? p.images : [''] });
         }
-      } catch (e: any) { Alert.alert('Error', e.message); }
+      } catch (e: any) { Alert.alert('خطأ', e.message); }
     })();
   }, []);
 
@@ -39,7 +39,7 @@ export default function ProductForm() {
       if (id) await apiCall(`/api/merchant/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiCall('/api/merchant/products', { method: 'POST', body: JSON.stringify(body) });
       Alert.alert('Success', `Product ${id ? 'updated' : 'created'}`, [{ text: 'OK', onPress: () => router.back() }]);
-    } catch (e: any) { Alert.alert('Error', e.message); } finally { setLoading(false); }
+    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); }
   };
 
   return (
