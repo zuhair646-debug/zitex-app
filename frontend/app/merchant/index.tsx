@@ -1,170 +1,211 @@
-import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
+import { colors, spacing, radius, typography, gradients } from '../../src/theme/tokens';
+import {
+  StatCard, ActionCard, SectionHeader, PrimaryButton, EmptyState, SkeletonBox, Badge,
+} from '../../src/components/ui';
 
-const SECTION_GROUPS = [
-  {
-    title: '🛒 المتجر',
-    items: [
-      { id: 'products', title: 'المنتجات', icon: 'cube', color: '#8833FF', route: '/merchant/products' },
-      { id: 'orders', title: 'الطلبات', icon: 'receipt', color: '#3B82F6', route: '/merchant/orders', badge_key: 'pending_orders' },
-      { id: 'customers', title: 'العملاء', icon: 'people', color: '#0EA5E9', route: '/merchant/customers' },
-      { id: 'banners', title: 'البانرات', icon: 'image', color: '#6366F1', route: '/merchant/banners' },
-    ],
-  },
-  {
-    title: '📣 السوشال ميديا والتسويق',
-    items: [
-      { id: 'social', title: 'إدارة المحتوى', icon: 'megaphone', color: '#EC4899', route: '/merchant/social' },
-      { id: 'competitions', title: 'المسابقات', icon: 'trophy', color: '#F97316', route: '/merchant/competitions' },
-    ],
-  },
-  {
-    title: '🛠️ الخدمات والصيانة',
-    items: [
-      { id: 'services', title: 'الخدمات', icon: 'construct', color: '#10B981', route: '/merchant/services' },
-      { id: 'bookings', title: 'الحجوزات', icon: 'calendar', color: '#F59E0B', route: '/merchant/bookings', badge_key: 'pending_bookings' },
-    ],
-  },
-  {
-    title: '👨‍💼 الموظفون والإعدادات',
-    items: [
-      { id: 'employees', title: 'الموظفون', icon: 'people-circle', color: '#EF4444', route: '/merchant/employees' },
-      { id: 'support-settings', title: 'الدعم الفني', icon: 'headset', color: '#10B981', route: '/merchant/support-settings' },
-    ],
-  },
-  {
-    title: '🚚 التوصيل',
-    items: [
-      { id: 'branches', title: 'الفروع', icon: 'storefront', color: '#06B6D4', route: '/merchant/branches' },
-      { id: 'drivers', title: 'السائقون', icon: 'car', color: '#14B8A6', route: '/merchant/drivers' },
-      { id: 'delivery-settings', title: 'تسعير التوصيل', icon: 'pricetag', color: '#A855F7', route: '/merchant/delivery-settings' },
-    ],
-  },
-];
-
-export default function MerchantDashboard() {
+export default function MerchantHome() {
   const router = useRouter();
   const { user, apiCall, logout } = useAuth();
   const [stats, setStats] = useState<any>(null);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/merchant/stats'); setStats(d); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    try {
+      const [s, o] = await Promise.all([
+        apiCall('/api/merchant/stats').catch(() => null),
+        apiCall('/api/merchant/orders?limit=5').catch(() => []),
+      ]);
+      setStats(s);
+      setRecentOrders(Array.isArray(o) ? o.slice(0, 5) : []);
+    } catch (e) { console.log(e); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  if (user?.role !== 'merchant') {
-    return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.err}>الدخول مرفوض</Text><TouchableOpacity onPress={() => router.replace('/(tabs)')} style={s.btn}><Text style={s.btnText}>الرئيسية</Text></TouchableOpacity></View></SafeAreaView>;
-  }
+  const onRefresh = () => { setRefreshing(true); load(); };
 
-  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  const money = (n: number) => new Intl.NumberFormat('en', { maximumFractionDigits: 0 }).format(n || 0);
+  const orderStatusTone = (s: string): any =>
+    s === 'pending' ? 'warning' : s === 'processing' ? 'info' : s === 'ready' ? 'gold' : s === 'delivered' ? 'success' : s === 'cancelled' ? 'error' : 'default';
+  const orderStatusLabel = (s: string) =>
+    ({ pending: 'قيد الانتظار', processing: 'قيد التنفيذ', ready: 'جاهز', out_for_delivery: 'في الطريق', delivered: 'تم التسليم', cancelled: 'ملغى' }[s] || s);
 
   return (
-    <SafeAreaView style={s.safe}>
-      <View style={s.header}>
-        <View style={{ flex: 1 }}>
-          <Text style={s.welcome}>أهلاً، {user?.name}</Text>
-          <Text style={s.subtitle}>لوحة تحكم التاجر</Text>
-        </View>
-        <TouchableOpacity onPress={() => router.push('/(tabs)' as any)} style={s.iconBtn}><Ionicons name="home-outline" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <TouchableOpacity testID="logout-btn" onPress={() => { logout(); router.replace('/login'); }} style={s.iconBtn}><Ionicons name="log-out-outline" size={22} color="#EF4444" /></TouchableOpacity>
-      </View>
-
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
-        {/* Hero stats */}
-        <View style={s.heroCard}>
-          <Text style={s.heroLabel}>إيرادات اليوم</Text>
-          <Text style={s.heroValue}>{stats?.today_revenue?.toFixed(0) || 0} <Text style={s.heroCurrency}>ر.س</Text></Text>
-          <Text style={s.heroSubtle}>إجمالي الإيرادات: {stats?.total_revenue?.toFixed(0) || 0} ر.س</Text>
-        </View>
-
-        <View style={s.statsRow}>
-          <View style={[s.statCard, { backgroundColor: '#DBEAFE' }]}>
-            <Ionicons name="receipt" size={18} color="#3B82F6" />
-            <Text style={s.statVal}>{stats?.total_orders || 0}</Text>
-            <Text style={s.statLbl}>إجمالي الطلبات</Text>
-          </View>
-          <View style={[s.statCard, { backgroundColor: '#FEE2E2' }]}>
-            <Ionicons name="alert-circle" size={18} color="#EF4444" />
-            <Text style={s.statVal}>{stats?.pending_orders || 0}</Text>
-            <Text style={s.statLbl}>طلبات معلقة</Text>
-          </View>
-        </View>
-        <View style={s.statsRow}>
-          <View style={[s.statCard, { backgroundColor: '#D1FAE5' }]}>
-            <Ionicons name="cube" size={18} color="#10B981" />
-            <Text style={s.statVal}>{stats?.total_products || 0}</Text>
-            <Text style={s.statLbl}>المنتجات</Text>
-          </View>
-          <View style={[s.statCard, { backgroundColor: '#FCE7F3' }]}>
-            <Ionicons name="people" size={18} color="#EC4899" />
-            <Text style={s.statVal}>{stats?.total_customers || 0}</Text>
-            <Text style={s.statLbl}>العملاء</Text>
-          </View>
-        </View>
-
-        {/* Grouped sections */}
-        {SECTION_GROUPS.map(group => (
-          <View key={group.title}>
-            <Text style={s.sectionTitle}>{group.title}</Text>
-            <View style={s.grid}>
-              {group.items.map(sec => {
-                const badge = (sec as any).badge_key ? stats?.[(sec as any).badge_key] : null;
-                return (
-                  <TouchableOpacity
-                    testID={`nav-${sec.id}`}
-                    key={sec.id}
-                    style={s.gridItem}
-                    onPress={() => router.push(sec.route as any)}
-                  >
-                    <View style={[s.iconBox, { backgroundColor: sec.color + '20' }]}>
-                      <Ionicons name={sec.icon as any} size={26} color={sec.color} />
-                      {badge && badge > 0 ? <View style={s.badge}><Text style={s.badgeText}>{badge}</Text></View> : null}
-                    </View>
-                    <Text style={s.gridText}>{sec.title}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        <ScrollView
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
+          contentContainerStyle={{ paddingBottom: 120 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.greeting}>مرحباً 👋</Text>
+              <Text style={styles.merchantName}>{user?.name || 'التاجر'}</Text>
+              <Text style={styles.merchantRole}>لوحة تحكم Zitex</Text>
             </View>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications')} activeOpacity={0.7}>
+              <Ionicons name="notifications-outline" size={22} color={colors.onSurface} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconBtn} onPress={logout} activeOpacity={0.7}>
+              <Ionicons name="log-out-outline" size={22} color={colors.onSurface} />
+            </TouchableOpacity>
           </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+
+          {/* Hero Metric — Big Card */}
+          <LinearGradient
+            colors={gradients.brandGold as any}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={styles.hero}
+          >
+            <View style={styles.heroTop}>
+              <Text style={styles.heroLabel}>إجمالي مبيعات اليوم</Text>
+              <Ionicons name="trending-up" size={20} color={colors.onBrandPrimary} />
+            </View>
+            {loading ? <SkeletonBox height={40} width="60%" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }} />
+              : <Text style={styles.heroValue}>{money(stats?.today_revenue || 0)} <Text style={styles.heroCurrency}>ر.س</Text></Text>}
+            <View style={styles.heroFooter}>
+              <View style={styles.heroPill}>
+                <Ionicons name="wallet" size={12} color={colors.onBrandPrimary} />
+                <Text style={styles.heroPillText}>إجمالي: {money(stats?.total_revenue || 0)} ر.س</Text>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* Stats Grid */}
+          <View style={styles.statsGrid}>
+            <StatCard icon="receipt" label="طلبات نشطة" value={stats?.pending_orders ?? '—'} tone="gold"
+              onPress={() => router.push('/merchant/orders')} />
+            <StatCard icon="cube" label="منتجات" value={stats?.total_products ?? '—'} tone="default"
+              onPress={() => router.push('/merchant/products')} />
+          </View>
+          <View style={styles.statsGrid}>
+            <StatCard icon="people" label="عملاء" value={stats?.total_customers ?? '—'} tone="success"
+              onPress={() => router.push('/merchant/customers')} />
+            <StatCard icon="trophy" label="مسابقات" value={stats?.pending_competitions_approval ?? 0} tone={stats?.pending_competitions_approval > 0 ? 'warning' : 'default'}
+              onPress={() => router.push('/merchant/competitions')} />
+          </View>
+
+          {/* Quick Actions */}
+          <SectionHeader title="إجراءات سريعة" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickRow} style={{ flexGrow: 0 }}>
+            <ActionCard icon="add-circle" label="إضافة منتج" onPress={() => router.push('/merchant/product-form')} />
+            <ActionCard icon="megaphone" label="منشور جديد" onPress={() => router.push('/merchant/social')} />
+            <ActionCard icon="trophy" label="إنشاء مسابقة" onPress={() => router.push('/merchant/competition-form')} />
+            <ActionCard icon="image" label="إضافة بانر" onPress={() => router.push('/merchant/banners')} />
+            <ActionCard icon="people-circle" label="إضافة موظف" onPress={() => router.push('/merchant/employees')} />
+            <ActionCard icon="settings" label="إعدادات الدعم" onPress={() => router.push('/merchant/support-settings')} />
+          </ScrollView>
+
+          {/* Recent Orders */}
+          <SectionHeader
+            title="أحدث الطلبات"
+            subtitle={recentOrders.length > 0 ? `${recentOrders.length} طلبات تحتاج انتباهك` : undefined}
+            action={() => router.push('/merchant/orders')}
+            actionLabel="عرض الكل"
+          />
+
+          {loading ? (
+            <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}>
+              <SkeletonBox height={72} /><SkeletonBox height={72} /><SkeletonBox height={72} />
+            </View>
+          ) : recentOrders.length === 0 ? (
+            <EmptyState
+              icon="receipt-outline"
+              title="لا توجد طلبات بعد"
+              description="ستظهر هنا كل الطلبات الجديدة من عملائك"
+              actionLabel="عرض المنتجات"
+              onAction={() => router.push('/merchant/products')}
+            />
+          ) : (
+            <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}>
+              {recentOrders.map((o: any) => (
+                <TouchableOpacity
+                  key={o.id} activeOpacity={0.85}
+                  onPress={() => router.push(`/merchant/orders?id=${o.id}` as any)}
+                  style={styles.orderCard}
+                >
+                  <View style={styles.orderIconWrap}>
+                    <Ionicons name="cart" size={20} color={colors.brand} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 2 }}>
+                      <Text style={styles.orderId}>#{String(o.id).slice(-6).toUpperCase()}</Text>
+                      <Badge label={orderStatusLabel(o.status)} tone={orderStatusTone(o.status)} />
+                    </View>
+                    <Text style={styles.orderCustomer} numberOfLines={1}>
+                      {o.customer_name || 'عميل'} • {o.items?.length || 0} منتج
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.orderAmount}>{money(o.total)}</Text>
+                    <Text style={styles.orderCurrency}>ر.س</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  welcome: { fontSize: 17, fontWeight: '800', color: '#0A0A0A' },
-  subtitle: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  iconBtn: { padding: 8, marginLeft: 4 },
-  heroCard: { backgroundColor: '#8833FF', padding: 20, borderRadius: 18, marginBottom: 12 },
-  heroLabel: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '600' },
-  heroValue: { color: 'white', fontSize: 38, fontWeight: '900', marginTop: 4 },
-  heroCurrency: { fontSize: 18, fontWeight: '700' },
-  heroSubtle: { color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 4 },
-  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
-  statCard: { flex: 1, padding: 14, borderRadius: 14 },
-  statLbl: { fontSize: 11, color: '#6B7280', marginTop: 2 },
-  statVal: { fontSize: 22, fontWeight: '900', color: '#0A0A0A', marginTop: 6 },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#0A0A0A', marginTop: 18, marginBottom: 10 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  gridItem: { width: '47%', backgroundColor: 'white', padding: 14, borderRadius: 14, alignItems: 'center' },
-  iconBox: { width: 54, height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 8, position: 'relative' },
-  badge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  badgeText: { color: 'white', fontSize: 11, fontWeight: '700' },
-  gridText: { fontSize: 13, fontWeight: '700', color: '#0A0A0A', textAlign: 'center' },
-  err: { color: '#EF4444', fontSize: 16, marginBottom: 16 },
-  btn: { backgroundColor: '#8833FF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
-  btnText: { color: 'white', fontWeight: '700' },
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.surface },
+  header: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.md,
+  },
+  greeting: { ...typography.bodyMedium, color: colors.onSurfaceSecondary },
+  merchantName: { ...typography.displaySmall, color: colors.onSurface, marginTop: 2 },
+  merchantRole: { ...typography.caption, color: colors.brand, marginTop: 2 },
+  iconBtn: {
+    width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border,
+  },
+  dot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.error, borderWidth: 2, borderColor: colors.surface },
+
+  hero: {
+    marginHorizontal: spacing.lg, marginTop: spacing.sm, marginBottom: spacing.lg,
+    padding: spacing.xl, borderRadius: radius.xl,
+    shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 20, elevation: 10,
+  },
+  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  heroLabel: { ...typography.labelMedium, color: colors.onBrandPrimary, opacity: 0.85 },
+  heroValue: { fontSize: 40, fontWeight: '900', color: colors.onBrandPrimary, marginTop: spacing.sm },
+  heroCurrency: { fontSize: 20, fontWeight: '700' },
+  heroFooter: { marginTop: spacing.md, flexDirection: 'row' },
+  heroPill: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    backgroundColor: 'rgba(0,0,0,0.18)', paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+  },
+  heroPillText: { ...typography.labelSmall, color: colors.onBrandPrimary, fontWeight: '700' },
+
+  statsGrid: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  quickRow: { paddingHorizontal: spacing.lg, gap: spacing.md, paddingBottom: spacing.sm },
+
+  orderCard: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    backgroundColor: colors.surfaceSecondary, borderRadius: radius.lg, padding: spacing.md,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  orderIconWrap: { width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center' },
+  orderId: { ...typography.labelMedium, color: colors.onSurface },
+  orderCustomer: { ...typography.caption, color: colors.onSurfaceSecondary },
+  orderAmount: { ...typography.titleSmall, color: colors.brand },
+  orderCurrency: { ...typography.caption, color: colors.onSurfaceSecondary },
 });

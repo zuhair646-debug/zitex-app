@@ -1,93 +1,218 @@
-import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, RefreshControl, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import { colors, spacing, radius, typography } from '../../src/theme/tokens';
+import { SegmentedControl, EmptyState, SkeletonBox, Badge, PrimaryButton, SecondaryButton } from '../../src/components/ui';
 
-const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-const STATUS_COLORS: any = { pending: '#F59E0B', processing: '#3B82F6', shipped: '#8833FF', delivered: '#10B981', cancelled: '#EF4444' };
+type OrderFilter = 'new' | 'processing' | 'ready' | 'delivering' | 'done' | 'all';
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'جديد', processing: 'قيد التنفيذ', ready: 'جاهز',
+  out_for_delivery: 'في الطريق', delivered: 'تم التسليم', cancelled: 'ملغى',
+};
+const STATUS_TONE: Record<string, any> = {
+  pending: 'warning', processing: 'info', ready: 'gold',
+  out_for_delivery: 'info', delivered: 'success', cancelled: 'error',
+};
 
 export default function MerchantOrders() {
-  const router = useRouter();
   const { apiCall } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState<OrderFilter>('new');
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/merchant/orders'); setOrders(d); } catch (e: any) { Alert.alert('Error', e.message); } finally { setLoading(false); setRefreshing(false); }
+    try { const d = await apiCall('/api/merchant/orders'); setOrders(Array.isArray(d) ? d : []); }
+    catch (e: any) { Alert.alert('خطأ', e.message); }
+    finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const updateStatus = (id: string, current: string) => {
-    Alert.alert('Update Status', 'Choose new status:', [
-      ...STATUSES.filter(s => s !== current).map(s => ({ text: s, onPress: async () => {
-        try { await apiCall(`/api/merchant/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: s }) }); load(); } catch (e: any) { Alert.alert('Error', e.message); }
-      }})),
-      { text: 'Cancel', style: 'cancel' as const },
-    ]);
+  const changeStatus = async (id: string, next: string) => {
+    try {
+      await apiCall(`/api/merchant/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: next }) });
+      load();
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
   };
 
-  const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+  const filtered = useMemo(() => {
+    if (filter === 'all') return orders;
+    if (filter === 'new') return orders.filter(o => o.status === 'pending');
+    if (filter === 'processing') return orders.filter(o => o.status === 'processing');
+    if (filter === 'ready') return orders.filter(o => o.status === 'ready' || o.status === 'out_for_delivery');
+    if (filter === 'done') return orders.filter(o => o.status === 'delivered' || o.status === 'cancelled');
+    return orders;
+  }, [orders, filter]);
+
+  const counts = useMemo(() => ({
+    new: orders.filter(o => o.status === 'pending').length,
+    processing: orders.filter(o => o.status === 'processing').length,
+    ready: orders.filter(o => o.status === 'ready' || o.status === 'out_for_delivery').length,
+    done: orders.filter(o => o.status === 'delivered' || o.status === 'cancelled').length,
+    all: orders.length,
+  }), [orders]);
+
+  const money = (n: number) => new Intl.NumberFormat('en').format(n || 0);
+  const dateFmt = (d: any) => { try { return new Date(d).toLocaleString('ar', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } };
 
   return (
-    <SafeAreaView style={s.safe}>
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Orders ({filtered.length})</Text>
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.filterRow}>
-        {['all', ...STATUSES].map(st => (
-          <TouchableOpacity key={st} testID={`f-${st}`} onPress={() => setFilter(st)} style={[s.chip, filter === st && s.chipActive]}>
-            <Text style={[s.chipText, filter === st && s.chipTextActive]}>{st}</Text>
+    <View style={s.root}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        <View style={s.header}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.title}>الطلبات</Text>
+            <Text style={s.subtitle}>{orders.length} طلب • {counts.new} جديد</Text>
+          </View>
+          <TouchableOpacity style={s.iconBtn} onPress={load} activeOpacity={0.7}>
+            <Ionicons name="refresh" size={20} color={colors.onSurface} />
           </TouchableOpacity>
-        ))}
-      </ScrollView>
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
-        <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
-          {filtered.length === 0 ? <Text style={s.empty}>No orders</Text> : filtered.map(o => (
-            <View key={o.id} style={s.card}>
-              <View style={s.row}>
-                <Text style={s.orderNo}>#{o.id.slice(-8).toUpperCase()}</Text>
-                <TouchableOpacity testID={`status-${o.id}`} onPress={() => updateStatus(o.id, o.status)} style={[s.statusBadge, { backgroundColor: STATUS_COLORS[o.status] + '20' }]}>
-                  <Text style={[s.statusText, { color: STATUS_COLORS[o.status] }]}>{o.status}</Text>
-                  <Ionicons name="chevron-down" size={12} color={STATUS_COLORS[o.status]} />
-                </TouchableOpacity>
+        </View>
+
+        <SegmentedControl<OrderFilter>
+          options={['new', 'processing', 'ready', 'done', 'all']}
+          value={filter}
+          onChange={setFilter}
+          labels={{
+            new: `جديد (${counts.new})`,
+            processing: `قيد التنفيذ (${counts.processing})`,
+            ready: `جاهز (${counts.ready})`,
+            done: `مكتمل (${counts.done})`,
+            all: `الكل (${counts.all})`,
+          }}
+        />
+
+        {loading ? (
+          <View style={{ padding: spacing.lg, gap: spacing.md }}>
+            <SkeletonBox height={130} /><SkeletonBox height={130} /><SkeletonBox height={130} />
+          </View>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon="receipt-outline"
+            title="لا توجد طلبات"
+            description="حين يبدأ العملاء بالطلب، ستظهر هنا للمتابعة"
+          />
+        ) : (
+          <ScrollView
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brand} />}
+            contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140, gap: spacing.md }}
+            showsVerticalScrollIndicator={false}
+          >
+            {filtered.map(o => (
+              <View key={o.id} style={s.card}>
+                {/* Top row: ID + status + amount */}
+                <View style={s.topRow}>
+                  <View style={s.idPill}>
+                    <Ionicons name="receipt" size={14} color={colors.brand} />
+                    <Text style={s.orderId}>#{String(o.id).slice(-6).toUpperCase()}</Text>
+                  </View>
+                  <Badge label={STATUS_LABEL[o.status] || o.status} tone={STATUS_TONE[o.status] || 'default'} />
+                  <View style={{ flex: 1 }} />
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={s.amount}>{money(o.total)} <Text style={s.currency}>ر.س</Text></Text>
+                  </View>
+                </View>
+
+                {/* Customer */}
+                <View style={s.custRow}>
+                  <Ionicons name="person" size={14} color={colors.onSurfaceSecondary} />
+                  <Text style={s.custName}>{o.customer_name || 'عميل'}</Text>
+                  <Text style={s.dotSep}>•</Text>
+                  <Text style={s.custMeta}>{o.items?.length || 0} منتج</Text>
+                  <Text style={s.dotSep}>•</Text>
+                  <Text style={s.custMeta}>{dateFmt(o.created_at)}</Text>
+                </View>
+
+                {/* Delivery info */}
+                {o.delivery_type && (
+                  <View style={s.deliveryRow}>
+                    <Ionicons
+                      name={o.delivery_type === 'pickup' ? 'storefront' : 'bicycle'}
+                      size={14} color={colors.onSurfaceSecondary}
+                    />
+                    <Text style={s.deliveryText}>
+                      {o.delivery_type === 'pickup' ? 'استلام من الفرع' : 'توصيل'}
+                      {o.driver_name ? ` • السائق: ${o.driver_name}` : ''}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Actions */}
+                <View style={s.actions}>
+                  {o.status === 'pending' && (
+                    <PrimaryButton size="sm" label="قبول وتجهيز" icon="checkmark-circle"
+                      onPress={() => changeStatus(o.id, 'processing')} />
+                  )}
+                  {o.status === 'processing' && (
+                    <PrimaryButton size="sm" label="وضع جاهز" icon="cube"
+                      onPress={() => changeStatus(o.id, 'ready')} />
+                  )}
+                  {o.status === 'ready' && (
+                    <PrimaryButton size="sm" label="خرج للتوصيل" icon="bicycle"
+                      onPress={() => changeStatus(o.id, 'out_for_delivery')} />
+                  )}
+                  {o.status === 'out_for_delivery' && (
+                    <PrimaryButton size="sm" label="تم التسليم" icon="checkmark-done"
+                      onPress={() => changeStatus(o.id, 'delivered')} />
+                  )}
+                  {o.status !== 'cancelled' && o.status !== 'delivered' && (
+                    <SecondaryButton size="sm" fullWidth={false} label="إلغاء" icon="close"
+                      onPress={() => Alert.alert('إلغاء الطلب', 'هل أنت متأكد؟', [
+                        { text: 'لا', style: 'cancel' },
+                        { text: 'نعم', style: 'destructive', onPress: () => changeStatus(o.id, 'cancelled') },
+                      ])} />
+                  )}
+                </View>
               </View>
-              <Text style={s.customer}>{o.customer_name || 'Customer'} • {o.customer_phone || o.phone || '-'}</Text>
-              <Text style={s.address} numberOfLines={2}>{o.address}</Text>
-              <View style={s.row}>
-                <Text style={s.items}>{(o.items || []).length} item(s)</Text>
-                <Text style={s.total}>{o.total?.toFixed(2)} SAR</Text>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      }
-    </SafeAreaView>
+            ))}
+          </ScrollView>
+        )}
+      </SafeAreaView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  backBtn: { padding: 4 },
-  title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: '#0A0A0A' },
-  filterRow: { padding: 12, flexGrow: 0 },
-  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', marginRight: 8 },
-  chipActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
-  chipText: { fontSize: 12, color: '#374151', textTransform: 'capitalize' },
-  chipTextActive: { color: 'white', fontWeight: '600' },
-  card: { backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 10 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  orderNo: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  statusText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  customer: { fontSize: 13, color: '#6B7280', marginVertical: 2 },
-  address: { fontSize: 12, color: '#9CA3AF', marginBottom: 4 },
-  items: { fontSize: 12, color: '#6B7280' },
-  total: { fontSize: 16, fontWeight: '800', color: '#8833FF' },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40, fontSize: 14 },
+  root: { flex: 1, backgroundColor: colors.surface },
+  header: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.md,
+  },
+  title: { ...typography.displaySmall, color: colors.onSurface },
+  subtitle: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
+  iconBtn: {
+    width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border,
+  },
+  card: {
+    backgroundColor: colors.surfaceSecondary, borderRadius: radius.lg,
+    padding: spacing.md, borderWidth: 1, borderColor: colors.border, gap: spacing.sm,
+  },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  idPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: colors.brandTertiary, paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radius.sm,
+  },
+  orderId: { ...typography.labelMedium, color: colors.brand },
+  amount: { ...typography.titleMedium, color: colors.onSurface, fontWeight: '800' },
+  currency: { ...typography.caption, color: colors.onSurfaceSecondary },
+
+  custRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
+  custName: { ...typography.bodyMedium, color: colors.onSurface, fontWeight: '600' },
+  dotSep: { color: colors.onSurfaceTertiary, fontSize: 12 },
+  custMeta: { ...typography.caption, color: colors.onSurfaceSecondary },
+
+  deliveryRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    paddingTop: spacing.xs, borderTopWidth: 1, borderTopColor: colors.borderSubtle,
+  },
+  deliveryText: { ...typography.caption, color: colors.onSurfaceSecondary },
+
+  actions: {
+    flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs,
+    paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderSubtle,
+  },
 });

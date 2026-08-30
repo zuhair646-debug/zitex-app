@@ -1,0 +1,37 @@
+{
+  "summary": "Verified Phase 1 of Merchant Dashboard Redesign (Tech Cyber Gold). Frontend-only Playwright testing on http://localhost:3000 in 390x844 mobile viewport with merchant credentials (0509999999/merchant2025). All 4 merchant screens (index/orders/products/more) render correctly with the new dark/gold theme, Bottom Tabs navigation is visible and switching works with 0 JS errors. Merchant Home: greeting + name + notif/logout icons, gold gradient hero card showing '0 ر.س' today with 'إجمالي: 82,489 ر.س' pill, 4 stat cards (طلبات نشطة=11, منتجات=6, عملاء=8, مسابقات=0), horizontal quick-actions row (6 tiles: add product, post, competition, banner, employee, support-settings), recent orders list (5 rows with #ID badge + status + amount). Orders screen: header '16 طلب • 0 جديد' + refresh icon, SegmentedControl with all 5 options (جديد/قيد التنفيذ/جاهز/مكتمل/الكل) with counts, empty state on 'جديد' filter (0 pending). Products screen: header '6 منتج • 0 نفدت • 0 منخفض' + gold + button, working search input, all 5 filter chips (الكل(6)/متوفر/منخفض(0)/نفد(0)/مميز) work — 'مميز' filter correctly shows only featured products, product cards show image+name+price+strike-through old price+stock switch+edit/delete buttons+badges. More screen: gold avatar 'Z' + name + phone, 3 grouped list sections (التسويق: 3 items, العمليات: 5 items, الإدارة: 3 items) + logout. All 11 More menu navigations tested and load their target screens without crash: social, competitions, banners, services, bookings, branches, drivers, delivery-settings, customers, employees, support-settings. Regression: Customer login (0500000000) → customer home (categories/hot products/banner) works, Driver login (0540001111) → /driver dashboard works. Total JS errors during merchant redesign flow = 0; only pre-existing 'Unexpected text node' warnings on /merchant/social (already documented in iteration_13, not touched by Phase 1). Non-fatal RN Web deprecation warnings observed for 'shadow*' style props, Image.resizeMode style, and props.pointerEvents — these come from RN Web layer/expo-linear-gradient and are not blockers but worth tracking for the RN Web migration path.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/merchant/product-form", "issues": ["Screen still shows English labels ('New Product', 'Name (Arabic) *', 'Price (SAR) *', category names in English) and uses the old light theme. Out of Phase 1 scope but visually inconsistent with new dark/gold merchant UI. Consider covering in Phase 2."]},
+      {"screen": "/merchant/customers", "issues": ["Still uses the OLD purple theme with English 'Customers (N)' header and 'orders' label. Reachable from the redesigned More menu but visually inconsistent. Out of Phase 1 scope."]}
+    ],
+    "react_native_issues": [
+      {"component": "merchant/social.tsx", "issue": "Console error 'Unexpected text node: . A text node cannot be a child of a <View>.' still fires ~12 times when opening /merchant/social (pre-existing, already documented in iteration_13.json). Reference: /app/frontend/app/merchant/social.tsx around lines 175/196/226-234/245-252. Not caused by Phase 1."},
+      {"component": "RN Web deprecations (multiple screens)", "issue": "Console warnings on merchant screens: (1) 'shadow* style props are deprecated. Use boxShadow.' — comes from shadows in /app/frontend/src/theme/tokens.ts (shadows.card/cardGold/header) applied via StyleSheet in ui/index.tsx and merchant/*.tsx. (2) 'Image: style.resizeMode is deprecated. Please use props.resizeMode.' (3) 'props.pointerEvents is deprecated. Use style.pointerEvents'. Non-fatal on native, only affects RN Web preview. Consider updating shadow tokens to also provide boxShadow for web builds."}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "OPTIONAL / Phase 2 candidate: Redesign /merchant/product-form and /merchant/customers to use the new dark/gold tokens + Arabic labels for consistency with the redesigned tabs.",
+    "LOW / Optional: Address pre-existing 'Unexpected text node' warnings in merchant/social.tsx (unchanged since iteration_13).",
+    "LOW / Optional: Update /app/frontend/src/theme/tokens.ts shadows to also emit boxShadow so RN Web stops firing deprecation warnings, and switch Image.resizeMode from style to prop where used."
+  ],
+  "critical_code_review_comments": [
+    "merchant/_layout.tsx correctly uses expo-router Tabs with 4 visible screens and hides 13 sub-routes via href:null. BlurView + gold tint + 68px height + 24px radius meet the described spec.",
+    "src/theme/tokens.ts is a clean, single-source design token file with dark surface (#0B0C10 / #15171E / #20232B), gold brand (#D4AF37), on-brand-primary black text, and semantic soft-fill colors — matches 'Tech Cyber Gold' spec, no blue/purple accents present.",
+    "src/components/ui/index.tsx (396 lines) is well below the 700-line threshold and exposes all 15 documented components. Haptics wrapped in try-catch (catch(()=>{})) so web preview does not crash.",
+    "merchant/index.tsx apiCall dependency array on useCallback is empty []; if apiCall identity changes on auth refresh, the initial load could go stale. Non-blocking as apiCall is stable across renders in the current AuthProvider.",
+    "merchant/products.tsx toggleStock does optimistic update and rollback on error — good pattern. Uses PUT /api/merchant/products/:id and passes full product body which is what the backend expects.",
+    "merchant/orders.tsx SegmentedControl generates counts memo-ized correctly; PrimaryButton/SecondaryButton with size='sm' are used in per-order actions."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (not in scope)", "frontend": "100% — 4/4 tabs load, 11/11 More menu routes navigate, 0 JS errors on redesigned screens, regression (customer + driver) intact"},
+  "seed_data_creation": "None. Used existing merchant/customer/driver accounts from /app/memory/test_credentials.md.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 1 merchant redesign is fully verified on web preview. If Phase 2 lands (product-form + customers + banners + etc. redesign), re-run the same navigation loop and also test: (1) product-form create flow end-to-end, (2) orders status transitions with real orders (there are 16 pending seeded), (3) verify boxShadow-based shadows once tokens are updated for RN Web. The 'Unexpected text node' warnings on /merchant/social are pre-existing and unrelated.",
+  "rca_of_issue": "N/A — no bugs found in Phase 1 scope. One false-negative during the automated More-menu sweep (label 'العملاء' via .first matched a subtitle inside the الحجوزات ListItem because 'حجوزات العملاء للخدمات' contains the substring); direct navigation to /merchant/customers works and the ListItem itself wires correctly to the customers route. This is a test-selector limitation, not a product bug."
+}
