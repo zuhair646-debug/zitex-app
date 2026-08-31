@@ -1,20 +1,25 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Image, RefreshControl, FlatList, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, RefreshControl, FlatList, Platform, StatusBar } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
+import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
+import { colors, spacing, radius } from '../../src/theme/tokens';
 
 type Tab = 'posts' | 'comments';
 type PostType = 'post' | 'story' | 'poll' | 'question' | 'event';
+type MediaItem = { kind: 'image' | 'video'; path: string };
 
-const POST_TYPES: { id: PostType; label: string; icon: any; desc: string; color: string }[] = [
-  { id: 'post',     label: 'منشور',   icon: 'document-text', desc: 'صورة + نص',         color: '#8833FF' },
-  { id: 'story',    label: 'حالة',    icon: 'flash',         desc: 'تختفي بعد 24 ساعة', color: '#EC4899' },
-  { id: 'poll',     label: 'استطلاع', icon: 'bar-chart',     desc: 'صوّت بين خيارات',   color: '#3B82F6' },
-  { id: 'question', label: 'سؤال',    icon: 'help-circle',   desc: 'سؤال للجمهور',       color: '#F59E0B' },
-  { id: 'event',    label: 'فعالية',  icon: 'calendar',      desc: 'تاريخ ومكان',         color: '#10B981' },
+const POST_TYPES: { id: PostType; label: string; icon: any; desc: string }[] = [
+  { id: 'post',     label: 'منشور',   icon: 'document-text', desc: 'صور + فيديو + نص' },
+  { id: 'story',    label: 'حالة',    icon: 'flash',         desc: 'تختفي بعد 24 ساعة' },
+  { id: 'poll',     label: 'استطلاع', icon: 'bar-chart',     desc: 'صوّت بين خيارات' },
+  { id: 'question', label: 'سؤال',    icon: 'help-circle',   desc: 'سؤال للجمهور' },
+  { id: 'event',    label: 'فعالية',  icon: 'calendar',      desc: 'تاريخ ومكان' },
 ];
 
 export default function MerchantSocial() {
@@ -30,10 +35,13 @@ export default function MerchantSocial() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [postType, setPostType] = useState<PostType>('post');
   const [text, setText] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
   const [eventDate, setEventDate] = useState('');
   const [eventLocation, setEventLocation] = useState('');
+  const [locationTag, setLocationTag] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
   const [publishing, setPublishing] = useState(false);
 
   // comment thread modal
@@ -53,22 +61,50 @@ export default function MerchantSocial() {
   useEffect(() => { setLoading(true); load(); }, [load]);
 
   const pickImage = async () => {
+    if (postType === 'post' && media.length >= 8) { Alert.alert('الحد', 'يمكن رفع 8 وسائط فقط'); return; }
     const r = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (r.status !== 'granted') {
       Alert.alert('صلاحية الصور', 'يجب السماح للوصول إلى الصور لإرفاقها');
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'] as any,
       allowsMultipleSelection: postType === 'post',
-      quality: 0.7,
-      base64: true,
+      selectionLimit: postType === 'post' ? Math.max(1, 8 - media.length) : 1,
+      quality: 0.85,
     });
-    if (!res.canceled) {
-      const newImages = res.assets.map(a => a.base64 ? `data:${a.mimeType || 'image/jpeg'};base64,${a.base64}` : a.uri);
-      if (postType === 'post') setImages([...images, ...newImages].slice(0, 4));
-      else setImages([newImages[0]]);
-    }
+    if (res.canceled) return;
+    setUploading(true);
+    try {
+      const items: MediaItem[] = [];
+      for (const a of res.assets) {
+        const up = await uploadMedia(a.uri, a.fileName || undefined, a.mimeType || undefined);
+        items.push({ kind: 'image', path: up.path });
+      }
+      if (postType === 'post') setMedia([...media, ...items].slice(0, 8));
+      else setMedia([items[0]]);
+    } catch (e: any) { Alert.alert('خطأ الرفع', e.message); }
+    finally { setUploading(false); }
+  };
+
+  const pickVideo = async () => {
+    if (postType !== 'post' && postType !== 'story') { Alert.alert('غير مسموح', 'الفيديو للمنشور أو الحالة فقط'); return; }
+    if (media.length >= 8) { Alert.alert('الحد', 'يمكن رفع 8 وسائط فقط'); return; }
+    const r = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (r.status !== 'granted') { Alert.alert('صلاحية', 'يجب السماح للوصول إلى المكتبة'); return; }
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['videos'] as any, quality: 0.85, videoMaxDuration: 60,
+    });
+    if (res.canceled) return;
+    setUploading(true);
+    try {
+      const a = res.assets[0];
+      const up = await uploadMedia(a.uri, a.fileName || undefined, a.mimeType || undefined);
+      const it: MediaItem = { kind: 'video', path: up.path };
+      if (postType === 'post') setMedia([...media, it].slice(0, 8));
+      else setMedia([it]);
+    } catch (e: any) { Alert.alert('خطأ الرفع', e.message); }
+    finally { setUploading(false); }
   };
 
   const takePhoto = async () => {
@@ -77,26 +113,30 @@ export default function MerchantSocial() {
       Alert.alert('صلاحية الكاميرا', 'يجب السماح للوصول إلى الكاميرا');
       return;
     }
-    const res = await ImagePicker.launchCameraAsync({ quality: 0.7, base64: true });
-    if (!res.canceled) {
+    const res = await ImagePicker.launchCameraAsync({ quality: 0.85, mediaTypes: ['images'] as any });
+    if (res.canceled) return;
+    setUploading(true);
+    try {
       const a = res.assets[0];
-      const uri = a.base64 ? `data:${a.mimeType || 'image/jpeg'};base64,${a.base64}` : a.uri;
-      if (postType === 'post') setImages([...images, uri].slice(0, 4));
-      else setImages([uri]);
-    }
+      const up = await uploadMedia(a.uri, a.fileName || undefined, a.mimeType || undefined);
+      const it: MediaItem = { kind: 'image', path: up.path };
+      if (postType === 'post') setMedia([...media, it].slice(0, 8));
+      else setMedia([it]);
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    finally { setUploading(false); }
   };
 
-  const removeImage = (i: number) => setImages(images.filter((_, idx) => idx !== i));
+  const removeMedia = (i: number) => setMedia(media.filter((_, idx) => idx !== i));
   const updatePollOption = (i: number, v: string) => { const o = [...pollOptions]; o[i] = v; setPollOptions(o); };
   const addPollOption = () => pollOptions.length < 6 && setPollOptions([...pollOptions, '']);
   const removePollOption = (i: number) => pollOptions.length > 2 && setPollOptions(pollOptions.filter((_, idx) => idx !== i));
 
-  const resetComposer = () => { setText(''); setImages([]); setPollOptions(['', '']); setEventDate(''); setEventLocation(''); setPostType('post'); };
+  const resetComposer = () => { setText(''); setMedia([]); setPollOptions(['', '']); setEventDate(''); setEventLocation(''); setLocationTag(''); setScheduledAt(''); setPostType('post'); };
 
   const publish = async () => {
     // Validation per type
-    if (postType === 'post' && !text.trim() && images.length === 0) { Alert.alert('مطلوب', 'أضف نصاً أو صورة'); return; }
-    if (postType === 'story' && images.length === 0) { Alert.alert('مطلوب', 'الحالة تحتاج صورة'); return; }
+    if (postType === 'post' && !text.trim() && media.length === 0) { Alert.alert('مطلوب', 'أضف نصاً أو وسائط'); return; }
+    if (postType === 'story' && media.length === 0) { Alert.alert('مطلوب', 'الحالة تحتاج صورة أو فيديو'); return; }
     if (postType === 'poll') {
       if (!text.trim()) { Alert.alert('مطلوب', 'اكتب سؤال الاستطلاع'); return; }
       const valid = pollOptions.filter(o => o.trim()).length;
@@ -110,10 +150,15 @@ export default function MerchantSocial() {
 
     setPublishing(true);
     try {
+      const imagesPaths = media.filter(m => m.kind === 'image').map(m => m.path);
+      const videoPath = media.find(m => m.kind === 'video')?.path || '';
       const body: any = {
         text: text.trim(),
-        image: images[0] || '',
-        images,
+        image: imagesPaths[0] || '',
+        images: imagesPaths,
+        video: videoPath,
+        location_tag: locationTag.trim(),
+        scheduled_at: scheduledAt.trim(),
         type: postType,
       };
       if (postType === 'poll') body.poll_options = pollOptions.filter(o => o.trim()).map(o => ({ text: o.trim(), votes: 0 }));
@@ -124,7 +169,7 @@ export default function MerchantSocial() {
       resetComposer();
       setComposerOpen(false);
       load();
-      Alert.alert('تم النشر', postType === 'story' ? 'الحالة ستظهر لـ 24 ساعة' : 'تم نشر المحتوى');
+      Alert.alert('✅ تم النشر', postType === 'story' ? 'الحالة ستظهر لـ 24 ساعة' : 'تم نشر المحتوى');
     } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setPublishing(false); }
   };
 
@@ -259,102 +304,154 @@ export default function MerchantSocial() {
 
       {/* ─── Composer Modal ─── */}
       <Modal visible={composerOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setComposerOpen(false)}>
-        <SafeAreaView style={s.safe}>
-          <View style={s.header}>
-            <TouchableOpacity onPress={() => setComposerOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <Text style={s.title}>محتوى جديد</Text>
-            <TouchableOpacity onPress={publish} disabled={publishing} style={s.publishTopBtn}>
-              {publishing ? <ActivityIndicator size="small" color="white" /> : <Text style={s.publishTopText}>نشر</Text>}
-            </TouchableOpacity>
-          </View>
+        <View style={s.composerRoot}>
+          <StatusBar barStyle="light-content" />
+          <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+            <View style={s.composerHeader}>
+              <TouchableOpacity onPress={() => setComposerOpen(false)} style={s.headerIcon}>
+                <Ionicons name="close" size={24} color={colors.brand} />
+              </TouchableOpacity>
+              <Text style={s.composerTitle}>محتوى جديد</Text>
+              <TouchableOpacity onPress={publish} disabled={publishing || uploading} style={s.publishTopBtn}>
+                <LinearGradient colors={['#F5C518', '#D4AF37']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.publishTopInner}>
+                  {publishing ? <ActivityIndicator size="small" color={colors.onBrandPrimary} /> : <Text style={s.publishTopText}>نشر</Text>}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
 
-          <ScrollView contentContainerStyle={{ padding: 14 }}>
-            <Text style={s.label}>نوع المحتوى</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {POST_TYPES.map(t => (
-                <TouchableOpacity key={t.id} style={[s.typeCard, postType === t.id && { borderColor: t.color, backgroundColor: t.color + '15' }]} onPress={() => setPostType(t.id)}>
-                  <View style={[s.typeIconBox, { backgroundColor: t.color + '30' }]}>
-                    <Ionicons name={t.icon} size={22} color={t.color} />
+            <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+              <Text style={s.goldLabel}>نوع المحتوى</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: 4 }}>
+                {POST_TYPES.map(t => {
+                  const active = postType === t.id;
+                  return (
+                    <TouchableOpacity key={t.id} style={[s.typeCardGold, active && s.typeCardGoldActive]} onPress={() => setPostType(t.id)}>
+                      <View style={[s.typeIconBoxGold, active && { backgroundColor: colors.brand }]}>
+                        <Ionicons name={t.icon} size={20} color={active ? colors.onBrandPrimary : colors.brand} />
+                      </View>
+                      <Text style={[s.typeLabelGold, active && { color: colors.brand }]}>{t.label}</Text>
+                      <Text style={s.typeDescGold}>{t.desc}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Text input */}
+              {postType !== 'story' && (
+                <>
+                  <Text style={s.goldLabel}>{postType === 'poll' ? 'سؤال الاستطلاع' : postType === 'question' ? 'السؤال' : postType === 'event' ? 'اسم الفعالية' : 'نص المنشور'} *</Text>
+                  <TextInput
+                    style={[s.goldInput, { height: postType === 'poll' || postType === 'question' ? 72 : 128, textAlignVertical: 'top' }]}
+                    multiline
+                    value={text}
+                    onChangeText={setText}
+                    placeholderTextColor={colors.onSurfaceTertiary}
+                    placeholder={postType === 'poll' ? 'ما هو أفضل هاتف لعام 2026؟' : postType === 'question' ? 'ما رأيكم في...؟' : postType === 'event' ? 'افتتاح فرع جديد' : 'ماذا تريد أن تشارك؟'}
+                  />
+                </>
+              )}
+
+              {/* Media (Images + Video) */}
+              {(postType === 'post' || postType === 'story') && (
+                <>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md }}>
+                    <Text style={[s.goldLabel, { marginTop: 0, flex: 1 }]}>{postType === 'story' ? 'وسائط الحالة *' : 'الوسائط (صور + فيديو، حتى 8)'}</Text>
+                    <Text style={s.helperCount}>{media.length}/{postType === 'story' ? 1 : 8}</Text>
                   </View>
-                  <Text style={s.typeLabel}>{t.label}</Text>
-                  <Text style={s.typeDesc}>{t.desc}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {/* Text input */}
-            {postType !== 'story' && (
-              <>
-                <Text style={s.label}>{postType === 'poll' ? 'سؤال الاستطلاع' : postType === 'question' ? 'السؤال' : postType === 'event' ? 'اسم الفعالية' : 'نص المنشور'} *</Text>
-                <TextInput
-                  style={[s.input, { height: postType === 'poll' || postType === 'question' ? 60 : 110, textAlignVertical: 'top' }]}
-                  multiline
-                  value={text}
-                  onChangeText={setText}
-                  placeholder={postType === 'poll' ? 'ما هو أفضل هاتف لعام 2025؟' : postType === 'question' ? 'ما رأيكم في...؟' : postType === 'event' ? 'افتتاح فرع جديد' : 'ماذا تريد أن تشارك؟'}
-                />
-              </>
-            )}
-
-            {/* Images */}
-            {(postType === 'post' || postType === 'story') && (
-              <>
-                <Text style={s.label}>{postType === 'story' ? 'صورة الحالة *' : 'الصور (حتى 4)'}</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {images.map((uri, i) => (
-                    <View key={i} style={s.imgPreview}>
-                      <Image source={{ uri }} style={s.imgPreviewImg} />
-                      <TouchableOpacity style={s.removeImgBtn} onPress={() => removeImage(i)}><Ionicons name="close" size={14} color="white" /></TouchableOpacity>
-                    </View>
-                  ))}
-                  {(postType === 'story' ? images.length === 0 : images.length < 4) && (
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                      <TouchableOpacity style={s.addImgBtn} onPress={pickImage}>
-                        <Ionicons name="image" size={28} color="#8833FF" />
-                        <Text style={s.addImgText}>المعرض</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={s.addImgBtn} onPress={takePhoto}>
-                        <Ionicons name="camera" size={28} color="#8833FF" />
-                        <Text style={s.addImgText}>كاميرا</Text>
-                      </TouchableOpacity>
+                  <View style={s.mediaGridGold}>
+                    {media.map((m, i) => (
+                      <View key={i} style={s.mediaSlotGold}>
+                        {m.kind === 'image' ? (
+                          <Image source={{ uri: mediaUrlSync(m.path) }} style={s.mediaSlotImg} contentFit="cover" />
+                        ) : (
+                          <View style={s.videoPlaceholder}>
+                            <Ionicons name="videocam" size={26} color={colors.brand} />
+                            <Text style={s.videoBadge}>فيديو</Text>
+                          </View>
+                        )}
+                        <TouchableOpacity style={s.mediaRemoveGold} onPress={() => removeMedia(i)}>
+                          <Ionicons name="close" size={14} color="white" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                    {(postType === 'story' ? media.length === 0 : media.length < 8) && (
+                      <>
+                        <TouchableOpacity style={s.mediaAddGold} onPress={pickImage} disabled={uploading}>
+                          <Ionicons name="images" size={22} color={colors.brand} />
+                          <Text style={s.mediaAddGoldText}>معرض</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={s.mediaAddGold} onPress={takePhoto} disabled={uploading}>
+                          <Ionicons name="camera" size={22} color={colors.brand} />
+                          <Text style={s.mediaAddGoldText}>كاميرا</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={s.mediaAddGold} onPress={pickVideo} disabled={uploading}>
+                          <Ionicons name="videocam" size={22} color={colors.brand} />
+                          <Text style={s.mediaAddGoldText}>فيديو</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </View>
+                  {uploading && (
+                    <View style={s.uploadingRowGold}>
+                      <ActivityIndicator color={colors.brand} />
+                      <Text style={s.uploadingTextGold}>جارٍ رفع الوسائط...</Text>
                     </View>
                   )}
-                </View>
-              </>
-            )}
+                </>
+              )}
 
-            {/* Poll options */}
-            {postType === 'poll' && (
-              <>
-                <Text style={s.label}>خيارات الاستطلاع *</Text>
-                {pollOptions.map((opt, i) => (
-                  <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
-                    <TextInput style={[s.input, { flex: 1 }]} value={opt} onChangeText={v => updatePollOption(i, v)} placeholder={`الخيار ${i + 1}`} />
-                    {pollOptions.length > 2 && <TouchableOpacity onPress={() => removePollOption(i)} style={s.removeOptBtn}><Ionicons name="close" size={20} color="#EF4444" /></TouchableOpacity>}
-                  </View>
-                ))}
-                {pollOptions.length < 6 && (
-                  <TouchableOpacity onPress={addPollOption} style={s.addOptBtn}>
-                    <Ionicons name="add" size={16} color="#8833FF" />
-                    <Text style={s.addOptText}>إضافة خيار</Text>
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
+              {/* Poll options */}
+              {postType === 'poll' && (
+                <>
+                  <Text style={s.goldLabel}>خيارات الاستطلاع *</Text>
+                  {pollOptions.map((opt, i) => (
+                    <View key={i} style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm, alignItems: 'center' }}>
+                      <TextInput style={[s.goldInput, { flex: 1 }]} value={opt} onChangeText={v => updatePollOption(i, v)}
+                        placeholderTextColor={colors.onSurfaceTertiary} placeholder={`الخيار ${i + 1}`} />
+                      {pollOptions.length > 2 && <TouchableOpacity onPress={() => removePollOption(i)} style={s.removeOptBtnGold}><Ionicons name="close" size={20} color={colors.error} /></TouchableOpacity>}
+                    </View>
+                  ))}
+                  {pollOptions.length < 6 && (
+                    <TouchableOpacity onPress={addPollOption} style={s.addOptBtnGold}>
+                      <Ionicons name="add-circle" size={16} color={colors.brand} />
+                      <Text style={s.addOptTextGold}>إضافة خيار</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
 
-            {/* Event extras */}
-            {postType === 'event' && (
-              <>
-                <Text style={s.label}>التاريخ والوقت *</Text>
-                <TextInput style={s.input} value={eventDate} onChangeText={setEventDate} placeholder="2025-08-20 19:00" />
-                <Text style={s.label}>المكان</Text>
-                <TextInput style={s.input} value={eventLocation} onChangeText={setEventLocation} placeholder="فرع الرياض - شارع الملك فهد" />
-              </>
-            )}
+              {/* Event extras */}
+              {postType === 'event' && (
+                <>
+                  <Text style={s.goldLabel}>التاريخ والوقت *</Text>
+                  <TextInput style={s.goldInput} value={eventDate} onChangeText={setEventDate}
+                    placeholderTextColor={colors.onSurfaceTertiary} placeholder="2026-08-20 19:00" />
+                  <Text style={s.goldLabel}>المكان</Text>
+                  <TextInput style={s.goldInput} value={eventLocation} onChangeText={setEventLocation}
+                    placeholderTextColor={colors.onSurfaceTertiary} placeholder="فرع الرياض - شارع الملك فهد" />
+                </>
+              )}
 
-            {postType === 'story' && <Text style={s.hint}>💡 الحالة ستختفي تلقائياً بعد 24 ساعة</Text>}
-          </ScrollView>
-        </SafeAreaView>
+              {/* Optional: Location tag + Schedule */}
+              {(postType === 'post' || postType === 'story') && (
+                <>
+                  <Text style={s.goldLabel}>📍 موقع (اختياري)</Text>
+                  <TextInput style={s.goldInput} value={locationTag} onChangeText={setLocationTag}
+                    placeholderTextColor={colors.onSurfaceTertiary} placeholder="الرياض - العليا" />
+                  {postType === 'post' && (
+                    <>
+                      <Text style={s.goldLabel}>⏰ جدولة النشر (اختياري)</Text>
+                      <TextInput style={s.goldInput} value={scheduledAt} onChangeText={setScheduledAt}
+                        placeholderTextColor={colors.onSurfaceTertiary} placeholder="2026-08-31 20:00 (اتركه فارغاً للنشر الفوري)" />
+                    </>
+                  )}
+                </>
+              )}
+
+              {postType === 'story' && <Text style={s.hintGold}>💡 الحالة ستختفي تلقائياً بعد 24 ساعة</Text>}
+            </ScrollView>
+          </SafeAreaView>
+        </View>
       </Modal>
 
       {/* ─── Thread Modal ─── */}
@@ -464,4 +561,33 @@ const s = StyleSheet.create({
   replyToText: { fontSize: 11, color: '#6B7280', fontWeight: '600' },
   sendBtn: { backgroundColor: '#8833FF', width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40, fontSize: 13 },
+
+  // ─── Composer (Tech Cyber Gold) ───
+  composerRoot: { flex: 1, backgroundColor: colors.surface },
+  composerHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  composerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '800', color: colors.onSurface },
+  publishTopInner: { paddingHorizontal: 18, paddingVertical: 8, borderRadius: 999, alignItems: 'center' },
+  goldLabel: { fontSize: 12, fontWeight: '700', color: colors.brand, marginTop: spacing.md, marginBottom: spacing.xs },
+  goldInput: { backgroundColor: colors.surfaceSecondary, padding: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, fontSize: 14, color: colors.onSurface, textAlign: 'right' },
+  typeCardGold: { width: 110, alignItems: 'center', padding: 10, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSecondary },
+  typeCardGoldActive: { borderColor: colors.brand, backgroundColor: colors.brandTertiary },
+  typeIconBoxGold: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 6, backgroundColor: colors.brandTertiary },
+  typeLabelGold: { fontSize: 13, fontWeight: '800', color: colors.onSurface },
+  typeDescGold: { fontSize: 10, color: colors.onSurfaceTertiary, marginTop: 2, textAlign: 'center' },
+  helperCount: { fontSize: 12, color: colors.onSurfaceTertiary },
+  mediaGridGold: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  mediaSlotGold: { width: 88, height: 88, borderRadius: radius.md, overflow: 'hidden', backgroundColor: colors.surfaceTertiary, position: 'relative' },
+  mediaSlotImg: { width: '100%', height: '100%' },
+  mediaRemoveGold: { position: 'absolute', top: 4, right: 4, backgroundColor: colors.error, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  mediaAddGold: { width: 88, height: 88, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.brand, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brandTertiary },
+  mediaAddGoldText: { fontSize: 11, color: colors.brand, marginTop: 4, fontWeight: '600' },
+  videoPlaceholder: { flex: 1, backgroundColor: colors.surfaceTertiary, alignItems: 'center', justifyContent: 'center' },
+  videoBadge: { fontSize: 10, color: colors.brand, marginTop: 4, fontWeight: '700' },
+  uploadingRowGold: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md, backgroundColor: colors.brandTertiary, padding: spacing.sm, borderRadius: radius.md },
+  uploadingTextGold: { color: colors.brand, fontSize: 12, fontWeight: '600' },
+  removeOptBtnGold: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  addOptBtnGold: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10, borderRadius: radius.md, backgroundColor: colors.brandTertiary, alignSelf: 'flex-start' },
+  addOptTextGold: { color: colors.brand, fontWeight: '700', fontSize: 13 },
+  hintGold: { fontSize: 12, color: colors.brand, marginTop: spacing.md, textAlign: 'center', fontStyle: 'italic' },
 });

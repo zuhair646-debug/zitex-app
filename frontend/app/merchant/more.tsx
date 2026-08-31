@@ -12,6 +12,7 @@ export default function MerchantMore() {
   const sales = [
     { icon: 'cart', title: 'نقطة البيع POS', subtitle: 'شاشة كاشير سريعة لإصدار الفواتير', route: '/merchant/pos' },
     { icon: 'receipt', title: 'الفواتير', subtitle: 'سجل الفواتير ومبيعات اليوم', route: '/merchant/invoices' },
+    { icon: 'megaphone', title: 'التسويق والمسوقون', subtitle: 'إعلانات مدفوعة + برنامج المسوقين بالعمولة', route: '/merchant/marketing' },
   ] as const;
 
   const marketing = [

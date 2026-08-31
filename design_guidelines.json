@@ -1,38 +1,38 @@
 {
-  "app_name": "Zitex Merchant Admin",
-  "personality": "7 Dark-First Utility structure with 6 Glass / Luxe finishes",
-  "personality_one_liner": "A high-performance, command-center dashboard wrapped in a premium, cinematic dark-gold tech aesthetic.",
+  "app_name": "Zitex Merchant Dashboard",
+  "personality": "6 Glass / Luxe DARK (Customized for Tech Cyber Gold)",
+  "personality_one_liner": "A premium, high-contrast, dark-first operational command center that feels like high-end tech.",
   "color": {
-    "surface": "#0B0C10",
+    "surface": "#0A0A0A",
     "onSurface": "#FFFFFF",
-    "surfaceSecondary": "#15171E",
-    "onSurfaceSecondary": "#A3A6B0",
-    "surfaceTertiary": "#20232B",
-    "onSurfaceTertiary": "#D1D3D9",
+    "surfaceSecondary": "#14151B",
+    "onSurfaceSecondary": "#A0A0A5",
+    "surfaceTertiary": "#1C1D24",
+    "onSurfaceTertiary": "#8E8E93",
     "surfaceInverse": "#FFFFFF",
-    "onSurfaceInverse": "#0B0C10",
-    "brand": "#D4AF37",
-    "brandPrimary": "#D4AF37",
-    "onBrandPrimary": "#000000",
-    "brandSecondary": "#B59124",
-    "onBrandSecondary": "#000000",
-    "brandTertiary": "rgba(212, 175, 55, 0.12)",
-    "onBrandTertiary": "#D4AF37",
+    "onSurfaceInverse": "#0A0A0A",
+    "brand": "#F5C518",
+    "brandPrimary": "#F5C518",
+    "onBrandPrimary": "#0A0A0A",
+    "brandSecondary": "#D4AF37",
+    "onBrandSecondary": "#0A0A0A",
+    "brandTertiary": "#292410",
+    "onBrandTertiary": "#F5C518",
     "success": "#34C759",
-    "onSuccess": "#000000",
-    "warning": "#FF9F0A",
-    "onWarning": "#000000",
+    "onSuccess": "#FFFFFF",
+    "warning": "#FF9500",
+    "onWarning": "#FFFFFF",
     "error": "#FF453A",
     "onError": "#FFFFFF",
-    "info": "#EBEBF5",
-    "onInfo": "#000000",
-    "border": "#2A2D37",
-    "borderStrong": "#3D414D",
-    "divider": "#1F222B"
+    "info": "#0A84FF",
+    "onInfo": "#FFFFFF",
+    "border": "#2A2B33",
+    "borderStrong": "#40424F",
+    "divider": "#1F2027"
   },
   "typography": {
-    "displayFontFamily": "Cairo, Plus Jakarta Sans",
-    "textFontFamily": "Cairo, Plus Jakarta Sans",
+    "displayFontFamily": "Space Grotesk",
+    "textFontFamily": "Cairo",
     "scale": {
       "sm": 12,
       "base": 14,
@@ -42,7 +42,7 @@
     }
   },
   "spacing": {
-    "rule": "Generous vertical breathing room for luxury feel, but tight internal padding inside utility cards for density. Ensure 44pt touch targets.",
+    "rule": "Strictly adhere to the 8px grid to fix cramped layouts. Use generous padding (lg or xl) for screen edges and form groups to create breathing space.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -57,20 +57,17 @@
     "lg": 20,
     "pill": 999
   },
-  "shadow_tier": "1",
-  "navigation": "bottom_tabs",
+  "shadow_tier": 1,
+  "navigation": "stack_only",
   "icon_set": "Ionicons",
   "glassmorphism": {
-    "enabled": "true",
+    "enabled": true,
     "do's": [
-      "Use glass on the bottom tab bar (frosted dark)",
-      "Use glass on sticky headers over scrolling lists",
-      "Use frosted overlays on featured competition banners",
-      "Ensure text over glass has high contrast (onSurface)"
+      "Use glassmorphism for sticky top headers, bottom sheets, and sticky CTA bars.",
+      "Use heavy tint (>75% surface) under glass to maintain high contrast for text."
     ],
     "dont's": [
-      "Do not use glass on every data card; keep standard cards solid surfaceSecondary",
-      "Do not use glass on form inputs"
+      "Never use glassmorphism on form inputs or dense data tables."
     ]
   },
   "platform_libraries": {
@@ -85,90 +82,95 @@
     "animation": "react-native-reanimated",
     "gesture": "react-native-gesture-handler"
   },
+  "haptics": {
+    "primary_button_press": "impactLight",
+    "segmented_control_switch": "selection",
+    "success_action": "notificationSuccess",
+    "error_action": "notificationError",
+    "bottom_sheet_open": "impactLight"
+  },
   "screens": [
     {
-      "name": "Home (Dashboard)",
-      "purpose": "Command center for the merchant, providing immediate visibility into top-level metrics and quick operational actions.",
+      "name": "Merchant Dashboard Base (Header)",
+      "purpose": "The main entry layout containing the global segmented toggle for Marketing vs Store views.",
       "states": {
-        "loading": "Dark shimmer skeletons for metric cards and recent order rows.",
-        "empty": "Abstract dark gold texture background with a prompt to 'Set up your store'.",
-        "error": "Clean inline error banner with a gold 'Retry' button."
+        "loading": "Skeleton of dashboard widgets.",
+        "empty": "N/A",
+        "error": "N/A"
       },
-      "layout": "Header with Merchant Profile and Notifications. Top row: 2-3 Metric Cards (Revenue, Active Orders). Horizontal scroll section: 'Quick Actions' (Add Product, Create Post, Scan). Bottom section: Vertical list of 'Pending Orders' requiring immediate attention."
+      "layout": "Sticky top header using a frosted glass background. Center of header contains a highly visible Segmented Control [التسويق (Marketing) | المتجر (Store)]. Below the header, a scrollable area displaying the respective module's widgets."
     },
     {
-      "name": "Products",
-      "purpose": "Deep, structured catalog management allowing quick stock toggles and variant drill-downs.",
+      "name": "Social Post Creation",
+      "purpose": "Rich media post composer supporting mixed images, video, product tagging, and scheduling.",
       "states": {
-        "loading": "List skeleton with thumbnail circles and text blocks.",
-        "empty": "Premium empty state using gold texture pattern, text 'No products yet', and a primary Add Product CTA.",
-        "error": "Error message with retry."
+        "loading": "Spinner during media upload or tagging.",
+        "empty": "N/A",
+        "error": "Failed to upload media banner."
       },
-      "layout": "Sticky header with Search and Filter chips (Categories). Vertical list of products. Each row: left product image, right details (title, price, stock). Include a quick-action switch for 'In Stock/Out of Stock'."
+      "layout": "Vertical scrollview. Top: Post type selector chips (Post/Story/Poll). Section 1: Rich Text Input. Section 2: Media Carousel (horizontal scroll, supports both video thumbs and images up to 8 items). Section 3: Action grid (Tag Products, Add Location). Section 4: Schedule Picker (bottom sheet trigger). Bottom: Sticky submit CTA pinned above keyboard."
     },
     {
-      "name": "Orders",
-      "purpose": "Efficient order triage and processing pipeline.",
+      "name": "Product Creation Form",
+      "purpose": "Comprehensive product data entry with Arabic localization, variant support, and multi-warehouse stock.",
       "states": {
-        "loading": "Skeleton order cards.",
-        "empty": "Iconography-based empty state (no cartoons) indicating zero active orders in the selected filter.",
-        "error": "Error state with retry."
+        "loading": "Form submission spinner.",
+        "empty": "N/A",
+        "error": "Validation error text below missing required fields (Arabic localized)."
       },
-      "layout": "Top pinned segmented control (New, Processing, Ready, Completed). Vertical list of high-density order cards showing Order ID, Customer Name, Total, and a primary action button (e.g., 'Assign Driver' or 'Mark Ready')."
+      "layout": "Structured into visually separated cards on a scrolling `surface` background to reduce noise. Card 1: Basic Info (Name, Desc in Arabic/English). Card 2: Media (Grid of image/video upload slots). Card 3: Variants (Accordion or nested list for size/color). Card 4: Inventory (Multi-warehouse stock inputs). Top-Right header action: Barcode Scan icon. Bottom: Sticky CTA bar with a 'Live Preview' secondary button."
     },
     {
-      "name": "Competitions",
-      "purpose": "Manage marketing draws and participants visually and cleanly.",
+      "name": "Marketing Panel",
+      "purpose": "Dashboard for in-app ads and affiliate program overview.",
       "states": {
-        "loading": "Skeleton banners.",
-        "empty": "Premium abstract wave texture empty state with 'Create your first competition' CTA.",
-        "error": "Error state with retry."
+        "loading": "Skeleton metrics.",
+        "empty": "Illustration of a megaphone with 'لا توجد حملات تسويقية' (No marketing campaigns) and 'إنشاء إعلان' (Create Ad) CTA.",
+        "error": "Error loading marketing data."
       },
-      "layout": "List of large hero cards. Each card uses a branded image/video thumbnail with a dark gradient scrim (vertical, top->bottom fade). Overlay text shows Competition Name, Date, and Participant Count at the bottom."
+      "layout": "Two tabs (Ads | Affiliates). Ads Tab: Summary metrics, list of active banner ad cards (with target demographics). Affiliates Tab: List of pending applications (highlighted with badge) followed by top performers list."
     },
     {
-      "name": "More (Menu)",
-      "purpose": "Access to all other 10+ settings and management sections (Employees, Social, Support, Branches).",
+      "name": "Affiliate Application Review",
+      "purpose": "Modal or sub-screen to review, approve/reject customer affiliate requests.",
       "states": {
-        "loading": "None",
-        "empty": "None",
-        "error": "None"
+        "loading": "Processing approval.",
+        "empty": "N/A",
+        "error": "Toast on failed approval."
       },
-      "layout": "Vertical list of grouped list items. Each item has a leading icon in a brandTertiary tinted rounded square, title, and a trailing chevron. Grouped by 'Operations', 'Marketing', 'Settings'."
+      "layout": "Sheet or Stack screen. Top: Customer profile summary (Name, Stats). Middle: Requested commission/notes. Bottom: Two large full-width CTAs side-by-side: Reject (SurfaceSecondary, OnSurface) and Approve (BrandPrimary, OnBrandPrimary). On Approve -> triggers success animation and shows generated link."
+    },
+    {
+      "name": "Social Feed Preview",
+      "purpose": "Customer-facing social feed layout with a manual Light/Dark mode toggle.",
+      "states": {
+        "loading": "Skeleton feed posts.",
+        "empty": "Empty state illustration of a user holding a phone, 'لا توجد منشورات' (No posts yet).",
+        "error": "Failed to fetch feed."
+      },
+      "layout": "Standard scrolling feed. Header includes a distinct Day/Night toggle icon (Sun/Moon). The layout dynamically flips theme tokens based on this state (unlike the locked merchant side). Posts display rich media carousels, 'Shop this post' chips, and location tags."
     }
   ],
   "images": {
-    "hero_abstract_gold": {
-      "url": "https://images.pexels.com/photos/21031387/pexels-photo-21031387.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-      "alt": "Intricate golden wave patterns creating a luxurious abstract art piece."
+    "logo_placeholder": {
+      "url": "https://images.unsplash.com/photo-1741356474357-72188f76e801?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwxfHxibGFjayUyMGFuZCUyMGdvbGQlMjBhYnN0cmFjdCUyMHRlY2glMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc4ODE1NjEyMXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Tech Cyber Gold Background"
     },
-    "empty_state_texture": {
-      "url": "https://images.unsplash.com/photo-1513346940221-6f673d962e97?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGRhcmslMjBnb2xkJTIwbHV4dXJ5JTIwdGV4dHVyZXxlbnwwfHx8fDE3ODgxMTkzNzB8MA&ixlib=rb-4.1.0&q=85",
-      "alt": "a very long line of yellow lines on a black background"
+    "laptop_placeholder": {
+      "url": "https://images.unsplash.com/photo-1542393545-10f5cde2c810?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBkYXJrJTIwZ2FtaW5nJTIwbGFwdG9wfGVufDB8fHx8MTc4ODE1NjEyMXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Gaming Laptop for Product Placeholder"
     },
-    "product_placeholder": {
-      "url": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxwcmVtaXVtJTIwaGVhZHBob25lJTIwYmxhY2t8ZW58MHx8fHwxNzg4MTE5MzcwfDA&ixlib=rb-4.1.0&q=85",
-      "alt": "premium headphone black on surface"
+    "headphones_placeholder": {
+      "url": "https://images.unsplash.com/photo-1641048930621-ab5d225ae5b0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTN8MHwxfHNlYXJjaHwyfHxwcmVtaXVtJTIwYmxhY2slMjBoZWFkcGhvbmVzfGVufDB8fHx8MTc4ODE1NjEyMXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Premium Black Headphones Placeholder"
     }
   },
   "instructions_to_main_agent": [
-    "IMPORTANT: Apply the Dark-First Utility + Glass Luxe fusion. NO CARTOONS ALLOWED. Use the abstract gold textures provided for empty states and hero backgrounds. NO BLUES ALLOWED.",
-    "RTL & i18n: Ensure all layouts flex correctly for RTL (Arabic is primary). Continue using the existing `useT()` hook for labels.",
-    "=== خطة إعادة تصميم لوحة تحكم التاجر (Merchant Admin Panel Redesign Plan) ===",
-    "1. الهيكلة العامة وتجربة المستخدم (General IA & UX): الانتقال من تصميم الشبكة (Grid Menu) المسطح إلى شريط تنقل سفلي (Bottom Tabs) يحتوي على (الرئيسية، الطلبات، المنتجات، المزيد). الأقسام الـ 14 كثيرة جداً لتكون في واجهة واحدة، لذا سيتم دمج العمليات اليومية في التبويبات، ونقل الإعدادات العميقة (الموظفين، الفروع، سياسات التوصيل) إلى قائمة 'المزيد'.",
-    "2. خطة تصميم الأقسام (Section-by-section redesign):",
-    "   - الرئيسية (Dashboard): التخلي عن أيقونات القائمة القديمة. إضافة بطاقات أداء (Metrics) في الأعلى (المبيعات، الطلبات النشطة)، تليها إجراءات سريعة (إضافة منتج، مسح طلب)، ثم قائمة بالطلبات التي تتطلب إجراءً فورياً.",
-    "   - المنتجات (Products): تحويلها لقائمة عمودية (Vertical List) غنية. كل منتج يظهر مع صورته، السعر، حالة المخزون بوضوح، مع إضافة مفتاح (Toggle) سريع لتغيير حالة توفر المنتج بدون الدخول للتفاصيل. الشاشات الداخلية ستدعم إدارة المتغيرات (Variants) بشكل أعمق.",
-    "   - الطلبات (Orders): إضافة فلتر علوي (Segmented Control) لتصفية الطلبات (جديد، قيد التنفيذ، جاهز). بطاقات الطلبات ستكون واضحة، تركز على رقم الطلب وإجمالي المبلغ وزر إجراء أساسي (Primary CTA) مثل 'تعيين سائق'.",
-    "   - المسابقات (Competitions): التخلص من الرسوم الكرتونية كلياً. استخدام صور احترافية أو خلفيات بتأثيرات ذهبية داكنة للبطاقات. كل مسابقة ستعرض كبطاقة عريضة توضح حالة السحب وعدد المشاركين بوضوح.",
-    "   - باقي الأقسام (Employees, Support, etc.): تنظيمها كقوائم (List views) احترافية مع أيقونات بخلفية ذهبية شفافة (Tinted icons) وأسهم انتقال (Chevrons) لتعطي إحساساً بالفخامة والترتيب.",
-    "3. الهوية البصرية (Visual Identity): تطبيق نمط (Tech Cyber Gold). ألوان خلفية تعتمد على الأسود المطفأ والداكن جداً (Obsidian/Dark Grey) مع استخدام اللون الذهبي (#D4AF37) كلون أساسي للأزرار والاعتمادات. الخطوط نظيفة واحترافية. لا وجود للرسومات الكرتونية.",
-    "4. مكتبة المكونات (Component Library): بناء مكونات موحدة تشمل: StatCard (لإحصائيات الرئيسية)، ActionCard (للمهام)، PrimaryButton (زر ذهبي مع نص أسود)، و SegmentedControl (للفلترة).",
-    "5. الحالات الفارغة (Empty States): استبدال الرسومات الكرتونية بأنماط هندسية ونسيج ذهبي تجريدي (Abstract Gold Textures) متوفر في الـ JSON، مع نص يوجه المستخدم للإجراء التالي.",
-    "6. التفاعلات المصغرة (Micro-interactions): إضافة اهتزاز خفيف (Haptics) عند تبديل حالة مخزون المنتج أو تغيير حالة الطلب. واستخدام (Skeleton Loaders) داكنة بدلاً من أيقونات التحميل الدوارة المزعجة.",
-    "7. خطة الإطلاق (Rollout Plan):",
-    "   - المرحلة الأولى: الإطار العام (Navigation)، الرئيسية، الطلبات، المنتجات.",
-    "   - المرحلة الثانية: المسابقات، السوشيال ميديا، والخدمات.",
-    "   - المرحلة الثالثة: الموظفين، إعدادات الدعم، وبقية الخصائص الإدارية."
+    "NUCLEAR BAN on Purple/White styling: Actively hunt down and refactor /merchant/social, /merchant/product-form, and /merchant/pos to strictly use the 'Tech Cyber Gold' color tokens (#0A0A0A, #14151B, #F5C518).",
+    "Arabic RTL First: All merchant forms must prioritize Arabic labels. Ensure UI flips correctly (e.g., text alignment right-to-left) or explicitly handle Arabic strings with appropriate flex directions.",
+    "Component Structure - Segmented Toggle: Build a reusable `<SegmentedControl />` component for the Marketing/Store header switch. Use BrandPrimary (Gold) for the active indicator.",
+    "Form Noise Reduction: Group product creation fields into `<Card>` components with `lg` padding. Avoid a single massive scrollview of 20 flat inputs. Use a `<BottomSheet>` for Variants and Schedule pickers to keep the main screen clean.",
+    "Social Feed Theme Toggle: Create a localized ThemeProvider or state context specifically for the 'Social Feed Preview' to allow flipping between Light and Dark mode, independent of the locked Dark Merchant dashboard.",
+    "Action Buttons: Any primary action (Save, Post, Approve) should be anchored sticky at the bottom using a safe area view with a subtle blur/glass background."
   ]
 }

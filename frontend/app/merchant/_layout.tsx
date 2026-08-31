@@ -88,6 +88,7 @@ export default function MerchantLayout() {
       <Tabs.Screen name="team" options={{ href: null }} />
       <Tabs.Screen name="pos" options={{ href: null }} />
       <Tabs.Screen name="invoices" options={{ href: null }} />
+      <Tabs.Screen name="marketing" options={{ href: null }} />
     </Tabs>
   );
 }

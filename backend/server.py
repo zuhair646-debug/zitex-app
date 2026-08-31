@@ -49,6 +49,9 @@ def serialize_doc(doc):
     doc["id"] = str(doc.pop("_id"))
     return doc
 
+def serialize_docs(docs):
+    return [serialize_doc(d) for d in docs if d is not None]
+
 async def get_current_user(request: Request) -> dict:
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
@@ -1268,9 +1271,14 @@ class ProductInput(BaseModel):
     discount_price: Optional[float] = None
     condition: str = "new"
     images: List[str] = []
+    video: str = ""
     storage_options: List[str] = []
     colors: List[dict] = []
     specs: dict = {}
+    variants: List[dict] = []
+    branch_stock: List[dict] = []
+    sku: str = ""
+    tags: List[str] = []
     in_stock: bool = True
     featured: bool = False
     published: bool = True
@@ -1282,12 +1290,30 @@ async def merchant_create_product(data: ProductInput, user=Depends(get_current_u
     doc.update({"rating": 0, "review_count": 0, "sold_count": 0,
                 "created_at": datetime.now(timezone.utc).isoformat()})
     r = await db.products.insert_one(doc)
-    return {"id": str(r.inserted_id), "message": "Product created"}
+    # Sync branch inventory
+    pid = str(r.inserted_id)
+    for bs in data.branch_stock:
+        if bs.get("branch_id") and bs.get("quantity") is not None:
+            await db.branch_inventory.update_one(
+                {"branch_id": bs["branch_id"], "product_id": pid},
+                {"$set": {"quantity": int(bs["quantity"]),
+                          "updated_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True,
+            )
+    return {"id": pid, "message": "Product created"}
 
 @api_router.put("/merchant/products/{pid}")
 async def merchant_update_product(pid: str, data: ProductInput, user=Depends(get_current_user)):
     require_merchant(user)
     await db.products.update_one({"_id": ObjectId(pid)}, {"$set": data.model_dump()})
+    for bs in data.branch_stock:
+        if bs.get("branch_id") and bs.get("quantity") is not None:
+            await db.branch_inventory.update_one(
+                {"branch_id": bs["branch_id"], "product_id": pid},
+                {"$set": {"quantity": int(bs["quantity"]),
+                          "updated_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True,
+            )
     return {"message": "Product updated"}
 
 @api_router.delete("/merchant/products/{pid}")
@@ -1463,8 +1489,11 @@ async def merchant_update_booking_status(bid: str, request: Request, user=Depend
 # ─── Merchant: Social Posts CRUD ───
 class SocialPostInput(BaseModel):
     text: str = ""
-    image: str = ""  # url or base64 data URI
+    image: str = ""  # url or storage path
     images: List[str] = []  # for multi-image posts
+    video: str = ""  # storage path
+    location_tag: str = ""
+    scheduled_at: str = ""
     type: str = "post"  # post | poll | question | event | story
     poll_options: List[dict] = []  # [{text, votes}]
     question: str = ""  # for type=question
@@ -1474,14 +1503,17 @@ class SocialPostInput(BaseModel):
 @api_router.post("/merchant/social/posts")
 async def merchant_create_post(data: SocialPostInput, user=Depends(get_current_user)):
     require_merchant(user)
-    if not data.text and not data.image and not data.images and data.type == "post":
-        raise HTTPException(status_code=400, detail="Post must have text or image")
+    if not data.text and not data.image and not data.images and not data.video and data.type == "post":
+        raise HTTPException(status_code=400, detail="المنشور يحتاج نص أو وسائط")
     doc = {
         "author": user.get("name", "Store"),
         "author_id": user["id"],
         "text": data.text,
         "image": data.image,
         "images": data.images or ([data.image] if data.image else []),
+        "video": data.video,
+        "location_tag": data.location_tag,
+        "scheduled_at": data.scheduled_at,
         "type": data.type,
         "likes": 0, "comments": 0, "views": 0,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -3087,11 +3119,189 @@ async def get_invoice(iid: str, user=Depends(get_current_user)):
     return serialize_doc(inv)
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# ─── MARKETING & AFFILIATE MODULE ───
+# ═══════════════════════════════════════════════════════════════════════════
+
+class MarketingAdInput(BaseModel):
+    title: str
+    description: str = ""
+    image: str = ""
+    cta_label: str = "تسوّق الآن"
+    cta_link: str = ""
+    target_cities: List[str] = []
+    target_genders: List[str] = []  # ["male", "female"]
+    target_age_min: int = 18
+    target_age_max: int = 65
+    budget: float = 0
+    starts_at: str = ""
+    ends_at: str = ""
+    active: bool = True
+
+@api_router.post("/merchant/marketing/ads")
+async def create_ad(data: MarketingAdInput, user=Depends(get_current_user)):
+    require_merchant(user)
+    mid = user.get("merchant_id", user["id"])
+    doc = data.model_dump()
+    doc.update({
+        "merchant_id": mid,
+        "merchant_name": user.get("name", "Store"),
+        "views": 0, "clicks": 0, "conversions": 0,
+        "spent": 0.0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    r = await db.marketing_ads.insert_one(doc)
+    return {"id": str(r.inserted_id), "message": "تم إنشاء الإعلان"}
+
+@api_router.get("/merchant/marketing/ads")
+async def list_ads(user=Depends(get_current_user)):
+    require_merchant(user)
+    mid = user.get("merchant_id", user["id"])
+    ads = await db.marketing_ads.find({"merchant_id": mid}).sort("created_at", -1).to_list(200)
+    return serialize_docs(ads)
+
+@api_router.delete("/merchant/marketing/ads/{aid}")
+async def delete_ad(aid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    if not ObjectId.is_valid(aid): raise HTTPException(400)
+    mid = user.get("merchant_id", user["id"])
+    r = await db.marketing_ads.delete_one({"_id": ObjectId(aid), "merchant_id": mid})
+    if r.deleted_count == 0: raise HTTPException(404)
+    return {"message": "تم الحذف"}
+
+@api_router.get("/marketing/ads/active")
+async def active_ads_for_customer(user=Depends(get_current_user)):
+    """Returns active ads customers can see on their feed/home."""
+    q = {"active": True}
+    # (Basic targeting — real implementation would filter by user's city/gender/age)
+    ads = await db.marketing_ads.find(q).sort("created_at", -1).to_list(20)
+    return serialize_docs(ads)
+
+
+class AffiliateApplyInput(BaseModel):
+    merchant_id: str  # target merchant to be affiliate for
+    full_name: str
+    social_handle: str = ""  # instagram/twitter link
+    audience_size: int = 0
+    note: str = ""
+
+@api_router.post("/affiliate/apply")
+async def apply_affiliate(data: AffiliateApplyInput, user=Depends(get_current_user)):
+    if user.get("role") not in ("customer", "user"):
+        raise HTTPException(status_code=403, detail="فقط العملاء يمكنهم التقديم")
+    # Prevent duplicate pending applications
+    existing = await db.affiliate_applications.find_one({
+        "merchant_id": data.merchant_id,
+        "applicant_id": user["id"],
+        "status": "pending",
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="لديك طلب معلق مسبقاً")
+    doc = {
+        "merchant_id": data.merchant_id,
+        "applicant_id": user["id"],
+        "applicant_name": data.full_name or user.get("name", ""),
+        "applicant_phone": user.get("phone", ""),
+        "social_handle": data.social_handle,
+        "audience_size": data.audience_size,
+        "note": data.note,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    r = await db.affiliate_applications.insert_one(doc)
+    return {"id": str(r.inserted_id), "message": "تم إرسال الطلب"}
+
+@api_router.get("/merchant/affiliate/applications")
+async def list_affiliate_applications(user=Depends(get_current_user)):
+    require_merchant(user)
+    mid = user.get("merchant_id", user["id"])
+    apps = await db.affiliate_applications.find({"merchant_id": mid}).sort("created_at", -1).to_list(200)
+    return serialize_docs(apps)
+
+@api_router.post("/merchant/affiliate/applications/{aid}/approve")
+async def approve_affiliate(aid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    if not ObjectId.is_valid(aid): raise HTTPException(400)
+    mid = user.get("merchant_id", user["id"])
+    appn = await db.affiliate_applications.find_one({"_id": ObjectId(aid), "merchant_id": mid})
+    if not appn: raise HTTPException(404)
+    if appn["status"] != "pending":
+        raise HTTPException(status_code=400, detail="تمت المعالجة مسبقاً")
+    # Generate unique referral code
+    ref_code = secrets.token_urlsafe(8).replace("_", "").replace("-", "")[:10].upper()
+    while await db.affiliates.find_one({"referral_code": ref_code}):
+        ref_code = secrets.token_urlsafe(8).replace("_", "").replace("-", "")[:10].upper()
+    aff_doc = {
+        "merchant_id": mid,
+        "user_id": appn["applicant_id"],
+        "name": appn["applicant_name"],
+        "phone": appn["applicant_phone"],
+        "referral_code": ref_code,
+        "commission_percent": 5.0,  # default 5%
+        "total_earnings": 0.0,
+        "total_conversions": 0,
+        "wallet_balance": 0.0,
+        "active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.affiliates.insert_one(aff_doc)
+    await db.affiliate_applications.update_one(
+        {"_id": ObjectId(aid)},
+        {"$set": {"status": "approved", "approved_at": datetime.now(timezone.utc).isoformat(),
+                  "referral_code": ref_code}},
+    )
+    # Also flag user to have "affiliate" capability
+    await db.users.update_one(
+        {"_id": ObjectId(appn["applicant_id"])},
+        {"$addToSet": {"affiliate_of": mid}},
+    )
+    return {"referral_code": ref_code, "message": "تمت الموافقة وإنشاء الحساب"}
+
+@api_router.post("/merchant/affiliate/applications/{aid}/reject")
+async def reject_affiliate(aid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    if not ObjectId.is_valid(aid): raise HTTPException(400)
+    mid = user.get("merchant_id", user["id"])
+    r = await db.affiliate_applications.update_one(
+        {"_id": ObjectId(aid), "merchant_id": mid, "status": "pending"},
+        {"$set": {"status": "rejected", "rejected_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    if r.matched_count == 0: raise HTTPException(404)
+    return {"message": "تم الرفض"}
+
+@api_router.get("/merchant/affiliate/list")
+async def merchant_affiliates(user=Depends(get_current_user)):
+    require_merchant(user)
+    mid = user.get("merchant_id", user["id"])
+    affs = await db.affiliates.find({"merchant_id": mid}).sort("total_earnings", -1).to_list(200)
+    return serialize_docs(affs)
+
+@api_router.get("/affiliate/my")
+async def my_affiliate_accounts(user=Depends(get_current_user)):
+    """Customer sees all the affiliate accounts they own."""
+    if user.get("role") not in ("customer", "user"):
+        raise HTTPException(status_code=403)
+    affs = await db.affiliates.find({"user_id": user["id"]}).to_list(50)
+    return serialize_docs(affs)
+
+
 app.include_router(api_router)
+
+# ─── Object Storage router (Emergent Managed) ───
+try:
+    from object_storage import build_router as _build_storage_router, init_storage as _init_storage
+    app.include_router(_build_storage_router(get_current_user, JWT_SECRET, JWT_ALGORITHM))
+except Exception as _e:
+    logger.error(f"Failed to mount object_storage router: {_e}")
 
 @app.on_event("startup")
 async def startup():
     await seed_data()
+    try:
+        _init_storage()
+        logger.info("Object storage initialized")
+    except Exception as e:
+        logger.warning(f"Object storage init failed (non-fatal): {e}")
     logger.info("Tech Store API started")
 
 @app.on_event("shutdown")
