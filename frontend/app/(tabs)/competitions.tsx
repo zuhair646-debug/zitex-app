@@ -50,7 +50,7 @@ export default function CompetitionsScreen() {
 
         {comps.map((comp: any) => (
           <TouchableOpacity testID={`competition-${comp.id}`} key={comp.id} style={s.compCard}
-            onPress={() => router.push(`/competition/${comp.id}`)}>
+            onPress={() => router.push(comp.competition_type === 'ugc_video' ? `/ugc-contest?id=${comp.id}` : `/competition/${comp.id}`)}>
             <View style={s.compTop}>
               <View style={[s.statusBadge, { backgroundColor: comp.status === 'open' ? '#DCFCE7' : comp.status === 'coming_soon' ? '#DBEAFE' : '#F3F4F6' }]}>
                 <View style={[s.statusDot, { backgroundColor: comp.status === 'open' ? '#10B981' : comp.status === 'coming_soon' ? '#3B82F6' : '#6B7280' }]} />

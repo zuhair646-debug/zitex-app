@@ -1767,17 +1767,20 @@ class CompetitionInput(BaseModel):
     description: str = ""
     prize: str
     prize_count: int = 1
-    # NEW: "qa" | "purchase" | "signup" | "general"
+    # NEW: "qa" | "purchase" | "signup" | "general" | "ugc_video"
     competition_type: str = "general"
     question: str = ""
     correct_answer: str = ""
+    options: List[str] = []           # For qa multiple choice
     required_product_id: str = ""
     spend_requirement: float = 0
+    purchase_mode: str = "single"     # "single" | "accumulated"
+    max_submissions_per_user: int = 1  # UGC only
+    ugc_hashtag: str = ""
     start_date: str = ""
     end_date: str = ""
     draw_date: str = ""
     max_participants: int = 1000
-    # Chamber supervision (NO approval needed - just permit + assigned employee)
     chamber_supervised: bool = False
     permit_number: str = ""
     assigned_chamber_employee_id: str = ""
@@ -1898,6 +1901,144 @@ async def save_draw_video(cid: str, request: Request, user=Depends(get_current_u
         raise HTTPException(status_code=400, detail="video_url required")
     await db.competitions.update_one({"_id": ObjectId(cid)}, {"$set": {"draw_video_url": video_url}})
     return {"message": "Video saved"}
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ─── UGC Video Competition endpoints ───
+# ═══════════════════════════════════════════════════════════════════════════
+
+class UGCSubmitInput(BaseModel):
+    video: str          # storage path
+    thumbnail: str = ""
+    caption: str = ""
+    hashtags: List[str] = []
+
+@api_router.post("/competitions/{cid}/videos")
+async def submit_ugc_video(cid: str, data: UGCSubmitInput, user=Depends(get_current_user)):
+    if not ObjectId.is_valid(cid): raise HTTPException(400)
+    comp = await db.competitions.find_one({"_id": ObjectId(cid)})
+    if not comp: raise HTTPException(404, "المسابقة غير موجودة")
+    if comp.get("competition_type") != "ugc_video":
+        raise HTTPException(400, "هذه المسابقة ليست من نوع UGC")
+    # Check submission cap
+    cap = int(comp.get("max_submissions_per_user") or 1)
+    existing = await db.competition_videos.count_documents({
+        "competition_id": cid, "user_id": user["id"]
+    })
+    if existing >= cap:
+        raise HTTPException(400, f"وصلت الحد الأقصى ({cap} فيديو)")
+    doc = {
+        "competition_id": cid,
+        "user_id": user["id"],
+        "user_name": user.get("name", ""),
+        "user_avatar": user.get("avatar", ""),
+        "video": data.video,
+        "thumbnail": data.thumbnail,
+        "caption": data.caption,
+        "hashtags": data.hashtags,
+        "likes": 0,
+        "comments": 0,
+        "views": 0,
+        "shares": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    r = await db.competition_videos.insert_one(doc)
+    return {"id": str(r.inserted_id), "message": "تم رفع الفيديو"}
+
+@api_router.get("/competitions/{cid}/videos")
+async def list_ugc_videos(cid: str, user=Depends(get_current_user)):
+    """Returns all videos for a competition sorted by likes DESC (leaderboard)."""
+    videos = await db.competition_videos.find({"competition_id": cid}).sort("likes", -1).to_list(200)
+    # Attach current user's like state
+    my_likes = set()
+    if user and user.get("id"):
+        liked = await db.competition_video_likes.find({"user_id": user["id"]}).to_list(500)
+        my_likes = {l["video_id"] for l in liked}
+    result = []
+    for i, v in enumerate(videos):
+        v["id"] = str(v.pop("_id"))
+        v["rank"] = i + 1
+        v["liked_by_me"] = v["id"] in my_likes
+        result.append(v)
+    return result
+
+@api_router.post("/competitions/{cid}/videos/{vid}/like")
+async def toggle_like_ugc_video(cid: str, vid: str, user=Depends(get_current_user)):
+    """1 like per user per video. Toggle."""
+    existing = await db.competition_video_likes.find_one({
+        "video_id": vid, "user_id": user["id"]
+    })
+    if existing:
+        await db.competition_video_likes.delete_one({"_id": existing["_id"]})
+        await db.competition_videos.update_one({"_id": ObjectId(vid)}, {"$inc": {"likes": -1}})
+        return {"liked": False}
+    await db.competition_video_likes.insert_one({
+        "video_id": vid, "user_id": user["id"],
+        "competition_id": cid,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    await db.competition_videos.update_one({"_id": ObjectId(vid)}, {"$inc": {"likes": 1}})
+    return {"liked": True}
+
+class UGCCommentInput(BaseModel):
+    text: str
+
+@api_router.post("/competitions/{cid}/videos/{vid}/comment")
+async def comment_ugc_video(cid: str, vid: str, data: UGCCommentInput, user=Depends(get_current_user)):
+    if not data.text.strip():
+        raise HTTPException(400, "التعليق فارغ")
+    await db.competition_video_comments.insert_one({
+        "video_id": vid,
+        "competition_id": cid,
+        "user_id": user["id"],
+        "user_name": user.get("name", ""),
+        "text": data.text.strip(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    await db.competition_videos.update_one({"_id": ObjectId(vid)}, {"$inc": {"comments": 1}})
+    return {"message": "تم إضافة التعليق"}
+
+@api_router.get("/competitions/{cid}/videos/{vid}/comments")
+async def list_ugc_comments(cid: str, vid: str):
+    comms = await db.competition_video_comments.find({"video_id": vid}).sort("created_at", -1).to_list(200)
+    return serialize_docs(comms)
+
+@api_router.post("/competitions/{cid}/videos/{vid}/share")
+async def share_ugc_video(cid: str, vid: str, user=Depends(get_current_user)):
+    await db.competition_videos.update_one({"_id": ObjectId(vid)}, {"$inc": {"shares": 1}})
+    return {"ok": True}
+
+@api_router.post("/competitions/{cid}/videos/{vid}/view")
+async def view_ugc_video(cid: str, vid: str):
+    await db.competition_videos.update_one({"_id": ObjectId(vid)}, {"$inc": {"views": 1}})
+    return {"ok": True}
+
+@api_router.post("/competitions/{cid}/auto-finalize")
+async def auto_finalize_ugc(cid: str, user=Depends(get_current_user)):
+    """Auto-select UGC winners by like count. Callable by merchant, chamber, or system."""
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403)
+    if not ObjectId.is_valid(cid): raise HTTPException(400)
+    comp = await db.competitions.find_one({"_id": ObjectId(cid)})
+    if not comp: raise HTTPException(404)
+    if comp.get("competition_type") != "ugc_video":
+        raise HTTPException(400, "ليست UGC")
+    prize_count = int(comp.get("prize_count") or 1)
+    top = await db.competition_videos.find({"competition_id": cid}).sort("likes", -1).limit(prize_count).to_list(prize_count)
+    winners = [{
+        "user_id": v.get("user_id"),
+        "user_name": v.get("user_name"),
+        "video_id": str(v["_id"]),
+        "likes": v.get("likes", 0),
+        "rank": i + 1,
+    } for i, v in enumerate(top)]
+    await db.competitions.update_one(
+        {"_id": ObjectId(cid)},
+        {"$set": {"winners": winners, "status": "ended",
+                  "finalized_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"winners": winners}
+
 
 # ─── Social: Reply to comment ───
 @api_router.post("/social/posts/{post_id}/comments/{comment_id}/reply")

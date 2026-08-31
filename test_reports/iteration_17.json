@@ -1,0 +1,58 @@
+{
+  "summary": "UGC Video Competition system fully verified. Backend: 10/10 pytest cases passed covering merchant creation with competition_type='ugc_video', video submission (path='zitex/uploads/test/fake.mp4', caption, hashtags), cap enforcement (max_submissions_per_user=1 → 2nd submission → 400), list-videos returns rank + liked_by_me + likes sorted DESC, like toggle (liked:true/false + likes ±1), comment insert + list + counter increment, share + view counter increments, and auto-finalize which creates 3 videos across 3 different customers with 3/2/1 likes respectively → merchant POST /auto-finalize returned winners sorted DESC top-3, and GET /api/competitions/{cid} shows status='ended' with winners populated. Frontend (Playwright, 390x844): merchant login → /merchant/competition-form shows 5 type options (General Draw + 4 Arabic: سؤال وجواب/شراء بمبلغ/فيديو تسويقي/تسجيل جديد); selecting فيديو تسويقي reveals UGC fields (هاشتاق المسابقة, الحد الأقصى للفيديوهات, hint 'الأكثر لايكات يفوز'); create succeeded and returned to merchant home. Customer login → Competitions tab → UGC card tap routed to /ugc-contest?id=... (NOT /competition/...) with dark theme, gold hero showing prize 'iPhone 15' + countdown 'ينتهي خلال 121 أيام و 14 ساعة', 'إنشاء فيديو' button visible. Submit modal opens with videocam dashed picker (اختر فيديو من المعرض), وصف الفيديو field, الهاشتاقات field, and forced #zitex_challenge chip. All acceptance criteria met.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/merchant/competition-form",
+        "issues": [
+          "Header title 'New Competition' and 'Publish Competition' button are in English while the rest of the form is Arabic — minor UX inconsistency for an RTL Arabic app.",
+          "First type option label still shows 'General Draw' (English) while the other 4 are Arabic; consider translating to 'سحب عام' for consistency."
+        ]
+      }
+    ],
+    "react_native_issues": [
+      {
+        "component": "Deprecated style props (console warnings)",
+        "issue": "Console emits: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' — appears on multiple screens (login, competition-form). Non-blocking but should be migrated. Reference: any StyleSheet using shadowColor/shadowOffset/etc."
+      },
+      {
+        "component": "Deprecated Image.style.resizeMode",
+        "issue": "Console warning: 'Image: style.resizeMode is deprecated. Please use props.resizeMode.' Reference: any <Image style={{resizeMode:...}}/> usage."
+      },
+      {
+        "component": "Deprecated pointerEvents prop",
+        "issue": "Console warning: 'props.pointerEvents is deprecated. Use style.pointerEvents' — appears after login navigation. Non-blocking."
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ugc_competition.py",
+    "/app/test_reports/pytest/ugc_competition.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Migrate deprecated shadow* style props to boxShadow across StyleSheets (non-blocking, Expo/React Native web console warnings).",
+    "OPTIONAL: Migrate Image style.resizeMode → props.resizeMode.",
+    "OPTIONAL: Migrate props.pointerEvents → style.pointerEvents.",
+    "OPTIONAL: Localize 'New Competition' header, 'Publish Competition' button, and 'General Draw' type label to Arabic in /app/frontend/app/merchant/competition-form.tsx for full RTL consistency."
+  ],
+  "critical_code_review_comments": [
+    "auto_finalize_ugc uses `if not ObjectId.is_valid(cid): raise HTTPException(400)` — HTTPException without a detail message will surface as '400: Bad Request' to the client with no Arabic text; consider adding a detail (e.g., 'معرف غير صالح').",
+    "list_ugc_videos returns raw MongoDB fields without excluding legacy _id when the id is already popped — verified _id is popped, safe.",
+    "toggle_like_ugc_video does not validate the video belongs to the competition passed in URL (vid/cid mismatch would still increment counters). Low-severity data integrity note; not exploitable but worth guarding.",
+    "list_ugc_comments does not require auth via Depends; that's OK for public read but comment/like/share/submit/finalize all require auth — consistent.",
+    "share/view/comment/like endpoints do not verify the video exists first; incrementing a non-existent ObjectId is a silent no-op and won't 404. Consider adding an existence check for better UX."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "test_ugc_competition.py registers 3 disposable customer accounts with phone pattern 05x555xxx (idempotent register/login) for the auto-finalize test class. Two TEST_-prefixed competitions were created (title starts with 'TEST_'): 'TEST_تحدي فيديو Zitex' and 'TEST_تحدي فيديو Finalize'. No cleanup performed — main agent may add teardown later if desired.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend API test lives at /app/backend/tests/test_ugc_competition.py — reuse for regression. Frontend test flow: merchant creates UGC via /merchant/competition-form (fields via TYPES array with 5 entries), customer sees card on Competitions tab and taps → routes to /ugc-contest?id=<cid>. UGC-related endpoints all under /api/competitions/{cid}/videos/... The auto-finalize endpoint is /api/competitions/{cid}/auto-finalize and requires merchant or chamber role.",
+  "rca_of_issue": "N/A — no failures to root-cause."
+}

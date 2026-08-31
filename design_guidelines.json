@@ -1,38 +1,44 @@
 {
-  "app_name": "Zitex Marketing Module",
-  "personality": "6 Glass / Luxe DARK (Customized for Tech Cyber Gold)",
-  "personality_one_liner": "A commanding, cinematic dark-mode experience dripping in cyber gold, designed for high-performance marketing and affiliate tracking.",
+  "app_name": "Zitex Competitions",
+  "personality": "1 iOS-Native Clean with Tech Cyber Gold Theme Fusion",
+  "personality_one_liner": "A premium, unified competitions ecosystem fusing clean iOS layout structures with a Tech Cyber Gold identity for an immersive e-commerce experience.",
   "color": {
-    "surface": "#0A0A0A",
-    "onSurface": "#FFFFFF",
-    "surfaceSecondary": "#151515",
-    "onSurfaceSecondary": "#E0E0E0",
-    "surfaceTertiary": "#1F1F1F",
-    "onSurfaceTertiary": "#A0A0A0",
-    "surfaceInverse": "#FFFFFF",
-    "onSurfaceInverse": "#0A0A0A",
+    "surface": "#FFFFFF",
+    "onSurface": "#0A0A0A",
+    "surfaceSecondary": "#F5F5F5",
+    "onSurfaceSecondary": "#1A1A1A",
+    "surfaceTertiary": "#E5E5E5",
+    "onSurfaceTertiary": "#1A1A1A",
+    "surfaceInverse": "#0A0A0A",
+    "onSurfaceInverse": "#FFFFFF",
     "brand": "#F5C518",
     "brandPrimary": "#F5C518",
     "onBrandPrimary": "#0A0A0A",
-    "brandSecondary": "#D4A017",
+    "brandSecondary": "#E0B010",
     "onBrandSecondary": "#0A0A0A",
-    "brandTertiary": "#2E2404",
-    "onBrandTertiary": "#F5C518",
+    "brandTertiary": "#FFF7D6",
+    "onBrandTertiary": "#8C6D00",
     "success": "#10B981",
     "onSuccess": "#FFFFFF",
-    "warning": "#F5C518",
-    "onWarning": "#0A0A0A",
+    "warning": "#F59E0B",
+    "onWarning": "#FFFFFF",
     "error": "#EF4444",
     "onError": "#FFFFFF",
     "info": "#3B82F6",
     "onInfo": "#FFFFFF",
-    "border": "#2A2A2A",
-    "borderStrong": "#404040",
-    "divider": "#1F1F1F"
+    "border": "#E5E5E5",
+    "borderStrong": "#D4D4D4",
+    "divider": "#E5E5E5",
+    "merchantSurface": "#0A0A0A",
+    "merchantOnSurface": "#FFFFFF",
+    "merchantSurfaceSecondary": "#1A1A1A",
+    "merchantBorder": "#333333",
+    "leaderboardGoldGradientStart": "#F5C518",
+    "leaderboardGoldGradientEnd": "#FFDF73"
   },
   "typography": {
-    "displayFontFamily": "Cairo",
-    "textFontFamily": "Tajawal",
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Geist",
     "scale": {
       "sm": 12,
       "base": 14,
@@ -42,7 +48,7 @@
     }
   },
   "spacing": {
-    "rule": "Generous cinematic spacing. Use 'md' or 'lg' between form elements, '2xl' for section breaks. Tappable areas minimum 44x44pt. Strict RTL adherence (padding-right for leading elements).",
+    "rule": "Generous spacing. Utilize safe area insets at bottom for sticky banners. Keep inputs and buttons minimum 44pt height.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -57,19 +63,21 @@
     "lg": 20,
     "pill": 999
   },
-  "shadow_tier": "1",
-  "navigation": "stack_only",
+  "shadow_tier": 1,
+  "navigation": "bottom_tabs",
   "icon_set": "Ionicons",
   "glassmorphism": {
     "enabled": true,
     "do's": [
-      "Use heavy glass on the FAB and sticky bottom CTAs",
-      "Use subtle glass effect over 'brandTertiary' tint for the top segmented pill toggle",
-      "Apply glassmorphism to the QR code / referral link floating card in the Affiliate Dashboard"
+      "Use on customer sticky floating banner at the bottom of the Home feed.",
+      "Use on floating action buttons (FABs) like the 'Create Video' button.",
+      "Use on bottom tab bar.",
+      "Apply gradient-to-dark scrim over hero background images."
     ],
     "dont's": [
-      "Do not use glass on form inputs or dense lists",
-      "Avoid stacking glass on glass"
+      "Don't use on body form fields.",
+      "Don't stack glass on glass.",
+      "Don't use on dense lists or standard merchant views."
     ]
   },
   "platform_libraries": {
@@ -86,103 +94,112 @@
   },
   "screens": [
     {
-      "name": "MerchantMarketingHome",
-      "purpose": "Central hub for merchants to view and manage their Ads and Affiliates.",
+      "name": "MerchantNewCompetition",
+      "purpose": "Single flow for merchants to create any of the 3 competition types.",
       "states": {
-        "loading": "Centered gold spinner",
-        "empty": "Glassy card with gold abstract illustration, text: 'لا توجد حملات حالياً' (No campaigns currently), and a 'إنشاء حملة' (Create Campaign) button.",
-        "error": "Readable text with retry button"
-      },
-      "layout": "RTL Layout. Top: Glassy segmented control [إعلانات ↔ مسوّقون] (Ads / Affiliates). Ads Tab: Vertical list of active campaigns (Regular Ads). Affiliates Tab: Top horizontal scroll of pending applications, followed by a vertical leaderboard list of top-earning affiliates. Bottom right: Heavy glass FAB with gold icon for 'New Campaign'. FAB opens a Bottom Sheet type picker."
-    },
-    {
-      "name": "NewCampaignFlow",
-      "purpose": "A unified flow to create either a Regular Ad or an Affiliate Campaign.",
-      "states": {
-        "loading": "Gold spinner inside CTA button during save",
-        "empty": "N/A - Form",
-        "error": "Inline red text below failed fields"
-      },
-      "layout": "RTL Layout. Type Selector Modal: Two large glassy cards (Regular Ad vs Affiliate Campaign). Once selected, opens full-screen scrollable form. For Regular Ad: Title, Description, Image (with 1080x1080 preview aspect ratio), Target Cities (Chip group picker), Gender (Pill segmented control: الكل, رجال, نساء), Interest Tags (Chip selector), Starts/Ends dates. No budget field. For Affiliate Campaign: Includes all above + large Commission % Slider (with bold numeric readout), Incentives text area. Sticky bottom container with 'surfaceSecondary' glass background holding a full-width 'brandPrimary' (Gold) CTA button."
-    },
-    {
-      "name": "CustomerSocialFeedCard",
-      "purpose": "Customer-facing social feed item showcasing merchant campaigns with high conversion CTAs.",
-      "states": {
-        "loading": "Skeleton pulse",
+        "loading": "Centered spinner",
         "empty": "N/A",
-        "error": "N/A"
+        "error": "Standard error alert with retry"
       },
-      "layout": "RTL Layout. Lighter customer theme base but with 'brandTertiary' (Gold) subtle borders for affiliate cards. 1:1 or 4:5 Aspect Ratio Image taking full width of the card. Mandatory vertical gradient scrim (transparent to 80% surfaceInverse) at the bottom. Overlay Text: Title and description anchored bottom-right. Bottom-left: Big 'brandPrimary' (Gold) CTA button (e.g., 'قدّم الآن' or 'تسوق الآن')."
+      "layout": "Dark theme layout (merchantSurface #0A0A0A). Top: segmented control or 3 horizontal scrollable cards to pick Type (Purchase / Q&A / UGC). Below: Dynamic form. Purchase: threshold input, single/accumulated toggle. Q&A: question input, add option rows (check correct). UGC: Submissions cap, winner count. Sticky bottom Primary CTA 'Create Competition'."
     },
     {
-      "name": "CustomerAffiliateApply",
-      "purpose": "Frictionless application form for customers to join an affiliate program.",
+      "name": "CustomerHome",
+      "purpose": "Home feed featuring a sticky floating banner for active competitions.",
       "states": {
-        "loading": "Spinner during submission",
-        "empty": "N/A",
-        "error": "Toast error message"
+        "loading": "Skeleton feed",
+        "empty": "Illustration + 'لا توجد مسابقات حالية'",
+        "error": "Error message with retry button"
       },
-      "layout": "RTL Layout. Dark modal. Header: Merchant Logo and 'انضم كمسوّق' (Join as Affiliate) title. Content: Auto-filled fields (Name, Phone, City) shown as disabled/dimmed inputs. Missing fields (Social handle, Audience size) highlighted with 'borderStrong' gold outlines. Bottom: Sticky gold CTA 'تقديم الطلب' (Submit Application)."
+      "layout": "Standard white e-commerce feed. Bottom sticky banner (glassmorphism enabled) anchored above tab bar. Left side: Context (Prize icon + 'اشتري بـ 1000 ر.س وادخل السحب على iPhone 15'). Right side: small circular progress pie or secondary CTA 'انضم الآن'. Must preserve space via safe-area-inset."
     },
     {
-      "name": "CustomerStoreTabWithPill",
-      "purpose": "Store tab that injects a top segmented toggle when the user is an approved affiliate.",
+      "name": "CustomerPurchaseDetail",
+      "purpose": "Shows user progress towards a purchase-based competition.",
       "states": {
-        "loading": "N/A",
+        "loading": "Spinner",
         "empty": "N/A",
-        "error": "N/A"
+        "error": "Retry layout"
       },
-      "layout": "RTL Layout. Absolute top center (respecting safe area): Floating pill segmented control [🛍 المتجر ↔ 🏆 المسوّق]. Active state uses 'brandPrimary' background with 'onBrandPrimary' text. Inactive uses translucent 'surfaceSecondary'. Tapping 'المسوّق' cross-fades the screen into the CustomerAffiliateDashboard."
+      "layout": "Hero image of prize with dark scrim and title. Large animated ProgressBar component in center showing accumulated spend vs threshold. Subtitle 'متبقي 350 ر.س للانضمام'. Info cards for rules. Sticky 'Shop Now' CTA at bottom."
     },
     {
-      "name": "CustomerAffiliateDashboard",
-      "purpose": "Command center for approved affiliates to track earnings and get referral links.",
+      "name": "CustomerQnADetail",
+      "purpose": "User answers a quiz to enter the draw.",
       "states": {
-        "loading": "Staggered skeleton cards",
+        "loading": "Spinner",
         "empty": "N/A",
-        "error": "Retry connection button"
+        "error": "Retry layout"
       },
-      "layout": "RTL Layout. Dark Cyber Gold theme. Top: Merchant logo + Name. Hero Section: Glassy card displaying 'Total Earnings' with a large gold count-up numeric font. Below Hero: 'رابط التسويق الخاص بك' (Your Referral Link) card containing the URL, a mini QR code button, and a large 'نسخ' (Copy) icon button alongside WhatsApp share. Middle: 2x2 grid of analytics (Clicks, Visitors, Pending, Paid) using 'surfaceSecondary' cards. Bottom: 'Withdraw' gold CTA (if balance > threshold) and 'سجل الأرباح' (History List) showing recent conversions with timestamp and amount."
+      "layout": "Prize hero image. Large bold question text. Vertical list of AnswerOption cards. On tap, animate border and apply subtle glow if correct, then slide up a success bottom sheet confirming entry."
+    },
+    {
+      "name": "CustomerUGCDetail",
+      "purpose": "UGC video competition featuring live leaderboard and video upload.",
+      "states": {
+        "loading": "Spinner",
+        "empty": "Illustration + 'كن أول من يشارك بفيديو!' (Be the first to submit a video!)",
+        "error": "Retry layout"
+      },
+      "layout": "Top: Campaign hero + CountdownTimer component pulsing red in last hour. Middle: 'LeaderboardRow' list sorted by likes. Top 1-3 highlighted with leaderboardGoldGradient tokens. Each row has thumbnail, name, rank badge, like count, LikeButton. Bottom right: Sticky FAB 'إنشاء فيديو' with glass effect."
+    },
+    {
+      "name": "CustomerUGCSubmit",
+      "purpose": "Form to upload a user-generated video for the competition.",
+      "states": {
+        "loading": "Upload progress bar",
+        "empty": "N/A",
+        "error": "Retry layout"
+      },
+      "layout": "Full screen form. Large VideoUploadButton (dashed border area) using ImagePicker. Inputs for caption and hashtags. Sticky 'Submit Video' bottom button."
+    },
+    {
+      "name": "ChamberDrawOverview",
+      "purpose": "Supervisory view for Chamber employees to execute final draws.",
+      "states": {
+        "loading": "Spinner",
+        "empty": "Illustration + 'لا توجد سحوبات معلقة'",
+        "error": "Retry layout"
+      },
+      "layout": "Dark theme layout (merchantSurface #0A0A0A). List of supervised competitions ready for draw. Card shows permit number, participants count. Action button 'إجراء السحب' triggers draw and opens video upload modal for ceremonial announcement."
+    },
+    {
+      "name": "CompetitionsTab",
+      "purpose": "Central hub for all competition history and active statuses.",
+      "states": {
+        "loading": "Spinner",
+        "empty": "Illustration + 'لا توجد مسابقات'",
+        "error": "Retry layout"
+      },
+      "layout": "Header with 4 segmented tabs (نشطة / قادمة / منتهية / فائزون). List of CompetitionCards. Winners section features video player (draw videos) and winner names."
     }
   ],
   "images": {
-    "hero_abstract_bg": {
-      "url": "https://images.unsplash.com/photo-1782330300409-f6c1ae5f64cb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzd8MHwxfHNlYXJjaHwyfHxjeWJlciUyMGdvbGQlMjBhYnN0cmFjdCUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc4ODE2MzcxNXww&ixlib=rb-4.1.0&q=85",
-      "dark": "https://images.unsplash.com/photo-1782015960141-6b94d1c118ac?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzd8MHwxfHNlYXJjaHwxfHxjeWJlciUyMGdvbGQlMjBhYnN0cmFjdCUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc4ODE2MzcxNXww&ixlib=rb-4.1.0&q=85",
-      "alt": "Cyber gold abstract dark circuit background"
+    "iphone_15": {
+      "url": "https://images.unsplash.com/photo-1726587912121-ea21fcc57ff8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAxODF8MHwxfHNlYXJjaHwxfHxpcGhvbmUlMjAxNSUyMHBybyUyMG1heHxlbnwwfHx8fDE3ODgxNjg4NzV8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "iPhone 15 Pro Max side by side"
     },
-    "ad_placeholder": {
-      "url": "https://images.unsplash.com/photo-1761005653885-b3d8b04f47c5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjB0ZWNoJTIwaGVhZHBob25lcyUyMHByb2R1Y3QlMjBkYXJrJTIwc2hvdHxlbnwwfHx8fDE3ODgxNjM3MTV8MA&ixlib=rb-4.1.0&q=85",
-      "alt": "Red illuminated headphones product shot"
+    "gift_box": {
+      "url": "https://images.unsplash.com/photo-1513201099705-a9746e1e201f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwxfHxnaWZ0JTIwYm94fGVufDB8fHx8MTc4ODE2ODg3NXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Brown gift box with pink ribbon"
     },
-    "affiliate_avatar": {
-      "url": "https://images.unsplash.com/photo-1624411024074-18a756682b50?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHxhcmFiJTIwbWFsZSUyMHByb2Zlc3Npb25hbCUyMHBvcnRyYWl0JTIwc21pbGluZ3xlbnwwfHx8fDE3ODgxNjM3MTV8MA&ixlib=rb-4.1.0&q=85",
-      "alt": "Arab male professional smiling"
+    "arab_man_1": {
+      "url": "https://images.unsplash.com/photo-1624411024074-18a756682b50?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxhcmFiJTIwbWFuJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzg4MTY4ODc2fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Arab man in white thobe and red hijab"
+    },
+    "arab_man_2": {
+      "url": "https://images.unsplash.com/photo-1621374549297-690665030416?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwzfHxhcmFiJTIwbWFuJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzg4MTY4ODc2fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Arab man in car"
     }
   },
-  "api_contract": {
-    "POST /api/marketing/campaigns": "Payload: { type: 'ad'|'affiliate', title, description, image_url, target_cities: [], target_gender: 'all'|'male'|'female', target_interests: [], starts_at, ends_at, commission_pct (optional), incentives (optional) }. Response: 201 Created.",
-    "POST /api/marketing/affiliate-apply": "Payload: { merchant_id, campaign_id, social_handle, audience_size, note }. Response: 201 Created (status: 'pending').",
-    "PUT /api/marketing/affiliate-approve/:application_id": "Payload: { status: 'approved' }. Response: 200 OK (Creates referral code & updates user flag).",
-    "GET /api/marketing/affiliate-dashboard/:merchant_id": "Response: { total_earnings, pending_commission, referral_link, qr_code_url, analytics: { clicks, unique_visitors, conversions }, history: [{ order_id, amount, date }] }"
-  },
-  "state_flow": "1. Customer Taps 'Apply' -> 2. Application status = 'pending' -> 3. Merchant reviews & Approves -> 4. System flags user as affiliate & generates code -> 5. Customer UI unlocks 'المسوّق' toggle on Store tab -> 6. Customer accesses Dashboard.",
-  "haptics": {
-    "NewCampaignSubmit": "success",
-    "ToggleStoreAffiliate": "selection",
-    "CopyReferralLink": "success",
-    "ApproveApplication": "medium"
-  },
-  "motion_notes": "Use gold shimmer effects on the 'Total Earnings' card in the dashboard. Slide-in animation for the Store top toggle pill. Count-up Reanimated effects for analytics grid numbers.",
   "instructions_to_main_agent": [
-    "Strictly follow RTL layout guidelines for Arabic text and icon placement (icons generally on the right, text right-aligned).",
-    "Use Cairo for headings and Tajawal for body text.",
-    "Ensure 'Tech Cyber Gold' styling is dominant. Background must be #0A0A0A (Midnight Obsidian) with Gold (#F5C518) accents. Avoid generic blues entirely.",
-    "For the Customer Social Feed Card, always overlay a gradient scrim (transparent to dark) behind the text and the gold CTA to guarantee contrast against the image.",
-    "Implement the Top Pill toggle ([🛍 المتجر ↔ 🏆 المسوّق]) as an absolute-positioned floating glass pill at the top of the Customer Store tab.",
-    "In the Affiliate Dashboard, emphasize the 'Total Earnings' and 'Referral Link' cards using glassmorphism (`expo-blur`) over a dark tint.",
-    "Use Reanimated to implement a count-up animation for the commission/earnings numbers.",
-    "Build a reusable component for the Campaign Form that conditionally renders the Commission/Incentives fields based on the selected type (Regular vs Affiliate)."
+    "CRITICAL THEME INSTRUCTION: The user strictly requested 'Tech Cyber Gold' (#0A0A0A and #F5C518). Implement the Merchant and Chamber screens in DARK mode using the 'merchantSurface' (#0A0A0A) and 'merchantSurfaceSecondary' tokens. Implement the Customer screens in LIGHT mode (white surface, subtle gold accents).",
+    "UGC Leaderboard Architecture: Ensure the leaderboard list features rank badges. The top 3 rows should have a distinct gold gradient background or border utilizing the 'leaderboardGoldGradientStart/End' tokens.",
+    "Customer Home Banner: The floating banner for purchase competitions must be sticky at the bottom. Use absolute positioning with bottom mapped to the safe area inset. Apply 'expo-glass-effect' for the banner container background so the feed content blurs underneath it.",
+    "Interaction & Animation: Add reanimated shared values to smoothly fill the ProgressBar on the CustomerPurchaseDetail screen. On CustomerQnADetail, when the correct AnswerOption is tapped, animate the border color to 'success' (#10B981) and trigger a soft haptic success feedback.",
+    "State Flows: For Q&A, the entry is immediate upon a correct answer. For Purchase, entry happens automatically once the spend threshold is met. For UGC, the entry is manual via the video upload form.",
+    "Add new components: `CompetitionCard`, `ProgressBar`, `AnswerOption`, `LeaderboardRow`, `CountdownTimer`, `VideoUploadButton`, `LikeButton` to the UI kit.",
+    "API Integrations: Introduce mocked API endpoints for UGC (`/competitions/{cid}/videos` POST/GET, `/competitions/{cid}/videos/{vid}/like` POST, `/competitions/{cid}/leaderboard`).",
+    "Empty states: Ensure all empty states display an appropriate illustration alongside Arabic text, centered with a Call to Action if applicable."
   ]
 }
