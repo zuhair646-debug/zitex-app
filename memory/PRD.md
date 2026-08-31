@@ -1,4 +1,11 @@
-# Tech Store App - Complete PRD (Final)
+# Tech Store App - Complete PRD (Final) — v1.3.7
+
+## Latest Release Notes (v1.3.7 — 2026-06)
+- **Competition Form Upgrade**: cover_image + prize_image uploads via Emergent Object Storage, 4-option Q&A with star-toggle for correct answer, RTL preview modal.
+- **Critical Fix**: removed duplicate `POST /api/competitions/{id}/answer` route that shadowed the new QA answer handler.
+- **Backend Validation**: QA competitions must have ≥2 non-empty options and a correct_answer that exists in the options list.
+- **A11y**: Star touch target 44×44 px, cross-platform Modal (not iOS-only pageSheet).
+- **Tests**: 11/11 pass on `test_merchant_competition_upgrade.py`.
 
 ## Overview
 Full-featured Tech Store mobile app. React Native Expo + FastAPI + MongoDB. 25+ screens, 40+ API endpoints. All internal flows integrated.
