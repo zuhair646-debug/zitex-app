@@ -21,30 +21,30 @@ export default function CompetitionsScreen() {
     (async () => { try { const d = await apiCall('/api/competitions'); setComps(d); } catch {} finally { setLoading(false); } })();
   }, []);
 
-  if (loading) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Text style={s.title}>Competitions</Text>
+          <Text style={s.title}>المسابقات</Text>
         </View>
 
         <View style={s.statsRow}>
           <View style={s.statCard}>
-            <View style={[s.statIcon, { backgroundColor: '#EFE6FF' }]}><Ionicons name="trophy" size={22} color="#8833FF" /></View>
-            <Text style={s.statNum}>3</Text>
-            <Text style={s.statLabel}>Active</Text>
+            <View style={s.statIcon}><Ionicons name="trophy" size={22} color="#F5C518" /></View>
+            <Text style={s.statNum}>{comps.filter((c: any) => c.status === 'open').length}</Text>
+            <Text style={s.statLabel}>نشطة</Text>
           </View>
           <View style={s.statCard}>
-            <View style={[s.statIcon, { backgroundColor: '#DCFCE7' }]}><Ionicons name="checkmark-circle" size={22} color="#10B981" /></View>
-            <Text style={s.statNum}>1</Text>
-            <Text style={s.statLabel}>Joined</Text>
+            <View style={s.statIcon}><Ionicons name="checkmark-circle" size={22} color="#10B981" /></View>
+            <Text style={s.statNum}>0</Text>
+            <Text style={s.statLabel}>مشاركة</Text>
           </View>
           <View style={s.statCard}>
-            <View style={[s.statIcon, { backgroundColor: '#FEF3C7' }]}><Ionicons name="star" size={22} color="#F59E0B" /></View>
-            <Text style={s.statNum}>199</Text>
-            <Text style={s.statLabel}>Points</Text>
+            <View style={s.statIcon}><Ionicons name="star" size={22} color="#F5C518" /></View>
+            <Text style={s.statNum}>{user?.points || 0}</Text>
+            <Text style={s.statLabel}>نقاطك</Text>
           </View>
         </View>
 
@@ -52,10 +52,10 @@ export default function CompetitionsScreen() {
           <TouchableOpacity testID={`competition-${comp.id}`} key={comp.id} style={s.compCard}
             onPress={() => router.push(comp.competition_type === 'ugc_video' ? `/ugc-contest?id=${comp.id}` : `/competition/${comp.id}`)}>
             <View style={s.compTop}>
-              <View style={[s.statusBadge, { backgroundColor: comp.status === 'open' ? '#DCFCE7' : comp.status === 'coming_soon' ? '#DBEAFE' : '#F3F4F6' }]}>
+              <View style={[s.statusBadge, { backgroundColor: comp.status === 'open' ? '#052E19' : comp.status === 'coming_soon' ? '#0B1B3B' : '#2A2A2A' }]}>
                 <View style={[s.statusDot, { backgroundColor: comp.status === 'open' ? '#10B981' : comp.status === 'coming_soon' ? '#3B82F6' : '#6B7280' }]} />
-                <Text style={[s.statusText, { color: comp.status === 'open' ? '#10B981' : comp.status === 'coming_soon' ? '#3B82F6' : '#6B7280' }]}>
-                  {comp.status === 'open' ? 'Still open' : comp.status === 'coming_soon' ? 'Coming soon' : 'Ended'}
+                <Text style={[s.statusText, { color: comp.status === 'open' ? '#10B981' : comp.status === 'coming_soon' ? '#3B82F6' : '#9CA3AF' }]}>
+                  {comp.status === 'open' ? 'مفتوحة' : comp.status === 'coming_soon' ? 'قريباً' : 'انتهت'}
                 </Text>
               </View>
             </View>
@@ -82,27 +82,27 @@ export default function CompetitionsScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF' },
+  safe: { flex: 1, backgroundColor: '#0A0A0A' },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  title: { fontSize: 24, fontWeight: '800', color: '#0A0A0A' },
+  title: { fontSize: 24, fontWeight: '900', color: '#F5C518' },
   statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: '#F9F9FB', borderRadius: 16, padding: 14, alignItems: 'center' },
-  statIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  statNum: { fontSize: 20, fontWeight: '800', color: '#0A0A0A', marginBottom: 2 },
-  statLabel: { fontSize: 11, color: '#52525B', fontWeight: '500' },
-  compCard: { marginHorizontal: 20, backgroundColor: '#F9F9FB', borderRadius: 20, padding: 18, marginBottom: 14 },
+  statCard: { flex: 1, backgroundColor: '#151515', borderRadius: 16, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: '#2A2A2A' },
+  statIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 8, backgroundColor: '#2E2404' },
+  statNum: { fontSize: 20, fontWeight: '800', color: 'white', marginBottom: 2 },
+  statLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '500' },
+  compCard: { marginHorizontal: 20, backgroundColor: '#151515', borderRadius: 20, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: '#2A2A2A' },
   compTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#2E2404' },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusText: { fontSize: 11, fontWeight: '600' },
+  statusText: { fontSize: 11, fontWeight: '700' },
   timeLeft: { fontSize: 12, color: '#EF4444', fontWeight: '600' },
-  compTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 6 },
-  compDesc: { fontSize: 13, color: '#52525B', lineHeight: 20, marginBottom: 12 },
-  prizeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FEF3C7', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 14, alignSelf: 'flex-start' },
-  prizeText: { fontSize: 13, fontWeight: '600', color: '#92400E' },
+  compTitle: { fontSize: 16, fontWeight: '700', color: 'white', marginBottom: 6 },
+  compDesc: { fontSize: 13, color: '#D0D0D0', lineHeight: 20, marginBottom: 12 },
+  prizeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#2E2404', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 14, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#F5C518' },
+  prizeText: { fontSize: 13, fontWeight: '700', color: '#F5C518' },
   progressSection: {},
-  progressBar: { height: 8, backgroundColor: '#E4E4E7', borderRadius: 4 },
+  progressBar: { height: 8, backgroundColor: '#2A2A2A', borderRadius: 4 },
   progressFill: { height: '100%', borderRadius: 4 },
   progressInfo: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 },
-  progressLabel: { fontSize: 12, color: '#52525B', fontWeight: '500' },
+  progressLabel: { fontSize: 12, color: '#9CA3AF', fontWeight: '500' },
 });

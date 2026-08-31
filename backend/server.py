@@ -1914,32 +1914,35 @@ class UGCSubmitInput(BaseModel):
     hashtags: List[str] = []
 
 @api_router.post("/competitions/{cid}/videos")
-async def submit_ugc_video(cid: str, data: UGCSubmitInput, user=Depends(get_current_user)):
+async def submit_ugc_video(cid: str, data: UGCSubmitInput, request: Request, user=Depends(get_current_user)):
     if not ObjectId.is_valid(cid): raise HTTPException(400)
     comp = await db.competitions.find_one({"_id": ObjectId(cid)})
     if not comp: raise HTTPException(404, "المسابقة غير موجودة")
     if comp.get("competition_type") != "ugc_video":
         raise HTTPException(400, "هذه المسابقة ليست من نوع UGC")
-    # Check submission cap
     cap = int(comp.get("max_submissions_per_user") or 1)
     existing = await db.competition_videos.count_documents({
         "competition_id": cid, "user_id": user["id"]
     })
     if existing >= cap:
         raise HTTPException(400, f"وصلت الحد الأقصى ({cap} فيديو)")
+    # Anti-fraud: limit 5 submissions from same IP per competition
+    client_ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "")).split(",")[0].strip()
+    if client_ip:
+        ip_subs = await db.competition_videos.count_documents({"competition_id": cid, "client_ip": client_ip})
+        if ip_subs >= 5:
+            raise HTTPException(429, "تم تجاوز الحد المسموح من نفس الشبكة (5)")
     doc = {
         "competition_id": cid,
         "user_id": user["id"],
         "user_name": user.get("name", ""),
         "user_avatar": user.get("avatar", ""),
+        "client_ip": client_ip,
         "video": data.video,
         "thumbnail": data.thumbnail,
         "caption": data.caption,
         "hashtags": data.hashtags,
-        "likes": 0,
-        "comments": 0,
-        "views": 0,
-        "shares": 0,
+        "likes": 0, "comments": 0, "views": 0, "shares": 0,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     r = await db.competition_videos.insert_one(doc)
@@ -1963,8 +1966,8 @@ async def list_ugc_videos(cid: str, user=Depends(get_current_user)):
     return result
 
 @api_router.post("/competitions/{cid}/videos/{vid}/like")
-async def toggle_like_ugc_video(cid: str, vid: str, user=Depends(get_current_user)):
-    """1 like per user per video. Toggle."""
+async def toggle_like_ugc_video(cid: str, vid: str, request: Request, user=Depends(get_current_user)):
+    """1 like per user per video. Toggle. Anti-fraud: max 5 unique liking accounts per IP per competition."""
     existing = await db.competition_video_likes.find_one({
         "video_id": vid, "user_id": user["id"]
     })
@@ -1972,9 +1975,26 @@ async def toggle_like_ugc_video(cid: str, vid: str, user=Depends(get_current_use
         await db.competition_video_likes.delete_one({"_id": existing["_id"]})
         await db.competition_videos.update_one({"_id": ObjectId(vid)}, {"$inc": {"likes": -1}})
         return {"liked": False}
+    # Anti-fraud: check distinct users from same IP for this competition
+    client_ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "")).split(",")[0].strip()
+    if client_ip:
+        # Count distinct user_ids that have liked ANY video in this competition from this IP
+        pipeline = [
+            {"$match": {"competition_id": cid, "client_ip": client_ip}},
+            {"$group": {"_id": "$user_id"}},
+            {"$count": "n"},
+        ]
+        agg = await db.competition_video_likes.aggregate(pipeline).to_list(1)
+        distinct_users = (agg[0]["n"] if agg else 0)
+        # If this is a new user_id from this IP AND we already have 5, block
+        if distinct_users >= 5:
+            already_from_ip = await db.competition_video_likes.find_one({"user_id": user["id"], "client_ip": client_ip, "competition_id": cid})
+            if not already_from_ip:
+                raise HTTPException(429, "تم تجاوز الحد المسموح من الحسابات من نفس الشبكة (5) — حماية من الغش")
     await db.competition_video_likes.insert_one({
         "video_id": vid, "user_id": user["id"],
         "competition_id": cid,
+        "client_ip": client_ip,
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
     await db.competition_videos.update_one({"_id": ObjectId(vid)}, {"$inc": {"likes": 1}})

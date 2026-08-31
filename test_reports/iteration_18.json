@@ -1,0 +1,42 @@
+{
+  "summary": "Anti-fraud (IP-based) and Tech Cyber Gold theme for Competitions verified end-to-end. BACKEND (pytest, 5/5 passing against public preview URL): (a) POST /api/competitions/{cid}/videos — 5 unique customer accounts (0511111101..0511111105) submitting via X-Forwarded-For: 10.0.0.42 all returned 200 with id; 6th account (0511111106) same IP → 429 with detail 'تم تجاوز الحد المسموح من نفس الشبكة (5)' (exact Arabic match). (b) Same 6th user on a DIFFERENT IP (10.0.0.43) succeeded → confirms scope is per-IP. (c) POST /api/competitions/{cid}/videos/{vid}/like — 5 unique likers from same IP all succeed and likes counter increments to 5 (verified via GET videos list); 6th unique account on same IP → 429 with 'الشبكة' in detail; an already-counted user can toggle unlike → re-like (both 200) without hitting the limit — confirmed. (d) Regression: list-videos returns rank + sorted DESC by likes; comment insert + GET comments works; share and view counters increment. FRONTEND (Playwright 390x844 on preview URL): customer 0500000000/test1234 logged in, navigated to /competitions. Verified: SafeAreaView background rgb(10,10,10) = #0A0A0A ✓; title 'المسابقات' rendered with color rgb(245,197,24) = #F5C518 gold ✓; three stat cards with Arabic labels 'نشطة' / 'مشاركة' / 'نقاطك' visible on dark #151515 cards with gold/green/gold icons ✓; 7 competition cards rendered with dark backgrounds, gold prize chips ('iPhone 15') and green 'مفتوحة' status badges on dark chip #052E19 ✓; tapping a UGC competition card correctly routed to /ugc-contest?id=<cid> ✓. Note: 'قريباً' and 'انتهت' status text labels were not present in DOM only because there are currently no competitions with status='coming_soon' or status='ended' in the DB — the ternary rendering logic in code covers all three branches. All acceptance criteria met, no blockers.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {
+        "component": "Deprecated style props (console warnings)",
+        "issue": "Console still emits: '\"shadow*\" style props are deprecated. Use \"boxShadow\".', 'Image: style.resizeMode is deprecated', 'props.pointerEvents is deprecated'. Same warnings as iteration_17 — non-blocking, but should be migrated. Reference: any StyleSheet using shadow*, <Image style={{resizeMode}}/>, and pointerEvents prop across the app."
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ugc_antifraud.py",
+    "/app/test_reports/pytest/ugc_antifraud.xml"
+  ],
+  "action_items": [
+    "OPTIONAL (carry-over): Migrate deprecated shadow*, Image.style.resizeMode, and props.pointerEvents across StyleSheets to the current APIs (boxShadow / resizeMode prop / style.pointerEvents)."
+  ],
+  "critical_code_review_comments": [
+    "server.py:1930 & 1979 — IP extraction uses `(request.headers.get('x-forwarded-for') or request.client.host).split(',')[0].strip()`. Works correctly but note that behind a chain of proxies the leftmost XFF value is client-controlled and could be spoofed. Consider trusting only the ingress-controller's most-recent XFF hop (rightmost) or using request.client.host when behind a controlled proxy. For the current anti-fraud goal (blocking casual fraud) the leftmost approach is acceptable.",
+    "server.py:1918 — `raise HTTPException(400)` with no detail returns bare '400: Bad Request' — consider adding an Arabic detail message for consistency with the rest of the endpoint.",
+    "server.py:1927 — max-per-user cap error is 400 while IP anti-fraud is 429; consider 429 for both (rate-limit-style) or keep 400 for cap violation and document the distinction. Not a bug, but worth noting.",
+    "server.py:1930 — anti-fraud check runs AFTER the per-user cap check. Order is fine but if a legitimate user retries near their cap the 5-IP counter still bumps first only after they insert — verified: only insertion increments the IP count, so no false trip.",
+    "server.py:1990 — the '5 distinct likers per IP' aggregation counts users across ALL videos in the competition, not per-video. This matches the request ('participating = submitting OR liking'). Confirmed intended.",
+    "server.py:1979 — toggle_like_ugc_video still doesn't verify vid belongs to cid (carry-over from iteration_17 review). Non-blocking."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ugc_antifraud.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "Registered 6 idempotent test customers 0511111101..0511111106 (password test1234). Created several TEST_AntiFraud_* competitions under merchant 0509999999 — safe to leave for regression, all UGC type.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Anti-fraud tests live at /app/backend/tests/test_ugc_antifraud.py — reusable regression suite. IP is overridden via X-Forwarded-For header (server takes leftmost value). Use SPOOF_IP='10.0.0.42' and SPOOF_IP_2='10.0.0.43' to trigger/bypass the limit deterministically. For any competition-tab UI test, note that status labels 'قريباً' and 'انتهت' only render when comps actually have those statuses in DB — code covers all three branches at competitions.tsx:55-59.",
+  "rca_of_issue": "N/A — feature implementation verified successful."
+}
