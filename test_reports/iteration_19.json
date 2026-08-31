@@ -1,0 +1,104 @@
+{
+  "summary": "Tested upgraded Merchant Competition Creation form (backend + frontend). Backend POST /api/merchant/competitions correctly persists new fields (cover_image, prize_image, options, correct_answer) and public GET returns them intact — 8/11 backend tests pass. CRITICAL BUG: duplicate route registration for POST /competitions/{id}/answer — the legacy quiz-scoring endpoint at server.py:364 shadows the new QA endpoint at server.py:1855, so customers cannot answer QA competitions. Response is legacy shape {score, correct:int, total, passed} instead of new {correct:bool, entered:bool}. Frontend form renders all 5 type cards, Cover/Prize image side-by-side pickers, 4 Q&A option inputs with star buttons, Preview button, and Publish button. NO testID attributes exist on any interactive element in competition-form.tsx which made automation brittle. Preview modal open could not be automation-verified on web (uses presentationStyle=pageSheet which is native-oriented); needs manual verification. Merchant login (0509999999/merchant2025) works and lands on /merchant.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/competitions/{id}/answer",
+        "issue": "Duplicate route: server.py:364 (legacy quiz-scoring using `questions` array) is registered BEFORE server.py:1855 (new QA endpoint using `answer` + `correct_answer`). FastAPI picks the first-registered, so the new QA flow is UNREACHABLE. Response shape is {'score':0.0,'correct':0,'total':0,'passed':False} instead of {'correct':bool,'entered':bool}. Customers can never enter QA competitions via the app. Fix: delete the legacy handler at server.py:364-383 OR rename its route (e.g. /competitions/{id}/quiz-answer).",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "POST /api/merchant/competitions",
+        "issue": "Backend does not validate that competition_type='qa' requires a non-empty correct_answer / options. Frontend enforces this today, but a direct API call can persist an unanswerable QA. Consider Pydantic root_validator."
+      },
+      {
+        "endpoint": "POST /api/competitions/{id}/answer (new)",
+        "issue": "Answer comparison strips+lowercases both sides, which is fine for Latin, but for Arabic strings 'lower()' is a no-op — this is OK today. Just noting that trailing tashkeel or NFC/NFD normalization is not handled; if merchants ever paste different Unicode forms it will fail."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "competition-form.tsx (all interactive elements)",
+        "issue": "Zero testID attributes. No stable selectors for: 5 type cards, title/description/prize/prize_count inputs, cover/prize image pickers, 4 QA option inputs, 4 star buttons, chamber toggle, permit_number input, preview button, publish button, and Preview modal close button. Testing is forced to rely on Arabic text or coordinate math (fragile).",
+        "testID": "MISSING",
+        "priority": "HIGH"
+      },
+      {
+        "component": "Preview Modal (competition-form.tsx:245)",
+        "issue": "Uses `presentationStyle=\"pageSheet\"` which is iOS/native-only. On Expo Web the modal may not render correctly / could not be automation-verified as open. Recommend removing presentationStyle for cross-platform behaviour or add explicit `transparent`.",
+        "testID": "MISSING",
+        "priority": "MEDIUM"
+      },
+      {
+        "component": "Star button (competition-form.tsx:165-167)",
+        "issue": "Star toggle logic uses `data.correct_answer === data.options[i] && data.options[i]` — this fails silently when two options have the same text (unlikely) and does not visually distinguish an empty option being 'selected'. Also tapping the star when the option text is empty stores an empty correct_answer (should require non-empty option). Minor UX.",
+        "testID": "MISSING",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Customer answers QA competition",
+        "issue": "Blocked end-to-end by the duplicate backend route bug. Even if frontend calls POST /competitions/{id}/answer with {answer: 'الرياض'}, backend returns legacy scoring payload and does NOT insert competition_entries — customer never enters the draw.",
+        "affected_testIDs": ["N/A — no testIDs"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "competition-form.tsx",
+        "issues": [
+          "Star button touch target is only 34x34 (competition-form.tsx:334) — below the 44x44 minimum for accessibility.",
+          "Type card `typeName` mixes Latin ('General Draw') with Arabic labels in an RTL layout — inconsistent language. Consider translating 'General Draw' → 'سحب عام'.",
+          "Preview modal header padding is 12px vertical only — could feel tight on notched devices although SafeAreaView is present.",
+          "Cover/prize image pickers show only an icon + short label ('غلاف' / 'جائزة') — could add a hint 'اضغط للاختيار' for clarity."
+        ]
+      }
+    ],
+    "react_native_issues": [
+      {
+        "component": "Modal (Preview)",
+        "issue": "`presentationStyle=\"pageSheet\"` is iOS-only and behaves unpredictably on Web / Android. Recommend removing it or using transparent + animationType. Reference: /app/frontend/app/merchant/competition-form.tsx:245."
+      },
+      {
+        "component": "Deprecated style props",
+        "issue": "Console warnings observed: `\"shadow*\" style props are deprecated. Use \"boxShadow\"` and `Image: style.resizeMode is deprecated. Use props.resizeMode` and `props.pointerEvents is deprecated. Use style.pointerEvents`. Reported from React Native web components; not fatal, but should be migrated."
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_merchant_competition_upgrade.py",
+    "/app/test_reports/pytest/merchant_competition_upgrade.xml"
+  ],
+  "action_items": [
+    "CRITICAL: Remove/rename the duplicate legacy handler at server.py:364-383 (`answer_quiz`) so the new QA handler at server.py:1855 (`submit_answer`) becomes reachable. Suggested: delete the legacy one — it references a non-existent `comp['questions']` field which is never populated by the current schema. Then re-run test_merchant_competition_upgrade.py — the 3 failing tests should pass.",
+    "HIGH: Add testID props to all interactive elements in competition-form.tsx: type-card-{id}, input-title, input-description, input-prize, input-prize-count, picker-cover-image, picker-prize-image, input-question, option-input-{0..3}, star-btn-{0..3}, toggle-chamber-supervised, input-permit-number, chip-employee-{id}, btn-open-preview, btn-submit, preview-modal, preview-close, preview-option-correct.",
+    "MEDIUM: Remove `presentationStyle=\"pageSheet\"` from the Preview Modal (competition-form.tsx:245) to ensure it renders on web/Android. Optionally use `animationType=\"slide\"` alone with `transparent={false}`.",
+    "MEDIUM: Enlarge starBtn hit target from 34x34 → 44x44 (competition-form.tsx:334).",
+    "LOW: Add backend Pydantic validator ensuring competition_type='qa' requires non-empty `correct_answer` and at least 2 non-empty `options`.",
+    "LOW: Translate 'General Draw' type label to Arabic ('سحب عام') to match the rest of the Arabic UI.",
+    "LOW: Star toggle should not accept an empty option as correct_answer (guard `if (!data.options[i].trim()) return;` before setState)."
+  ],
+  "critical_code_review_comments": [
+    "server.py has TWO handlers registered for POST /competitions/{X}/answer (lines 364 and 1855). This is a silent shadowing bug caught only by response-shape assertions.",
+    "server.py exceeds 3500 lines — should be split into routers (competitions, merchant, chamber, etc.) per the >700 line rule.",
+    "competition-form.tsx uses `any` typing for `data` state (line 29) — losing type safety. Define a `CompetitionFormData` interface.",
+    "No error boundary around the picker upload flow — if `uploadMedia` throws, it shows Alert but does not clear partially set state. Minor.",
+    "Merchant create endpoint accepts unlimited `options[]` and does not cap `max_participants` — trust boundary issue if merchant sends huge values."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_merchant_competition_upgrade.py (created)"
+  ],
+  "success_rate": {
+    "backend": "73% (8/11 pytest cases pass; 3 fail on duplicate-route regression)",
+    "frontend": "80% — form + fields + type cards render correctly; Preview modal open + full submit could not be automation-verified due to missing testIDs and pageSheet modal on web"
+  },
+  "seed_data_creation": "None — tests self-cleanup via DELETE. One residual test competition 'TEST_QA_Comp_Upgraded' is cleaned by module teardown. Also 'TEST_qa_no_answer' is cleaned.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "After E1 fixes the duplicate /competitions/{id}/answer route, re-run: `EXPO_PUBLIC_BACKEND_URL=https://mobile-builder-146.preview.emergentagent.com python -m pytest /app/backend/tests/test_merchant_competition_upgrade.py -v` — all 11 tests should pass. After E1 adds testIDs, use them (data-testid=...) instead of Arabic-text selectors for a stable Playwright suite covering: type card selection → QA form appears → fill 4 options → tap star for correct → Preview modal opens with green highlight → submit → success alert. Note: the frontend uses env var EXPO_PUBLIC_BACKEND_URL (not EXPO_BACKEND_URL). Merchant login (0509999999/merchant2025) redirects to /merchant. Direct navigation to /merchant/competition-form works after login.",
+  "rca_of_issue": "RCA — Duplicate route silently shadowing new QA endpoint:\n\n1) REPRODUCTION:\n   a. Login as merchant → POST /api/merchant/competitions with competition_type='qa', options=['الرياض','جدة','مكة','الدمام'], correct_answer='الرياض'. Note the returned competition id.\n   b. Login as customer → POST /api/competitions/{id}/answer with body {\"answer\":\"الرياض\"}.\n   c. Response is {'score':0.0,'correct':0,'total':0,'passed':False} (legacy shape). Expected: {'correct':true,'entered':true}.\n   d. GET /api/competitions/{id}/participants returns [] — customer is NEVER inserted into competition_entries.\n\n2) CODE:\n   - server.py:364 `@api_router.post(\"/competitions/{comp_id}/answer\")` `async def answer_quiz(...)` — reads `body.get('answers', [])` and iterates `comp.get('questions', [])`. Since the schema has no `questions` field, `total` is always 0 and `passed` is False.\n   - server.py:1855 `@api_router.post(\"/competitions/{cid}/answer\")` `async def submit_answer(...)` — this is the NEW handler the merchant form + customer app targets. It is registered AFTER the legacy one, so FastAPI silently keeps only the first.\n\n3) FIX:\n   Delete lines 364-383 in server.py (the legacy `answer_quiz` handler). The new handler at 1855 will then win. Optionally rename it to /competitions/{id}/quiz-answer if any other code path still needs it.\n\n4) VERIFICATION:\n   Re-run pytest /app/backend/tests/test_merchant_competition_upgrade.py — the 3 currently-failing tests in TestCustomerAnswerFlow should pass, giving 11/11 green."
+}

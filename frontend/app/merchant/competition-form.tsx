@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Switch, Alert, ActivityIndicator, Modal } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
+import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 
 const TYPES = [
-  { id: 'general', name: 'General Draw', icon: 'people', desc: 'Any registered user can join' },
+  { id: 'general', name: 'سحب عام', icon: 'people', desc: 'أي مستخدم مسجّل يمكنه الانضمام' },
   { id: 'qa', name: 'سؤال وجواب', icon: 'help-circle', desc: 'الإجابة الصحيحة تدخل السحب' },
   { id: 'purchase', name: 'شراء بمبلغ', icon: 'cart', desc: 'اشترِ بمبلغ محدد وادخل السحب' },
   { id: 'ugc_video', name: 'فيديو تسويقي', icon: 'videocam', desc: 'الأكثر لايكات يفوز' },
@@ -20,6 +24,8 @@ export default function CompetitionForm() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [showEmpModal, setShowEmpModal] = useState(false);
   const [newEmp, setNewEmp] = useState({ name: '', phone: '', password: '', email: '' });
+  const [showPreview, setShowPreview] = useState(false);
+  const [uploading, setUploading] = useState<'cover' | 'prize' | null>(null);
   const [data, setData] = useState<any>({
     title: '', description: '', prize: '', prize_count: '1',
     competition_type: 'general',
@@ -29,8 +35,25 @@ export default function CompetitionForm() {
     start_date: '', end_date: '', draw_date: '',
     max_participants: '1000',
     chamber_supervised: false, permit_number: '', assigned_chamber_employee_id: '',
-    cover_image: '',
+    cover_image: '', prize_image: '',
   });
+
+  const pickPhoto = async (kind: 'cover' | 'prize') => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { Alert.alert('صلاحية', 'السماح للوصول للمعرض'); return; }
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, quality: 0.85 });
+    if (res.canceled) return;
+    setUploading(kind);
+    try {
+      const a = res.assets[0];
+      const up = await uploadMedia(a.uri, a.fileName || undefined, a.mimeType || undefined);
+      setData((d: any) => ({ ...d, [kind === 'cover' ? 'cover_image' : 'prize_image']: up.path }));
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    finally { setUploading(null); }
+  };
+
+  const setOpt = (i: number, v: string) =>
+    setData((d: any) => ({ ...d, options: d.options.map((o: string, ix: number) => ix === i ? v : o) }));
 
   const loadEmps = async () => { try { const r = await apiCall('/api/merchant/chamber-employees'); setEmployees(r); } catch {} };
   useEffect(() => { loadEmps(); }, []);
@@ -91,16 +114,61 @@ export default function CompetitionForm() {
         <TextInput style={s.input} value={data.prize} onChangeText={t => setData({ ...data, prize: t })} placeholder="iPhone 16 Pro" />
         <Text style={s.label}>عدد الفائزين</Text>
         <TextInput style={s.input} keyboardType="numeric" value={data.prize_count} onChangeText={t => setData({ ...data, prize_count: t })} />
-        <Text style={s.label}>رابط صورة الغلاف</Text>
-        <TextInput style={s.input} value={data.cover_image} onChangeText={t => setData({ ...data, cover_image: t })} placeholder="https://..." autoCapitalize="none" />
+
+        {/* Cover + Prize images (upload) */}
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.label}>صورة الغلاف</Text>
+            {data.cover_image ? (
+              <View style={s.imgSlotBox}>
+                <Image source={{ uri: mediaUrlSync(data.cover_image) }} style={s.imgSlotImg} contentFit="cover" />
+                <TouchableOpacity style={s.imgSlotRm} onPress={() => setData({ ...data, cover_image: '' })}>
+                  <Ionicons name="close" size={14} color="white" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={s.imgPickBox} onPress={() => pickPhoto('cover')} disabled={!!uploading}>
+                {uploading === 'cover' ? <ActivityIndicator color="#F5C518" /> : <>
+                  <Ionicons name="image" size={22} color="#F5C518" />
+                  <Text style={s.imgPickTxt}>غلاف</Text>
+                </>}
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.label}>صورة الجائزة</Text>
+            {data.prize_image ? (
+              <View style={s.imgSlotBox}>
+                <Image source={{ uri: mediaUrlSync(data.prize_image) }} style={s.imgSlotImg} contentFit="cover" />
+                <TouchableOpacity style={s.imgSlotRm} onPress={() => setData({ ...data, prize_image: '' })}>
+                  <Ionicons name="close" size={14} color="white" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={s.imgPickBox} onPress={() => pickPhoto('prize')} disabled={!!uploading}>
+                {uploading === 'prize' ? <ActivityIndicator color="#F5C518" /> : <>
+                  <Ionicons name="trophy" size={22} color="#F5C518" />
+                  <Text style={s.imgPickTxt}>جائزة</Text>
+                </>}
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
 
         {data.competition_type === 'qa' && (
           <>
             <Text style={s.label}>السؤال *</Text>
             <TextInput style={s.input} value={data.question} onChangeText={t => setData({ ...data, question: t })} placeholder="ما عاصمة المملكة العربية السعودية؟" />
-            <Text style={s.label}>الإجابة الصحيحة *</Text>
-            <TextInput style={s.input} value={data.correct_answer} onChangeText={t => setData({ ...data, correct_answer: t })} placeholder="الرياض" />
-            <Text style={s.hint}>مطابقة النص بدون تحسّس لحالة الأحرف</Text>
+            <Text style={s.label}>الخيارات (اضغط ⭐ للإجابة الصحيحة)</Text>
+            {[0, 1, 2, 3].map(i => (
+              <View key={i} style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6 }}>
+                <TouchableOpacity onPress={() => { if (data.options[i]?.trim()) setData({ ...data, correct_answer: data.options[i] }); }} style={s.starBtn} testID={`comp-star-${i}`}>
+                  <Ionicons name={data.correct_answer && data.correct_answer === data.options[i] && data.options[i] ? 'star' : 'star-outline'} size={22} color="#F5C518" />
+                </TouchableOpacity>
+                <TextInput style={[s.input, { flex: 1, marginTop: 0 }]} value={data.options[i]} onChangeText={t => setOpt(i, t)} placeholder={`الخيار ${i + 1}`} testID={`comp-option-${i}`} />
+              </View>
+            ))}
+            <Text style={s.hint}>💡 اكتب الخيارات ثم اضغط ⭐ بجانب الإجابة الصحيحة</Text>
           </>
         )}
         {data.competition_type === 'purchase' && (
@@ -164,9 +232,72 @@ export default function CompetitionForm() {
           </>
         )}
 
-        <TouchableOpacity style={s.submitBtn} onPress={submit} disabled={loading}>
-          {loading ? <ActivityIndicator color="white" /> : <Text style={s.submitText}>Publish Competition</Text>}
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
+          <TouchableOpacity testID="comp-preview-btn" style={[s.submitBtn, { flex: 1, backgroundColor: '#151515', borderWidth: 1, borderColor: '#F5C518' }]} onPress={() => setShowPreview(true)}>
+            <Text style={[s.submitText, { color: '#F5C518' }]}>👁️ معاينة</Text>
+          </TouchableOpacity>
+          <TouchableOpacity testID="comp-submit-btn" style={[s.submitBtn, { flex: 2 }]} onPress={submit} disabled={loading}>
+            {loading ? <ActivityIndicator color="white" /> : <Text style={s.submitText}>نشر المسابقة</Text>}
+          </TouchableOpacity>
+        </View>
+
+        {/* Preview modal */}
+        <Modal visible={showPreview} animationType="slide" transparent={false} onRequestClose={() => setShowPreview(false)}>
+          <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+            <View style={s.previewHeader}>
+              <TouchableOpacity onPress={() => setShowPreview(false)}><Ionicons name="close" size={24} color="#F5C518" /></TouchableOpacity>
+              <Text style={s.previewTitle}>معاينة (كما يراها العميل)</Text>
+              <View style={{ width: 24 }} />
+            </View>
+            <ScrollView contentContainerStyle={{ padding: 16 }}>
+              {!!data.cover_image && <Image source={{ uri: mediaUrlSync(data.cover_image) }} style={s.prevCover} contentFit="cover" />}
+              <View style={s.prevCard}>
+                <View style={s.prevBadge}><Text style={s.prevBadgeText}>{TYPES.find(t => t.id === data.competition_type)?.name || 'مسابقة'}</Text></View>
+                <Text style={s.prevH1}>{data.title || 'عنوان المسابقة'}</Text>
+                {!!data.description && <Text style={s.prevDesc}>{data.description}</Text>}
+                <LinearGradient colors={['#F5C518', '#D4A017']} style={s.prevPrize} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  {!!data.prize_image && <Image source={{ uri: mediaUrlSync(data.prize_image) }} style={s.prevPrizeImg} contentFit="cover" />}
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.prevPrizeLbl}>🏆 الجائزة</Text>
+                    <Text style={s.prevPrizeName}>{data.prize || '—'}</Text>
+                    <Text style={s.prevPrizeSub}>عدد الفائزين: {data.prize_count || 1}</Text>
+                  </View>
+                </LinearGradient>
+                {data.competition_type === 'qa' && !!data.question && (
+                  <View style={s.prevQA}>
+                    <Text style={s.prevQ}>❓ {data.question}</Text>
+                    {data.options.filter((o: string) => o.trim()).map((o: string, i: number) => (
+                      <View key={i} style={[s.prevOpt, o === data.correct_answer && s.prevOptCorrect]}>
+                        <Text style={s.prevOptTxt}>{o}</Text>
+                        {o === data.correct_answer && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {data.competition_type === 'purchase' && (
+                  <View style={s.prevInfoBox}>
+                    <Ionicons name="cart" size={18} color="#F5C518" />
+                    <Text style={s.prevInfoTxt}>
+                      اشترِ بـ {data.spend_requirement || 0} ر.س {data.purchase_mode === 'accumulated' ? 'تراكمياً' : 'في فاتورة واحدة'}
+                    </Text>
+                  </View>
+                )}
+                {data.competition_type === 'ugc_video' && (
+                  <View style={s.prevInfoBox}>
+                    <Ionicons name="videocam" size={18} color="#F5C518" />
+                    <Text style={s.prevInfoTxt}>ارفع فيديو تسويقي — الأكثر لايكات يفوز {data.ugc_hashtag ? `• #${data.ugc_hashtag}` : ''}</Text>
+                  </View>
+                )}
+                {data.chamber_supervised && (
+                  <View style={s.prevChamber}>
+                    <Ionicons name="shield-checkmark" size={16} color="#10B981" />
+                    <Text style={s.prevChamberTxt}>معتمدة من الغرفة التجارية • تصريح {data.permit_number}</Text>
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
       </ScrollView>
 
       <Modal visible={showEmpModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowEmpModal(false)}>
@@ -200,6 +331,34 @@ const s = StyleSheet.create({
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#0A0A0A', marginTop: 8, marginBottom: 8 },
   label: { fontSize: 13, fontWeight: '600', color: '#374151', marginTop: 12, marginBottom: 6 },
   hint: { fontSize: 11, color: '#9CA3AF', marginTop: 4 },
+  starBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  imgPickBox: { alignItems: 'center', justifyContent: 'center', padding: 20, borderRadius: 10, borderWidth: 1.5, borderColor: '#F5C518', borderStyle: 'dashed', backgroundColor: '#FFF6E0', gap: 4 },
+  imgPickTxt: { fontSize: 11, color: '#8B7500', fontWeight: '700' },
+  imgSlotBox: { height: 100, borderRadius: 10, overflow: 'hidden', backgroundColor: '#F3F4F6', position: 'relative' },
+  imgSlotImg: { width: '100%', height: '100%' },
+  imgSlotRm: { position: 'absolute', top: 4, right: 4, backgroundColor: '#EF4444', width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  previewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2A2A2A' },
+  previewTitle: { color: 'white', fontSize: 16, fontWeight: '800' },
+  prevCover: { width: '100%', height: 180, borderRadius: 16, marginBottom: 12 },
+  prevCard: { backgroundColor: '#151515', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#2A2A2A' },
+  prevBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: '#2E2404', marginBottom: 8 },
+  prevBadgeText: { color: '#F5C518', fontSize: 11, fontWeight: '800' },
+  prevH1: { color: 'white', fontSize: 20, fontWeight: '900', marginBottom: 6 },
+  prevDesc: { color: '#D0D0D0', fontSize: 13, lineHeight: 20, marginBottom: 12 },
+  prevPrize: { flexDirection: 'row', gap: 12, padding: 12, borderRadius: 14, alignItems: 'center', marginBottom: 12 },
+  prevPrizeImg: { width: 64, height: 64, borderRadius: 12, backgroundColor: 'white' },
+  prevPrizeLbl: { color: '#0A0A0A', fontWeight: '700', fontSize: 12 },
+  prevPrizeName: { color: '#0A0A0A', fontWeight: '900', fontSize: 18, marginTop: 2 },
+  prevPrizeSub: { color: '#0A0A0A', fontSize: 11, marginTop: 2 },
+  prevQA: { marginTop: 8 },
+  prevQ: { color: 'white', fontWeight: '800', fontSize: 15, marginBottom: 10 },
+  prevOpt: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 10, backgroundColor: '#2A2A2A', marginBottom: 8, borderWidth: 1, borderColor: '#2A2A2A' },
+  prevOptCorrect: { backgroundColor: '#052E19', borderColor: '#10B981' },
+  prevOptTxt: { color: 'white', fontSize: 14, flex: 1, textAlign: 'right' },
+  prevInfoBox: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 10, backgroundColor: '#2E2404', marginTop: 8 },
+  prevInfoTxt: { color: '#F5C518', fontSize: 13, fontWeight: '600' },
+  prevChamber: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, padding: 10, borderRadius: 8, backgroundColor: '#052E19', borderWidth: 1, borderColor: '#10B981' },
+  prevChamberTxt: { color: '#10B981', fontSize: 12, fontWeight: '700' },
   modePill: { flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#F9FAFB', alignItems: 'center', marginTop: 6 },
   modePillActive: { borderColor: '#F5C518', backgroundColor: '#FFF6E0' },
   modePillText: { fontSize: 13, fontWeight: '700', color: '#52525B' },

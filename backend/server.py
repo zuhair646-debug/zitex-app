@@ -361,26 +361,9 @@ async def chamber_competition_full(comp_id: str, user=Depends(get_current_user))
     comp["participants"] = [serialize_doc(e) for e in entries]
     return comp
 
-@api_router.post("/competitions/{comp_id}/answer")
-async def answer_quiz(comp_id: str, request: Request, user=Depends(get_current_user)):
-    body = await request.json()
-    answers = body.get("answers", [])
-    comp = await db.competitions.find_one({"_id": ObjectId(comp_id)})
-    if not comp:
-        raise HTTPException(status_code=404, detail="Competition not found")
-    questions = comp.get("questions", [])
-    correct = sum(1 for i, a in enumerate(answers) if i < len(questions) and a == questions[i].get("correct"))
-    score = correct / max(len(questions), 1) * 100
-    passed = score >= 70
-    if passed:
-        existing = await db.competition_entries.find_one({"competition_id": comp_id, "user_id": user["id"]})
-        if not existing:
-            await db.competition_entries.insert_one({
-                "competition_id": comp_id, "user_id": user["id"], "user_name": user["name"],
-                "user_phone": user["phone"], "score": score, "joined_at": datetime.now(timezone.utc).isoformat()
-            })
-            await db.competitions.update_one({"_id": ObjectId(comp_id)}, {"$inc": {"joined_count": 1}})
-    return {"score": score, "correct": correct, "total": len(questions), "passed": passed}
+# Note: legacy answer_quiz handler removed. The active QA handler is defined at
+# /api/competitions/{cid}/answer below (see submit_answer) which uses the new
+# `question`/`correct_answer` schema.
 
 # ─── Wallet ───
 @api_router.get("/wallet")
@@ -1785,10 +1768,20 @@ class CompetitionInput(BaseModel):
     permit_number: str = ""
     assigned_chamber_employee_id: str = ""
     cover_image: str = ""
+    prize_image: str = ""
 
 @api_router.post("/merchant/competitions")
 async def merchant_create_competition(data: CompetitionInput, user=Depends(get_current_user)):
     require_merchant(user)
+    # Validation: qa competitions must have correct_answer and ≥2 options
+    if data.competition_type == "qa":
+        clean_opts = [o for o in (data.options or []) if o and o.strip()]
+        if len(clean_opts) < 2:
+            raise HTTPException(status_code=422, detail="مسابقة سؤال وجواب تحتاج خيارين على الأقل")
+        if not data.correct_answer or not data.correct_answer.strip():
+            raise HTTPException(status_code=422, detail="حدّد الإجابة الصحيحة")
+        if data.correct_answer not in clean_opts:
+            raise HTTPException(status_code=422, detail="الإجابة الصحيحة يجب أن تكون من ضمن الخيارات")
     doc = data.model_dump()
     doc.update({
         "status": "open",
