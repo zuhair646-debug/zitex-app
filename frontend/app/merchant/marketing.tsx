@@ -170,7 +170,7 @@ export default function MarketingPanel() {
             <Ionicons name="arrow-back" size={22} color={colors.brand} />
           </TouchableOpacity>
           <Text style={s.headerTitle}>لوحة التسويق</Text>
-          <TouchableOpacity onPress={() => setPickerOpen(true)} style={s.headerIcon}>
+          <TouchableOpacity testID="marketing-add-btn" onPress={() => setPickerOpen(true)} style={s.headerIcon}>
             <Ionicons name="add" size={26} color={colors.brand} />
           </TouchableOpacity>
         </View>
@@ -315,14 +315,14 @@ export default function MarketingPanel() {
         <TouchableOpacity style={s.pickerBackdrop} activeOpacity={1} onPress={() => setPickerOpen(false)}>
           <View style={s.pickerCard}>
             <Text style={s.pickerTitle}>أنشئ حملة جديدة</Text>
-            <TouchableOpacity style={s.pickerOption} onPress={() => openCreate('ad')}>
+            <TouchableOpacity testID="picker-ad" style={s.pickerOption} onPress={() => openCreate('ad')}>
               <View style={s.pickerIcon}><Ionicons name="megaphone" size={24} color={colors.brand} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={s.pickerOptTitle}>إعلان مستهدف مجاني</Text>
                 <Text style={s.pickerOptDesc}>يظهر للعملاء المناسبين بحسب المدينة والاهتمام — بلا ميزانية</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity style={s.pickerOption} onPress={() => openCreate('affiliate')}>
+            <TouchableOpacity testID="picker-affiliate" style={s.pickerOption} onPress={() => openCreate('affiliate')}>
               <View style={s.pickerIcon}><Ionicons name="people" size={24} color={colors.brand} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={s.pickerOptTitle}>برنامج مسوّقين بالعمولة</Text>
@@ -343,7 +343,7 @@ export default function MarketingPanel() {
                 <Ionicons name="close" size={24} color={colors.brand} />
               </TouchableOpacity>
               <Text style={s.headerTitle}>{campaignType === 'affiliate' ? 'برنامج مسوّقين' : 'إعلان مستهدف'}</Text>
-              <TouchableOpacity onPress={submit} disabled={saving || uploading} style={s.headerIcon}>
+              <TouchableOpacity testID="form-submit-btn" onPress={submit} disabled={saving || uploading} style={s.headerIcon}>
                 <LinearGradient colors={['#F5C518', '#D4AF37']} style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                   {saving ? <ActivityIndicator size="small" color={colors.onBrandPrimary} /> : <Text style={{ color: colors.onBrandPrimary, fontWeight: '800' }}>نشر</Text>}
                 </LinearGradient>
@@ -352,7 +352,7 @@ export default function MarketingPanel() {
 
             <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 60 }}>
               <Text style={s.label}>عنوان الحملة *</Text>
-              <TextInput style={s.input} value={form.title} onChangeText={t => setForm({ ...form, title: t })}
+              <TextInput testID="form-title-input" style={s.input} value={form.title} onChangeText={t => setForm({ ...form, title: t })}
                 placeholderTextColor={colors.onSurfaceTertiary}
                 placeholder={campaignType === 'affiliate' ? 'انضم لبرنامج مسوّقي زايتكس' : 'خصومات نهاية الأسبوع 30%'} />
 
@@ -378,7 +378,7 @@ export default function MarketingPanel() {
                     placeholderTextColor={colors.onSurfaceTertiary} placeholder="مثال: 7.5" />
 
                   <Text style={s.label}>🎁 الحوافز والمكافآت (اختياري)</Text>
-                  <TextInput style={[s.input, { height: 70, textAlignVertical: 'top' }]} multiline value={form.incentives}
+                  <TextInput testID="form-incentives-input" style={[s.input, { height: 70, textAlignVertical: 'top' }]} multiline value={form.incentives}
                     onChangeText={t => setForm({ ...form, incentives: t })}
                     placeholderTextColor={colors.onSurfaceTertiary}
                     placeholder="أفضل مسوّق شهرياً يحصل على 500 ر.س إضافية" />

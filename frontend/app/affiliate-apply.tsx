@@ -144,12 +144,12 @@ export default function AffiliateApply() {
             placeholderTextColor="#6B7280" placeholder="الرياض" />
 
           <Text style={[s.label, { marginTop: 12 }]}>حساب السوشال (اختياري)</Text>
-          <TextInput style={s.input} value={form.social_handle}
+          <TextInput testID="apply-social-input" style={s.input} value={form.social_handle}
             onChangeText={t => setForm({ ...form, social_handle: t })}
             placeholderTextColor="#6B7280" placeholder="@username على انستقرام أو تويتر" autoCapitalize="none" />
 
           <Text style={[s.label, { marginTop: 12 }]}>حجم الجمهور (متابع)</Text>
-          <TextInput style={s.input} value={form.audience_size} keyboardType="numeric"
+          <TextInput testID="apply-audience-input" style={s.input} value={form.audience_size} keyboardType="numeric"
             onChangeText={t => setForm({ ...form, audience_size: t })}
             placeholderTextColor="#6B7280" placeholder="5000" />
 
@@ -158,7 +158,7 @@ export default function AffiliateApply() {
             value={form.note} onChangeText={t => setForm({ ...form, note: t })}
             placeholderTextColor="#6B7280" placeholder="أشارك أخبار التقنية مع متابعيني..." />
 
-          <TouchableOpacity onPress={submit} disabled={saving} style={s.submitBtn}>
+          <TouchableOpacity testID="apply-submit-btn" onPress={submit} disabled={saving} style={s.submitBtn}>
             <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.submitInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
               {saving ? <ActivityIndicator color="#0A0A0A" /> : <>
                 <Ionicons name="send" size={18} color="#0A0A0A" />
