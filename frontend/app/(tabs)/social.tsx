@@ -29,6 +29,7 @@ export default function SocialScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [storyOpen, setStoryOpen] = useState<any>(null);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
 
   // Comments thread
   const [threadPostId, setThreadPostId] = useState<string | null>(null);
@@ -37,15 +38,17 @@ export default function SocialScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [postsData, storiesData, supportData] = await Promise.all([
+      const [postsData, storiesData, supportData, campaignsData] = await Promise.all([
         apiCall('/api/social/posts'),
         apiCall('/api/social/stories').catch(() => []),
         apiCall('/api/store/support').catch(() => null),
+        apiCall('/api/marketing/ads/active').catch(() => []),
       ]);
       // Filter out stories from main feed (they're already in stories row)
       setPosts((postsData || []).filter((p: any) => p.type !== 'story'));
       setStories(storiesData || []);
       setStoreInfo(supportData);
+      setCampaigns(campaignsData || []);
     } catch (e) { console.log(e); } finally { setLoading(false); setRefreshing(false); }
   }, []);
 
@@ -147,8 +150,51 @@ export default function SocialScreen() {
             ))}
           </ScrollView>
 
+          {/* Marketing campaign cards */}
+          {campaigns.length > 0 && campaigns.map((c: any) => {
+            const isAff = c.campaign_type === 'affiliate';
+            const label = c.cta_label || (isAff ? 'قدّم الآن' : 'تسوّق الآن');
+            const onPress = async () => {
+              try { await apiCall(`/api/marketing/ads/${c.id}/track?event=click`, { method: 'POST' }); } catch {}
+              if (isAff) {
+                router.push({
+                  pathname: '/affiliate-apply',
+                  params: {
+                    merchant_id: c.merchant_id,
+                    merchant_name: c.merchant_name || '',
+                    campaign_id: c.id,
+                    commission: String(c.commission_percent || ''),
+                  },
+                });
+              } else if (c.cta_link) {
+                if (c.cta_link.startsWith('http')) Linking.openURL(c.cta_link);
+                else router.push(c.cta_link as any);
+              }
+            };
+            return (
+              <TouchableOpacity key={c.id} onPress={onPress} style={s.campaignCard} activeOpacity={0.9}>
+                {!!c.image && <Image source={{ uri: c.image?.startsWith('http') ? c.image : `${(process.env.EXPO_PUBLIC_BACKEND_URL || '')}/api/files/${c.image}` }} style={s.campaignImage} />}
+                <View style={s.campaignBody}>
+                  <View style={s.campaignBadgeRow}>
+                    <View style={[s.campaignBadge, isAff && s.campaignBadgeGold]}>
+                      <Text style={[s.campaignBadgeText, isAff && s.campaignBadgeTextGold]}>{isAff ? `🎁 ${c.commission_percent}% عمولة` : '📢 إعلان'}</Text>
+                    </View>
+                    <Text style={s.campaignMerchant}>{c.merchant_name}</Text>
+                  </View>
+                  <Text style={s.campaignTitle}>{c.title}</Text>
+                  {!!c.description && <Text style={s.campaignDesc} numberOfLines={3}>{c.description}</Text>}
+                  {!!c.incentives && isAff && <Text style={s.campaignIncentives}>🎯 {c.incentives}</Text>}
+                  <View style={s.campaignCta}>
+                    <Text style={s.campaignCtaText}>{label}</Text>
+                    <Ionicons name="arrow-back" size={16} color="#0A0A0A" />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+
           {/* Posts */}
-          {posts.length === 0 && <Text style={s.empty}>لا توجد منشورات بعد</Text>}
+          {posts.length === 0 && campaigns.length === 0 && <Text style={s.empty}>لا توجد منشورات بعد</Text>}
           {posts.map((post: any) => {
             const postId = post.id || post._id;
             const isPoll = post.type === 'poll';
@@ -346,6 +392,20 @@ const s = StyleSheet.create({
   storyLabel: { fontSize: 10, color: '#52525B', fontWeight: '500', textAlign: 'center' },
 
   postCard: { marginHorizontal: 20, marginBottom: 16, backgroundColor: '#F9F9FB', borderRadius: 20, padding: 16 },
+  campaignCard: { marginHorizontal: 20, marginBottom: 16, backgroundColor: '#0A0A0A', borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: '#F5C518' },
+  campaignImage: { width: '100%', height: 140, backgroundColor: '#1F1F1F' },
+  campaignBody: { padding: 16 },
+  campaignBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  campaignBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: '#2A2A2A' },
+  campaignBadgeGold: { backgroundColor: '#F5C518' },
+  campaignBadgeText: { color: '#F5C518', fontSize: 11, fontWeight: '800' },
+  campaignBadgeTextGold: { color: '#0A0A0A' },
+  campaignMerchant: { color: '#9CA3AF', fontSize: 11, marginLeft: 'auto' },
+  campaignTitle: { color: 'white', fontSize: 17, fontWeight: '900', marginBottom: 4 },
+  campaignDesc: { color: '#D0D0D0', fontSize: 13, lineHeight: 20 },
+  campaignIncentives: { color: '#F5C518', fontSize: 12, marginTop: 8, fontWeight: '700' },
+  campaignCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14, backgroundColor: '#F5C518', paddingVertical: 12, borderRadius: 12 },
+  campaignCtaText: { color: '#0A0A0A', fontSize: 15, fontWeight: '900' },
   qBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FEF3C7', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 8 },
   qBadgeText: { fontSize: 11, color: '#92400E', fontWeight: '700' },
   postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },

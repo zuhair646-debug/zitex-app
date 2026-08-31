@@ -3124,16 +3124,23 @@ async def get_invoice(iid: str, user=Depends(get_current_user)):
 # ═══════════════════════════════════════════════════════════════════════════
 
 class MarketingAdInput(BaseModel):
+    # Campaign kind: "ad" (regular targeted ad) or "affiliate" (affiliate program)
+    campaign_type: str = "ad"
     title: str
     description: str = ""
     image: str = ""
     cta_label: str = "تسوّق الآن"
     cta_link: str = ""
+    # Targeting
     target_cities: List[str] = []
-    target_genders: List[str] = []  # ["male", "female"]
+    target_genders: List[str] = []          # ["male", "female"]
+    target_interest_tags: List[str] = []    # ["phones","laptops","gaming","accessories","home"]
     target_age_min: int = 18
     target_age_max: int = 65
-    budget: float = 0
+    # Affiliate-only
+    commission_percent: float = 0.0
+    incentives: str = ""
+    # Duration
     starts_at: str = ""
     ends_at: str = ""
     active: bool = True
@@ -3147,11 +3154,10 @@ async def create_ad(data: MarketingAdInput, user=Depends(get_current_user)):
         "merchant_id": mid,
         "merchant_name": user.get("name", "Store"),
         "views": 0, "clicks": 0, "conversions": 0,
-        "spent": 0.0,
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
     r = await db.marketing_ads.insert_one(doc)
-    return {"id": str(r.inserted_id), "message": "تم إنشاء الإعلان"}
+    return {"id": str(r.inserted_id), "message": "تم إنشاء الحملة"}
 
 @api_router.get("/merchant/marketing/ads")
 async def list_ads(user=Depends(get_current_user)):
@@ -3170,16 +3176,47 @@ async def delete_ad(aid: str, user=Depends(get_current_user)):
     return {"message": "تم الحذف"}
 
 @api_router.get("/marketing/ads/active")
-async def active_ads_for_customer(user=Depends(get_current_user)):
-    """Returns active ads customers can see on their feed/home."""
-    q = {"active": True}
-    # (Basic targeting — real implementation would filter by user's city/gender/age)
-    ads = await db.marketing_ads.find(q).sort("created_at", -1).to_list(20)
-    return serialize_docs(ads)
+async def active_ads_for_customer(campaign_type: str = "", user=Depends(get_current_user)):
+    """Returns active campaigns visible to this customer with targeting applied."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    q: dict = {"active": True}
+    if campaign_type in ("ad", "affiliate"):
+        q["campaign_type"] = campaign_type
+    ads = await db.marketing_ads.find(q).sort("created_at", -1).to_list(100)
+    user_city = (user.get("city") or "").strip()
+    user_gender = (user.get("gender") or "").strip().lower()
+    filtered = []
+    for a in ads:
+        # If starts_at/ends_at set — check window
+        if a.get("ends_at") and a["ends_at"] < now_iso[:10]:
+            continue
+        if a.get("starts_at") and a["starts_at"] > now_iso[:10]:
+            continue
+        # City filter (empty = all)
+        tcities = [c.strip() for c in (a.get("target_cities") or []) if c.strip()]
+        if tcities and user_city and user_city not in tcities:
+            continue
+        # Gender filter (empty = all)
+        tgend = [g.strip().lower() for g in (a.get("target_genders") or []) if g.strip()]
+        if tgend and user_gender and user_gender not in tgend:
+            continue
+        filtered.append(a)
+    return serialize_docs(filtered)
+
+@api_router.post("/marketing/ads/{aid}/track")
+async def track_ad_event(aid: str, event: str, user=Depends(get_current_user)):
+    """event: view | click"""
+    if not ObjectId.is_valid(aid): raise HTTPException(400)
+    if event not in ("view", "click"):
+        raise HTTPException(400, "invalid event")
+    key = "views" if event == "view" else "clicks"
+    await db.marketing_ads.update_one({"_id": ObjectId(aid)}, {"$inc": {key: 1}})
+    return {"ok": True}
 
 
 class AffiliateApplyInput(BaseModel):
     merchant_id: str  # target merchant to be affiliate for
+    campaign_id: str = ""  # optional — which affiliate campaign
     full_name: str
     social_handle: str = ""  # instagram/twitter link
     audience_size: int = 0
@@ -3197,11 +3234,18 @@ async def apply_affiliate(data: AffiliateApplyInput, user=Depends(get_current_us
     })
     if existing:
         raise HTTPException(status_code=400, detail="لديك طلب معلق مسبقاً")
+    # Also prevent duplicate if already active affiliate
+    already = await db.affiliates.find_one({"merchant_id": data.merchant_id, "user_id": user["id"], "active": True})
+    if already:
+        raise HTTPException(status_code=400, detail="أنت مسوّق نشط لدى هذا التاجر بالفعل")
     doc = {
         "merchant_id": data.merchant_id,
+        "campaign_id": data.campaign_id,
         "applicant_id": user["id"],
         "applicant_name": data.full_name or user.get("name", ""),
         "applicant_phone": user.get("phone", ""),
+        "applicant_city": user.get("city", ""),
+        "applicant_email": user.get("email", ""),
         "social_handle": data.social_handle,
         "audience_size": data.audience_size,
         "note": data.note,
@@ -3227,19 +3271,33 @@ async def approve_affiliate(aid: str, user=Depends(get_current_user)):
     if not appn: raise HTTPException(404)
     if appn["status"] != "pending":
         raise HTTPException(status_code=400, detail="تمت المعالجة مسبقاً")
+    # Pull commission from linked affiliate campaign if any, else default 5%
+    commission = 5.0
+    incentives = ""
+    campaign_id = appn.get("campaign_id") or ""
+    if campaign_id and ObjectId.is_valid(campaign_id):
+        camp = await db.marketing_ads.find_one({"_id": ObjectId(campaign_id)})
+        if camp:
+            commission = float(camp.get("commission_percent") or 5.0)
+            incentives = camp.get("incentives") or ""
     # Generate unique referral code
     ref_code = secrets.token_urlsafe(8).replace("_", "").replace("-", "")[:10].upper()
     while await db.affiliates.find_one({"referral_code": ref_code}):
         ref_code = secrets.token_urlsafe(8).replace("_", "").replace("-", "")[:10].upper()
     aff_doc = {
         "merchant_id": mid,
+        "merchant_name": user.get("name", "Store"),
+        "campaign_id": campaign_id,
         "user_id": appn["applicant_id"],
         "name": appn["applicant_name"],
         "phone": appn["applicant_phone"],
         "referral_code": ref_code,
-        "commission_percent": 5.0,  # default 5%
+        "commission_percent": commission,
+        "incentives": incentives,
         "total_earnings": 0.0,
         "total_conversions": 0,
+        "total_clicks": 0,
+        "unique_visitors": 0,
         "wallet_balance": 0.0,
         "active": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -3250,12 +3308,47 @@ async def approve_affiliate(aid: str, user=Depends(get_current_user)):
         {"$set": {"status": "approved", "approved_at": datetime.now(timezone.utc).isoformat(),
                   "referral_code": ref_code}},
     )
-    # Also flag user to have "affiliate" capability
-    await db.users.update_one(
-        {"_id": ObjectId(appn["applicant_id"])},
-        {"$addToSet": {"affiliate_of": mid}},
-    )
-    return {"referral_code": ref_code, "message": "تمت الموافقة وإنشاء الحساب"}
+    # Flag user to have "affiliate" capability
+    try:
+        await db.users.update_one(
+            {"_id": ObjectId(appn["applicant_id"])},
+            {"$addToSet": {"affiliate_of": mid}},
+        )
+    except Exception:
+        pass
+    return {"referral_code": ref_code, "commission_percent": commission, "message": "تمت الموافقة وإنشاء الحساب"}
+
+
+@api_router.get("/affiliate/dashboard")
+async def affiliate_dashboard(user=Depends(get_current_user)):
+    """Full dashboard for the customer showing all their affiliate accounts + analytics."""
+    if user.get("role") not in ("customer", "user"):
+        raise HTTPException(status_code=403)
+    affs = await db.affiliates.find({"user_id": user["id"], "active": True}).to_list(50)
+    result = []
+    for a in affs:
+        # Get recent conversions from a simple activity/conversions collection
+        recent = await db.affiliate_conversions.find({"affiliate_id": str(a["_id"])}).sort("created_at", -1).limit(20).to_list(20)
+        a["id"] = str(a.pop("_id"))
+        a["recent_conversions"] = serialize_docs(recent)
+        # Compute this-month earnings
+        month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+        this_month = 0.0
+        for c in recent:
+            if c.get("created_at", "") >= month_start:
+                this_month += float(c.get("commission_amount") or 0)
+        a["this_month_earnings"] = this_month
+        result.append(a)
+    return result
+
+@api_router.post("/affiliate/{code}/click")
+async def track_affiliate_click(code: str):
+    """Public endpoint — tracks a click on a referral link (from anywhere)."""
+    aff = await db.affiliates.find_one({"referral_code": code.upper()})
+    if not aff:
+        raise HTTPException(404, "رمز إحالة غير صالح")
+    await db.affiliates.update_one({"_id": aff["_id"]}, {"$inc": {"total_clicks": 1}})
+    return {"ok": True, "merchant_id": aff["merchant_id"]}
 
 @api_router.post("/merchant/affiliate/applications/{aid}/reject")
 async def reject_affiliate(aid: str, user=Depends(get_current_user)):

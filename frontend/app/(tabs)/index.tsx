@@ -21,6 +21,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bannerIdx, setBannerIdx] = useState(0);
+  const [affiliateCount, setAffiliateCount] = useState(0);
 
   // Prompt for location on first launch if not set
   useEffect(() => {
@@ -59,6 +60,15 @@ export default function HomeScreen() {
       setTopCompetition(live || (Array.isArray(comps) && comps[0]) || null);
     } catch (e) { console.log(e); } finally { setLoading(false); }
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const a = await apiCall('/api/affiliate/my').catch(() => []);
+        setAffiliateCount(Array.isArray(a) ? a.length : 0);
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => { loadData(); }, []);
   const onRefresh = useCallback(async () => { setRefreshing(true); await loadData(); setRefreshing(false); }, []);
@@ -136,6 +146,20 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* ─── Store ↔ Affiliate toggle (only if user has ≥1 approved affiliate account) ─── */}
+        {affiliateCount > 0 && (
+          <View style={s.tglWrap}>
+            <View style={s.tglOn}>
+              <Ionicons name="storefront" size={14} color="#8833FF" />
+              <Text style={s.tglOnText}>🛍 المتجر</Text>
+            </View>
+            <TouchableOpacity onPress={() => router.push('/my-affiliate')} style={s.tglOff}>
+              <Text style={s.tglOffText}>🏆 المسوّق</Text>
+              {affiliateCount > 0 && <View style={s.tglBadge}><Text style={s.tglBadgeText}>{affiliateCount}</Text></View>}
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* ─── Banner Slider ─── */}
         {banners.length > 0 && (
@@ -282,6 +306,13 @@ export default function HomeScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  tglWrap: { flexDirection: 'row', marginHorizontal: 16, marginTop: 4, marginBottom: 12, backgroundColor: '#F1F1F5', borderRadius: 999, padding: 4 },
+  tglOn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 999, backgroundColor: 'white' },
+  tglOnText: { color: '#8833FF', fontWeight: '800', fontSize: 13 },
+  tglOff: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 999, backgroundColor: 'transparent' },
+  tglOffText: { color: '#52525B', fontWeight: '700', fontSize: 13 },
+  tglBadge: { backgroundColor: '#F5C518', paddingHorizontal: 6, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  tglBadgeText: { color: '#0A0A0A', fontWeight: '900', fontSize: 10 },
   loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
 
   // Header
