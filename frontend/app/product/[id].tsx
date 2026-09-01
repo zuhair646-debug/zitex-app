@@ -97,16 +97,28 @@ export default function ProductDetailScreen() {
             )}
           </View>
 
-          {/* Colors */}
+          {/* Colors — circular chip picker */}
           {product.colors?.length > 0 && (
             <View style={styles.optionSection}>
-              <Text style={styles.optionTitle}>Color</Text>
-              <View style={styles.optionRow}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={styles.optionTitle}>اللون</Text>
+                <Text style={styles.colorSelectedName}>{product.colors[selectedColor]?.name || ''}</Text>
+              </View>
+              <View style={styles.colorCircleRow}>
                 {product.colors.map((c: any, i: number) => (
-                  <TouchableOpacity testID={`color-option-${i}`} key={i} style={[styles.colorBtn, selectedColor === i && styles.colorSelected]}
-                    onPress={() => setSelectedColor(i)}>
-                    <View style={[styles.colorDot, { backgroundColor: c.hex }]} />
-                    <Text style={[styles.colorLabel, selectedColor === i && styles.colorLabelActive]}>{c.name}</Text>
+                  <TouchableOpacity
+                    testID={`color-option-${i}`}
+                    key={i}
+                    onPress={() => setSelectedColor(i)}
+                    style={styles.colorCircleWrap}
+                    activeOpacity={0.75}
+                  >
+                    <View style={[
+                      styles.colorCircleOuter,
+                      selectedColor === i && styles.colorCircleOuterActive,
+                    ]}>
+                      <View style={[styles.colorCircleInner, { backgroundColor: c.hex }]} />
+                    </View>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -161,7 +173,53 @@ export default function ProductDetailScreen() {
               <Text style={styles.availText}>الحالة: {product.condition === 'new' || !product.condition ? 'جديد (New)' : product.condition === 'used_3months' ? 'مستعمل - 3 أشهر' : product.condition === 'used_6months' ? 'مستعمل - 6 أشهر' : 'مستعمل (Used)'}</Text>
             </View>
 
-            {product.warranty_days > 0 || product.warranty ? (
+            {product.warranty_type && product.warranty_type !== 'none' ? (
+              <View style={styles.warrantyBlock}>
+                {(product.warranty_type === 'shop' || product.warranty_type === 'both') && product.shop_warranty_days > 0 && (
+                  <View style={styles.warrCard}>
+                    <View style={styles.warrHead}>
+                      <View style={[styles.warrBadge, { backgroundColor: '#DCFCE7' }]}>
+                        <Ionicons name="storefront" size={16} color="#166534" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.warrTitle}>ضمان المحل</Text>
+                        <Text style={styles.warrSub}>{product.shop_warranty_days} يوم</Text>
+                      </View>
+                      <View style={styles.warrChip}><Text style={styles.warrChipText}>مضمون</Text></View>
+                    </View>
+                    {!!product.shop_warranty_terms && <Text style={styles.warrTerms}>{product.shop_warranty_terms}</Text>}
+                  </View>
+                )}
+                {(product.warranty_type === 'manufacturer' || product.warranty_type === 'both') && product.manufacturer_name && (
+                  <View style={styles.warrCard}>
+                    <View style={styles.warrHead}>
+                      <View style={[styles.warrBadge, { backgroundColor: '#DBEAFE' }]}>
+                        <Ionicons name="business" size={16} color="#1E40AF" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.warrTitle}>ضمان {product.manufacturer_name}</Text>
+                        <Text style={styles.warrSub}>{product.manufacturer_days || 365} يوم (شركة)</Text>
+                      </View>
+                    </View>
+                    {!!product.manufacturer_terms && <Text style={styles.warrTerms}>{product.manufacturer_terms}</Text>}
+                    <View style={styles.warrActions}>
+                      {!!product.manufacturer_url && (
+                        <TouchableOpacity style={styles.warrBtn} onPress={() => require('react-native').Linking.openURL(product.manufacturer_url)}>
+                          <Ionicons name="globe-outline" size={14} color="#1E40AF" />
+                          <Text style={styles.warrBtnText}>الموقع الرسمي</Text>
+                        </TouchableOpacity>
+                      )}
+                      {!!product.manufacturer_phone && (
+                        <TouchableOpacity style={styles.warrBtn} onPress={() => require('react-native').Linking.openURL(`tel:${product.manufacturer_phone}`)}>
+                          <Ionicons name="call-outline" size={14} color="#1E40AF" />
+                          <Text style={styles.warrBtnText}>اتصال</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                )}
+              </View>
+            ) : product.warranty_days > 0 || product.warranty ? (
               <View style={styles.availItem}>
                 <Ionicons name="shield-checkmark" size={20} color="#10B981" />
                 <Text style={styles.availText}>ضمان {product.warranty_days || 365} يوم{product.warranty_type ? ` - ${product.warranty_type}` : ''}</Text>
@@ -247,6 +305,24 @@ const styles = StyleSheet.create({
   colorDot: { width: 20, height: 20, borderRadius: 10 },
   colorLabel: { fontSize: 13, color: '#52525B', fontWeight: '500' },
   colorLabelActive: { color: '#8833FF' },
+  colorSelectedName: { fontSize: 13, fontWeight: '700', color: '#8833FF' },
+  colorCircleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 8 },
+  colorCircleWrap: { alignItems: 'center' },
+  colorCircleOuter: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  colorCircleOuterActive: { borderColor: '#8833FF' },
+  colorCircleInner: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)' },
+  warrantyBlock: { gap: 10, marginTop: 6, marginBottom: 6 },
+  warrCard: { backgroundColor: '#FFF', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' },
+  warrHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  warrBadge: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  warrTitle: { fontSize: 14, fontWeight: '800', color: '#0A0A0A', textAlign: 'right' },
+  warrSub: { fontSize: 12, color: '#6B7280', marginTop: 2, textAlign: 'right' },
+  warrChip: { backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  warrChipText: { fontSize: 10, color: '#166534', fontWeight: '800' },
+  warrTerms: { fontSize: 12, color: '#374151', marginTop: 8, lineHeight: 18, textAlign: 'right' },
+  warrActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  warrBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#DBEAFE', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
+  warrBtnText: { fontSize: 12, color: '#1E40AF', fontWeight: '700' },
   storageBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: '#E4E4E7', backgroundColor: '#FFF' },
   storageSelected: { borderColor: '#8833FF', backgroundColor: '#EFE6FF' },
   storageLabel: { fontSize: 14, fontWeight: '600', color: '#52525B' },

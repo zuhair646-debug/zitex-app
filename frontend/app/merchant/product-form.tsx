@@ -33,7 +33,14 @@ export default function ProductForm() {
     variants: [] as Variant[],
     branch_stock: [] as BranchStock[],
     sku: '', tags: '',
+    colors: [] as { name: string; hex: string }[],
+    warranty_type: 'none',
+    shop_warranty_days: '', shop_warranty_terms: '',
+    manufacturer_name: '', manufacturer_days: '',
+    manufacturer_url: '', manufacturer_phone: '', manufacturer_terms: '',
   });
+  const [newColorName, setNewColorName] = useState('');
+  const [newColorHex, setNewColorHex] = useState('#000000');
 
   useEffect(() => {
     (async () => {
@@ -57,6 +64,15 @@ export default function ProductForm() {
             branch_stock: p.branch_stock || [],
             sku: p.sku || '',
             tags: (p.tags || []).join(', '),
+            colors: p.colors || [],
+            warranty_type: p.warranty_type || 'none',
+            shop_warranty_days: p.shop_warranty_days ? String(p.shop_warranty_days) : '',
+            shop_warranty_terms: p.shop_warranty_terms || '',
+            manufacturer_name: p.manufacturer_name || '',
+            manufacturer_days: p.manufacturer_days ? String(p.manufacturer_days) : '',
+            manufacturer_url: p.manufacturer_url || '',
+            manufacturer_phone: p.manufacturer_phone || '',
+            manufacturer_terms: p.manufacturer_terms || '',
           });
         }
       } catch (e: any) { Alert.alert('خطأ', e.message); }
@@ -159,6 +175,9 @@ export default function ProductForm() {
           ? data.tags.split(',').map((s: string) => s.trim()).filter(Boolean)
           : data.tags,
         variants: data.variants.filter((v: Variant) => v.name.trim() && v.value.trim()),
+        colors: (data.colors || []).filter((c: any) => c.name && c.hex),
+        shop_warranty_days: parseInt(data.shop_warranty_days || '0', 10) || 0,
+        manufacturer_days: parseInt(data.manufacturer_days || '0', 10) || 0,
       };
       if (id) await apiCall(`/api/merchant/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiCall('/api/merchant/products', { method: 'POST', body: JSON.stringify(body) });
@@ -355,6 +374,125 @@ export default function ProductForm() {
             </TouchableOpacity>
           </View>
 
+          {/* Card: Color Circles */}
+          <View style={s.card}>
+            <View style={s.cardHeader}>
+              <View style={s.iconBadge}><Ionicons name="color-palette" size={16} color={colors.brand} /></View>
+              <Text style={s.cardTitle}>الألوان المتوفرة</Text>
+            </View>
+            <Text style={{ fontSize: 11, color: colors.onSurfaceSecondary, marginBottom: 8 }}>
+              اضغط على الدائرة لتغيير اللون، ثم اكتب اسمه واضغط ➕
+            </Text>
+            {data.colors.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                {data.colors.map((c: any, i: number) => (
+                  <View key={i} style={{ alignItems: 'center', gap: 4 }}>
+                    <View style={{ position: 'relative' }}>
+                      <View style={[s.colorDot, { backgroundColor: c.hex }]} />
+                      <TouchableOpacity
+                        style={s.colorDotRm}
+                        onPress={() => setData((d: any) => ({ ...d, colors: d.colors.filter((_: any, ix: number) => ix !== i) }))}>
+                        <Ionicons name="close" size={12} color="white" />
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={{ fontSize: 10, color: colors.onSurface, maxWidth: 60 }} numberOfLines={1}>{c.name}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            {/* Presets */}
+            <Text style={{ fontSize: 11, color: colors.onSurfaceSecondary, marginBottom: 6 }}>ألوان جاهزة (اضغط لإضافة):</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {[
+                { name: 'أسود', hex: '#1A1A1A' }, { name: 'أبيض', hex: '#F9F9F9' },
+                { name: 'ذهبي', hex: '#D4A017' }, { name: 'فضي', hex: '#C0C0C0' },
+                { name: 'أزرق', hex: '#007AFF' }, { name: 'أحمر', hex: '#EF4444' },
+                { name: 'أخضر', hex: '#10B981' }, { name: 'وردي', hex: '#EC4899' },
+                { name: 'بنفسجي', hex: '#8833FF' }, { name: 'تيتانيوم', hex: '#A0A0A0' },
+              ].map(p => (
+                <TouchableOpacity key={p.hex} onPress={() => {
+                  if (data.colors.find((c: any) => c.hex === p.hex)) return;
+                  setData((d: any) => ({ ...d, colors: [...d.colors, p] }));
+                }}>
+                  <View style={[s.colorPresetDot, { backgroundColor: p.hex }]} />
+                </TouchableOpacity>
+              ))}
+            </View>
+            {/* Custom color add */}
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+              <TouchableOpacity onPress={() => {
+                const hexes = ['#000','#F00','#0F0','#00F','#FF0','#F0F','#0FF','#F80','#80F','#08F','#F08','#888'];
+                setNewColorHex(hexes[Math.floor(Math.random()*hexes.length)]);
+              }}>
+                <View style={[s.colorDot, { backgroundColor: newColorHex, borderWidth: 2, borderColor: colors.brand }]} />
+              </TouchableOpacity>
+              <TextInput style={[s.input, { flex: 1 }]} value={newColorName} placeholderTextColor={colors.onSurfaceTertiary}
+                onChangeText={setNewColorName} placeholder="اسم اللون (مثال: أزرق سماوي)" />
+              <TouchableOpacity onPress={() => {
+                if (!newColorName.trim()) { Alert.alert('اسم اللون مطلوب'); return; }
+                setData((d: any) => ({ ...d, colors: [...d.colors, { name: newColorName.trim(), hex: newColorHex }] }));
+                setNewColorName(''); setNewColorHex('#000000');
+              }} style={{ padding: 8 }}>
+                <Ionicons name="add-circle" size={30} color={colors.brand} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Card: Warranty (Dual) */}
+          <View style={s.card}>
+            <View style={s.cardHeader}>
+              <View style={s.iconBadge}><Ionicons name="shield-checkmark" size={16} color={colors.brand} /></View>
+              <Text style={s.cardTitle}>الضمان</Text>
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {[
+                { id: 'none', label: 'بدون ضمان', icon: 'close-circle' },
+                { id: 'shop', label: 'ضمان المحل', icon: 'storefront' },
+                { id: 'manufacturer', label: 'ضمان الشركة', icon: 'business' },
+                { id: 'both', label: 'الاثنين معاً', icon: 'shield' },
+              ].map(t => (
+                <TouchableOpacity key={t.id} onPress={() => setData({ ...data, warranty_type: t.id })}
+                  style={[s.warrTypeBtn, data.warranty_type === t.id && s.warrTypeBtnActive]}>
+                  <Ionicons name={t.icon as any} size={14} color={data.warranty_type === t.id ? 'white' : colors.brand} />
+                  <Text style={[s.warrTypeText, data.warranty_type === t.id && { color: 'white' }]}>{t.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {(data.warranty_type === 'shop' || data.warranty_type === 'both') && (
+              <View style={s.warrSection}>
+                <Text style={s.warrSectionTitle}>🏪 ضمان المحل</Text>
+                <TextInput style={s.input} keyboardType="numeric" value={data.shop_warranty_days}
+                  onChangeText={t => setData({ ...data, shop_warranty_days: t })}
+                  placeholder="عدد الأيام (مثال: 90)" placeholderTextColor={colors.onSurfaceTertiary} />
+                <TextInput style={[s.input, { height: 60, marginTop: 8 }]} multiline value={data.shop_warranty_terms}
+                  onChangeText={t => setData({ ...data, shop_warranty_terms: t })}
+                  placeholder="شروط ضمان المحل (اختياري)" placeholderTextColor={colors.onSurfaceTertiary} />
+              </View>
+            )}
+
+            {(data.warranty_type === 'manufacturer' || data.warranty_type === 'both') && (
+              <View style={s.warrSection}>
+                <Text style={s.warrSectionTitle}>🏢 ضمان الشركة</Text>
+                <TextInput style={s.input} value={data.manufacturer_name}
+                  onChangeText={t => setData({ ...data, manufacturer_name: t })}
+                  placeholder="اسم الشركة (Apple، Samsung...)" placeholderTextColor={colors.onSurfaceTertiary} />
+                <TextInput style={[s.input, { marginTop: 8 }]} keyboardType="numeric" value={data.manufacturer_days}
+                  onChangeText={t => setData({ ...data, manufacturer_days: t })}
+                  placeholder="عدد الأيام (365)" placeholderTextColor={colors.onSurfaceTertiary} />
+                <TextInput style={[s.input, { marginTop: 8 }]} autoCapitalize="none" value={data.manufacturer_url}
+                  onChangeText={t => setData({ ...data, manufacturer_url: t })}
+                  placeholder="رابط الدعم الرسمي (https://...)" placeholderTextColor={colors.onSurfaceTertiary} />
+                <TextInput style={[s.input, { marginTop: 8 }]} keyboardType="phone-pad" value={data.manufacturer_phone}
+                  onChangeText={t => setData({ ...data, manufacturer_phone: t })}
+                  placeholder="هاتف التواصل مع الشركة" placeholderTextColor={colors.onSurfaceTertiary} />
+                <TextInput style={[s.input, { height: 60, marginTop: 8 }]} multiline value={data.manufacturer_terms}
+                  onChangeText={t => setData({ ...data, manufacturer_terms: t })}
+                  placeholder="شروط ضمان الشركة (اختياري)" placeholderTextColor={colors.onSurfaceTertiary} />
+              </View>
+            )}
+          </View>
+
           {/* Card: Multi-Branch Stock */}
           {branches.length > 0 && (
             <View style={s.card}>
@@ -470,4 +608,12 @@ const s = StyleSheet.create({
   submitBtn: { borderRadius: radius.lg, overflow: 'hidden' },
   submitInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingVertical: spacing.md },
   submitText: { color: colors.onBrandPrimary, fontWeight: '800', fontSize: 16 },
+  colorDot: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: colors.border },
+  colorPresetDot: { width: 30, height: 30, borderRadius: 15, borderWidth: 1.5, borderColor: colors.border },
+  colorDotRm: { position: 'absolute', top: -4, right: -4, backgroundColor: colors.error, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  warrTypeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceTertiary },
+  warrTypeBtnActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  warrTypeText: { fontSize: 12, color: colors.onSurface, fontWeight: '700' },
+  warrSection: { backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md, marginTop: spacing.sm, borderWidth: 1, borderColor: colors.border },
+  warrSectionTitle: { fontSize: 13, fontWeight: '800', color: colors.brand, marginBottom: spacing.sm, textAlign: 'right' },
 });

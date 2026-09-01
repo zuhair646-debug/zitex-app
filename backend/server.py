@@ -1453,6 +1453,15 @@ class ProductInput(BaseModel):
     in_stock: bool = True
     featured: bool = False
     published: bool = True
+    # ─── Dual Warranty (product) ───
+    warranty_type: str = "none"          # "none" | "shop" | "manufacturer" | "both"
+    shop_warranty_days: int = 0
+    shop_warranty_terms: str = ""
+    manufacturer_name: str = ""
+    manufacturer_days: int = 0
+    manufacturer_url: str = ""            # web / support portal
+    manufacturer_phone: str = ""
+    manufacturer_terms: str = ""
 
 @api_router.post("/merchant/products")
 async def merchant_create_product(data: ProductInput, user=Depends(get_current_user)):
