@@ -70,7 +70,10 @@ export default function HomeScreen() {
       } catch {}
       try {
         const bookings = await apiCall('/api/services/bookings/my').catch(() => []);
-        const active = (Array.isArray(bookings) ? bookings : []).find((b: any) => ['pending','received','in_progress','ready'].includes(b.status));
+        const arr = Array.isArray(bookings) ? bookings : [];
+        // priority: in_progress > ready > received > pending
+        const priority = ['in_progress', 'ready', 'received', 'pending'];
+        const active = priority.map(p => arr.find((b: any) => b.status === p)).find(Boolean);
         if (active) setActiveBooking(active);
       } catch {}
     })();
@@ -277,7 +280,7 @@ export default function HomeScreen() {
 
         {/* ─── Active Service Booking widget ─── */}
         {activeBooking && (
-          <TouchableOpacity activeOpacity={0.85} style={s.svcBanner} onPress={() => router.push('/my-services')}>
+          <TouchableOpacity testID="active-service-banner" activeOpacity={0.85} style={s.svcBanner} onPress={() => router.push('/my-services')}>
             <View style={s.svcIconWrap}>
               <Ionicons name="construct" size={26} color="#F5C518" />
             </View>

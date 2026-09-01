@@ -19,7 +19,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 client = AsyncIOMotorClient(MONGO_URL)
-db = client.test_database
+db = client[os.environ.get("DB_NAME", "test_database")]
 
 RIYADH = (24.7136, 46.6753)  # shop coords
 CUSTOMER_HOME = (24.8000, 46.7500)

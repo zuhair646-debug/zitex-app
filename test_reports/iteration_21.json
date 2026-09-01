@@ -1,0 +1,71 @@
+{
+  "summary": "Regression for Zitex v1.4.2 dual-warranty products + demo seed. Backend: created /app/backend/tests/test_dual_warranty.py (12 pytest cases across 5 classes) — ALL 12/12 PASSED (100%). Covered: (a) POST /api/merchant/products with warranty_type='both' + 2 colors → GET /api/products/{id} echoes every warranty + colors field; (b) warranty_type='shop' defaults manufacturer_* to '' / 0 and colors to []; (c) warranty_type='none' works with no warranty fields; (d) backward compat — POST without warranty_type or colors defaults to 'none' / []; (e) seed verification: iPhone 16 Pro Max has 4 colors, warranty_type='both', manufacturer_url https:// + manufacturer_days 365; iPhone 13 (SKU IP13U-256) has warranty_type='shop', 3 colors, empty manufacturer; 3 demo services present with non-empty warranty_terms; customer 0500000000 has 4 bookings covering {pending, received, in_progress, completed}; in_progress water-damage booking exposes 2 updates each with video_url+caption+avg_rating; first update returns >=1 review with 5 stars; completed screen-repair service exposes the vid-screen-1 public experience; /api/notifications returns a data.type='service_update' item with booking_id. Frontend (Expo web preview, mobile viewport 390x844): (1) customer login OK; (2) home widget renders — top 'active booking' banner shows the newest matching status (pending screen repair, not the requested in_progress) — banner text lacks a testID; (3) /my-services timeline renders 4 cards, all 4 Arabic status labels present (قيد الاستلام / مستلم / قيد الإصلاح / مكتمل), device names iPhone 15 Pro Max, iPhone 14, Samsung Galaxy S24 Ultra, iPhone 13 all visible; (4) tapping the Galaxy S24 Ultra card opens the booking modal showing both video updates ('استلمنا جهازك...' and 'غسل اللوحة بالموجات فوق الصوتية...') each with a 5-star rating widget; (5) product detail /product/{iPhone16ProMax} renders 4 circular color chips (styles.colorCircleOuter: 44x44 borderRadius 22, inner 34x34 borderRadius 17) — tapping color-option-1 highlights it with purple ring and label 'تيتانيوم أبيض' appears above the row; warranty section shows both cards (ضمان المحل + ضمان Apple) plus 'الموقع الرسمي' and 'اتصال' buttons; (6) merchant login → /merchant/product-form?mode=new — 4 warranty-type buttons visible (بدون ضمان / ضمان المحل / ضمان الشركة / الاثنين معاً) and colors section with 24 round colored preset dots + custom picker present. No critical bugs found; two minor UX notes below.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/products",
+        "issue": "Filter param is `search`, not `q` (as mentioned in review_request). Both /api/products?search=iPhone works, /api/products?q=iPhone silently ignores the term. Doc / mobile app already use `search`; keep as-is or accept both."
+      },
+      {
+        "endpoint": "GET /api/notifications",
+        "issue": "Endpoint is /api/notifications (not /api/notifications/my as mentioned in review_request). Works correctly with auth. Minor doc mismatch only."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "app/(tabs)/index.tsx — Active Service banner",
+        "issue": "TouchableOpacity at line 280 has no testID. Also the banner is placed AFTER categories / hot products / deals so it appears far below the fold; on mobile web preview a user must scroll ~1000px to reach it. Consider moving it above 'Hot products' or adding testID='active-service-banner'.",
+        "testID": "MISSING (add testID='active-service-banner')",
+        "priority": "MEDIUM"
+      },
+      {
+        "component": "app/(tabs)/index.tsx — Active Service banner selection",
+        "issue": "`bookings.find(b => ['pending','received','in_progress','ready'].includes(b.status))` picks the first in the sorted list (created_at DESC). With the seed's 4 identical timestamps, MongoDB tie-breaks on _id and the *pending* screen-repair booking wins, not the in_progress Galaxy S24 booking that the review_request expects. If the intent is 'show the most active repair', prefer a status-weighted priority (e.g., in_progress > received > pending) or use a stable secondary sort key.",
+        "testID": "N/A",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/my-services",
+        "issues": [
+          "Leftover TEST_ZTX_Screen_Repair booking from previous test iteration (test_services_module.py) appears in customer's timeline. Cleanup fixture in that file didn't remove the booking (no DELETE endpoint exists on /api/services/bookings/{bid}). Consider adding an admin/merchant delete endpoint so tests can self-clean."
+        ]
+      }
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_dual_warranty.py",
+    "/app/test_reports/pytest/dual_warranty.xml"
+  ],
+  "action_items": [
+    "Optional: add testID='active-service-banner' on /app/frontend/app/(tabs)/index.tsx:280 for reliable E2E targeting.",
+    "Optional: change activeBooking selection to a status-priority order (in_progress > received > ready > pending) so the widget consistently surfaces the ongoing repair even when created_at is tied.",
+    "Optional: add a customer DELETE endpoint on /api/services/bookings/{bid} (owner-only, only when status='pending' or 'completed') so integration tests can clean up their bookings.",
+    "Optional: accept both `q` and `search` on GET /api/products to match review_request wording.",
+    "Optional: add /api/notifications/my alias to mirror /api/services/bookings/my naming convention."
+  ],
+  "critical_code_review_comments": [
+    "server.py remains at 3788 lines — the merchant CRUD block (products/categories/banners/branches/services) plus the public product listing (~450 lines total) should be extracted into backend/routes/merchant.py to reduce cognitive load.",
+    "ProductInput.warranty_type uses a bare `str` — no Pydantic validator to enforce {none|shop|manufacturer|both}. A typo like 'shp' will save silently and the product-detail UI will fall through both warranty conditions. Add `Literal['none','shop','manufacturer','both']` or a validator.",
+    "ProductInput.colors is `List[dict]` — no per-item schema for {name, hex}. A merchant could POST arbitrary keys and they'd persist to Mongo. Define a `ProductColor(BaseModel)` with name:str, hex:str and validate hex against #RGB/#RRGGBB regex.",
+    "seed_demo_services.py hard-codes `db = client.test_database` instead of reading DB_NAME from env — will silently target the wrong DB if DB_NAME is ever renamed. Use `db = client[os.environ['DB_NAME']]`."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_dual_warranty.py (new — 12 pytest cases)"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 dual-warranty + demo seed cases pass)",
+    "frontend": "~95% — all 5 requested flows visually verified; active-service banner works but auto-selects pending booking instead of in_progress due to tied timestamps (behaviour, not a hard bug)"
+  },
+  "seed_data_creation": "test_dual_warranty.py creates 4 test products (TEST_ZTX_iPhone_Both, TEST_ZTX_ShopOnly, TEST_ZTX_NoWarranty, TEST_ZTX_Legacy) and DELETEs all of them via module-scope autouse fixture through DELETE /api/merchant/products/{pid}. Verified no residue after run. Demo seed (seed_demo_services.py) was NOT re-run — read-only verification of pre-populated data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "v1.4.2 dual-warranty backend is fully green (12/12). Frontend: /my-services timeline + booking modal + product detail color/warranty + merchant product-form all render correctly. Active-service banner works but has no testID and is placed low on the home ScrollView (needs ~1000px inner scroll). To hit the banner in Playwright, iterate scrollables and set scrollTop; better fix is to add testID='active-service-banner' upstream. iPhone 16 Pro Max product id was 6a96da837668396e8d0a0226 in the current DB (may change on re-seed — always resolve by GET /api/products?search=iPhone%2016%20Pro%20Max first). Merchant form route is /merchant/product-form?mode=new (not /merchant/products/new). Public URL: https://mobile-builder-146.preview.emergentagent.com — env var name is EXPO_PUBLIC_BACKEND_URL. Credentials in /app/memory/test_credentials.md.",
+  "rca_of_issue": "N/A — no failures. The banner discrepancy vs review_request expectation is an ordering artefact of Mongo tie-breaking on identical created_at timestamps produced by the seed script (all 4 bookings inserted in the same asyncio tick). The banner condition `find()` returns the first match; sort direction DESC + tie-break returns pending first. Fix suggestions listed in action_items."
+}
