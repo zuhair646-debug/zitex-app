@@ -1,44 +1,56 @@
 {
-  "app_name": "Zitex Competitions",
-  "personality": "1 iOS-Native Clean with Tech Cyber Gold Theme Fusion",
-  "personality_one_liner": "A premium, unified competitions ecosystem fusing clean iOS layout structures with a Tech Cyber Gold identity for an immersive e-commerce experience.",
+  "app_name": "Zitex Services",
+  "personality": "1 iOS-Native Clean",
+  "personality_one_liner": "Clean, highly readable iOS-native structure tailored for a dual-sided Arabic marketplace: bright, trustworthy light theme for customers, and a premium dark-utility theme for merchants.",
   "color": {
     "surface": "#FFFFFF",
-    "onSurface": "#0A0A0A",
-    "surfaceSecondary": "#F5F5F5",
-    "onSurfaceSecondary": "#1A1A1A",
-    "surfaceTertiary": "#E5E5E5",
-    "onSurfaceTertiary": "#1A1A1A",
+    "onSurface": "#1C1C1E",
+    "surfaceSecondary": "#F2F2F7",
+    "onSurfaceSecondary": "#3A3A3C",
+    "surfaceTertiary": "#E5E5EA",
+    "onSurfaceTertiary": "#8E8E93",
     "surfaceInverse": "#0A0A0A",
     "onSurfaceInverse": "#FFFFFF",
-    "brand": "#F5C518",
-    "brandPrimary": "#F5C518",
-    "onBrandPrimary": "#0A0A0A",
-    "brandSecondary": "#E0B010",
-    "onBrandSecondary": "#0A0A0A",
-    "brandTertiary": "#FFF7D6",
-    "onBrandTertiary": "#8C6D00",
-    "success": "#10B981",
+    "brand": "#8833FF",
+    "brandPrimary": "#8833FF",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#E7D6FF",
+    "onBrandSecondary": "#4B1A99",
+    "brandTertiary": "#F4ECFF",
+    "onBrandTertiary": "#8833FF",
+    "success": "#34C759",
     "onSuccess": "#FFFFFF",
-    "warning": "#F59E0B",
-    "onWarning": "#FFFFFF",
-    "error": "#EF4444",
+    "warning": "#FFCC00",
+    "onWarning": "#000000",
+    "error": "#FF3B30",
     "onError": "#FFFFFF",
-    "info": "#3B82F6",
+    "info": "#007AFF",
     "onInfo": "#FFFFFF",
-    "border": "#E5E5E5",
-    "borderStrong": "#D4D4D4",
-    "divider": "#E5E5E5",
+    "border": "#E5E5EA",
+    "borderStrong": "#C7C7CC",
+    "divider": "#E5E5EA",
     "merchantSurface": "#0A0A0A",
-    "merchantOnSurface": "#FFFFFF",
-    "merchantSurfaceSecondary": "#1A1A1A",
-    "merchantBorder": "#333333",
-    "leaderboardGoldGradientStart": "#F5C518",
-    "leaderboardGoldGradientEnd": "#FFDF73"
+    "onMerchantSurface": "#FFFFFF",
+    "merchantSurfaceSecondary": "#1C1C1E",
+    "onMerchantSurfaceSecondary": "#EBEBF5",
+    "merchantSurfaceTertiary": "#2C2C2E",
+    "onMerchantSurfaceTertiary": "#8E8E93",
+    "merchantSurfaceInverse": "#FFFFFF",
+    "onMerchantSurfaceInverse": "#0A0A0A",
+    "merchantBrand": "#F5C518",
+    "merchantBrandPrimary": "#F5C518",
+    "onMerchantBrandPrimary": "#0A0A0A",
+    "merchantBrandSecondary": "#5C4A09",
+    "onMerchantBrandSecondary": "#F5C518",
+    "merchantBrandTertiary": "#332905",
+    "onMerchantBrandTertiary": "#F5C518",
+    "merchantBorder": "#2C2C2E",
+    "merchantBorderStrong": "#3A3A3C",
+    "merchantDivider": "#2C2C2E"
   },
   "typography": {
-    "displayFontFamily": "Plus Jakarta Sans",
-    "textFontFamily": "Geist",
+    "displayFontFamily": "Cairo",
+    "textFontFamily": "Tajawal",
     "scale": {
       "sm": 12,
       "base": 14,
@@ -48,7 +60,7 @@
     }
   },
   "spacing": {
-    "rule": "Generous spacing. Utilize safe area insets at bottom for sticky banners. Keep inputs and buttons minimum 44pt height.",
+    "rule": "Generous vertical breathing room. Avoid dense dashboard styles. Thumb zone primary CTA sticky at bottom.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -63,21 +75,21 @@
     "lg": 20,
     "pill": 999
   },
-  "shadow_tier": 1,
+  "shadow_tier": "1",
   "navigation": "bottom_tabs",
   "icon_set": "Ionicons",
   "glassmorphism": {
-    "enabled": true,
+    "enabled": "true",
     "do's": [
-      "Use on customer sticky floating banner at the bottom of the Home feed.",
-      "Use on floating action buttons (FABs) like the 'Create Video' button.",
-      "Use on bottom tab bar.",
-      "Apply gradient-to-dark scrim over hero background images."
+      "Bottom tab bar",
+      "Sticky header backgrounds over scrolling content",
+      "Featured hero card overlays",
+      "Floating action buttons"
     ],
     "dont's": [
-      "Don't use on body form fields.",
-      "Don't stack glass on glass.",
-      "Don't use on dense lists or standard merchant views."
+      "Form fields",
+      "Body text regions",
+      "Cards in dense lists"
     ]
   },
   "platform_libraries": {
@@ -94,112 +106,98 @@
   },
   "screens": [
     {
-      "name": "MerchantNewCompetition",
-      "purpose": "Single flow for merchants to create any of the 3 competition types.",
+      "name": "Customer - Service Detail",
+      "purpose": "Showcase service offerings, warranty, pricing, and social proof to drive booking.",
+      "states": {
+        "loading": "Skeleton of hero image and tabs",
+        "empty": "N/A",
+        "error": "Failed to load service details, with retry button"
+      },
+      "layout": "RTL Native. Edge-to-edge hero image with top-to-bottom gradient scrim. Glass header over image. Sticky bottom sheet/container with 'Book Now' primary CTA. Tabs below hero for About / Experiences / Reviews. Use horizontal scrolling for customer experience video thumbnails."
+    },
+    {
+      "name": "Customer - Booking Sheet",
+      "purpose": "Capture booking details, calculate dynamic pickup fee, and confirm schedule.",
+      "states": {
+        "loading": "Calculating fee spinner",
+        "empty": "N/A",
+        "error": "Address not within service range"
+      },
+      "layout": "Full-height bottom sheet. Segmented control for Drop-off vs Pickup/Return. Map view snippet for location. Dynamic fee calculation prominently displayed in LTR numeric format. Grid layout for time slots."
+    },
+    {
+      "name": "Customer - My Services (Progress)",
+      "purpose": "Track live status of device repair and view/rate merchant video updates.",
       "states": {
         "loading": "Centered spinner",
+        "empty": "Illustration + 'No active services'",
+        "error": "Network error, retry"
+      },
+      "layout": "Vertical step progress tracker (Pending -> Completed). Below tracker, a chronological feed of video update cards. Each card has an embedded video player (expo-av) and a 5-star rating input with comment box."
+    },
+    {
+      "name": "Customer - Experiences Gallery",
+      "purpose": "Public social proof feed of successful repairs.",
+      "states": {
+        "loading": "Skeleton video tiles",
+        "empty": "No experiences shared yet",
+        "error": "Feed unavailable"
+      },
+      "layout": "Vertical scrollable feed of videos (similar to TikTok/Reels) with overlay text. Shows customer rating and merchant caption. Gradient scrim behind text."
+    },
+    {
+      "name": "Merchant - Service Form",
+      "purpose": "Create or edit a service listing with comprehensive details.",
+      "states": {
+        "loading": "Form skeleton",
         "empty": "N/A",
-        "error": "Standard error alert with retry"
+        "error": "Validation errors on fields"
       },
-      "layout": "Dark theme layout (merchantSurface #0A0A0A). Top: segmented control or 3 horizontal scrollable cards to pick Type (Purchase / Q&A / UGC). Below: Dynamic form. Purchase: threshold input, single/accumulated toggle. Q&A: question input, add option rows (check correct). UGC: Submissions cap, winner count. Sticky bottom Primary CTA 'Create Competition'."
+      "layout": "Dark theme. Single column scrollable form. Multi-image picker at top. Toggle switches for pickup support and availability. Sticky 'Save Service' CTA at bottom inside KeyboardAvoidingView."
     },
     {
-      "name": "CustomerHome",
-      "purpose": "Home feed featuring a sticky floating banner for active competitions.",
+      "name": "Merchant - Video Update Composer",
+      "purpose": "Record and upload short video updates to customers with optional social cross-posting.",
       "states": {
-        "loading": "Skeleton feed",
-        "empty": "Illustration + 'لا توجد مسابقات حالية'",
-        "error": "Error message with retry button"
-      },
-      "layout": "Standard white e-commerce feed. Bottom sticky banner (glassmorphism enabled) anchored above tab bar. Left side: Context (Prize icon + 'اشتري بـ 1000 ر.س وادخل السحب على iPhone 15'). Right side: small circular progress pie or secondary CTA 'انضم الآن'. Must preserve space via safe-area-inset."
-    },
-    {
-      "name": "CustomerPurchaseDetail",
-      "purpose": "Shows user progress towards a purchase-based competition.",
-      "states": {
-        "loading": "Spinner",
+        "loading": "Uploading video progress bar",
         "empty": "N/A",
-        "error": "Retry layout"
+        "error": "Upload failed, retry"
       },
-      "layout": "Hero image of prize with dark scrim and title. Large animated ProgressBar component in center showing accumulated spend vs threshold. Subtitle 'متبقي 350 ر.س للانضمام'. Info cards for rules. Sticky 'Shop Now' CTA at bottom."
-    },
-    {
-      "name": "CustomerQnADetail",
-      "purpose": "User answers a quiz to enter the draw.",
-      "states": {
-        "loading": "Spinner",
-        "empty": "N/A",
-        "error": "Retry layout"
-      },
-      "layout": "Prize hero image. Large bold question text. Vertical list of AnswerOption cards. On tap, animate border and apply subtle glow if correct, then slide up a success bottom sheet confirming entry."
-    },
-    {
-      "name": "CustomerUGCDetail",
-      "purpose": "UGC video competition featuring live leaderboard and video upload.",
-      "states": {
-        "loading": "Spinner",
-        "empty": "Illustration + 'كن أول من يشارك بفيديو!' (Be the first to submit a video!)",
-        "error": "Retry layout"
-      },
-      "layout": "Top: Campaign hero + CountdownTimer component pulsing red in last hour. Middle: 'LeaderboardRow' list sorted by likes. Top 1-3 highlighted with leaderboardGoldGradient tokens. Each row has thumbnail, name, rank badge, like count, LikeButton. Bottom right: Sticky FAB 'إنشاء فيديو' with glass effect."
-    },
-    {
-      "name": "CustomerUGCSubmit",
-      "purpose": "Form to upload a user-generated video for the competition.",
-      "states": {
-        "loading": "Upload progress bar",
-        "empty": "N/A",
-        "error": "Retry layout"
-      },
-      "layout": "Full screen form. Large VideoUploadButton (dashed border area) using ImagePicker. Inputs for caption and hashtags. Sticky 'Submit Video' bottom button."
-    },
-    {
-      "name": "ChamberDrawOverview",
-      "purpose": "Supervisory view for Chamber employees to execute final draws.",
-      "states": {
-        "loading": "Spinner",
-        "empty": "Illustration + 'لا توجد سحوبات معلقة'",
-        "error": "Retry layout"
-      },
-      "layout": "Dark theme layout (merchantSurface #0A0A0A). List of supervised competitions ready for draw. Card shows permit number, participants count. Action button 'إجراء السحب' triggers draw and opens video upload modal for ceremonial announcement."
-    },
-    {
-      "name": "CompetitionsTab",
-      "purpose": "Central hub for all competition history and active statuses.",
-      "states": {
-        "loading": "Spinner",
-        "empty": "Illustration + 'لا توجد مسابقات'",
-        "error": "Retry layout"
-      },
-      "layout": "Header with 4 segmented tabs (نشطة / قادمة / منتهية / فائزون). List of CompetitionCards. Winners section features video player (draw videos) and winner names."
+      "layout": "Dark theme. Camera view taking up top 60%. Caption input below. Toggles for 'Make Public Experience' and 'Cross-post to Social Feed' below caption. Big primary upload button."
     }
   ],
   "images": {
-    "iphone_15": {
-      "url": "https://images.unsplash.com/photo-1726587912121-ea21fcc57ff8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAxODF8MHwxfHNlYXJjaHwxfHxpcGhvbmUlMjAxNSUyMHBybyUyMG1heHxlbnwwfHx8fDE3ODgxNjg4NzV8MA&ixlib=rb-4.1.0&q=85",
-      "alt": "iPhone 15 Pro Max side by side"
+    "hero_smartphone_repair": {
+      "url": "https://images.unsplash.com/photo-1746005514011-ea00280f3b6e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwyfHxzbWFydHBob25lJTIwc2NyZWVuJTIwcmVwYWlyfGVufDB8fHx8MTc4ODI0NTkxMnww&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1706972612595-aa53b400ee80?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxzbWFydHBob25lJTIwc2NyZWVuJTIwcmVwYWlyfGVufDB8fHx8MTc4ODI0NTkxMnww&ixlib=rb-4.1.0&q=85",
+      "alt": "Smartphone components disassembled on a blue mat"
     },
-    "gift_box": {
-      "url": "https://images.unsplash.com/photo-1513201099705-a9746e1e201f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwxfHxnaWZ0JTIwYm94fGVufDB8fHx8MTc4ODE2ODg3NXww&ixlib=rb-4.1.0&q=85",
-      "alt": "Brown gift box with pink ribbon"
+    "hero_laptop_repair": {
+      "url": "https://images.pexels.com/photos/7639374/pexels-photo-7639374.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "dark": "https://images.pexels.com/photos/7639355/pexels-photo-7639355.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Close up image of hands repairing laptop circuit board"
     },
-    "arab_man_1": {
-      "url": "https://images.unsplash.com/photo-1624411024074-18a756682b50?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxhcmFiJTIwbWFuJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzg4MTY4ODc2fDA&ixlib=rb-4.1.0&q=85",
-      "alt": "Arab man in white thobe and red hijab"
-    },
-    "arab_man_2": {
-      "url": "https://images.unsplash.com/photo-1621374549297-690665030416?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwzfHxhcmFiJTIwbWFuJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzg4MTY4ODc2fDA&ixlib=rb-4.1.0&q=85",
-      "alt": "Arab man in car"
+    "merchant_logo": {
+      "url": "https://images.unsplash.com/photo-1761207850745-d41a776ef897?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwcmVwYWlyJTIwc2hvcCUyMGxvZ298ZW58MHx8fHwxNzg4MjQ1OTEyfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Gadgets repair shop neon sign"
     }
   },
   "instructions_to_main_agent": [
-    "CRITICAL THEME INSTRUCTION: The user strictly requested 'Tech Cyber Gold' (#0A0A0A and #F5C518). Implement the Merchant and Chamber screens in DARK mode using the 'merchantSurface' (#0A0A0A) and 'merchantSurfaceSecondary' tokens. Implement the Customer screens in LIGHT mode (white surface, subtle gold accents).",
-    "UGC Leaderboard Architecture: Ensure the leaderboard list features rank badges. The top 3 rows should have a distinct gold gradient background or border utilizing the 'leaderboardGoldGradientStart/End' tokens.",
-    "Customer Home Banner: The floating banner for purchase competitions must be sticky at the bottom. Use absolute positioning with bottom mapped to the safe area inset. Apply 'expo-glass-effect' for the banner container background so the feed content blurs underneath it.",
-    "Interaction & Animation: Add reanimated shared values to smoothly fill the ProgressBar on the CustomerPurchaseDetail screen. On CustomerQnADetail, when the correct AnswerOption is tapped, animate the border color to 'success' (#10B981) and trigger a soft haptic success feedback.",
-    "State Flows: For Q&A, the entry is immediate upon a correct answer. For Purchase, entry happens automatically once the spend threshold is met. For UGC, the entry is manual via the video upload form.",
-    "Add new components: `CompetitionCard`, `ProgressBar`, `AnswerOption`, `LeaderboardRow`, `CountdownTimer`, `VideoUploadButton`, `LikeButton` to the UI kit.",
-    "API Integrations: Introduce mocked API endpoints for UGC (`/competitions/{cid}/videos` POST/GET, `/competitions/{cid}/videos/{vid}/like` POST, `/competitions/{cid}/leaderboard`).",
-    "Empty states: Ensure all empty states display an appropriate illustration alongside Arabic text, centered with a Call to Action if applicable."
-  ]
+    "Data Models: Add MongoDB collections: 'services_extension', 'service_bookings', 'service_updates' (videos), 'service_reviews'. Ensure 'service_updates' supports flags for 'is_public_experience' and 'is_crossposted'.",
+    "API Endpoints: Create/modify POST /api/services, GET /api/services/{id}, POST /api/bookings (calc dynamic fee based on geo), POST /api/service_updates (handle Emergent Object Storage URL + in-app notification trigger).",
+    "Theme Handling: Explicitly use the light theme token set (#8833FF brand) for all Customer screens and the dark theme token set (#0A0A0A bg, #F5C518 brand) for all Merchant screens. These must not leak into each other.",
+    "RTL/LTR: App must use RTL layout for all text and containers. LTR is ONLY used for numeric values, pricing, and timers.",
+    "Component - Video Player: Use expo-av for video playback. Implement gradient scrims (transparent to ≥70% surfaceInverse) whenever text is overlaid on video or hero images.",
+    "Notifications: DO NOT design OS-level push notifications infrastructure. Use an in-app notification bell + real-time badge in the tab bar for video update alerts.",
+    "Interaction: Ensure the 'Book Now' and 'Save Service' buttons are sticky at the bottom with a glass effect behind them to ensure thumb-reachability without scroll.",
+    "MVP Scope: Focus on service creation, basic booking with manual fee entry if dynamic mapping is too complex for phase 1, and the video update upload + rating flow. Cross-posting to social feed can be Phase 2 if Emergent Object Storage integration is tight."
+  ],
+  "haptics": {
+    "booking_toggle_switch": "light",
+    "time_slot_select": "selection",
+    "video_rating_star_tap": "light",
+    "submit_booking": "success",
+    "upload_video_start": "medium",
+    "upload_video_complete": "success"
+  }
 }

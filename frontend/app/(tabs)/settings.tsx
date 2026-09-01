@@ -80,6 +80,7 @@ export default function SettingsScreen() {
         {/* Quick actions */}
         <View style={styles.menuSection}>
           <MenuItem icon="cart" label={t('orders.title')} onPress={() => router.push('/orders')} />
+          <MenuItem icon="construct" label={lang === 'ar' ? 'خدماتي' : 'My Services'} color="#8833FF" onPress={() => router.push('/my-services')} />
           <MenuItem icon="people" label={t('gb.title')} color="#EC4899" onPress={() => router.push('/group-buys' as any)} />
           <MenuItem icon="medal" label={t('points.title')} color="#F59E0B" onPress={() => router.push('/points' as any)} />
           <MenuItem icon="notifications" label={t('notif.title')} color="#3B82F6" onPress={() => router.push('/notifications' as any)} />

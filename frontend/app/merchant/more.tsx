@@ -23,7 +23,7 @@ export default function MerchantMore() {
 
   const operations = [
     { icon: 'briefcase', title: 'الخدمات', subtitle: 'خدماتك المقدمة للعملاء', route: '/merchant/services' },
-    { icon: 'calendar', title: 'الحجوزات', subtitle: 'حجوزات العملاء للخدمات', route: '/merchant/bookings' },
+    { icon: 'calendar', title: 'حجوزات الخدمات', subtitle: 'إدارة الحجوزات + تحديثات الفيديو', route: '/merchant/service-bookings' },
     { icon: 'business', title: 'الفروع', subtitle: 'مواقع فروع المتجر', route: '/merchant/branches' },
     { icon: 'car-sport', title: 'السائقون', subtitle: 'إدارة السائقين والتعيين', route: '/merchant/drivers' },
     { icon: 'map', title: 'إعدادات التوصيل', subtitle: 'الأسعار والمناطق والأوقات', route: '/merchant/delivery-settings' },

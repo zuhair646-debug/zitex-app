@@ -430,16 +430,39 @@ async def my_ads(user=Depends(get_current_user)):
 
 # ─── Services Booking ───
 class ServiceBookInput(BaseModel):
+    service_id: str = ""
     service_name: str
     device_model: str = ""
     issue_desc: str = ""
-    delivery_type: str = "store"  # store, delivery, home_pickup
+    delivery_type: str = "store"  # store, home_pickup
     address: str = ""
     phone: str = ""
+    dest_lat: float | None = None
+    dest_lng: float | None = None
+
+def _haversine_km(lat1, lng1, lat2, lng2):
+    """Great-circle distance in km."""
+    from math import radians, sin, cos, asin, sqrt
+    R = 6371.0
+    dlat = radians(lat2 - lat1); dlng = radians(lng2 - lng1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng/2)**2
+    return 2 * R * asin(sqrt(a))
+
+async def _calc_pickup_fee(svc: dict, dest_lat, dest_lng):
+    """Compute round-trip pickup fee: distance × 2 × price_per_km, capped/floored."""
+    if not svc.get("home_pickup"): return 0.0, 0.0
+    price_km = float(svc.get("pickup_price_per_km", 3.0))
+    base = float(svc.get("pickup_base_fee", 10.0))
+    shop_lat = svc.get("shop_lat"); shop_lng = svc.get("shop_lng")
+    if dest_lat is None or dest_lng is None or shop_lat is None or shop_lng is None:
+        return base, 0.0
+    d = _haversine_km(shop_lat, shop_lng, dest_lat, dest_lng)
+    fee = round(base + d * 2 * price_km, 2)
+    return fee, round(d, 2)
 
 @api_router.get("/services")
 async def get_services():
-    services = await db.services.find({"published": True}).to_list(20)
+    services = await db.services.find({"published": True}).to_list(50)
     return [serialize_doc(s) for s in services]
 
 @api_router.get("/services/{svc_id}")
@@ -449,21 +472,177 @@ async def get_service(svc_id: str):
         raise HTTPException(status_code=404, detail="Service not found")
     return serialize_doc(svc)
 
+@api_router.post("/services/{svc_id}/quote")
+async def quote_service(svc_id: str, request: Request):
+    """Return quote incl. dynamic pickup fee based on destination coords."""
+    body = await request.json()
+    svc = await db.services.find_one({"_id": ObjectId(svc_id)})
+    if not svc: raise HTTPException(status_code=404, detail="Service not found")
+    fee, dist = await _calc_pickup_fee(svc, body.get("dest_lat"), body.get("dest_lng"))
+    return {
+        "service_price": float(svc.get("price", 0)),
+        "inspection_price": float(svc.get("inspection_price", 0)),
+        "pickup_fee": fee, "distance_km": dist,
+        "home_pickup_supported": bool(svc.get("home_pickup", False)),
+    }
+
 @api_router.post("/services/book")
 async def book_service(data: ServiceBookInput, user=Depends(get_current_user)):
-    result = await db.service_bookings.insert_one({
-        "user_id": user["id"], "service_name": data.service_name,
+    pickup_fee = 0.0; distance_km = 0.0; svc = None
+    if data.service_id and ObjectId.is_valid(data.service_id):
+        svc = await db.services.find_one({"_id": ObjectId(data.service_id)})
+    if svc and data.delivery_type == "home_pickup":
+        pickup_fee, distance_km = await _calc_pickup_fee(svc, data.dest_lat, data.dest_lng)
+    total = float(svc.get("price", 0)) if svc else 0.0
+    total += pickup_fee
+    doc = {
+        "user_id": user["id"],
+        "service_id": data.service_id,
+        "service_name": data.service_name,
         "device_model": data.device_model, "issue_desc": data.issue_desc,
         "delivery_type": data.delivery_type, "address": data.address, "phone": data.phone,
-        "status": "pending", "warranty": True,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
-    return {"id": str(result.inserted_id), "message": "Service booked successfully"}
+        "dest_lat": data.dest_lat, "dest_lng": data.dest_lng,
+        "pickup_fee": pickup_fee, "distance_km": distance_km,
+        "service_price": float(svc.get("price", 0)) if svc else 0.0,
+        "total_amount": total,
+        "status": "pending", "warranty": bool(svc.get("warranty_available", True)) if svc else True,
+        "warranty_days": int(svc.get("warranty_days", 90)) if svc else 90,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    result = await db.service_bookings.insert_one(doc)
+    bid = str(result.inserted_id)
+    # notify merchant admin (best-effort)
+    merchant = await db.users.find_one({"role": "merchant"})
+    if merchant:
+        try: await create_notification(str(merchant["_id"]), "🔔 حجز خدمة جديد", f"{user.get('name','')} حجز {data.service_name}", {"type":"booking","booking_id":bid})
+        except Exception: pass
+    return {"id": bid, "message": "Service booked", "total_amount": total, "pickup_fee": pickup_fee, "distance_km": distance_km}
 
 @api_router.get("/services/bookings/my")
 async def my_service_bookings(user=Depends(get_current_user)):
     bookings = await db.service_bookings.find({"user_id": user["id"]}).sort("created_at", -1).to_list(50)
     return [serialize_doc(b) for b in bookings]
+
+@api_router.get("/services/bookings/{bid}")
+async def get_service_booking(bid: str, user=Depends(get_current_user)):
+    b = await db.service_bookings.find_one({"_id": ObjectId(bid)})
+    if not b: raise HTTPException(status_code=404, detail="Booking not found")
+    if b.get("user_id") != user["id"] and user.get("role") not in ("merchant","chamber"):
+        raise HTTPException(status_code=403, detail="Not allowed")
+    b = serialize_doc(b)
+    # attach updates + reviews inline
+    ups = await db.service_updates.find({"booking_id": bid}).sort("created_at", 1).to_list(50)
+    b["updates"] = [serialize_doc(u) for u in ups]
+    revs = await db.service_reviews.find({"booking_id": bid}).to_list(50)
+    b["reviews"] = [serialize_doc(r) for r in revs]
+    return b
+
+# ─── Service updates (merchant → customer videos) ───
+class ServiceUpdateInput(BaseModel):
+    booking_id: str
+    video_url: str = ""
+    image_url: str = ""
+    caption: str = ""
+    is_public_experience: bool = False
+    crosspost_to_social: bool = False
+
+@api_router.post("/services/updates")
+async def create_service_update(data: ServiceUpdateInput, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant","chamber"):
+        raise HTTPException(status_code=403, detail="Merchants only")
+    b = await db.service_bookings.find_one({"_id": ObjectId(data.booking_id)})
+    if not b: raise HTTPException(status_code=404, detail="Booking not found")
+    doc = data.model_dump()
+    doc.update({
+        "merchant_id": user["id"],
+        "service_id": b.get("service_id", ""),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "avg_rating": 0, "review_count": 0,
+    })
+    r = await db.service_updates.insert_one(doc)
+    uid = str(r.inserted_id)
+    # notify the customer
+    if b.get("user_id"):
+        try:
+            await create_notification(b["user_id"], "🎥 تحديث جديد على جوالك",
+                                       data.caption or "شاهد تحديث الصيانة",
+                                       {"type": "service_update", "booking_id": data.booking_id, "update_id": uid})
+        except Exception: pass
+    # cross-post to social if requested
+    if data.crosspost_to_social and data.video_url:
+        try:
+            svc_name = b.get("service_name", "خدمة صيانة")
+            await db.social_posts.insert_one({
+                "user_id": user["id"], "author_name": user.get("name",""), "author_role": "merchant",
+                "text": f"🛠️ {svc_name}\n{data.caption}".strip(),
+                "images": [], "video": data.video_url,
+                "badge": "خدمة صيانة", "linked_service_id": b.get("service_id",""),
+                "likes": 0, "liked_by": [], "comments": [], "views": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+        except Exception as e:
+            logger.warning(f"cross-post failed: {e}")
+    return {"id": uid, "message": "Update posted"}
+
+@api_router.put("/services/updates/{uid}")
+async def edit_service_update(uid: str, request: Request, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant","chamber"): raise HTTPException(status_code=403, detail="Merchants only")
+    body = await request.json()
+    allow = {k: v for k, v in body.items() if k in {"caption","is_public_experience","crosspost_to_social"}}
+    if not allow: raise HTTPException(status_code=400, detail="Nothing to update")
+    await db.service_updates.update_one({"_id": ObjectId(uid)}, {"$set": allow})
+    return {"message": "Updated"}
+
+@api_router.delete("/services/updates/{uid}")
+async def delete_service_update(uid: str, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant","chamber"): raise HTTPException(status_code=403, detail="Merchants only")
+    await db.service_updates.delete_one({"_id": ObjectId(uid)})
+    await db.service_reviews.delete_many({"update_id": uid})
+    return {"message": "Deleted"}
+
+# ─── Service reviews (customer ratings on videos + final rating) ───
+class ServiceReviewInput(BaseModel):
+    booking_id: str
+    update_id: str = ""  # empty = final overall rating
+    stars: int
+    comment: str = ""
+
+@api_router.post("/services/reviews")
+async def submit_service_review(data: ServiceReviewInput, user=Depends(get_current_user)):
+    if data.stars < 1 or data.stars > 5: raise HTTPException(status_code=400, detail="التقييم من 1 إلى 5 نجوم")
+    b = await db.service_bookings.find_one({"_id": ObjectId(data.booking_id)})
+    if not b: raise HTTPException(status_code=404, detail="Booking not found")
+    if b.get("user_id") != user["id"]: raise HTTPException(status_code=403, detail="فقط صاحب الحجز يقيّم")
+    # upsert (one review per user per update, or one final per user per booking)
+    q = {"user_id": user["id"], "booking_id": data.booking_id, "update_id": data.update_id}
+    doc = {**q, "stars": data.stars, "comment": data.comment, "user_name": user.get("name",""),
+           "service_id": b.get("service_id",""), "created_at": datetime.now(timezone.utc).isoformat()}
+    await db.service_reviews.update_one(q, {"$set": doc}, upsert=True)
+    # recompute aggregate on the target (update or service)
+    if data.update_id:
+        revs = await db.service_reviews.find({"update_id": data.update_id}).to_list(500)
+        avg = round(sum(r["stars"] for r in revs) / len(revs), 2) if revs else 0
+        await db.service_updates.update_one({"_id": ObjectId(data.update_id)},
+            {"$set": {"avg_rating": avg, "review_count": len(revs)}})
+    else:
+        revs = await db.service_reviews.find({"service_id": b.get("service_id",""), "update_id": ""}).to_list(2000)
+        if b.get("service_id") and ObjectId.is_valid(b["service_id"]):
+            avg = round(sum(r["stars"] for r in revs) / len(revs), 2) if revs else 0
+            await db.services.update_one({"_id": ObjectId(b["service_id"])},
+                {"$set": {"rating": avg, "review_count": len(revs)}})
+    return {"message": "Review submitted"}
+
+@api_router.get("/services/{svc_id}/reviews")
+async def service_reviews(svc_id: str):
+    revs = await db.service_reviews.find({"service_id": svc_id, "update_id": ""}).sort("created_at", -1).to_list(200)
+    return [serialize_doc(r) for r in revs]
+
+@api_router.get("/services/{svc_id}/experiences")
+async def service_experiences(svc_id: str):
+    """Public gallery of merchant-approved experience videos for this service."""
+    ups = await db.service_updates.find({"service_id": svc_id, "is_public_experience": True, "video_url": {"$ne": ""}}).sort("created_at", -1).to_list(100)
+    return [serialize_doc(u) for u in ups]
+
 
 # ─── Support Tickets ───
 class TicketInput(BaseModel):
@@ -1370,22 +1549,32 @@ async def merchant_delete_banner(bid: str, user=Depends(get_current_user)):
 class ServiceInput(BaseModel):
     name: str
     desc: str = ""
+    long_description: str = ""
     icon: str = "construct"
     color: str = "#8833FF"
+    category: str = "repair"   # repair | replacement | installation | diagnostic | other
+    images: List[str] = []      # object-storage paths
     price: float
     inspection_price: float = 0
     turnaround: str = "1-2 Days"
     delivery_available: bool = True
     home_pickup: bool = True
+    pickup_base_fee: float = 10.0
+    pickup_price_per_km: float = 3.0
+    shop_lat: float | None = None
+    shop_lng: float | None = None
     warranty_available: bool = True
     warranty_days: int = 90
+    warranty_terms: str = ""
     published: bool = True
 
 @api_router.post("/merchant/services")
 async def merchant_create_service(data: ServiceInput, user=Depends(get_current_user)):
     require_merchant(user)
     doc = data.model_dump()
-    doc.update({"total_requests": 0, "rating": 0, "review_count": 0})
+    doc.update({"total_requests": 0, "rating": 0, "review_count": 0,
+                "merchant_id": user["id"],
+                "created_at": datetime.now(timezone.utc).isoformat()})
     r = await db.services.insert_one(doc)
     return {"id": str(r.inserted_id), "message": "Service created"}
 
@@ -1400,6 +1589,12 @@ async def merchant_delete_service(sid: str, user=Depends(get_current_user)):
     require_merchant(user)
     await db.services.delete_one({"_id": ObjectId(sid)})
     return {"message": "Deleted"}
+
+@api_router.get("/merchant/services")
+async def merchant_list_services(user=Depends(get_current_user)):
+    require_merchant(user)
+    services = await db.services.find({}).sort("created_at", -1).to_list(200)
+    return [serialize_doc(s) for s in services]
 
 # ─── Merchant: Orders Management ───
 @api_router.get("/merchant/orders")
@@ -1466,7 +1661,25 @@ async def merchant_list_bookings(user=Depends(get_current_user)):
 async def merchant_update_booking_status(bid: str, request: Request, user=Depends(get_current_user)):
     require_merchant(user)
     body = await request.json()
-    await db.service_bookings.update_one({"_id": ObjectId(bid)}, {"$set": {"status": body.get("status", "")}})
+    new_status = body.get("status", "")
+    if new_status not in ["pending","received","in_progress","ready","completed","cancelled"]:
+        raise HTTPException(status_code=400, detail="حالة غير صحيحة")
+    b = await db.service_bookings.find_one({"_id": ObjectId(bid)})
+    if not b: raise HTTPException(status_code=404, detail="Booking not found")
+    await db.service_bookings.update_one({"_id": ObjectId(bid)},
+        {"$set": {"status": new_status, "status_updated_at": datetime.now(timezone.utc).isoformat()}})
+    BOOKING_MSG_AR = {
+        "received":     ("📥 تم استلام جهازك",       "الفني بدأ العمل على جهازك"),
+        "in_progress":  ("🔧 قيد الإصلاح",            "جهازك تحت الفحص والإصلاح"),
+        "ready":        ("✅ جهازك جاهز",              "يمكنك استلامه أو انتظار التوصيل"),
+        "completed":    ("🎉 مكتمل",                   "تم تسليم جهازك — قيّم تجربتك"),
+        "cancelled":    ("❌ تم إلغاء الحجز",           ""),
+    }
+    if new_status in BOOKING_MSG_AR and b.get("user_id"):
+        t, m = BOOKING_MSG_AR[new_status]
+        try: await create_notification(b["user_id"], t, m or b.get("service_name",""),
+                                       {"type":"booking","booking_id":bid,"status":new_status})
+        except Exception: pass
     return {"message": "Updated"}
 
 # ─── Merchant: Social Posts CRUD ───

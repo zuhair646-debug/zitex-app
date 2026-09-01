@@ -1,164 +1,267 @@
-import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, FlatList } from 'react-native';
+import { Image } from 'expo-image';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../_layout';
+import { mediaUrlSync } from '../../src/utils/upload';
 
-export default function ServiceDetailScreen() {
+const PURPLE = '#8833FF';
+const { width } = Dimensions.get('window');
+
+type Tab = 'about' | 'experiences' | 'reviews';
+
+export default function ServiceDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [svc, setSvc] = useState<any>(null);
+  const [experiences, setExperiences] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [tab, setTab] = useState<Tab>('about');
+  const [imgIndex, setImgIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showBook, setShowBook] = useState(false);
-  const [deviceModel, setDeviceModel] = useState('');
-  const [issueDesc, setIssueDesc] = useState('');
-  const [deliveryType, setDeliveryType] = useState('store');
-  const [booking, setBooking] = useState(false);
 
-  useEffect(() => {
-    (async () => { try { const d = await apiCall(`/api/services/${id}`); setSvc(d); } catch {} finally { setLoading(false); } })();
-  }, [id]);
-
-  const bookService = async () => {
-    setBooking(true);
+  const load = useCallback(async () => {
     try {
-      await apiCall('/api/services/book', { method: 'POST', body: JSON.stringify({
-        service_name: svc.name, device_model: deviceModel, issue_desc: issueDesc,
-        delivery_type: deliveryType, phone: '0500000000'
-      })});
-      setShowBook(false);
-      Alert.alert('Booked!', 'Your service has been booked successfully. We will contact you shortly.');
-    } catch (e: any) { Alert.alert('Error', e.message); } finally { setBooking(false); }
-  };
+      const [d, exp, revs] = await Promise.all([
+        apiCall(`/api/services/${id}`),
+        apiCall(`/api/services/${id}/experiences`).catch(() => []),
+        apiCall(`/api/services/${id}/reviews`).catch(() => []),
+      ]);
+      setSvc(d); setExperiences(exp); setReviews(revs);
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    finally { setLoading(false); }
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
-  if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#8833FF" /></View>;
-  if (!svc) return <View style={s.load}><Text>Not found</Text></View>;
+  if (loading) return <View style={s.load}><ActivityIndicator size="large" color={PURPLE} /></View>;
+  if (!svc) return <View style={s.load}><Text>غير موجودة</Text></View>;
+
+  const images: string[] = svc.images?.length ? svc.images : [];
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={['top']}>
       <View style={s.topBar}>
-        <TouchableOpacity testID="svc-back" style={s.topBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.topTitle}>{svc.name}</Text>
+        <TouchableOpacity style={s.topBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
+        </TouchableOpacity>
+        <Text style={s.topTitle} numberOfLines={1}>{svc.name}</Text>
         <View style={{ width: 40 }} />
       </View>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
-        <View style={[s.heroIcon, { backgroundColor: svc.color + '18' }]}><Ionicons name={svc.icon as any} size={48} color={svc.color} /></View>
-        <Text style={s.svcName}>{svc.name}</Text>
-        <Text style={s.svcDesc}>{svc.desc}</Text>
 
-        <View style={s.priceCard}>
-          <View style={s.priceRow}><Text style={s.priceLabel}>Service Price</Text><Text style={s.priceVal}>{svc.price} SAR</Text></View>
-          {svc.inspection_price > 0 && <View style={s.priceRow}><Text style={s.priceLabel}>Inspection Price</Text><Text style={s.priceVal}>{svc.inspection_price} SAR</Text></View>}
-          <View style={s.priceRow}><Text style={s.priceLabel}>Total Requests</Text><Text style={s.priceVal}>{svc.total_requests}</Text></View>
-          <View style={s.priceRow}><Text style={s.priceLabel}>Turnaround</Text><Text style={s.priceVal}>{svc.turnaround}</Text></View>
+      <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        {/* Hero images carousel */}
+        <View>
+          {images.length > 0 ? (
+            <FlatList
+              data={images} horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={e => setImgIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
+              renderItem={({ item }) => (
+                <Image source={{ uri: mediaUrlSync(item) }} style={{ width, height: 260 }} contentFit="cover" />
+              )}
+              keyExtractor={(_, i) => String(i)}
+            />
+          ) : (
+            <LinearGradient colors={['#F4ECFF', '#E7D6FF']} style={s.heroFallback}>
+              <Ionicons name={svc.icon || 'construct'} size={72} color={PURPLE} />
+            </LinearGradient>
+          )}
+          {images.length > 1 && (
+            <View style={s.dots}>
+              {images.map((_, i) => <View key={i} style={[s.dot, imgIndex === i && s.dotActive]} />)}
+            </View>
+          )}
+          {svc.warranty_available && (
+            <View style={s.warrantyBadge}>
+              <Ionicons name="shield-checkmark" size={14} color="white" />
+              <Text style={s.warrantyBadgeText}>ضمان {svc.warranty_days} يوم</Text>
+            </View>
+          )}
         </View>
 
-        {svc.inspection_price > 0 && (
-          <View style={s.noteCard}>
-            <Ionicons name="information-circle" size={20} color="#F59E0B" />
-            <Text style={s.noteText}>All services are subject to inspection service. Inspection Price: {svc.inspection_price} SAR</Text>
+        <View style={s.headerCard}>
+          <Text style={s.name}>{svc.name}</Text>
+          {!!svc.desc && <Text style={s.desc}>{svc.desc}</Text>}
+          <View style={s.metaRow}>
+            <View style={s.metaChip}><Ionicons name="cash" size={14} color={PURPLE} /><Text style={s.metaText}>{svc.price} ر.س</Text></View>
+            <View style={s.metaChip}><Ionicons name="time" size={14} color={PURPLE} /><Text style={s.metaText}>{svc.turnaround}</Text></View>
+            {svc.rating > 0 && (
+              <View style={s.metaChip}><Ionicons name="star" size={14} color="#F5C518" /><Text style={s.metaText}>{svc.rating} ({svc.review_count})</Text></View>
+            )}
+          </View>
+        </View>
+
+        {/* Tabs */}
+        <View style={s.tabsBar}>
+          {[
+            { id: 'about', name: 'نبذة', icon: 'information-circle' },
+            { id: 'experiences', name: `تجارب (${experiences.length})`, icon: 'videocam' },
+            { id: 'reviews', name: `تقييمات (${reviews.length})`, icon: 'star' },
+          ].map(t => (
+            <TouchableOpacity key={t.id} onPress={() => setTab(t.id as Tab)} style={[s.tabItem, tab === t.id && s.tabItemActive]}>
+              <Ionicons name={t.icon as any} size={16} color={tab === t.id ? PURPLE : '#6B7280'} />
+              <Text style={[s.tabText, tab === t.id && s.tabTextActive]}>{t.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {tab === 'about' && (
+          <View style={{ padding: 20 }}>
+            {!!svc.long_description && (
+              <View style={s.aboutCard}>
+                <Text style={s.aboutTitle}>عن الخدمة</Text>
+                <Text style={s.aboutBody}>{svc.long_description}</Text>
+              </View>
+            )}
+            <View style={s.featureGrid}>
+              <Feature icon="time-outline" title="مدة الإنجاز" value={svc.turnaround} />
+              {svc.warranty_available && <Feature icon="shield-checkmark-outline" title="الضمان" value={`${svc.warranty_days} يوم`} />}
+              {svc.home_pickup && <Feature icon="car-outline" title="استلام منزلي" value={`من ${svc.pickup_base_fee || 10} ر.س`} />}
+              {svc.delivery_available && <Feature icon="paper-plane-outline" title="توصيل" value="متاح" />}
+              {svc.inspection_price > 0 && <Feature icon="search-outline" title="رسم الفحص" value={`${svc.inspection_price} ر.س`} />}
+            </View>
+            {!!svc.warranty_terms && (
+              <View style={s.warrantyCard}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="shield-checkmark" size={18} color="#10B981" />
+                  <Text style={s.warrantyTitle}>شروط الضمان</Text>
+                </View>
+                <Text style={s.warrantyBody}>{svc.warranty_terms}</Text>
+              </View>
+            )}
           </View>
         )}
 
-        <Text style={s.sectionTitle}>Service Options</Text>
-        <View style={s.optionsGrid}>
-          <View style={s.optionItem}>
-            <Ionicons name={svc.delivery_available ? 'checkmark-circle' : 'close-circle'} size={20} color={svc.delivery_available ? '#10B981' : '#EF4444'} />
-            <Text style={s.optionLabel}>Delivery</Text>
-            <Text style={s.optionVal}>{svc.delivery_available ? 'Available' : 'Not available'}</Text>
+        {tab === 'experiences' && (
+          <View style={{ padding: 12 }}>
+            {experiences.length === 0 ? (
+              <View style={s.emptyBox}>
+                <Ionicons name="videocam-outline" size={48} color="#D4D4D8" />
+                <Text style={s.emptyText}>لا توجد تجارب عملاء بعد</Text>
+                <Text style={s.emptySubText}>كن أول من يجرب هذي الخدمة</Text>
+              </View>
+            ) : experiences.map(e => <ExperienceCard key={e.id} exp={e} />)}
           </View>
-          <View style={s.optionItem}>
-            <Ionicons name={svc.home_pickup ? 'checkmark-circle' : 'close-circle'} size={20} color={svc.home_pickup ? '#10B981' : '#EF4444'} />
-            <Text style={s.optionLabel}>Home pickup</Text>
-            <Text style={s.optionVal}>{svc.home_pickup ? 'Available' : 'Not available'}</Text>
-          </View>
-          <View style={s.optionItem}>
-            <Ionicons name={svc.warranty_available ? 'checkmark-circle' : 'close-circle'} size={20} color={svc.warranty_available ? '#10B981' : '#EF4444'} />
-            <Text style={s.optionLabel}>Warranty</Text>
-            <Text style={s.optionVal}>{svc.warranty_available ? `${svc.warranty_days} days` : 'Not available'}</Text>
-          </View>
-        </View>
+        )}
 
-        <View style={s.ratingCard}>
-          <Ionicons name="star" size={20} color="#FACC15" />
-          <Text style={s.ratingVal}>{svc.rating}</Text>
-          <Text style={s.ratingCount}>{svc.review_count} reviews</Text>
-        </View>
+        {tab === 'reviews' && (
+          <View style={{ padding: 16 }}>
+            {reviews.length === 0 ? (
+              <View style={s.emptyBox}>
+                <Ionicons name="star-outline" size={48} color="#D4D4D8" />
+                <Text style={s.emptyText}>لا توجد تقييمات بعد</Text>
+              </View>
+            ) : reviews.map(r => (
+              <View key={r.id} style={s.reviewCard}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={s.reviewer}>{r.user_name || 'عميل'}</Text>
+                  <View style={{ flexDirection: 'row', gap: 2 }}>
+                    {[1,2,3,4,5].map(i => (
+                      <Ionicons key={i} name={i <= r.stars ? 'star' : 'star-outline'} size={14} color="#F5C518" />
+                    ))}
+                  </View>
+                </View>
+                {!!r.comment && <Text style={s.reviewComment}>{r.comment}</Text>}
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       <View style={s.bottomBar}>
-        <TouchableOpacity testID="get-service-btn" style={s.getBtn} onPress={() => setShowBook(true)}>
-          <Text style={s.getBtnText}>Get service</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.bottomLabel}>السعر</Text>
+          <Text style={s.bottomPrice}>{svc.price} ر.س</Text>
+        </View>
+        <TouchableOpacity testID="book-svc-btn" style={s.bookBtn}
+          onPress={() => router.push(`/service-booking?service_id=${svc.id}`)}>
+          <Text style={s.bookText}>احجز الخدمة</Text>
+          <Ionicons name="arrow-back" size={18} color="white" />
         </TouchableOpacity>
       </View>
-
-      <Modal visible={showBook} animationType="slide" transparent>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.modalWrap}>
-          <View style={s.modal}>
-            <View style={s.modalHeader}><Text style={s.modalTitle}>Book {svc.name}</Text><TouchableOpacity onPress={() => setShowBook(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity></View>
-            <TextInput testID="device-model" style={s.input} placeholder="Device model (e.g. iPhone 16 Pro)" value={deviceModel} onChangeText={setDeviceModel} />
-            <TextInput testID="issue-desc" style={[s.input, s.textArea]} placeholder="Describe the issue..." value={issueDesc} onChangeText={setIssueDesc} multiline numberOfLines={3} textAlignVertical="top" />
-            <Text style={s.fieldLabel}>Delivery Type</Text>
-            <View style={s.deliveryRow}>
-              {[{ val: 'store', label: 'In Store', icon: 'storefront' }, { val: 'delivery', label: 'Delivery', icon: 'car' }, { val: 'home_pickup', label: 'Home Pickup', icon: 'home' }].map(d => (
-                <TouchableOpacity key={d.val} testID={`delivery-${d.val}`} style={[s.deliveryBtn, deliveryType === d.val && s.deliveryActive]}
-                  onPress={() => setDeliveryType(d.val)} disabled={d.val === 'delivery' && !svc.delivery_available || d.val === 'home_pickup' && !svc.home_pickup}>
-                  <Ionicons name={d.icon as any} size={18} color={deliveryType === d.val ? '#FFF' : '#52525B'} />
-                  <Text style={[s.deliveryText, deliveryType === d.val && s.deliveryTextActive]}>{d.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity testID="confirm-book-btn" style={s.confirmBtn} onPress={bookService} disabled={booking}>
-              {booking ? <ActivityIndicator color="#FFF" /> : <Text style={s.confirmText}>Confirm Booking</Text>}
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
     </SafeAreaView>
+  );
+}
+
+function Feature({ icon, title, value }: { icon: string; title: string; value: string }) {
+  return (
+    <View style={s.featureCard}>
+      <Ionicons name={icon as any} size={20} color={PURPLE} />
+      <Text style={s.featureTitle}>{title}</Text>
+      <Text style={s.featureValue}>{value}</Text>
+    </View>
+  );
+}
+
+function ExperienceCard({ exp }: { exp: any }) {
+  const player = useVideoPlayer(mediaUrlSync(exp.video_url), p => { p.loop = false; });
+  return (
+    <View style={s.expCard}>
+      <VideoView player={player} style={s.expVideo} contentFit="cover" nativeControls />
+      <View style={{ padding: 12 }}>
+        {!!exp.caption && <Text style={s.expCaption}>{exp.caption}</Text>}
+        {exp.avg_rating > 0 && (
+          <View style={{ flexDirection: 'row', gap: 4, marginTop: 6 }}>
+            {[1,2,3,4,5].map(i => (
+              <Ionicons key={i} name={i <= Math.round(exp.avg_rating) ? 'star' : 'star-outline'} size={14} color="#F5C518" />
+            ))}
+            <Text style={{ fontSize: 12, color: '#6B7280', marginLeft: 4 }}>({exp.review_count})</Text>
+          </View>
+        )}
+      </View>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFF' },
   load: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 8 },
-  topBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
-  topTitle: { fontSize: 18, fontWeight: '700', color: '#0A0A0A' },
-  content: { paddingHorizontal: 20, paddingBottom: 100 },
-  heroIcon: { width: 80, height: 80, borderRadius: 24, alignItems: 'center', justifyContent: 'center', alignSelf: 'center', marginBottom: 16 },
-  svcName: { fontSize: 24, fontWeight: '800', color: '#0A0A0A', textAlign: 'center', marginBottom: 8 },
-  svcDesc: { fontSize: 14, color: '#52525B', textAlign: 'center', lineHeight: 22, marginBottom: 20 },
-  priceCard: { backgroundColor: '#F9F9FB', borderRadius: 16, padding: 16, marginBottom: 16 },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F4F4F5' },
-  priceLabel: { fontSize: 14, color: '#52525B' },
-  priceVal: { fontSize: 14, fontWeight: '600', color: '#0A0A0A' },
-  noteCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FEF3C7', borderRadius: 12, padding: 14, marginBottom: 16 },
-  noteText: { flex: 1, fontSize: 12, color: '#92400E', lineHeight: 18 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 12 },
-  optionsGrid: { gap: 10, marginBottom: 20 },
-  optionItem: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#F9F9FB', borderRadius: 12, padding: 14 },
-  optionLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: '#0A0A0A' },
-  optionVal: { fontSize: 13, color: '#52525B' },
-  ratingCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F9F9FB', borderRadius: 12, padding: 14 },
-  ratingVal: { fontSize: 18, fontWeight: '700', color: '#0A0A0A' },
-  ratingCount: { fontSize: 13, color: '#52525B' },
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingBottom: 34, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F4F4F5' },
-  getBtn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  getBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
-  modalWrap: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modal: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#0A0A0A' },
-  input: { backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, marginBottom: 12, borderWidth: 1, borderColor: '#E4E4E7' },
-  textArea: { height: 80 },
-  fieldLabel: { fontSize: 14, fontWeight: '600', color: '#0A0A0A', marginBottom: 8 },
-  deliveryRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  deliveryBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 12, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7' },
-  deliveryActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
-  deliveryText: { fontSize: 12, fontWeight: '500', color: '#52525B' },
-  deliveryTextActive: { color: '#FFF' },
-  confirmBtn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  confirmText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10 },
+  topBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F4F4F5', alignItems: 'center', justifyContent: 'center' },
+  topTitle: { flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '800', color: '#0A0A0A' },
+  heroFallback: { width: '100%', height: 260, alignItems: 'center', justifyContent: 'center' },
+  dots: { position: 'absolute', bottom: 12, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.5)' },
+  dotActive: { backgroundColor: 'white', width: 20 },
+  warrantyBadge: { position: 'absolute', top: 12, left: 12, backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  warrantyBadgeText: { color: 'white', fontSize: 11, fontWeight: '800' },
+  headerCard: { padding: 20 },
+  name: { fontSize: 22, fontWeight: '900', color: '#0A0A0A', textAlign: 'right' },
+  desc: { fontSize: 14, color: '#52525B', marginTop: 6, lineHeight: 22, textAlign: 'right' },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  metaChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F4ECFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  metaText: { fontSize: 12, color: PURPLE, fontWeight: '700' },
+  tabsBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', backgroundColor: '#FFF' },
+  tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4, paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  tabItemActive: { borderBottomColor: PURPLE },
+  tabText: { fontSize: 13, color: '#6B7280', fontWeight: '600' },
+  tabTextActive: { color: PURPLE, fontWeight: '800' },
+  aboutCard: { backgroundColor: '#F9FAFB', padding: 14, borderRadius: 14, marginBottom: 12 },
+  aboutTitle: { fontSize: 14, fontWeight: '800', color: '#0A0A0A', marginBottom: 6, textAlign: 'right' },
+  aboutBody: { fontSize: 14, color: '#374151', lineHeight: 22, textAlign: 'right' },
+  featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  featureCard: { width: '48%', padding: 12, borderRadius: 12, backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB' },
+  featureTitle: { fontSize: 12, color: '#6B7280', marginTop: 6, textAlign: 'right' },
+  featureValue: { fontSize: 14, fontWeight: '800', color: '#0A0A0A', marginTop: 2, textAlign: 'right' },
+  warrantyCard: { marginTop: 12, padding: 14, borderRadius: 12, backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#BBF7D0' },
+  warrantyTitle: { fontSize: 14, fontWeight: '800', color: '#166534' },
+  warrantyBody: { fontSize: 13, color: '#166534', marginTop: 6, lineHeight: 20, textAlign: 'right' },
+  emptyBox: { alignItems: 'center', padding: 40, gap: 8 },
+  emptyText: { fontSize: 15, color: '#6B7280', fontWeight: '700' },
+  emptySubText: { fontSize: 12, color: '#9CA3AF' },
+  reviewCard: { padding: 12, borderRadius: 10, backgroundColor: '#F9FAFB', marginBottom: 8 },
+  reviewer: { fontSize: 13, fontWeight: '800', color: '#0A0A0A' },
+  reviewComment: { fontSize: 13, color: '#374151', marginTop: 4, textAlign: 'right' },
+  expCard: { backgroundColor: '#FFF', borderRadius: 14, overflow: 'hidden', marginBottom: 12, borderWidth: 1, borderColor: '#E5E7EB' },
+  expVideo: { width: '100%', height: 220, backgroundColor: '#000' },
+  expCaption: { fontSize: 13, color: '#0A0A0A', textAlign: 'right' },
+  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 30, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#E5E7EB', flexDirection: 'row', alignItems: 'center', gap: 12 },
+  bottomLabel: { fontSize: 11, color: '#6B7280', textAlign: 'right' },
+  bottomPrice: { fontSize: 20, fontWeight: '900', color: PURPLE, textAlign: 'right' },
+  bookBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: PURPLE, paddingHorizontal: 20, paddingVertical: 14, borderRadius: 12 },
+  bookText: { color: 'white', fontSize: 15, fontWeight: '800' },
 });

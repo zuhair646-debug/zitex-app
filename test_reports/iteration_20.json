@@ -1,0 +1,55 @@
+{
+  "summary": "Backend-only regression for the new Services module (rich merchant services + dynamic GPS pickup fee + merchant video updates + reviews + public experiences + cross-post to social). Wrote /app/backend/tests/test_services_module.py (32 pytest cases across 8 test classes) and executed against the public URL. ALL 32/32 PASSED (100%). Covered: (1) merchant rich Service CRUD with images/category/warranty/home_pickup/GPS, (2) auth 401/403 guards on merchant endpoints, (3) public /services + /services/{id} + /services/{id}/quote with dynamic Haversine pickup fee, (4) customer booking with home_pickup — total_amount == service_price + pickup_fee and pickup_fee matches quote, (5) merchant booking status flow through pending→received→in_progress→ready→completed plus invalid status rejected (400), (6) service_updates create by merchant → customer notification (type=service_update) inserted; customer forbidden (403); edit toggles is_public_experience, (7) reviews per-update with upsert (5★ → 3★, avg_rating recompute, review_count stays 1), final overall rating writes service.rating=4 & review_count=1, invalid stars 0/6 → 400, non-owner → 403, (8) public experiences gallery honours is_public_experience toggle both ways, (9) crosspost_to_social:true inserts a social_posts doc with badge='خدمة صيانة', linked_service_id and video. No backend fixes were required. No frontend testing performed (per request).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "PUT /api/services/updates/{uid}",
+        "issue": "Whitelists only {caption,is_public_experience,crosspost_to_social} for edit — video_url/image_url cannot be replaced after creation. Intentional? If merchant re-uploads a video for the same update, they'd have to delete + recreate (losing existing reviews). Consider allowing video_url edit or documenting the constraint."
+      },
+      {
+        "endpoint": "POST /api/services/reviews",
+        "issue": "final-rating aggregate is only recomputed when service_id is a valid ObjectId (server.py:629). If a booking exists without service_id (walk-in), reviews are stored but never surface anywhere. Low priority, but should be logged."
+      },
+      {
+        "endpoint": "POST /api/services/book",
+        "issue": "book_service uses `await db.users.find_one({'role': 'merchant'})` to notify the merchant — picks the *first* merchant found. In a multi-tenant future this would notify the wrong merchant. Prefer looking up merchant_id from the service document."
+      },
+      {
+        "endpoint": "POST /api/services/updates (cross-post)",
+        "issue": "Cross-post exception is swallowed with a warning log — customer sees success. Consider surfacing a soft warning field in the response so the merchant UI can toast when cross-post fails."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_services_module.py",
+    "/app/test_reports/pytest/pytest_services_module.xml"
+  ],
+  "action_items": [
+    "None blocking for backend. Optional: (a) allow editing video_url on service updates, (b) target notification by service.merchant_id instead of first merchant, (c) return a warning flag when cross-post to social fails so merchant UI can show it, (d) add Pydantic root_validator to guarantee shop_lat/lng are set when home_pickup=true (currently returns fee=base with distance=0)."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 3770 lines — well past the 700-line guideline. Services module (~215 lines) is a clean extraction candidate: move `_haversine_km`, `_calc_pickup_fee`, ServiceBookInput, ServiceUpdateInput, ServiceReviewInput, ServiceInput and the 15 related routes into backend/routes/services.py.",
+    "`bookings/{bid}` allows chamber role to read any booking (server.py:530) — is that intended? Chamber usually only supervises promotions; consider tightening.",
+    "book_service does not validate `dest_lat/lng` are within reasonable bounds (-90..90 / -180..180); a malformed value silently propagates into pickup_fee/distance calculations.",
+    "service_reviews.avg_rating uses `round(..., 2)` but service.rating uses the same rounding — assertion of exact `5.0` and `3.0` passes because integers of 5★ average to 5.0 exactly, but this is fragile once counts grow. Consider storing the raw sum + count for stable recomputation."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_services_module.py (created — 32 tests across 8 classes)"
+  ],
+  "success_rate": {
+    "backend": "100% (32/32 pytest cases pass)",
+    "frontend": "not tested (backend-only request)"
+  },
+  "seed_data_creation": "Tests are self-cleaning. Module-scope teardown deletes: the created service (TEST_ZTX_Screen_Repair), the 2 service_updates (regular + cross-post), and implicitly the linked service_reviews via DELETE /services/updates/{uid} cascade. The booking document + the cross-posted social_posts doc remain (no delete endpoint for those). Prefix 'TEST_ZTX_' used on the service for identification.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend for the Services module is fully green. Frontend testing is the next step: focus on (a) Merchant service creation form — rich fields incl. images picker, category, warranty toggle, home_pickup toggle + pickup_base_fee/pickup_price_per_km + shop location picker; (b) Merchant bookings list → booking detail → status stepper + video upload sheet with toggles (is_public_experience / crosspost_to_social); (c) Customer service detail with tabs About/Experiences/Reviews, Book form with home_pickup toggle showing dynamic quote; (d) Customer My Services timeline (5 steps) + rating modal per merchant update + final rating on completed. Backend URL: https://mobile-builder-146.preview.emergentagent.com (env var name is EXPO_PUBLIC_BACKEND_URL — not EXPO_BACKEND_URL). Credentials in /app/memory/test_credentials.md. Run existing pytest again to guard against regressions: `EXPO_PUBLIC_BACKEND_URL=https://mobile-builder-146.preview.emergentagent.com python -m pytest /app/backend/tests/test_services_module.py -v`.",
+  "rca_of_issue": "N/A — no failures. Test file is idempotent: creates a fresh service each run, walks through all state transitions, and tears down at module scope. Distance/fee assertions use `math.isclose(..., abs_tol=0.1)` to tolerate float rounding between client Haversine reproduction and backend calculation."
+}
