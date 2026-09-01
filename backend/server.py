@@ -511,10 +511,13 @@ async def book_service(data: ServiceBookInput, user=Depends(get_current_user)):
     }
     result = await db.service_bookings.insert_one(doc)
     bid = str(result.inserted_id)
-    # notify merchant admin (best-effort)
-    merchant = await db.users.find_one({"role": "merchant"})
-    if merchant:
-        try: await create_notification(str(merchant["_id"]), "🔔 حجز خدمة جديد", f"{user.get('name','')} حجز {data.service_name}", {"type":"booking","booking_id":bid})
+    # notify the merchant who owns this service (fallback: any merchant)
+    merchant_id = svc.get("merchant_id") if svc else None
+    if not merchant_id:
+        m = await db.users.find_one({"role": "merchant"})
+        merchant_id = str(m["_id"]) if m else None
+    if merchant_id:
+        try: await create_notification(merchant_id, "🔔 حجز خدمة جديد", f"{user.get('name','')} حجز {data.service_name}", {"type":"booking","booking_id":bid})
         except Exception: pass
     return {"id": bid, "message": "Service booked", "total_amount": total, "pickup_fee": pickup_fee, "distance_km": distance_km}
 
@@ -635,6 +638,12 @@ async def submit_service_review(data: ServiceReviewInput, user=Depends(get_curre
 @api_router.get("/services/{svc_id}/reviews")
 async def service_reviews(svc_id: str):
     revs = await db.service_reviews.find({"service_id": svc_id, "update_id": ""}).sort("created_at", -1).to_list(200)
+    return [serialize_doc(r) for r in revs]
+
+@api_router.get("/services/updates/{uid}/reviews")
+async def update_reviews(uid: str):
+    """Public reviews (stars + comment) for a specific service_update (experience video)."""
+    revs = await db.service_reviews.find({"update_id": uid}).sort("created_at", -1).to_list(200)
     return [serialize_doc(r) for r in revs]
 
 @api_router.get("/services/{svc_id}/experiences")

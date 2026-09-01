@@ -33,6 +33,7 @@ export default function NotificationsScreen() {
     if (d.type === 'order' && d.order_id) router.push(`/track-order/${d.order_id}` as any);
     else if (d.type === 'group_buy' && d.group_buy_id) router.push('/group-buys' as any);
     else if (d.type === 'competition' && d.competition_id) router.push(`/competition/${d.competition_id}` as any);
+    else if (d.type === 'service_update' || d.type === 'booking') router.push('/my-services' as any);
   };
 
   const timeAgo = (iso?: string) => {

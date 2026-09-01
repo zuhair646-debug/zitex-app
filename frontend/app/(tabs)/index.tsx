@@ -22,6 +22,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [affiliateCount, setAffiliateCount] = useState(0);
+  const [activeBooking, setActiveBooking] = useState<any>(null);
 
   // Prompt for location on first launch if not set
   useEffect(() => {
@@ -66,6 +67,11 @@ export default function HomeScreen() {
       try {
         const a = await apiCall('/api/affiliate/my').catch(() => []);
         setAffiliateCount(Array.isArray(a) ? a.length : 0);
+      } catch {}
+      try {
+        const bookings = await apiCall('/api/services/bookings/my').catch(() => []);
+        const active = (Array.isArray(bookings) ? bookings : []).find((b: any) => ['pending','received','in_progress','ready'].includes(b.status));
+        if (active) setActiveBooking(active);
       } catch {}
     })();
   }, []);
@@ -269,6 +275,25 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
 
+        {/* ─── Active Service Booking widget ─── */}
+        {activeBooking && (
+          <TouchableOpacity activeOpacity={0.85} style={s.svcBanner} onPress={() => router.push('/my-services')}>
+            <View style={s.svcIconWrap}>
+              <Ionicons name="construct" size={26} color="#F5C518" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.svcBannerTitle}>🛠️ {activeBooking.service_name}</Text>
+              <Text style={s.svcBannerSub}>{activeBooking.device_model} • {
+                activeBooking.status === 'pending' ? 'قيد الاستلام' :
+                activeBooking.status === 'received' ? 'مستلم' :
+                activeBooking.status === 'in_progress' ? 'قيد الإصلاح' :
+                activeBooking.status === 'ready' ? 'جاهز للاستلام' : activeBooking.status
+              }</Text>
+            </View>
+            <Ionicons name="chevron-back" size={22} color="#8833FF" />
+          </TouchableOpacity>
+        )}
+
         {/* ─── Competition Progress ─── */}
         {topCompetition && (() => {
           const joined = topCompetition.joined_count || 0;
@@ -395,6 +420,10 @@ const s = StyleSheet.create({
 
   // Competition
   competitionBanner: { marginHorizontal: 20, borderRadius: 16, backgroundColor: '#F9F9FB', flexDirection: 'row', padding: 16, alignItems: 'center', marginBottom: 10 },
+  svcBanner: { marginHorizontal: 20, borderRadius: 16, backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#F5C518', flexDirection: 'row', padding: 14, alignItems: 'center', gap: 12, marginBottom: 10 },
+  svcIconWrap: { width: 46, height: 46, borderRadius: 12, backgroundColor: 'rgba(245,197,24,0.15)', alignItems: 'center', justifyContent: 'center' },
+  svcBannerTitle: { fontSize: 14, fontWeight: '900', color: '#0A0A0A', textAlign: 'right' },
+  svcBannerSub: { fontSize: 12, color: '#6B7280', marginTop: 2, textAlign: 'right' },
   competitionLeft: { marginEnd: 14 },
   trophyWrap: { width: 50, height: 50, borderRadius: 14, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center' },
   trophyBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },

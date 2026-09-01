@@ -198,18 +198,45 @@ function Feature({ icon, title, value }: { icon: string; title: string; value: s
 }
 
 function ExperienceCard({ exp }: { exp: any }) {
+  const { apiCall } = useAuth();
   const player = useVideoPlayer(mediaUrlSync(exp.video_url), p => { p.loop = false; });
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [expanded, setExpanded] = useState(false);
+  const loadReviews = async () => {
+    if (reviews.length > 0) { setExpanded(!expanded); return; }
+    try { const r = await apiCall(`/api/services/updates/${exp.id}/reviews`); setReviews(r); setExpanded(true); } catch {}
+  };
   return (
     <View style={s.expCard}>
       <VideoView player={player} style={s.expVideo} contentFit="cover" nativeControls />
       <View style={{ padding: 12 }}>
         {!!exp.caption && <Text style={s.expCaption}>{exp.caption}</Text>}
-        {exp.avg_rating > 0 && (
-          <View style={{ flexDirection: 'row', gap: 4, marginTop: 6 }}>
-            {[1,2,3,4,5].map(i => (
-              <Ionicons key={i} name={i <= Math.round(exp.avg_rating) ? 'star' : 'star-outline'} size={14} color="#F5C518" />
+        <TouchableOpacity onPress={loadReviews} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+          {[1,2,3,4,5].map(i => (
+            <Ionicons key={i} name={i <= Math.round(exp.avg_rating || 0) ? 'star' : 'star-outline'} size={14} color="#F5C518" />
+          ))}
+          <Text style={{ fontSize: 12, color: '#6B7280', marginLeft: 4 }}>
+            {exp.avg_rating > 0 ? `${exp.avg_rating} • ${exp.review_count} تقييم` : 'لا توجد تقييمات بعد'}
+          </Text>
+          {exp.review_count > 0 && (
+            <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color="#8833FF" style={{ marginLeft: 'auto' }} />
+          )}
+        </TouchableOpacity>
+        {expanded && reviews.length > 0 && (
+          <View style={{ marginTop: 10, gap: 8 }}>
+            {reviews.map(r => (
+              <View key={r.id} style={{ backgroundColor: '#F9FAFB', padding: 10, borderRadius: 10 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0A0A0A' }}>{r.user_name || 'عميل'}</Text>
+                  <View style={{ flexDirection: 'row', gap: 2 }}>
+                    {[1,2,3,4,5].map(i => (
+                      <Ionicons key={i} name={i <= r.stars ? 'star' : 'star-outline'} size={12} color="#F5C518" />
+                    ))}
+                  </View>
+                </View>
+                {!!r.comment && <Text style={{ fontSize: 12, color: '#374151', marginTop: 4, textAlign: 'right' }}>{r.comment}</Text>}
+              </View>
             ))}
-            <Text style={{ fontSize: 12, color: '#6B7280', marginLeft: 4 }}>({exp.review_count})</Text>
           </View>
         )}
       </View>
