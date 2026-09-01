@@ -49,6 +49,6 @@ Every time you finish a set of user-requested edits, before calling `finish`:
 - Broken/half-done work — must land a working state first
 
 ## Current released versions
-- iOS: v1.3.7 (build 19) — Building on EAS ⏳ (2026-06)
-- Android: v1.3.7 (versionCode 20) — Building on EAS ⏳ (2026-06)
-- Previous: v1.3.2 (build 15/vc 16) — Submitted to App Store & Play Console ✅ (2026-08-31)
+- iOS: v1.4.0 (build 20) — Building on EAS ⏳ (2026-09)
+- Android: v1.4.0 (versionCode 21) — Building on EAS ⏳ (2026-09)
+- Previous: v1.3.7 → v1.3.2 all shipped ✅
