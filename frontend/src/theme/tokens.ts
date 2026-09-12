@@ -5,6 +5,8 @@
 
 export const colors = {
   // Surfaces
+  background: '#0B0C10',         // alias for surface
+  onBackground: '#FFFFFF',
   surface: '#0B0C10',            // Main obsidian background
   surfaceSecondary: '#15171E',   // Cards
   surfaceTertiary: '#20232B',    // Elevated / hover

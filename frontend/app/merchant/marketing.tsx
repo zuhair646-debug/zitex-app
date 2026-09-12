@@ -226,6 +226,26 @@ export default function MarketingPanel() {
             </>
           ) : (
             <>
+              {/* Summary tiles */}
+              <View style={s.summaryRow}>
+                <View style={s.summaryCard}>
+                  <Text style={s.summaryVal}>{affiliates.length}</Text>
+                  <Text style={s.summaryLbl}>المسوقون</Text>
+                </View>
+                <View style={s.summaryCard}>
+                  <Text style={s.summaryVal}>{affiliates.reduce((s: number, a: any) => s + (a.total_conversions || 0), 0)}</Text>
+                  <Text style={s.summaryLbl}>التحويلات</Text>
+                </View>
+                <View style={s.summaryCard}>
+                  <Text style={s.summaryVal}>{affiliates.reduce((s: number, a: any) => s + (a.total_sales || 0), 0).toFixed(0)}</Text>
+                  <Text style={s.summaryLbl}>مبيعات (ر.س)</Text>
+                </View>
+                <View style={s.summaryCard}>
+                  <Text style={s.summaryVal}>{affiliates.reduce((s: number, a: any) => s + (a.total_earnings || 0), 0).toFixed(0)}</Text>
+                  <Text style={s.summaryLbl}>عمولات (ر.س)</Text>
+                </View>
+              </View>
+
               {/* Affiliate Campaigns */}
               {affCampaigns.length > 0 && (
                 <>
@@ -290,7 +310,7 @@ export default function MarketingPanel() {
                 </View>
               )}
               {affiliates.map(af => (
-                <View key={af.id} style={s.affRow}>
+                <TouchableOpacity key={af.id} style={s.affRow} onPress={() => router.push(`/merchant/marketer-stats?id=${af.id}` as any)}>
                   <View style={s.affRank}><Text style={s.affRankText}>#{affiliates.indexOf(af) + 1}</Text></View>
                   <View style={{ flex: 1 }}>
                     <Text style={s.affName}>{af.name}</Text>
@@ -303,7 +323,8 @@ export default function MarketingPanel() {
                     <Text style={s.affEarn}>{(af.total_earnings || 0).toFixed(0)} ر.س</Text>
                     <Text style={s.affConv}>{af.total_conversions || 0} تحويل • {af.total_clicks || 0} نقرة</Text>
                   </View>
-                </View>
+                  <Ionicons name="chevron-back" size={18} color={colors.onSurfaceTertiary} />
+                </TouchableOpacity>
               ))}
             </>
           )}
@@ -517,6 +538,10 @@ const s = StyleSheet.create({
   rejectBtn: { flex: 1, paddingVertical: 10, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: colors.error },
   rejectText: { color: colors.error, fontWeight: '700', fontSize: 13 },
   affRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border },
+  summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  summaryCard: { flexBasis: '47%', flexGrow: 1, backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
+  summaryVal: { fontSize: 18, fontWeight: '900', color: colors.brand },
+  summaryLbl: { fontSize: 11, color: colors.onSurfaceSecondary, marginTop: 4 },
   affRank: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center' },
   affRankText: { color: colors.brand, fontWeight: '900', fontSize: 12 },
   affName: { color: colors.onSurface, fontSize: 14, fontWeight: '700' },

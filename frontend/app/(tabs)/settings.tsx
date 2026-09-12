@@ -5,11 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { useRouter } from 'expo-router';
 import { useT, LANGUAGES } from '../../src/i18n';
+import { useThemeMode } from '../../src/theme/mode';
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const { t, lang, setLang } = useT();
+  const { mode, toggle: toggleTheme } = useThemeMode();
   const [langModal, setLangModal] = useState(false);
   const [langSearch, setLangSearch] = useState('');
 
@@ -95,6 +97,13 @@ export default function SettingsScreen() {
           <MenuItem icon="storefront" label={lang === 'ar' ? 'عن المتجر' : 'About Store'} color="#3366FF" onPress={() => router.push('/about-store')} />
           <MenuItem icon="headset" label={lang === 'ar' ? 'الدعم' : 'Support'} color="#10B981" onPress={() => router.push('/support')} />
           <MenuItem icon="language" label={t('settings.language')} color="#9333EA" badge={`${currentLang?.flag || ''} ${currentLang?.nativeName || ''}`} onPress={() => setLangModal(true)} />
+          <MenuItem
+            icon={mode === 'dark' ? 'moon' : 'sunny'}
+            label={lang === 'ar' ? (mode === 'dark' ? 'الوضع الليلي' : 'الوضع النهاري') : (mode === 'dark' ? 'Night Mode' : 'Day Mode')}
+            color="#D4AF37"
+            badge={lang === 'ar' ? (mode === 'dark' ? '🌙 ليلي' : '☀️ نهاري') : (mode === 'dark' ? '🌙 Night' : '☀️ Day')}
+            onPress={toggleTheme}
+          />
         </View>
 
         <View style={styles.menuSection}>

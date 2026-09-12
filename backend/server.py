@@ -105,6 +105,7 @@ class OrderInput(BaseModel):
     branch_lat: Optional[float] = None
     branch_lng: Optional[float] = None
     scheduled_slot: Optional[dict] = None  # {label, start, end}
+    referral_code: Optional[str] = None    # affiliate/marketer referral code
 
 # ─── Auth Routes ───
 @api_router.post("/auth/register")
@@ -268,9 +269,15 @@ async def join_competition(comp_id: str, user=Depends(get_current_user)):
     comp = await db.competitions.find_one({"_id": ObjectId(comp_id)})
     if not comp:
         raise HTTPException(status_code=404, detail="Competition not found")
+    # Only signup / general competitions can be joined directly. Others require
+    # answering a QA, hitting a purchase threshold, or submitting a UGC video.
+    ctype = comp.get("competition_type", "general")
+    if ctype not in ("signup", "general"):
+        raise HTTPException(status_code=400, detail="هذي المسابقة لا تدعم الانضمام المباشر")
     existing = await db.competition_entries.find_one({"competition_id": comp_id, "user_id": user["id"]})
     if existing:
-        raise HTTPException(status_code=400, detail="Already joined")
+        # graceful — return success instead of hard 400
+        return {"message": "أنت مشترك بالفعل", "already": True}
     await db.competition_entries.insert_one({
         "competition_id": comp_id, "user_id": user["id"], "user_name": user["name"],
         "user_phone": user["phone"], "joined_at": datetime.now(timezone.utc).isoformat()
@@ -798,6 +805,50 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
     await db.cart_items.delete_many({"user_id": user["id"]})
     order_doc["id"] = str(result.inserted_id)
     order_doc.pop("_id", None)
+
+    # ─── Affiliate/Marketer attribution ───
+    if data.referral_code:
+        try:
+            aff = await db.affiliates.find_one({
+                "referral_code": data.referral_code.upper(), "active": True,
+            })
+            # Do NOT credit self-referral
+            if aff and aff.get("user_id") != user["id"]:
+                commission_pct = float(aff.get("commission_percent", 5))
+                earning = round(subtotal * commission_pct / 100.0, 2)
+                await db.affiliate_conversions.insert_one({
+                    "affiliate_id": str(aff["_id"]),
+                    "marketer_id": aff.get("user_id"),
+                    "marketer_name": aff.get("user_name", ""),
+                    "merchant_id": aff.get("merchant_id"),
+                    "customer_id": user["id"],
+                    "customer_name": user.get("name", ""),
+                    "order_id": order_doc["id"],
+                    "referral_code": aff["referral_code"],
+                    "order_subtotal": subtotal,
+                    "commission_percent": commission_pct,
+                    "earning": earning,
+                    "status": "confirmed",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                })
+                await db.affiliates.update_one({"_id": aff["_id"]}, {
+                    "$inc": {
+                        "total_conversions": 1,
+                        "total_sales": subtotal,
+                        "total_earnings": earning,
+                    },
+                    "$set": {"last_activity": datetime.now(timezone.utc).isoformat()},
+                })
+                # notify marketer
+                try:
+                    await create_notification(aff["user_id"], "🎉 عمولة جديدة",
+                        f"طلب بقيمة {subtotal:.0f} ر.س عبر رمزك — عمولتك {earning:.2f} ر.س",
+                        {"type": "affiliate_conversion", "affiliate_id": str(aff["_id"]), "order_id": order_doc["id"]})
+                except Exception: pass
+                order_doc["referral_credited"] = True
+                order_doc["referral_code"] = aff["referral_code"]
+        except Exception as e:
+            logger.warning(f"Affiliate attribution failed: {e}")
 
     # ─── Loyalty: award points (1 point per 10 SAR spent) ───
     points_earned = int(subtotal / 10)
@@ -2097,23 +2148,7 @@ async def submit_answer(cid: str, request: Request, user=Depends(get_current_use
             await db.competitions.update_one({"_id": ObjectId(cid)}, {"$inc": {"joined_count": 1}})
     return {"correct": is_correct, "entered": is_correct}
 
-@api_router.post("/competitions/{cid}/join")
-async def join_competition(cid: str, user=Depends(get_current_user)):
-    comp = await db.competitions.find_one({"_id": ObjectId(cid)})
-    if not comp:
-        raise HTTPException(status_code=404, detail="Not found")
-    if comp.get("competition_type") not in ["signup", "general"]:
-        raise HTTPException(status_code=400, detail="Not joinable directly")
-    existing = await db.competition_entries.find_one({"competition_id": cid, "user_id": user["id"]})
-    if existing:
-        return {"message": "Already joined"}
-    await db.competition_entries.insert_one({
-        "competition_id": cid, "user_id": user["id"], "user_name": user.get("name", ""),
-        "user_phone": user.get("phone", ""), "entry_type": "direct",
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
-    await db.competitions.update_one({"_id": ObjectId(cid)}, {"$inc": {"joined_count": 1}})
-    return {"message": "Joined"}
+# NOTE: /competitions/{id}/join is defined once at the top of this file (~L266).
 
 @api_router.post("/competitions/{cid}/draw-video")
 async def save_draw_video(cid: str, request: Request, user=Depends(get_current_user)):
@@ -3323,7 +3358,8 @@ async def seed_data():
     await db.users.create_index("phone", unique=True)
     await db.products.create_index([("name_ar", "text"), ("name_en", "text")])
 
-app.include_router(api_router)
+# NOTE: app.include_router(api_router) intentionally lives ONLY at the bottom
+# of this file (after ALL route definitions). Do not add it here.
 
 app.add_middleware(
     CORSMiddleware,
@@ -3761,6 +3797,68 @@ async def my_affiliate_accounts(user=Depends(get_current_user)):
         raise HTTPException(status_code=403)
     affs = await db.affiliates.find({"user_id": user["id"]}).to_list(50)
     return serialize_docs(affs)
+
+# ─── Marketer / Affiliate detailed statistics ───
+@api_router.get("/affiliate/{aid}/stats")
+async def affiliate_stats(aid: str, user=Depends(get_current_user)):
+    """Detailed statistics + recent activity for a single affiliate account.
+    Accessible by the owning marketer OR the owning merchant."""
+    if not ObjectId.is_valid(aid): raise HTTPException(400)
+    aff = await db.affiliates.find_one({"_id": ObjectId(aid)})
+    if not aff: raise HTTPException(404, "الحساب غير موجود")
+    is_owner = aff.get("user_id") == user["id"]
+    mid = user.get("merchant_id", user["id"])
+    is_merchant = user.get("role") == "merchant" and aff.get("merchant_id") == mid
+    if not (is_owner or is_merchant):
+        raise HTTPException(403, "لا صلاحية")
+    # last 20 conversions
+    convs = await db.affiliate_conversions.find({"affiliate_id": aid}).sort("created_at", -1).limit(20).to_list(20)
+    # last 30-day daily sales
+    from collections import defaultdict
+    daily = defaultdict(lambda: {"sales": 0, "earnings": 0, "count": 0})
+    all_convs = await db.affiliate_conversions.find({"affiliate_id": aid}).to_list(2000)
+    for c in all_convs:
+        day = (c.get("created_at") or "")[:10]
+        if not day: continue
+        daily[day]["sales"] += float(c.get("order_subtotal", 0))
+        daily[day]["earnings"] += float(c.get("earning", 0))
+        daily[day]["count"] += 1
+    daily_series = [{"date": d, **v} for d, v in sorted(daily.items())][-30:]
+    conversion_rate = 0.0
+    clicks = int(aff.get("total_clicks", 0)) or 0
+    if clicks > 0:
+        conversion_rate = round(int(aff.get("total_conversions", 0)) * 100.0 / clicks, 2)
+    return {
+        "affiliate": serialize_doc(aff),
+        "recent_conversions": [serialize_doc(c) for c in convs],
+        "daily_series": daily_series,
+        "conversion_rate": conversion_rate,
+        "avg_order_value": round(
+            float(aff.get("total_sales", 0)) / max(int(aff.get("total_conversions", 1)), 1), 2)
+                            if aff.get("total_conversions", 0) else 0,
+    }
+
+@api_router.get("/merchant/affiliate/summary")
+async def merchant_marketer_summary(user=Depends(get_current_user)):
+    """Global summary + leaderboard for the merchant."""
+    require_merchant(user)
+    mid = user.get("merchant_id", user["id"])
+    affs = await db.affiliates.find({"merchant_id": mid}).to_list(500)
+    pending = await db.affiliate_applications.count_documents({"merchant_id": mid, "status": "pending"})
+    active = sum(1 for a in affs if a.get("active"))
+    total_conv = sum(int(a.get("total_conversions", 0)) for a in affs)
+    total_sales = sum(float(a.get("total_sales", 0)) for a in affs)
+    total_earn = sum(float(a.get("total_earnings", 0)) for a in affs)
+    top = sorted(affs, key=lambda a: -float(a.get("total_earnings", 0)))[:5]
+    return {
+        "pending_applications": pending,
+        "active_marketers": active,
+        "total_marketers": len(affs),
+        "total_conversions": total_conv,
+        "total_sales": total_sales,
+        "total_commission_paid": total_earn,
+        "top_marketers": [serialize_doc(a) for a in top],
+    }
 
 
 app.include_router(api_router)
