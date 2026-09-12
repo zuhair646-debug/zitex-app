@@ -3861,6 +3861,51 @@ async def merchant_marketer_summary(user=Depends(get_current_user)):
     }
 
 
+@api_router.get("/merchant/products/live-viewers")
+async def live_viewers_summary(user=Depends(get_current_user)):
+    """Returns per-product count of visitors active in the last 5 minutes."""
+    require_merchant(user)
+    from datetime import datetime, timedelta, timezone
+    cutoff = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+    pipeline = [
+        {"$match": {"created_at": {"$gte": cutoff}}},
+        {"$group": {"_id": {"pid": "$product_id"},
+                     "count": {"$sum": 1},
+                     "sample_names": {"$addToSet": "$user_name"}}},
+    ]
+    docs = await db.product_views.aggregate(pipeline).to_list(200)
+    result: dict = {}
+    for d in docs:
+        pid = (d.get("_id") or {}).get("pid")
+        if not pid: continue
+        result[pid] = {"count": int(d.get("count", 0)),
+                       "sample_names": [n for n in (d.get("sample_names") or []) if n][:5]}
+    return result
+
+@api_router.post("/merchant/products/compare")
+async def compare_products(request: Request, user=Depends(get_current_user)):
+    """Side-by-side compare 2-4 products (KPI + monthly sales)."""
+    require_merchant(user)
+    body = await request.json()
+    ids = [i for i in (body.get("product_ids") or []) if ObjectId.is_valid(i)][:4]
+    if len(ids) < 2: raise HTTPException(400, "اختر منتجين على الأقل")
+    out = []
+    for pid in ids:
+        p = await db.products.find_one({"_id": ObjectId(pid)})
+        if not p: continue
+        views_count = await db.product_views.count_documents({"product_id": pid})
+        cart_count = await db.product_views.count_documents({"product_id": pid, "added_to_cart": True})
+        orders_count = await db.orders.count_documents({"items.product_id": pid})
+        out.append({
+            "id": pid, "name_ar": p.get("name_ar"), "image": (p.get("images") or [None])[0],
+            "price": p.get("price"), "sold_count": p.get("sold_count", 0),
+            "views_count": views_count, "cart_count": cart_count, "orders_count": orders_count,
+            "rating": p.get("rating", 0),
+            "conversion_rate": round(orders_count * 100.0 / max(views_count, 1), 2),
+        })
+    return out
+
+
 # ─── Product Analytics: track visits + abandoned checkouts ───────────────
 class ProductViewInput(BaseModel):
     product_id: str
