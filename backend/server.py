@@ -3861,6 +3861,141 @@ async def merchant_marketer_summary(user=Depends(get_current_user)):
     }
 
 
+# ─── Product Analytics: track visits + abandoned checkouts ───────────────
+class ProductViewInput(BaseModel):
+    product_id: str
+    session_id: str = ""
+    duration_seconds: int = 0
+    added_to_cart: bool = False
+    reached_checkout: bool = False
+
+@api_router.post("/products/{pid}/view")
+async def record_product_view(pid: str, data: ProductViewInput, request: Request):
+    """Anonymous or authenticated tracking of a product visit."""
+    try:
+        u = None
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        if token:
+            try: u = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])
+            except Exception: pass
+        uid = u.get("id") if u else ""
+        uname = ""
+        if uid and ObjectId.is_valid(uid):
+            udoc = await db.users.find_one({"_id": ObjectId(uid)})
+            if udoc: uname = udoc.get("name", "")
+        await db.product_views.insert_one({
+            "product_id": pid, "user_id": uid, "user_name": uname,
+            "session_id": data.session_id or f"anon_{datetime.now(timezone.utc).timestamp()}",
+            "duration_seconds": max(0, int(data.duration_seconds)),
+            "added_to_cart": bool(data.added_to_cart),
+            "reached_checkout": bool(data.reached_checkout),
+            "ip": request.client.host if request.client else "",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        if ObjectId.is_valid(pid):
+            await db.products.update_one({"_id": ObjectId(pid)}, {"$inc": {"views": 1}})
+        return {"ok": True}
+    except Exception as e:
+        logger.warning(f"product view tracking failed: {e}")
+        return {"ok": False}
+
+@api_router.get("/merchant/products/{pid}/analytics")
+async def product_analytics(pid: str, user=Depends(get_current_user)):
+    """Detailed analytics for a product: visitors, cart adds, abandoned checkouts, sales trend."""
+    require_merchant(user)
+    prod = await db.products.find_one({"_id": ObjectId(pid)}) if ObjectId.is_valid(pid) else None
+    if not prod: raise HTTPException(404, "Product not found")
+    views = await db.product_views.find({"product_id": pid}).sort("created_at", -1).to_list(500)
+    total_views = len(views)
+    unique_users = len({v.get("user_id") for v in views if v.get("user_id")})
+    add_to_cart = sum(1 for v in views if v.get("added_to_cart"))
+    reached_checkout = sum(1 for v in views if v.get("reached_checkout"))
+    abandoned = []
+    for v in views:
+        if v.get("reached_checkout") and v.get("user_id"):
+            has_order = await db.orders.find_one({
+                "user_id": v["user_id"], "items.product_id": pid,
+                "created_at": {"$gt": v.get("created_at", "")},
+            })
+            if not has_order:
+                abandoned.append(v)
+    from collections import defaultdict
+    monthly = defaultdict(lambda: {"sales": 0, "orders": 0, "units": 0})
+    orders_list = await db.orders.find({"items.product_id": pid}).to_list(2000)
+    for o in orders_list:
+        month = (o.get("created_at") or "")[:7]
+        for it in o.get("items", []):
+            if it.get("product_id") == pid:
+                qty = int(it.get("qty", 1))
+                monthly[month]["sales"] += float(it.get("price", 0)) * qty
+                monthly[month]["units"] += qty
+                monthly[month]["orders"] += 1
+    monthly_series = [{"month": m, **v} for m, v in sorted(monthly.items())][-12:]
+    visitors = [{
+        "user_name": v.get("user_name") or "زائر",
+        "duration_seconds": v.get("duration_seconds", 0),
+        "added_to_cart": v.get("added_to_cart", False),
+        "reached_checkout": v.get("reached_checkout", False),
+        "created_at": v.get("created_at", ""),
+    } for v in views[:20]]
+    avg_duration = round(sum(v.get("duration_seconds", 0) for v in views) / max(total_views, 1))
+    conv_rate = round(reached_checkout * 100.0 / max(total_views, 1), 2)
+    return {
+        "product": {"id": pid, "name_ar": prod.get("name_ar"), "images": prod.get("images", []),
+                    "price": prod.get("price"), "sold_count": prod.get("sold_count", 0)},
+        "kpis": {
+            "total_views": total_views, "unique_users": unique_users,
+            "add_to_cart": add_to_cart, "reached_checkout": reached_checkout,
+            "abandoned_count": len(abandoned), "conversion_rate": conv_rate,
+            "avg_duration_seconds": avg_duration,
+        },
+        "monthly_series": monthly_series,
+        "visitors": visitors,
+        "abandoned_cart_users": [{
+            "user_id": a.get("user_id"), "user_name": a.get("user_name") or "زائر",
+            "created_at": a.get("created_at", ""),
+        } for a in abandoned[:20]],
+    }
+
+@api_router.post("/merchant/abandoned-carts/{user_id}/send-offer")
+async def send_abandoned_offer(user_id: str, request: Request, user=Depends(get_current_user)):
+    """Send a discount notification to a user who abandoned their cart."""
+    require_merchant(user)
+    body = await request.json()
+    percent = int(body.get("discount_percent", 10))
+    product_name = body.get("product_name", "")
+    try:
+        await create_notification(
+            user_id,
+            f"🎁 خصم {percent}% خاص لك!",
+            f"عرض حصري على {product_name} — لا تفوّت الفرصة",
+            {"type": "abandoned_offer", "discount_percent": percent, "product_name": product_name},
+        )
+        return {"ok": True, "message": "تم إرسال العرض"}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+# ─── Social: merchant reply AS the store ────────────────────────────────
+@api_router.post("/social/posts/{pid}/comments/{cid}/store-reply")
+async def store_reply_to_comment(pid: str, cid: str, request: Request, user=Depends(get_current_user)):
+    if user.get("role") != "merchant":
+        raise HTTPException(403, "المتاجر فقط")
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text: raise HTTPException(400, "النص مطلوب")
+    reply = {
+        "id": str(ObjectId()), "user_id": user["id"],
+        "user_name": user.get("store_name") or user.get("name") or "المتجر",
+        "text": text, "is_store": True, "verified": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.social_posts.update_one(
+        {"_id": ObjectId(pid), "comments.id": cid},
+        {"$push": {"comments.$.replies": reply}},
+    )
+    return {"ok": True, "reply": reply}
+
+
 app.include_router(api_router)
 
 # ─── Object Storage router (Emergent Managed) ───

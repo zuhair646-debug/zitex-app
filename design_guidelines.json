@@ -1,52 +1,36 @@
 {
-  "app_name": "Zitex Services",
-  "personality": "1 iOS-Native Clean",
-  "personality_one_liner": "Clean, highly readable iOS-native structure tailored for a dual-sided Arabic marketplace: bright, trustworthy light theme for customers, and a premium dark-utility theme for merchants.",
+  "app_name": "Zitex Arabic Merchant Hub",
+  "personality": "7 Dark-First Utility with 6 Glass / Luxe DARK fusion",
+  "personality_one_liner": "An operational, high-density command center bathed in cinematic dark tones with premium gold accents, built exclusively for RTL commerce management.",
   "color": {
-    "surface": "#FFFFFF",
-    "onSurface": "#1C1C1E",
-    "surfaceSecondary": "#F2F2F7",
-    "onSurfaceSecondary": "#3A3A3C",
-    "surfaceTertiary": "#E5E5EA",
-    "onSurfaceTertiary": "#8E8E93",
-    "surfaceInverse": "#0A0A0A",
-    "onSurfaceInverse": "#FFFFFF",
-    "brand": "#8833FF",
-    "brandPrimary": "#8833FF",
-    "onBrandPrimary": "#FFFFFF",
-    "brandSecondary": "#E7D6FF",
-    "onBrandSecondary": "#4B1A99",
-    "brandTertiary": "#F4ECFF",
-    "onBrandTertiary": "#8833FF",
-    "success": "#34C759",
+    "surface": "#0B0C10",
+    "onSurface": "#F8F9FA",
+    "surfaceSecondary": "#1A1C23",
+    "onSurfaceSecondary": "#E0E2E6",
+    "surfaceTertiary": "#252830",
+    "onSurfaceTertiary": "#C1C4CB",
+    "surfaceInverse": "#F5C518",
+    "onSurfaceInverse": "#0B0C10",
+    "brand": "#F5C518",
+    "onBrand": "#0B0C10",
+    "brandPrimary": "#F5C518",
+    "onBrandPrimary": "#0B0C10",
+    "brandSecondary": "#D4A90C",
+    "onBrandSecondary": "#0B0C10",
+    "brandTertiary": "rgba(245, 197, 24, 0.15)",
+    "onBrandTertiary": "#F5C518",
+    "success": "#28A745",
     "onSuccess": "#FFFFFF",
-    "warning": "#FFCC00",
-    "onWarning": "#000000",
-    "error": "#FF3B30",
+    "warning": "#FFC107",
+    "onWarning": "#0B0C10",
+    "error": "#DC3545",
     "onError": "#FFFFFF",
-    "info": "#007AFF",
+    "info": "#17A2B8",
     "onInfo": "#FFFFFF",
-    "border": "#E5E5EA",
-    "borderStrong": "#C7C7CC",
-    "divider": "#E5E5EA",
-    "merchantSurface": "#0A0A0A",
-    "onMerchantSurface": "#FFFFFF",
-    "merchantSurfaceSecondary": "#1C1C1E",
-    "onMerchantSurfaceSecondary": "#EBEBF5",
-    "merchantSurfaceTertiary": "#2C2C2E",
-    "onMerchantSurfaceTertiary": "#8E8E93",
-    "merchantSurfaceInverse": "#FFFFFF",
-    "onMerchantSurfaceInverse": "#0A0A0A",
-    "merchantBrand": "#F5C518",
-    "merchantBrandPrimary": "#F5C518",
-    "onMerchantBrandPrimary": "#0A0A0A",
-    "merchantBrandSecondary": "#5C4A09",
-    "onMerchantBrandSecondary": "#F5C518",
-    "merchantBrandTertiary": "#332905",
-    "onMerchantBrandTertiary": "#F5C518",
-    "merchantBorder": "#2C2C2E",
-    "merchantBorderStrong": "#3A3A3C",
-    "merchantDivider": "#2C2C2E"
+    "border": "#2A2D35",
+    "borderStrong": "#4A4D55",
+    "divider": "#1F2128",
+    "muted": "#8A8D93"
   },
   "typography": {
     "displayFontFamily": "Cairo",
@@ -60,7 +44,7 @@
     }
   },
   "spacing": {
-    "rule": "Generous vertical breathing room. Avoid dense dashboard styles. Thumb zone primary CTA sticky at bottom.",
+    "rule": "Generous vertical breathing room for charts, tight metrics grouping. Arabic RTL needs proper horizontal padding to avoid edge collisions. Ensure flexDirection: 'row-reverse' is respected at the root of grouped components.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -77,19 +61,17 @@
   },
   "shadow_tier": "1",
   "navigation": "bottom_tabs",
-  "icon_set": "Ionicons",
+  "icon_set": "Phosphor",
   "glassmorphism": {
     "enabled": "true",
     "do's": [
-      "Bottom tab bar",
-      "Sticky header backgrounds over scrolling content",
-      "Featured hero card overlays",
-      "Floating action buttons"
+      "Use heavy tinted glass for the bottom tab bar background to allow product imagery to subtly pass underneath",
+      "Use frosted glass on the 'Live Preview' top pill and bottom sheet headers",
+      "Ensure text on glass uses onSurface and the base tint is ≥75% surface for dark mode readability"
     ],
     "dont's": [
-      "Form fields",
-      "Body text regions",
-      "Cards in dense lists"
+      "Don't blur dense data tables or charts",
+      "Don't use glass on generic list items"
     ]
   },
   "platform_libraries": {
@@ -106,98 +88,60 @@
   },
   "screens": [
     {
-      "name": "Customer - Service Detail",
-      "purpose": "Showcase service offerings, warranty, pricing, and social proof to drive booking.",
+      "name": "Merchant Tab Bar Layout",
+      "purpose": "Root navigation for merchants, featuring a prominent 64px central FAB to trigger Live Preview.",
       "states": {
-        "loading": "Skeleton of hero image and tabs",
+        "loading": "Standard native splash",
         "empty": "N/A",
-        "error": "Failed to load service details, with retry button"
+        "error": "N/A"
       },
-      "layout": "RTL Native. Edge-to-edge hero image with top-to-bottom gradient scrim. Glass header over image. Sticky bottom sheet/container with 'Book Now' primary CTA. Tabs below hero for About / Experiences / Reviews. Use horizontal scrolling for customer experience video thumbnails."
+      "layout": "Custom View wrapped in a glass container (absolute bottom, left 0, right 0). Height ~80pt + safe area. Use flexDirection: 'row-reverse' so array [Right2, Right1, Center, Left1, Left2] renders RTL. The FAB (64x64px, brandPrimary, pill radius, lifted shadow) sits in the center slot, slightly overlapping the top of the bar."
     },
     {
-      "name": "Customer - Booking Sheet",
-      "purpose": "Capture booking details, calculate dynamic pickup fee, and confirm schedule.",
+      "name": "Live Preview Mode",
+      "purpose": "Simulates customer app view but with merchant analytics overlaid.",
       "states": {
-        "loading": "Calculating fee spinner",
+        "loading": "Spinner overlaid on customer view",
         "empty": "N/A",
-        "error": "Address not within service range"
+        "error": "Error boundary with 'Exit Preview' CTA"
       },
-      "layout": "Full-height bottom sheet. Segmented control for Drop-off vs Pickup/Return. Map view snippet for location. Dynamic fee calculation prominently displayed in LTR numeric format. Grid layout for time slots."
+      "layout": "Wraps the existing customer product screens. Displays a floating Glass pill at top: '🔴 وضع المعاينة' + X to close. In product detail, injects a floating '📊 إحصائيات هذا المنتج' gold CTA fixed above bottom safe area, triggering the Gorhom Bottom Sheet."
     },
     {
-      "name": "Customer - My Services (Progress)",
-      "purpose": "Track live status of device repair and view/rate merchant video updates.",
+      "name": "Product Analytics Insights (Bottom Sheet)",
+      "purpose": "Deep dive into specific product metrics, visitor timelines, and cart abandonment actions.",
       "states": {
-        "loading": "Centered spinner",
-        "empty": "Illustration + 'No active services'",
-        "error": "Network error, retry"
+        "loading": "Skeleton UI over 3x2 grid",
+        "empty": "Empty state illustration with 'No data yet' message.",
+        "error": "Retry loading metrics."
       },
-      "layout": "Vertical step progress tracker (Pending -> Completed). Below tracker, a chronological feed of video update cards. Each card has an embedded video player (expo-av) and a 5-star rating input with comment box."
-    },
-    {
-      "name": "Customer - Experiences Gallery",
-      "purpose": "Public social proof feed of successful repairs.",
-      "states": {
-        "loading": "Skeleton video tiles",
-        "empty": "No experiences shared yet",
-        "error": "Feed unavailable"
-      },
-      "layout": "Vertical scrollable feed of videos (similar to TikTok/Reels) with overlay text. Shows customer rating and merchant caption. Gradient scrim behind text."
-    },
-    {
-      "name": "Merchant - Service Form",
-      "purpose": "Create or edit a service listing with comprehensive details.",
-      "states": {
-        "loading": "Form skeleton",
-        "empty": "N/A",
-        "error": "Validation errors on fields"
-      },
-      "layout": "Dark theme. Single column scrollable form. Multi-image picker at top. Toggle switches for pickup support and availability. Sticky 'Save Service' CTA at bottom inside KeyboardAvoidingView."
-    },
-    {
-      "name": "Merchant - Video Update Composer",
-      "purpose": "Record and upload short video updates to customers with optional social cross-posting.",
-      "states": {
-        "loading": "Uploading video progress bar",
-        "empty": "N/A",
-        "error": "Upload failed, retry"
-      },
-      "layout": "Dark theme. Camera view taking up top 60%. Caption input below. Toggles for 'Make Public Experience' and 'Cross-post to Social Feed' below caption. Big primary upload button."
+      "layout": "Full-screen-capable bottom sheet. Top section: 3x2 bento grid of KPI cards (DAU, Sessions, Cart Drops). Middle section: Monthly sales wave/line chart + visitor bar chart. Bottom section: List of abandoned cart users with an inline 'أرسل خصم' (Send 20% Off) CTA per row."
     }
   ],
   "images": {
-    "hero_smartphone_repair": {
-      "url": "https://images.unsplash.com/photo-1746005514011-ea00280f3b6e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwyfHxzbWFydHBob25lJTIwc2NyZWVuJTIwcmVwYWlyfGVufDB8fHx8MTc4ODI0NTkxMnww&ixlib=rb-4.1.0&q=85",
-      "dark": "https://images.unsplash.com/photo-1706972612595-aa53b400ee80?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxzbWFydHBob25lJTIwc2NyZWVuJTIwcmVwYWlyfGVufDB8fHx8MTc4ODI0NTkxMnww&ixlib=rb-4.1.0&q=85",
-      "alt": "Smartphone components disassembled on a blue mat"
+    "analytics_header_bg": {
+      "url": "https://images.unsplash.com/photo-1645290099737-23f17b0b7dd8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwxfHxibGFjayUyMGdvbGQlMjBhYnN0cmFjdCUyMHRleHR1cmUlMjBiYWNrZ3JvdW5kfGVufDB8fHxibGFja3wxNzg5MjUyMjA5fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Dark abstract gold swirl texture"
     },
-    "hero_laptop_repair": {
-      "url": "https://images.pexels.com/photos/7639374/pexels-photo-7639374.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-      "dark": "https://images.pexels.com/photos/7639355/pexels-photo-7639355.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-      "alt": "Close up image of hands repairing laptop circuit board"
+    "product_placeholder": {
+      "url": "https://images.unsplash.com/photo-1670177257750-9b47927f68eb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBnb2xkJTIwd2F0Y2glMjBwcm9kdWN0fGVufDB8fHx8MTc4OTI1MjIwOXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Luxury gold watch on a rock"
     },
-    "merchant_logo": {
-      "url": "https://images.unsplash.com/photo-1761207850745-d41a776ef897?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwcmVwYWlyJTIwc2hvcCUyMGxvZ298ZW58MHx8fHwxNzg4MjQ1OTEyfDA&ixlib=rb-4.1.0&q=85",
-      "alt": "Gadgets repair shop neon sign"
+    "empty_store_state": {
+      "url": "https://images.unsplash.com/photo-1546213290-e1b492ab3eee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjByZXRhaWwlMjBzdG9yZSUyMGludGVyaW9yfGVufDB8fHx8MTc4OTI1MjIwOXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Modern retail store interior"
     }
   },
   "instructions_to_main_agent": [
-    "Data Models: Add MongoDB collections: 'services_extension', 'service_bookings', 'service_updates' (videos), 'service_reviews'. Ensure 'service_updates' supports flags for 'is_public_experience' and 'is_crossposted'.",
-    "API Endpoints: Create/modify POST /api/services, GET /api/services/{id}, POST /api/bookings (calc dynamic fee based on geo), POST /api/service_updates (handle Emergent Object Storage URL + in-app notification trigger).",
-    "Theme Handling: Explicitly use the light theme token set (#8833FF brand) for all Customer screens and the dark theme token set (#0A0A0A bg, #F5C518 brand) for all Merchant screens. These must not leak into each other.",
-    "RTL/LTR: App must use RTL layout for all text and containers. LTR is ONLY used for numeric values, pricing, and timers.",
-    "Component - Video Player: Use expo-av for video playback. Implement gradient scrims (transparent to ≥70% surfaceInverse) whenever text is overlaid on video or hero images.",
-    "Notifications: DO NOT design OS-level push notifications infrastructure. Use an in-app notification bell + real-time badge in the tab bar for video update alerts.",
-    "Interaction: Ensure the 'Book Now' and 'Save Service' buttons are sticky at the bottom with a glass effect behind them to ensure thumb-reachability without scroll.",
-    "MVP Scope: Focus on service creation, basic booking with manual fee entry if dynamic mapping is too complex for phase 1, and the video update upload + rating flow. Cross-posting to social feed can be Phase 2 if Emergent Object Storage integration is tight."
-  ],
-  "haptics": {
-    "booking_toggle_switch": "light",
-    "time_slot_select": "selection",
-    "video_rating_star_tap": "light",
-    "submit_booking": "success",
-    "upload_video_start": "medium",
-    "upload_video_complete": "success"
-  }
+    "1. Redesign `/app/frontend/app/merchant/_layout.tsx`. Build a custom bottom tab bar. Use `flexDirection: 'row-reverse'` to handle RTL. Slots: [Tab 1, Tab 2, FAB, Tab 3, Tab 4]. The FAB is a 64x64px circular button labeled 'بث مباشر للمتجر'.",
+    "2. Build the Live Preview transition. Tapping the FAB navigates to a new `live-preview` wrapper route that renders the customer-facing stack. Show a floating absolute pill at `top: safeArea.top + 16` reading '🔴 أنت الآن في وضع المعاينة' with an exit (X) button.",
+    "3. On `/app/frontend/app/product/[id].tsx` (when in preview mode), display a floating button at the bottom: '📊 إحصائيات هذا المنتج'. Tapping this triggers a `@gorhom/bottom-sheet` containing the Product Analytics UI.",
+    "4. Analytics UI implementation: Use `react-native-svg-charts` or `victory-native` for the wave-line yearly sales chart and monthly bars. Build a 3x2 KPI grid for visitor counts, sessions, and checkout abandons.",
+    "5. Build the abandoned carts list in the bottom sheet. Each row shows the visitor name, session duration, and an 'أرسل خصم' (Send Discount) CTA.",
+    "6. Update `/app/frontend/app/(tabs)/social.tsx`. If the merchant is viewing it in preview mode, allow them to tap a 'Reply as Store' action. The reply composer should feature a gold verified badge next to the store name.",
+    "7. Backend Data Model Requirements: Create `product_views`, `product_sessions`, and `abandoned_carts` tables/collections in your DB layer. Establish foreign keys to `product_id` and `user_id`.",
+    "8. Required API Endpoints in `server.py`: `GET /api/merchant/products/{id}/analytics` (returns timeseries data and KPIs), `GET /api/merchant/products/{id}/abandoned-carts` (returns list of users), `POST /api/merchant/abandoned-carts/{id}/send-offer` (triggers push notification), and update `PUT /api/social/posts/{id}/comments/{cid}/reply` to accept a `merchant_flag` parameter.",
+    "9. MVP Scope Trade-offs: Real-time web sockets for live visitor tracking can be skipped for MVP in favor of polling or pull-to-refresh. Keep chart rendering simple (SVG lines) before adding complex D3 interactions.",
+    "10. Ensure text on top of images (like product headers) always uses the vertical gradient scrim overlay (Layer 0: Image, Layer 1: expo-linear-gradient transparent to ≥70% surfaceInverse, Layer 2: Text)."
+  ]
 }
