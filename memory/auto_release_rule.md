@@ -1,54 +1,59 @@
-# Auto-Release Rule (Zitex Project)
+# 🚨 CRITICAL PERMANENT RULE — Auto Release After EVERY Change
+# =====================================================================
+# Owner instruction (Arabic): "ارفع تحديث دايم خليها قاعده عندك"
+# Translation: "Always publish an update — keep this as your permanent rule."
 
-**قاعدة أنشأها صاحب المشروع في هذا الفورك:**
+## The Rule (NEVER skip these 6 steps)
+Any agent working on this repo — after ANY successful feature, bug fix,
+polish, or content change — MUST execute the following sequence BEFORE
+calling `finish`:
 
-> "بعد أي تعديل أو ميزة جديدة تضيفها، ارفع تحديثاً مباشرة على متجر Apple ومتجر Android حتى أشاهد التغييرات على جوالي."
-
-## MANDATORY WORKFLOW (Zitex only — main branch)
-
-Every time you finish a set of user-requested edits, before calling `finish`:
-
-1. **Bump version** in `/app/frontend/app.json`:
-   - Increment `version` (patch: 1.3.2 → 1.3.3)
-   - Increment `buildNumber` (iOS) by +1
-   - Increment `versionCode` (Android) by +1
-
-2. **Commit + push to GitHub** (`origin/main`):
-   ```bash
-   cd /app && git add -A && git commit -m "vX.Y.Z: <summary>" && git push origin main
+1. **Bump versions** in `frontend/app.json`:
+   - `expo.version` → next semver
+   - `expo.ios.buildNumber` → +1
+   - `expo.android.versionCode` → +1
+2. **Backend health**: `sudo supervisorctl restart backend && sleep 4`
+3. **Tests**: run the relevant pytest suites — everything must be green.
+4. **Commit**: `git add -A && git commit -m "vX.Y.Z: <what changed>"`
+5. **Push**: `git push origin main`
+6. **Build & submit** on Expo + submit to TestFlight and Play:
    ```
-
-3. **Trigger EAS builds** (both platforms, non-interactive, no-wait):
-   ```bash
    export EXPO_TOKEN="YVBYBJdtkXOHvpXZo16yxyXCtePkaeIzt00acoO6"
-   cd /app/frontend
-   eas build --platform all --profile production --non-interactive --no-wait \
-     --message "vX.Y.Z - <summary>"
+   export EXPO_APPLE_APP_SPECIFIC_PASSWORD="srls-tdmj-ddmz-ijnm"
+   cd /app/frontend && eas build --platform all --profile production \
+     --non-interactive --no-wait --message "vX.Y.Z - <what>"
    ```
-   Capture the two build IDs from the output.
+   Then spawn a **persistent background poller** with `nohup bash <script> & disown`
+   that waits for FINISHED status and auto-submits. Template lives in
+   `/app/memory/tools/auto_submit_template.sh`.
 
-4. **Launch background auto-submit script** (`/tmp/eas_auto.sh`):
-   - Polls EAS every 60s
-   - Once build finishes → runs `eas submit --platform <os> --id <build_id>`
-   - Retries up to 3× on `503 Service Unavailable` transient errors
-   - Logs to `/tmp/eas_release.log`
+## Environment credentials (already valid, DO NOT ask user)
+- `EXPO_TOKEN`               → `YVBYBJdtkXOHvpXZo16yxyXCtePkaeIzt00acoO6`
+- Apple app-specific pw      → `srls-tdmj-ddmz-ijnm`
+- Google Play service account→ `/app/frontend/../zitex-upload-f1fcca92544c.json`
+- Bundle IDs                 → iOS `com.smartangle.zitex` / Android `com.smartangle.zitex`
+- ASC App ID                 → `6773073572`
 
-5. **Report to user**: build URLs + expected TestFlight/Play Internal availability
-   time (usually 5-10 min for iOS, immediate for Android internal track).
-
-## Credentials (all saved)
-- `EXPO_TOKEN`: `YVBYBJdtkXOHvpXZo16yxyXCtePkaeIzt00acoO6`
-- `EXPO_APPLE_APP_SPECIFIC_PASSWORD`: `srls-tdmj-ddmz-ijnm`
-- Google Service Account: `/app/zitex-upload-f1fcca92544c.json`
-- iOS ASC App ID: `6773073572`
-- Bundle ID: `com.smartangle.zitex`
-
-## Skip auto-release ONLY when:
-- Change is purely internal to backend (no user-visible change)
-- User explicitly says "don't publish yet"
-- Broken/half-done work — must land a working state first
+## Retry policy
+- If `eas submit` fails once → sleep 30s → retry
+- If it fails 3 times consecutively → log to `/tmp/eas_release.log` and
+  continue with next attempt every 10 minutes (Apple / Google are sometimes
+  transiently down). The template script implements this.
 
 ## Current released versions
-- iOS: v1.5.0 (build 23) — Building ⏳ + auto-submit running
-- Android: v1.5.0 (versionCode 24) — Building ⏳ + auto-submit running
-- v1.4.2 & prior: shipped ✅
+- iOS: v1.6.0 (build 24) — Building/Submitting ⏳
+- Android: v1.6.0 (versionCode 25) — Building/Submitting ⏳
+- v1.5.0 & all prior: submitted ✅
+
+## Version-bump quick reference
+Feature category → semver bump:
+- Bug fix / spelling / small tweak            → patch (x.y.**Z**)
+- New sub-feature (screen, endpoint, module)  → minor (x.**Y**.0)
+- Big refactor / breaking change              → major (**X**.0.0)
+
+## DO NOT
+- ❌ Skip auto-release "because the change is small"
+- ❌ Ask the user "should I publish now?"
+- ❌ Downgrade a version to reuse a build number
+- ❌ Leave EAS submit unattended (always spawn the retry poller)
+- ❌ Modify EXPO_PACKAGER_PROXY_URL, EXPO_PACKAGER_HOSTNAME in .env
