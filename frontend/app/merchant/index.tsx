@@ -16,19 +16,22 @@ export default function MerchantHome() {
   const [stats, setStats] = useState<any>(null);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<any>({ checked_in: false });
+  const [inventoryAlerts, setInventoryAlerts] = useState<any>({ totals: {}, alerts: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [s, o, att] = await Promise.all([
+      const [s, o, att, inv] = await Promise.all([
         apiCall('/api/merchant/stats').catch(() => null),
         apiCall('/api/merchant/orders?limit=5').catch(() => []),
         apiCall('/api/employee/attendance-status').catch(() => ({ checked_in: false })),
+        apiCall('/api/merchant/inventory/alerts?limit=5').catch(() => ({ totals: {}, alerts: [] })),
       ]);
       setStats(s);
       setRecentOrders(Array.isArray(o) ? o.slice(0, 5) : []);
       setAttendance(att || { checked_in: false });
+      setInventoryAlerts(inv || { totals: {}, alerts: [] });
     } catch (e) { console.log(e); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
@@ -131,11 +134,32 @@ export default function MerchantHome() {
               onPress={() => router.push('/merchant/competitions')} />
           </View>
 
+          {/* Inventory Alert Banner */}
+          {(inventoryAlerts?.alerts?.length ?? 0) > 0 && (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => router.push('/merchant/inventory')}
+              style={styles.invAlertCard}
+            >
+              <View style={styles.invAlertIcon}>
+                <Ionicons name="warning" size={22} color={colors.warning} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.invAlertTitle}>تنبيه مخزون</Text>
+                <Text style={styles.invAlertSubtitle}>
+                  {inventoryAlerts.totals?.out_of_stock ?? 0} نفدت • {inventoryAlerts.totals?.low_stock ?? 0} منخفضة
+                </Text>
+              </View>
+              <Ionicons name="chevron-back" size={18} color={colors.warning} />
+            </TouchableOpacity>
+          )}
+
           {/* Quick Actions */}
           <SectionHeader title="إجراءات سريعة" />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickRow} style={{ flexGrow: 0 }}>
             <ActionCard icon="add-circle" label="إضافة منتج" onPress={() => router.push('/merchant/product-form')} />
             <ActionCard icon="cart" label="نقطة البيع POS" onPress={() => router.push('/merchant/pos')} />
+            <ActionCard icon="cube" label="المخزون" onPress={() => router.push('/merchant/inventory')} />
             <ActionCard icon="receipt" label="الفواتير" onPress={() => router.push('/merchant/invoices')} />
             <ActionCard icon="megaphone" label="التسويق" onPress={() => router.push('/merchant/marketing')} />
             <ActionCard icon="chatbubbles" label="منشور جديد" onPress={() => router.push('/merchant/social')} />
@@ -232,6 +256,20 @@ const styles = StyleSheet.create({
   heroPillText: { ...typography.labelSmall, color: colors.onBrandPrimary, fontWeight: '700' },
 
   statsGrid: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  invAlertCard: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    marginHorizontal: spacing.lg, marginBottom: spacing.md,
+    padding: spacing.md, borderRadius: radius.md,
+    backgroundColor: colors.warningSoft,
+    borderWidth: 1, borderColor: colors.warning,
+  },
+  invAlertIcon: {
+    width: 40, height: 40, borderRadius: radius.pill,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+  invAlertTitle: { ...typography.titleSmall, color: colors.onSurface, textAlign: 'right' },
+  invAlertSubtitle: { ...typography.caption, color: colors.onSurfaceSecondary, textAlign: 'right', marginTop: 2 },
   clockCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     marginHorizontal: spacing.lg, marginBottom: spacing.md,

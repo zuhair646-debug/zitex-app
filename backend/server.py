@@ -802,6 +802,13 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     result = await db.orders.insert_one(order_doc)
+    # Decrement `stock_app` for online orders
+    if branch_id:
+        for it in items:
+            pid = it.get("product_id") or it.get("id")
+            qty = int(it.get("quantity") or it.get("qty") or 1)
+            if pid:
+                await decrement_channel_stock(branch_id, pid, qty, channel="app")
     await db.cart_items.delete_many({"user_id": user["id"]})
     order_doc["id"] = str(result.inserted_id)
     order_doc.pop("_id", None)
@@ -2444,6 +2451,73 @@ async def branch_stats(bid: str, user=Depends(get_current_user)):
     }
 
 # ─── Branch inventory (products with branch-specific stock) ───
+def _normalize_inventory_doc(inv: dict) -> dict:
+    """Ensure inventory doc has both legacy and new channel fields.
+
+    Modes:
+      - "combined" (default): single pool `quantity` used for both store & app sales.
+      - "separate": `stock_store` and `stock_app` are tracked independently.
+    """
+    mode = inv.get("inventory_mode") or "combined"
+    total = int(inv.get("quantity", 0) or 0)
+    store = inv.get("stock_store")
+    apps = inv.get("stock_app")
+    if mode == "separate":
+        store = int(store if store is not None else total)
+        apps = int(apps if apps is not None else 0)
+        total = store + apps
+    else:
+        store = int(store if store is not None else total)
+        apps = int(apps if apps is not None else total)
+    return {
+        "inventory_mode": mode,
+        "quantity": total,
+        "stock_store": store,
+        "stock_app": apps,
+        "min_alert": int(inv.get("min_alert", 5) or 5),
+        "inventory_type": inv.get("inventory_type", "both"),
+    }
+
+async def decrement_channel_stock(branch_id: str, product_id: str, qty: int, channel: str = "store"):
+    """Decrement stock for a given channel (`store` for POS, `app` for online orders).
+
+    - In `combined` mode: decrement `quantity`, `stock_store`, `stock_app` together.
+    - In `separate` mode: decrement only the channel's dedicated pool and mirror to `quantity`.
+    Also emits a low-stock alert record when threshold is crossed.
+    """
+    if not branch_id or not product_id or qty <= 0:
+        return
+    inv = await db.branch_inventory.find_one({"branch_id": branch_id, "product_id": product_id})
+    if not inv:
+        # No branch stock configured — fall back to global product decrement (legacy)
+        return
+    normalized = _normalize_inventory_doc(inv)
+    mode = normalized["inventory_mode"]
+    if mode == "separate":
+        field = "stock_store" if channel == "store" else "stock_app"
+        new_val = max(0, normalized[field] - qty)
+        await db.branch_inventory.update_one(
+            {"branch_id": branch_id, "product_id": product_id},
+            {"$set": {field: new_val, "quantity": (normalized["stock_store"] if field != "stock_store" else new_val) + (normalized["stock_app"] if field != "stock_app" else new_val), "last_updated": datetime.now(timezone.utc).isoformat()}},
+        )
+        remaining = new_val
+    else:
+        new_val = max(0, normalized["quantity"] - qty)
+        await db.branch_inventory.update_one(
+            {"branch_id": branch_id, "product_id": product_id},
+            {"$set": {"quantity": new_val, "stock_store": new_val, "stock_app": new_val, "last_updated": datetime.now(timezone.utc).isoformat()}},
+        )
+        remaining = new_val
+    # Log low-stock alert
+    if remaining <= normalized["min_alert"]:
+        await db.stock_alerts.insert_one({
+            "branch_id": branch_id, "product_id": product_id,
+            "channel": channel, "remaining": remaining,
+            "min_alert": normalized["min_alert"],
+            "resolved": False,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+
 @api_router.get("/merchant/branches/{bid}/inventory")
 async def branch_inventory(bid: str, user=Depends(get_current_user)):
     require_merchant(user)
@@ -2453,14 +2527,19 @@ async def branch_inventory(bid: str, user=Depends(get_current_user)):
     for inv in inventory:
         p = await db.products.find_one({"_id": ObjectId(inv["product_id"])}) if ObjectId.is_valid(inv.get("product_id", "")) else None
         if p:
+            norm = _normalize_inventory_doc(inv)
             result.append({
                 "id": str(inv["_id"]),
                 "product_id": inv["product_id"],
                 "product_name": p.get("name_ar") or p.get("name_en"),
                 "product_image": (p.get("images") or [None])[0],
-                "quantity": inv.get("quantity", 0),
-                "min_alert": inv.get("min_alert", 5),
-                "inventory_type": inv.get("inventory_type", "both"),  # store/app/both
+                "quantity": norm["quantity"],
+                "stock_store": norm["stock_store"],
+                "stock_app": norm["stock_app"],
+                "inventory_mode": norm["inventory_mode"],
+                "min_alert": norm["min_alert"],
+                "inventory_type": norm["inventory_type"],
+                "is_low": (norm["stock_store"] <= norm["min_alert"]) or (norm["stock_app"] <= norm["min_alert"]) if norm["inventory_mode"] == "separate" else (norm["quantity"] <= norm["min_alert"]),
                 "last_updated": inv.get("last_updated"),
             })
     return result
@@ -2469,19 +2548,126 @@ async def branch_inventory(bid: str, user=Depends(get_current_user)):
 async def set_branch_inventory(bid: str, pid: str, request: Request, user=Depends(get_current_user)):
     require_merchant(user)
     body = await request.json()
-    from datetime import datetime
+    mode = body.get("inventory_mode") or ("separate" if ("stock_store" in body or "stock_app" in body) else "combined")
+    if mode == "separate":
+        store = int(body.get("stock_store", 0) or 0)
+        apps = int(body.get("stock_app", 0) or 0)
+        total = store + apps
+    else:
+        total = int(body.get("quantity", 0) or 0)
+        store = total
+        apps = total
     await db.branch_inventory.update_one(
         {"branch_id": bid, "product_id": pid},
         {"$set": {
             "branch_id": bid, "product_id": pid,
-            "quantity": int(body.get("quantity", 0)),
-            "min_alert": int(body.get("min_alert", 5)),
+            "quantity": total,
+            "stock_store": store,
+            "stock_app": apps,
+            "inventory_mode": mode,
+            "min_alert": int(body.get("min_alert", 5) or 5),
             "inventory_type": body.get("inventory_type", "both"),
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }},
         upsert=True,
     )
-    return {"message": "Updated"}
+    return {"message": "Updated", "quantity": total, "stock_store": store, "stock_app": apps, "inventory_mode": mode}
+
+# ─── Unified inventory dashboard (across all branches) ───
+@api_router.get("/merchant/inventory")
+async def merchant_inventory_overview(user=Depends(get_current_user), channel: Optional[str] = None):
+    """Aggregate view of inventory across every branch.
+    Optional `channel` filter: 'store' | 'app' | 'both'.
+    """
+    require_merchant(user)
+    branches = {str(b["_id"]): b for b in await db.branches.find({}).to_list(200)}
+    invs = await db.branch_inventory.find({}).to_list(2000)
+    items = []
+    totals = {"total_units": 0, "store_units": 0, "app_units": 0, "low_stock": 0, "out_of_stock": 0}
+    for inv in invs:
+        norm = _normalize_inventory_doc(inv)
+        if channel == "store" and norm["inventory_type"] not in ("store", "both"):
+            continue
+        if channel == "app" and norm["inventory_type"] not in ("app", "both"):
+            continue
+        p = await db.products.find_one({"_id": ObjectId(inv["product_id"])}) if ObjectId.is_valid(inv.get("product_id", "")) else None
+        if not p:
+            continue
+        b = branches.get(inv.get("branch_id"))
+        low = (norm["stock_store"] <= norm["min_alert"]) or (norm["stock_app"] <= norm["min_alert"]) if norm["inventory_mode"] == "separate" else (norm["quantity"] <= norm["min_alert"])
+        out = norm["quantity"] == 0
+        totals["total_units"] += norm["quantity"]
+        totals["store_units"] += norm["stock_store"] if norm["inventory_mode"] == "separate" else norm["quantity"]
+        totals["app_units"] += norm["stock_app"] if norm["inventory_mode"] == "separate" else norm["quantity"]
+        if low: totals["low_stock"] += 1
+        if out: totals["out_of_stock"] += 1
+        items.append({
+            "product_id": inv["product_id"],
+            "product_name": p.get("name_ar") or p.get("name_en"),
+            "product_image": (p.get("images") or [None])[0],
+            "price": p.get("price", 0),
+            "branch_id": inv.get("branch_id"),
+            "branch_name": (b.get("name") or b.get("name_ar") or b.get("name_en") or "—") if b else "—",
+            "quantity": norm["quantity"],
+            "stock_store": norm["stock_store"],
+            "stock_app": norm["stock_app"],
+            "inventory_mode": norm["inventory_mode"],
+            "min_alert": norm["min_alert"],
+            "inventory_type": norm["inventory_type"],
+            "is_low": low,
+            "is_out": out,
+        })
+    items.sort(key=lambda x: (0 if x["is_out"] else (1 if x["is_low"] else 2), x["product_name"]))
+    return {"totals": totals, "items": items}
+
+@api_router.get("/merchant/inventory/alerts")
+async def merchant_inventory_alerts(user=Depends(get_current_user), limit: int = 100):
+    """Only low-stock / out-of-stock rows, ordered by severity."""
+    require_merchant(user)
+    result = await merchant_inventory_overview(user=user)
+    alerts = [it for it in result["items"] if it["is_low"] or it["is_out"]]
+    return {"totals": result["totals"], "alerts": alerts[:limit]}
+
+@api_router.post("/merchant/inventory/{bid}/{pid}/adjust")
+async def merchant_inventory_adjust(bid: str, pid: str, request: Request, user=Depends(get_current_user)):
+    """Quick +/- adjustment for a specific channel or combined pool.
+    Body: { delta: int, channel: 'store'|'app'|'combined', reason?: str }
+    """
+    require_merchant(user)
+    body = await request.json()
+    delta = int(body.get("delta", 0))
+    channel = body.get("channel", "combined")
+    reason = body.get("reason", "")
+    inv = await db.branch_inventory.find_one({"branch_id": bid, "product_id": pid})
+    if not inv:
+        raise HTTPException(status_code=404, detail="Inventory record not found")
+    norm = _normalize_inventory_doc(inv)
+    if norm["inventory_mode"] == "separate" and channel in ("store", "app"):
+        field = "stock_store" if channel == "store" else "stock_app"
+        new_val = max(0, norm[field] + delta)
+        other_val = norm["stock_app"] if field == "stock_store" else norm["stock_store"]
+        await db.branch_inventory.update_one(
+            {"branch_id": bid, "product_id": pid},
+            {"$set": {field: new_val, "quantity": new_val + other_val, "last_updated": datetime.now(timezone.utc).isoformat()}},
+        )
+    else:
+        new_val = max(0, norm["quantity"] + delta)
+        await db.branch_inventory.update_one(
+            {"branch_id": bid, "product_id": pid},
+            {"$set": {"quantity": new_val, "stock_store": new_val, "stock_app": new_val, "last_updated": datetime.now(timezone.utc).isoformat()}},
+        )
+    await db.stock_movements.insert_one({
+        "branch_id": bid, "product_id": pid, "channel": channel,
+        "delta": delta, "reason": reason, "by_user": user.get("id"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"message": "Adjusted", "delta": delta, "channel": channel}
+
+@api_router.get("/merchant/inventory/movements")
+async def merchant_inventory_movements(user=Depends(get_current_user), limit: int = 50):
+    require_merchant(user)
+    movs = await db.stock_movements.find({}).sort("created_at", -1).to_list(limit)
+    return [serialize_doc(m) for m in movs]
 
 @api_router.get("/branches")
 async def list_branches():
@@ -3492,13 +3678,10 @@ async def create_invoice(data: InvoiceInput, user=Depends(get_current_user)):
         "status": "paid",
     }
     r = await db.invoices.insert_one(doc)
-    # Reduce branch inventory
+    # Reduce branch inventory (POS = store channel)
     if data.branch_id:
         for it in data.items:
-            await db.branch_inventory.update_one(
-                {"branch_id": data.branch_id, "product_id": it.product_id},
-                {"$inc": {"quantity": -it.quantity}}
-            )
+            await decrement_channel_stock(data.branch_id, it.product_id, it.quantity, channel="store")
     await log_activity(user, "pos_sale", "invoice", str(r.inserted_id),
                        {"total": total, "items_count": len(data.items)})
     return {"id": str(r.inserted_id), "invoice_number": inv_number, "total": total, "vat_amount": vat}

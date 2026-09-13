@@ -12,6 +12,7 @@ export default function MerchantMore() {
   const sales = [
     { icon: 'cart', title: 'نقطة البيع POS', subtitle: 'شاشة كاشير سريعة لإصدار الفواتير', route: '/merchant/pos' },
     { icon: 'receipt', title: 'الفواتير', subtitle: 'سجل الفواتير ومبيعات اليوم', route: '/merchant/invoices' },
+    { icon: 'cube', title: 'المخزون', subtitle: 'مخزون المتجر / التطبيق + تنبيهات النفاد', route: '/merchant/inventory' },
     { icon: 'megaphone', title: 'التسويق والمسوقون', subtitle: 'إعلانات مدفوعة + برنامج المسوقين بالعمولة', route: '/merchant/marketing' },
   ] as const;
 
@@ -79,7 +80,7 @@ export default function MerchantMore() {
             <ListItem icon="log-out" title="تسجيل الخروج" onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zitex Merchant v1.3.0</Text>
+          <Text style={styles.version}>Zitex Merchant v1.9.0</Text>
         </ScrollView>
       </SafeAreaView>
     </View>
