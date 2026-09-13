@@ -8,7 +8,8 @@ import { useAuth } from '../_layout';
 const { width } = Dimensions.get('window');
 
 export default function ProductDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, preview } = useLocalSearchParams<{ id: string; preview?: string }>();
+  const isPreview = preview === '1';
   const router = useRouter();
   const { apiCall } = useAuth();
   const [product, setProduct] = useState<any>(null);
@@ -272,6 +273,21 @@ export default function ProductDetailScreen() {
           )}
         </TouchableOpacity>
       </View>
+      {isPreview && (
+        <View style={{ position: 'absolute', top: 60, right: 12, backgroundColor: '#F5C518', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF4444' }} />
+          <Text style={{ color: '#0A0A0A', fontWeight: '900', fontSize: 12 }}>🔴 معاينة التاجر</Text>
+        </View>
+      )}
+      {isPreview && (
+        <TouchableOpacity
+          testID="preview-analytics-fab"
+          onPress={() => router.push(`/merchant/live-preview?analytics=${id}` as any)}
+          style={{ position: 'absolute', bottom: 90, left: 20, backgroundColor: '#0B0C10', borderWidth: 2, borderColor: '#F5C518', paddingHorizontal: 14, paddingVertical: 12, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 12 }}>
+          <Ionicons name="analytics" size={18} color="#F5C518" />
+          <Text style={{ color: '#F5C518', fontWeight: '900', fontSize: 13 }}>📊 إحصائيات المنتج</Text>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }

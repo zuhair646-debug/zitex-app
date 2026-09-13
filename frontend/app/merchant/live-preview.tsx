@@ -91,6 +91,7 @@ export default function LivePreview() {
 
 /* ─── Products grid with live viewers & comparison ─────────────────────── */
 function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSelectedIds, setCompareMode, openCompare }: any) {
+  const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
   const [live, setLive] = useState<Record<string, { count: number; sample_names: string[] }>>({});
   const [loading, setLoading] = useState(true);
@@ -139,7 +140,11 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
           const selected = selectedIds.includes(item.id);
           return (
             <TouchableOpacity style={[s.pCard, selected && s.pCardSelected]}
-              onPress={() => compareMode ? toggle(item.id) : onAnalytics(item)}
+              onPress={() => {
+                if (compareMode) { toggle(item.id); return; }
+                // Deep-link to the actual customer product page (with a preview flag)
+                router.push(`/product/${item.id}?preview=1` as any);
+              }}
               onLongPress={() => onAnalytics(item)}>
               {item.images?.[0] && (
                 <Image source={{ uri: mediaUrlSync(item.images[0]) }} style={s.pImg} contentFit="cover" />
