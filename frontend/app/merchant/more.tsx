@@ -80,7 +80,7 @@ export default function MerchantMore() {
             <ListItem icon="log-out" title="تسجيل الخروج" onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zitex Merchant v1.9.0</Text>
+          <Text style={styles.version}>Zitex Merchant v1.10.0</Text>
         </ScrollView>
       </SafeAreaView>
     </View>

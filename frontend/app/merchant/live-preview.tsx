@@ -196,6 +196,12 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                   <Text style={s.pLiveText}>{liveCount}</Text>
                 </View>
               )}
+              {/* Analytics button — always visible tap target */}
+              {!compareMode && (
+                <TouchableOpacity onPress={(e) => { e.stopPropagation(); onAnalytics(item); }} style={s.pAnalyticsBtn}>
+                  <Ionicons name="stats-chart" size={14} color={BG} />
+                </TouchableOpacity>
+              )}
               {compareMode && (
                 <View style={[s.checkbox, selected && s.checkboxOn]}>
                   {selected && <Ionicons name="checkmark" size={14} color={BG} />}
@@ -234,50 +240,277 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
 }
 
 function ServicesSection({ apiCall }: any) {
-  const [items, setItems] = useState<any[]>([]); const [loading, setLoading] = useState(true);
-  useEffect(() => { apiCall('/api/services').then((d: any) => setItems(Array.isArray(d) ? d : (d.services || []))).catch(() => {}).finally(() => setLoading(false)); }, [apiCall]);
+  const router = useRouter();
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [replyTo, setReplyTo] = useState<{ reviewId: string; commentText: string; userName: string } | null>(null);
+  const [replyText, setReplyText] = useState('');
+
+  const load = useCallback(async () => {
+    try {
+      // Try enriched merchant endpoint first, fallback to public services list
+      let data: any;
+      try { data = await apiCall('/api/merchant/services/live-summary'); }
+      catch { data = await apiCall('/api/services'); }
+      setItems(Array.isArray(data) ? data : (data?.services || []));
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    finally { setLoading(false); }
+  }, [apiCall]);
+  useEffect(() => { load(); const iv = setInterval(load, 20000); return () => clearInterval(iv); }, [load]);
+
+  const sendReply = async () => {
+    if (!replyTo || !replyText.trim()) return;
+    try {
+      await apiCall(`/api/services/reviews/${replyTo.reviewId}/reply`, {
+        method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
+      });
+      Alert.alert('تم', 'تم إرسال ردك ✨');
+      setReplyTo(null); setReplyText(''); load();
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
+  };
+
   if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
+
   return (
-    <FlatList data={items} keyExtractor={(x, i) => x.id || String(i)} contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
-      renderItem={({ item }) => (
-        <View style={s.svcCard}>
-          {item.images?.[0] && <Image source={{ uri: mediaUrlSync(item.images[0]) }} style={s.svcImg} contentFit="cover" />}
-          <View style={{ flex: 1, padding: 10 }}>
-            <Text style={s.svcName}>{item.name}</Text>
-            <Text style={s.svcDesc} numberOfLines={2}>{item.desc}</Text>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-              <Text style={s.svcPrice}>{item.price} ر.س</Text>
-              {item.warranty_available && <Text style={s.svcMeta}>🛡 {item.warranty_days} يوم</Text>}
-              {item.home_pickup && <Text style={s.svcMeta}>🚗 استلام منزلي</Text>}
+    <>
+      <FlatList
+        data={items}
+        keyExtractor={(x, i) => x.id || String(i)}
+        contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
+        renderItem={({ item }) => (
+          <View style={s.svcCard2}>
+            {/* Cover image with badges */}
+            <View style={{ position: 'relative' }}>
+              {(item.images?.[0] || item.cover) ? (
+                <Image source={{ uri: mediaUrlSync(item.images?.[0] || item.cover) }} style={s.svcCover} contentFit="cover" />
+              ) : (
+                <View style={[s.svcCover, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#1A1D26' }]}>
+                  <Ionicons name="construct" size={40} color={GOLD} />
+                </View>
+              )}
+              {item.avg_rating > 0 && (
+                <View style={s.svcBadge}>
+                  <Ionicons name="star" size={12} color={BG} />
+                  <Text style={s.svcBadgeText}>{item.avg_rating}</Text>
+                </View>
+              )}
+              {item.warranty_available && (
+                <View style={[s.svcBadge, { top: 8, left: 8, right: 'auto', backgroundColor: '#10B981' }]}>
+                  <Ionicons name="shield-checkmark" size={12} color={BG} />
+                  <Text style={[s.svcBadgeText, { color: BG }]}>ضمان {item.warranty_days || 0}ي</Text>
+                </View>
+              )}
+            </View>
+            <View style={{ padding: 12, gap: 4 }}>
+              <Text style={s.svcName2}>{item.title || item.name}</Text>
+              {!!(item.description || item.desc) && (
+                <Text style={s.svcDesc2} numberOfLines={2}>{item.description || item.desc}</Text>
+              )}
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
+                <Text style={s.svcPrice2}>{item.base_price || item.price || 0} ر.س</Text>
+                {item.home_pickup && (
+                  <View style={s.svcMetaChip}><Ionicons name="car" size={11} color={GOLD} />
+                    <Text style={s.svcMetaText}>استلام منزلي</Text>
+                  </View>
+                )}
+                {(item.review_count || 0) > 0 && (
+                  <View style={s.svcMetaChip}><Ionicons name="chatbubbles" size={11} color={GOLD} />
+                    <Text style={s.svcMetaText}>{item.review_count} تقييم</Text>
+                  </View>
+                )}
+                {(item.booking_count || 0) > 0 && (
+                  <View style={s.svcMetaChip}><Ionicons name="calendar" size={11} color={GOLD} />
+                    <Text style={s.svcMetaText}>{item.booking_count} حجز</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Reviews with reply capability */}
+              {(item.reviews || []).length > 0 && (
+                <View style={{ marginTop: 10, borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 8, gap: 6 }}>
+                  <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800', textAlign: 'right' }}>💬 آخر التقييمات</Text>
+                  {item.reviews.slice(0, 3).map((r: any) => (
+                    <View key={r.id} style={s.svcReview}>
+                      <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                        <Text style={s.svcReviewName}>{r.user_name || 'زائر'}</Text>
+                        <View style={{ flexDirection: 'row' }}>
+                          {[1,2,3,4,5].map(n => (
+                            <Ionicons key={n} name="star" size={9} color={n <= (r.stars||0) ? GOLD : BORDER} />
+                          ))}
+                        </View>
+                        <View style={{ flex: 1 }} />
+                        {!r.merchant_reply && (
+                          <TouchableOpacity style={s.replyBtn}
+                            onPress={() => { setReplyTo({ reviewId: r.id, commentText: r.comment || '', userName: r.user_name || '' }); setReplyText(''); }}>
+                            <Ionicons name="arrow-undo" size={10} color={BG} />
+                            <Text style={s.replyBtnText}>رد</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                      {!!r.comment && <Text style={s.svcReviewText}>{r.comment}</Text>}
+                      {!!r.merchant_reply && (
+                        <View style={s.replyBadge}>
+                          <Ionicons name="checkmark-circle" size={11} color={GOLD} />
+                          <Text style={s.replyBadgeText}>ردّ المتجر: {r.merchant_reply}</Text>
+                        </View>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           </View>
-        </View>
+        )}
+        ListEmptyComponent={<Text style={s.empty}>لا توجد خدمات</Text>}
+      />
+
+      {replyTo && (
+        <Modal visible transparent animationType="slide" onRequestClose={() => setReplyTo(null)}>
+          <View style={s.sheetBackdrop}>
+            <View style={s.replySheet}>
+              <View style={s.sheetHandle} />
+              <Text style={s.sheetTitle}>رد على تقييم {replyTo.userName} ✨</Text>
+              {!!replyTo.commentText && (
+                <View style={s.commentPreview}>
+                  <Text style={s.commentText}>💬 {replyTo.commentText}</Text>
+                </View>
+              )}
+              <TextInput style={s.replyInput} placeholder="اكتب ردك..." placeholderTextColor={MUTED}
+                multiline value={replyText} onChangeText={setReplyText} />
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                <TouchableOpacity style={s.cancelBtn} onPress={() => setReplyTo(null)}>
+                  <Text style={s.cancelText}>إلغاء</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.sendBtn} onPress={sendReply}>
+                  <Ionicons name="send" size={16} color={BG} />
+                  <Text style={s.sendText}>إرسال</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       )}
-      ListEmptyComponent={<Text style={s.empty}>لا توجد خدمات</Text>}
-    />
+    </>
   );
 }
 
 function CompetitionsSection({ apiCall }: any) {
-  const [items, setItems] = useState<any[]>([]); const [loading, setLoading] = useState(true);
-  useEffect(() => { apiCall('/api/competitions').then(setItems).catch(() => {}).finally(() => setLoading(false)); }, [apiCall]);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'active' | 'ended' | 'all'>('active');
+
+  const load = useCallback(async () => {
+    try {
+      const d = await apiCall('/api/competitions/live-summary');
+      setItems(d?.competitions || []);
+    } catch (e: any) {
+      // Fallback
+      try { const list = await apiCall('/api/competitions'); setItems(list || []); } catch {}
+    } finally { setLoading(false); }
+  }, [apiCall]);
+  useEffect(() => { load(); const iv = setInterval(load, 30000); return () => clearInterval(iv); }, [load]);
+
+  const filtered = useMemo(() => {
+    if (filter === 'all') return items;
+    if (filter === 'ended') return items.filter(c => c.status === 'ended' || (c.winners || []).length > 0);
+    return items.filter(c => c.status === 'open' || (c.remaining_ms || 0) > 0);
+  }, [items, filter]);
+
+  const fmtRemaining = (ms: number | null | undefined) => {
+    if (!ms) return null;
+    const days = Math.floor(ms / (24 * 3600 * 1000));
+    const hours = Math.floor((ms % (24 * 3600 * 1000)) / (3600 * 1000));
+    const mins = Math.floor((ms % (3600 * 1000)) / (60 * 1000));
+    if (days > 0) return `${days}ي ${hours}س`;
+    if (hours > 0) return `${hours}س ${mins}د`;
+    if (mins > 0) return `${mins} دقيقة`;
+    return 'ينتهي الآن';
+  };
+
   if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
+
   return (
-    <FlatList data={items} keyExtractor={(x, i) => x.id || String(i)} contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
-      renderItem={({ item }) => (
-        <LinearGradient colors={['#332905', '#1A1401']} style={s.compCard}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <View style={s.trophy}><Ionicons name="trophy" size={22} color={GOLD} /></View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.compTitle}>{item.title}</Text>
-              <Text style={s.compPrize}>🎁 {item.prize}</Text>
-              <Text style={s.compMeta}>👥 {item.joined_count || 0} مشترك</Text>
-            </View>
-          </View>
-        </LinearGradient>
-      )}
-      ListEmptyComponent={<Text style={s.empty}>لا مسابقات نشطة</Text>}
-    />
+    <>
+      {/* Filter row */}
+      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingTop: 10 }}>
+        {[
+          { k: 'active', label: 'نشطة' },
+          { k: 'ended', label: 'منتهية' },
+          { k: 'all', label: 'الكل' },
+        ].map((f: any) => (
+          <TouchableOpacity key={f.k} onPress={() => setFilter(f.k)}
+            style={[s.cmpBtn, filter === f.k && { backgroundColor: GOLD }]}>
+            <Text style={[s.cmpText, filter === f.k && { color: BG }]}>{f.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <FlatList data={filtered} keyExtractor={(x, i) => x.id || String(i)} contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
+        renderItem={({ item }) => {
+          const isEnded = item.status === 'ended' || (item.winners || []).length > 0;
+          const isLive = !isEnded && (item.remaining_ms == null || item.remaining_ms > 0);
+          return (
+            <LinearGradient colors={isEnded ? ['#1F2937', '#0F1116'] : ['#332905', '#1A1401']} style={s.compCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <View style={s.trophy}>
+                  <Ionicons name={isEnded ? 'checkmark-done-circle' : 'trophy'} size={22} color={GOLD} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={s.compTitle} numberOfLines={1}>{item.title}</Text>
+                    {isLive && <View style={s.liveTag}><View style={s.livePulse} /><Text style={s.liveTagText}>مباشرة</Text></View>}
+                    {isEnded && <View style={[s.liveTag, { backgroundColor: '#3B82F6' }]}><Text style={[s.liveTagText, { color: '#FFF' }]}>انتهت</Text></View>}
+                  </View>
+                  <Text style={s.compPrize}>🎁 {item.prize}{item.prize_count > 1 ? ` (${item.prize_count} جوائز)` : ''}</Text>
+                </View>
+              </View>
+
+              {/* Meta row: participants + remaining */}
+              <View style={s.compMetaRow}>
+                <View style={s.compMetaChip}>
+                  <Ionicons name="people" size={12} color={GOLD} />
+                  <Text style={s.compMetaText}>{item.joined_count || 0} مشترك</Text>
+                </View>
+                {item.starts_at && (
+                  <View style={s.compMetaChip}>
+                    <Ionicons name="play" size={12} color={GOLD} />
+                    <Text style={s.compMetaText}>بدأت {String(item.starts_at).slice(0, 10)}</Text>
+                  </View>
+                )}
+                {item.ends_at && (
+                  <View style={s.compMetaChip}>
+                    <Ionicons name="hourglass" size={12} color={GOLD} />
+                    <Text style={s.compMetaText}>
+                      {isLive && item.remaining_ms != null ? `متبقٍ: ${fmtRemaining(item.remaining_ms)}` : `تنتهي ${String(item.ends_at).slice(0, 10)}`}
+                    </Text>
+                  </View>
+                )}
+                {item.competition_type && (
+                  <View style={s.compMetaChip}>
+                    <Ionicons name="pricetag" size={12} color={GOLD} />
+                    <Text style={s.compMetaText}>{item.competition_type}</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Winners */}
+              {(item.winners || []).length > 0 && (
+                <View style={{ marginTop: 8, borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 8 }}>
+                  <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>🏆 الفائزون</Text>
+                  {item.winners.slice(0, 3).map((w: any, i: number) => (
+                    <View key={i} style={s.winnerRow}>
+                      <View style={s.winnerRank}><Text style={{ color: BG, fontWeight: '900', fontSize: 11 }}>{i + 1}</Text></View>
+                      <Text style={s.winnerName}>{w.user_name}</Text>
+                      <Text style={s.winnerPhone}>{(w.user_phone || '').slice(-4).padStart(4, '•')}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </LinearGradient>
+          );
+        }}
+        ListEmptyComponent={<Text style={s.empty}>{filter === 'ended' ? 'لا مسابقات منتهية' : 'لا مسابقات نشطة'}</Text>}
+      />
+    </>
   );
 }
 
@@ -285,6 +518,8 @@ function SocialSection({ apiCall }: any) {
   const [posts, setPosts] = useState<any[]>([]); const [loading, setLoading] = useState(true);
   const [replying, setReplying] = useState<{ postId: string; commentId: string; commentText: string } | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
+  const [filter, setFilter] = useState<'all' | 'needs_reply' | 'top'>('all');
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/social/posts'); setPosts(Array.isArray(d) ? d : (d.posts || [])); }
@@ -309,12 +544,38 @@ function SocialSection({ apiCall }: any) {
     } catch (e: any) { Alert.alert('خطأ', e.message); }
   };
 
+  const displayed = useMemo(() => {
+    if (filter === 'needs_reply') {
+      return posts.filter(p => (Array.isArray(p.comments) ? p.comments : []).some((c: any) => !c.store_reply));
+    }
+    if (filter === 'top') return [...posts].sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    return posts;
+  }, [posts, filter]);
+
   if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
 
   return (
     <>
-      <FlatList data={posts} keyExtractor={(x, i) => x.id || String(i)} contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
-        renderItem={({ item }) => (
+      {/* Filter row */}
+      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingTop: 10 }}>
+        {[
+          { k: 'all', label: 'الكل' },
+          { k: 'needs_reply', label: 'يحتاج رد' },
+          { k: 'top', label: 'الأكثر تفاعلاً' },
+        ].map((f: any) => (
+          <TouchableOpacity key={f.k} onPress={() => setFilter(f.k)}
+            style={[s.cmpBtn, filter === f.k && { backgroundColor: GOLD }]}>
+            <Text style={[s.cmpText, filter === f.k && { color: BG }]}>{f.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <FlatList data={displayed} keyExtractor={(x, i) => x.id || String(i)} contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
+        renderItem={({ item }) => {
+          const allComments = Array.isArray(item.comments) ? item.comments : [];
+          const commentCount = Array.isArray(item.comments) ? item.comments.length : (item.comments_count || item.comments || 0);
+          const expanded = expandedComments[item.id];
+          const visibleComments = expanded ? allComments : allComments.slice(0, 3);
+          return (
           <View style={s.postCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <View style={s.avatar}><Text style={{ color: BG, fontWeight: '900' }}>{(item.author_name || 'ز')[0]}</Text></View>
@@ -325,12 +586,28 @@ function SocialSection({ apiCall }: any) {
             </View>
             {!!item.text && <Text style={s.postText}>{item.text}</Text>}
             {item.images?.[0] && <Image source={{ uri: mediaUrlSync(item.images[0]) }} style={s.postImg} contentFit="cover" />}
+            {/* Poll */}
+            {item.poll && Array.isArray(item.poll.options) && (
+              <View style={{ marginTop: 8, gap: 4 }}>
+                <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right' }}>🗳 {item.poll.question}</Text>
+                {item.poll.options.map((opt: any, i: number) => {
+                  const totalVotes = item.poll.options.reduce((s: number, o: any) => s + (o.votes || 0), 0) || 1;
+                  const pct = Math.round(((opt.votes || 0) / totalVotes) * 100);
+                  return (
+                    <View key={i} style={s.pollRow}>
+                      <View style={[s.pollBar, { width: `${pct}%` }]} />
+                      <Text style={s.pollText}>{opt.text} — {pct}% ({opt.votes || 0})</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
             <View style={s.postMeta}>
               <TouchableOpacity onPress={() => likePost(item.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Ionicons name="heart" size={14} color={GOLD} />
                 <Text style={s.postMetaText}>{item.likes || 0}</Text>
               </TouchableOpacity>
-              <Text style={s.postMetaText}>💬 {(item.comments || []).length}</Text>
+              <Text style={s.postMetaText}>💬 {commentCount}</Text>
               <Text style={s.postMetaText}>👁 {item.views || 0}</Text>
               <View style={{ flex: 1 }} />
               <View style={s.livePulse2}>
@@ -338,22 +615,38 @@ function SocialSection({ apiCall }: any) {
                 <Text style={{ color: '#A7F3D0', fontSize: 10, fontWeight: '700' }}>مباشر</Text>
               </View>
             </View>
-            {/* Comments (first 3) */}
-            {(item.comments || []).slice(0, 3).map((c: any) => (
+            {/* Comments */}
+            {visibleComments.map((c: any) => (
               <View key={c.id} style={s.comment}>
                 <View style={{ flex: 1 }}>
                   <Text style={s.commentAuthor}>{c.user_name}</Text>
                   <Text style={s.commentText}>{c.text}</Text>
+                  {!!c.store_reply && (
+                    <View style={s.replyBadge}>
+                      <Ionicons name="checkmark-circle" size={11} color={GOLD} />
+                      <Text style={s.replyBadgeText}>ردّ المتجر: {c.store_reply}</Text>
+                    </View>
+                  )}
                 </View>
-                <TouchableOpacity style={s.replyBtn}
-                  onPress={() => { setReplying({ postId: item.id, commentId: c.id, commentText: c.text }); setReplyText(''); }}>
-                  <Ionicons name="arrow-undo" size={12} color={BG} />
-                  <Text style={s.replyBtnText}>رد باسم المتجر</Text>
-                </TouchableOpacity>
+                {!c.store_reply && (
+                  <TouchableOpacity style={s.replyBtn}
+                    onPress={() => { setReplying({ postId: item.id, commentId: c.id, commentText: c.text }); setReplyText(''); }}>
+                    <Ionicons name="arrow-undo" size={12} color={BG} />
+                    <Text style={s.replyBtnText}>رد باسم المتجر</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
+            {allComments.length > 3 && (
+              <TouchableOpacity onPress={() => setExpandedComments(x => ({ ...x, [item.id]: !x[item.id] }))} style={{ paddingVertical: 6, alignItems: 'center' }}>
+                <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800' }}>
+                  {expanded ? '↑ إخفاء التعليقات' : `↓ عرض جميع التعليقات (${allComments.length})`}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
-        )}
+          );
+        }}
         ListEmptyComponent={<Text style={s.empty}>لا منشورات</Text>}
       />
       {replying && (
@@ -657,4 +950,35 @@ const s = StyleSheet.create({
   cmpRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: BORDER },
   cmpLbl: { color: MUTED, fontSize: 10 },
   cmpVal: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
+  // Analytics button on product card
+  pAnalyticsBtn: { position: 'absolute', top: 6, left: 6, backgroundColor: GOLD, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 4 },
+  // Services rich card
+  svcCard2: { backgroundColor: CARD, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: BORDER, overflow: 'hidden' },
+  svcCover: { width: '100%', height: 160 },
+  svcBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: GOLD, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  svcBadgeText: { color: BG, fontSize: 10, fontWeight: '900' },
+  svcName2: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', textAlign: 'right' },
+  svcDesc2: { color: MUTED, fontSize: 12, marginTop: 2, textAlign: 'right', lineHeight: 18 },
+  svcPrice2: { color: GOLD, fontSize: 15, fontWeight: '900' },
+  svcMetaChip: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(245,197,24,0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(245,197,24,0.3)' },
+  svcMetaText: { color: GOLD, fontSize: 10, fontWeight: '700' },
+  svcReview: { backgroundColor: BG, borderRadius: 8, padding: 8, borderWidth: 1, borderColor: BORDER },
+  svcReviewName: { color: GOLD, fontSize: 11, fontWeight: '800' },
+  svcReviewText: { color: '#E5E7EB', fontSize: 11, marginTop: 4, textAlign: 'right' },
+  replyBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(245,197,24,0.12)', padding: 6, borderRadius: 6, marginTop: 6, borderWidth: 1, borderColor: 'rgba(245,197,24,0.3)' },
+  replyBadgeText: { color: GOLD, fontSize: 10, fontWeight: '700', flex: 1, textAlign: 'right' },
+  // Competitions details
+  liveTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#10B981', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
+  liveTagText: { color: BG, fontSize: 9, fontWeight: '900' },
+  compMetaRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 4 },
+  compMetaChip: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(0,0,0,0.35)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6 },
+  compMetaText: { color: '#E5E7EB', fontSize: 10, fontWeight: '700' },
+  winnerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(0,0,0,0.3)', padding: 6, borderRadius: 6, marginBottom: 4 },
+  winnerRank: { width: 22, height: 22, borderRadius: 11, backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center' },
+  winnerName: { color: '#FFFFFF', fontSize: 11, fontWeight: '800', flex: 1, textAlign: 'right' },
+  winnerPhone: { color: MUTED, fontSize: 10 },
+  // Poll bars
+  pollRow: { position: 'relative', backgroundColor: BG, borderRadius: 6, padding: 8, overflow: 'hidden', borderWidth: 1, borderColor: BORDER },
+  pollBar: { position: 'absolute', top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(245,197,24,0.2)' },
+  pollText: { color: '#E5E7EB', fontSize: 11, fontWeight: '700', textAlign: 'right' },
 });

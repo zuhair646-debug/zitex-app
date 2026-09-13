@@ -257,6 +257,43 @@ async def get_competitions():
     comps = await db.competitions.find({"status": "open"}).sort("created_at", -1).to_list(50)
     return [serialize_doc(c) for c in comps]
 
+@api_router.get("/competitions/live-summary")
+async def competitions_live_summary():
+    """Real-time snapshot for Live Preview: active + ended competitions with countdowns."""
+    from datetime import datetime as _dt
+    now_iso = _dt.now(timezone.utc).isoformat()
+    all_comps = await db.competitions.find({}).sort("created_at", -1).to_list(200)
+    summary = []
+    for c in all_comps:
+        c = serialize_doc(c)
+        starts_at = c.get("starts_at") or c.get("created_at", "")
+        ends_at = c.get("ends_at") or c.get("draw_at", "")
+        remaining_ms = None
+        if ends_at:
+            try:
+                remaining_ms = max(0, int((_dt.fromisoformat(ends_at.replace('Z', '+00:00')) - _dt.now(timezone.utc)).total_seconds() * 1000))
+            except Exception:
+                remaining_ms = None
+        # Live status
+        status = c.get("status", "open")
+        if status == "open" and ends_at and remaining_ms == 0:
+            status = "ended"
+        winners = c.get("winners") or []
+        summary.append({
+            "id": c["id"],
+            "title": c.get("title", ""),
+            "prize": c.get("prize", ""),
+            "prize_count": c.get("prize_count", 1),
+            "competition_type": c.get("competition_type", "general"),
+            "starts_at": starts_at, "ends_at": ends_at,
+            "remaining_ms": remaining_ms,
+            "joined_count": c.get("joined_count", 0),
+            "winners": winners,
+            "status": status,
+            "image": c.get("image", ""),
+        })
+    return {"generated_at": now_iso, "competitions": summary}
+
 @api_router.get("/competitions/{comp_id}")
 async def get_competition(comp_id: str):
     comp = await db.competitions.find_one({"_id": ObjectId(comp_id)})
@@ -472,6 +509,29 @@ async def get_services():
     services = await db.services.find({"published": True}).to_list(50)
     return [serialize_doc(s) for s in services]
 
+@api_router.get("/merchant/services/live-summary")
+async def merchant_services_live_summary(user=Depends(get_current_user)):
+    """Aggregated services with images, reviews, avg rating for Live Preview."""
+    require_merchant(user)
+    all_svcs = await db.services.find({}).sort("created_at", -1).to_list(200)
+    result = []
+    for s in all_svcs:
+        svc = serialize_doc(s)
+        # Attach top reviews (with merchant replies) — those without update_id are final overall reviews
+        revs = await db.service_reviews.find({"service_id": svc["id"], "update_id": ""}).sort("created_at", -1).to_list(10)
+        booking_count = await db.service_bookings.count_documents({"service_id": svc["id"]})
+        avg = svc.get("rating", 0)
+        if not avg and revs:
+            avg = round(sum(r.get("stars", 0) for r in revs) / len(revs), 2)
+        result.append({
+            **svc,
+            "reviews": [serialize_doc(r) for r in revs],
+            "review_count": len(revs),
+            "avg_rating": avg,
+            "booking_count": booking_count,
+        })
+    return result
+
 @api_router.get("/services/{svc_id}")
 async def get_service(svc_id: str):
     svc = await db.services.find_one({"_id": ObjectId(svc_id)})
@@ -646,6 +706,25 @@ async def submit_service_review(data: ServiceReviewInput, user=Depends(get_curre
 async def service_reviews(svc_id: str):
     revs = await db.service_reviews.find({"service_id": svc_id, "update_id": ""}).sort("created_at", -1).to_list(200)
     return [serialize_doc(r) for r in revs]
+
+@api_router.post("/services/reviews/{review_id}/reply")
+async def merchant_reply_service_review(review_id: str, request: Request, user=Depends(get_current_user)):
+    """Merchant can reply to a service review by ID."""
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(status_code=403, detail="Merchants only")
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="نص الرد مطلوب")
+    await db.service_reviews.update_one(
+        {"_id": ObjectId(review_id)},
+        {"$set": {
+            "merchant_reply": text,
+            "merchant_reply_at": datetime.now(timezone.utc).isoformat(),
+            "merchant_reply_by": user.get("name", ""),
+        }},
+    )
+    return {"message": "Reply saved"}
 
 @api_router.get("/services/updates/{uid}/reviews")
 async def update_reviews(uid: str):
