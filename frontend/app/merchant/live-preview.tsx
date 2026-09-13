@@ -23,6 +23,9 @@ export default function LivePreview() {
   const { apiCall } = useAuth();
   const [section, setSection] = useState<Section>('products');
   const [analyticsFor, setAnalyticsFor] = useState<any>(null);
+  const [serviceAnalyticsFor, setServiceAnalyticsFor] = useState<any>(null);
+  const [compAnalyticsFor, setCompAnalyticsFor] = useState<any>(null);
+  const [postDetailFor, setPostDetailFor] = useState<any>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [compareData, setCompareData] = useState<any[] | null>(null);
@@ -75,12 +78,21 @@ export default function LivePreview() {
           openCompare={openCompare}
         />
       )}
-      {section === 'services' && <ServicesSection apiCall={apiCall} />}
-      {section === 'competitions' && <CompetitionsSection apiCall={apiCall} />}
-      {section === 'social' && <SocialSection apiCall={apiCall} />}
+      {section === 'services' && <ServicesSection apiCall={apiCall} onAnalytics={setServiceAnalyticsFor} />}
+      {section === 'competitions' && <CompetitionsSection apiCall={apiCall} onAnalytics={setCompAnalyticsFor} />}
+      {section === 'social' && <SocialSection apiCall={apiCall} onOpenPost={setPostDetailFor} />}
 
       {analyticsFor && (
         <ProductAnalyticsSheet product={analyticsFor} onClose={() => setAnalyticsFor(null)} apiCall={apiCall} />
+      )}
+      {serviceAnalyticsFor && (
+        <ServiceAnalyticsSheet service={serviceAnalyticsFor} onClose={() => setServiceAnalyticsFor(null)} apiCall={apiCall} />
+      )}
+      {compAnalyticsFor && (
+        <CompetitionAnalyticsSheet competition={compAnalyticsFor} onClose={() => setCompAnalyticsFor(null)} apiCall={apiCall} />
+      )}
+      {postDetailFor && (
+        <PostDetailSheet post={postDetailFor} onClose={() => setPostDetailFor(null)} apiCall={apiCall} />
       )}
       {compareData && (
         <CompareSheet items={compareData} onClose={() => { setCompareData(null); setSelectedIds([]); setCompareMode(false); }} />
@@ -96,20 +108,26 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
   const [live, setLive] = useState<Record<string, { count: number; sample_names: string[] }>>({});
   const [banners, setBanners] = useState<any[]>([]);
   const [featured, setFeatured] = useState<any[]>([]);
+  const [top, setTop] = useState<any[]>([]);
+  const [overview, setOverview] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
-      const [d, lv, banners, featured] = await Promise.all([
+      const [d, lv, banners, featured, tp, ov] = await Promise.all([
         apiCall('/api/products'),
         apiCall('/api/merchant/products/live-viewers').catch(() => ({})),
         apiCall('/api/banners').catch(() => []),
         apiCall('/api/products/featured').catch(() => []),
+        apiCall('/api/merchant/analytics/top-products?limit=8').catch(() => ({ top: [] })),
+        apiCall('/api/merchant/analytics/sales-overview').catch(() => null),
       ]);
       setItems(Array.isArray(d) ? d : (d.products || d.items || []));
       setLive(lv || {});
       setBanners(Array.isArray(banners) ? banners : []);
       setFeatured(Array.isArray(featured) ? featured : (featured.products || []));
+      setTop((tp?.top) || []);
+      setOverview(ov);
     } catch (e: any) { Alert.alert('خطأ', e.message); }
     finally { setLoading(false); }
   }, [apiCall]);
@@ -134,6 +152,48 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
           <Text style={[s.cmpText, compareMode && { color: BG }]}>{compareMode ? `مقارنة (${selectedIds.length})` : 'مقارنة'}</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Sales overview strip */}
+      {!!overview && (
+        <View style={s.ovRow}>
+          <View style={s.ovCard}>
+            <Text style={s.ovLbl}>مبيعات اليوم</Text>
+            <Text style={s.ovVal}>{Math.round((overview.today?.pos_sales || 0) + (overview.today?.app_sales || 0)).toLocaleString()} ر.س</Text>
+            <Text style={s.ovSub}>{overview.today?.count || 0} عملية</Text>
+          </View>
+          <View style={s.ovCard}>
+            <Text style={s.ovLbl}>هذا الأسبوع</Text>
+            <Text style={s.ovVal}>{Math.round((overview.week?.pos_sales || 0) + (overview.week?.app_sales || 0)).toLocaleString()} ر.س</Text>
+            <Text style={s.ovSub}>{overview.week?.count || 0} عملية</Text>
+          </View>
+          <View style={s.ovCard}>
+            <Text style={s.ovLbl}>هذا الشهر</Text>
+            <Text style={s.ovVal}>{Math.round((overview.month?.pos_sales || 0) + (overview.month?.app_sales || 0)).toLocaleString()} ر.س</Text>
+            <Text style={s.ovSub}>{overview.month?.count || 0} عملية</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Top-sellers strip */}
+      {top.length > 0 && (
+        <View style={{ paddingHorizontal: 12, marginBottom: 6 }}>
+          <Text style={s.stripTitle}>🏆 الأكثر مبيعاً</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
+            {top.map((t: any, idx: number) => (
+              <TouchableOpacity key={t.product_id} onPress={() => onAnalytics({ id: t.product_id, name_ar: t.name, images: t.image ? [t.image] : [] })} style={s.topCard}>
+                <View style={s.topRank}><Text style={s.topRankText}>{idx + 1}</Text></View>
+                {!!t.image && <Image source={{ uri: mediaUrlSync(t.image) }} style={s.topImg} contentFit="cover" />}
+                <Text style={s.topName} numberOfLines={1}>{t.name}</Text>
+                <Text style={s.topRev}>{Math.round(t.revenue).toLocaleString()} ر.س</Text>
+                <View style={s.topSplit}>
+                  <Text style={s.topSplitPos}>POS {t.pos_orders}</Text>
+                  <Text style={s.topSplitApp}>App {t.app_orders}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       <FlatList
         data={items}
@@ -239,7 +299,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
   );
 }
 
-function ServicesSection({ apiCall }: any) {
+function ServicesSection({ apiCall, onAnalytics }: any) {
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -281,6 +341,9 @@ function ServicesSection({ apiCall }: any) {
           <View style={s.svcCard2}>
             {/* Cover image with badges */}
             <View style={{ position: 'relative' }}>
+              <TouchableOpacity onPress={() => onAnalytics && onAnalytics(item)} style={s.analyticsFloatBtn}>
+                <Ionicons name="stats-chart" size={16} color={BG} />
+              </TouchableOpacity>
               {(item.images?.[0] || item.cover) ? (
                 <Image source={{ uri: mediaUrlSync(item.images?.[0] || item.cover) }} style={s.svcCover} contentFit="cover" />
               ) : (
@@ -397,7 +460,7 @@ function ServicesSection({ apiCall }: any) {
   );
 }
 
-function CompetitionsSection({ apiCall }: any) {
+function CompetitionsSection({ apiCall, onAnalytics }: any) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'active' | 'ended' | 'all'>('active');
@@ -453,6 +516,9 @@ function CompetitionsSection({ apiCall }: any) {
           const isLive = !isEnded && (item.remaining_ms == null || item.remaining_ms > 0);
           return (
             <LinearGradient colors={isEnded ? ['#1F2937', '#0F1116'] : ['#332905', '#1A1401']} style={s.compCard}>
+              <TouchableOpacity onPress={() => onAnalytics && onAnalytics(item)} style={[s.analyticsFloatBtn, { top: 10, left: 10 }]}>
+                <Ionicons name="stats-chart" size={16} color={BG} />
+              </TouchableOpacity>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <View style={s.trophy}>
                   <Ionicons name={isEnded ? 'checkmark-done-circle' : 'trophy'} size={22} color={GOLD} />
@@ -517,7 +583,7 @@ function CompetitionsSection({ apiCall }: any) {
   );
 }
 
-function SocialSection({ apiCall }: any) {
+function SocialSection({ apiCall, onOpenPost }: any) {
   const [posts, setPosts] = useState<any[]>([]); const [loading, setLoading] = useState(true);
   const [replying, setReplying] = useState<{ postId: string; commentId: string; commentText: string } | null>(null);
   const [replyText, setReplyText] = useState('');
@@ -586,6 +652,10 @@ function SocialSection({ apiCall }: any) {
                 <Text style={s.postAuthor}>{item.author_name}</Text>
                 <Text style={s.postDate}>{(item.created_at || '').slice(0, 10)}</Text>
               </View>
+              <TouchableOpacity onPress={() => onOpenPost && onOpenPost(item)} style={s.detailBtn}>
+                <Ionicons name="analytics" size={14} color={BG} />
+                <Text style={s.detailBtnText}>التفاصيل</Text>
+              </TouchableOpacity>
             </View>
             {!!item.text && <Text style={s.postText}>{item.text}</Text>}
             {!!item.images?.[0] && <Image source={{ uri: mediaUrlSync(item.images[0]) }} style={s.postImg} contentFit="cover" />}
@@ -864,6 +934,315 @@ function Kpi({ icon, label, value, highlight, danger }: any) {
   );
 }
 
+/* ─── Service Analytics Sheet ───────────────────────────────────── */
+function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    apiCall(`/api/merchant/services/${service.id}/analytics`)
+      .then(setData)
+      .catch((e: any) => Alert.alert('خطأ', e.message))
+      .finally(() => setLoading(false));
+  }, [service.id]);
+
+  return (
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <View style={s.sheetBackdrop}>
+        <View style={[s.replySheet, { maxHeight: '90%' }]}>
+          <View style={s.sheetHandle} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <Text style={s.sheetTitle}>📊 إحصائيات الخدمة</Text>
+            <TouchableOpacity onPress={onClose}><Ionicons name="close" size={22} color="#FFF" /></TouchableOpacity>
+          </View>
+          <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right', marginBottom: 8 }}>
+            {service.title || service.name}
+          </Text>
+          {loading ? <ActivityIndicator color={GOLD} style={{ marginTop: 30 }} /> : !data ? (
+            <Text style={s.empty}>لا تتوفر بيانات</Text>
+          ) : (
+            <ScrollView>
+              <View style={s.sheetCard}>
+                <View style={s.sheetKpiRow}>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.total_bookings}</Text><Text style={s.sheetKpiLbl}>إجمالي الحجوزات</Text></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{Math.round(data.kpis.revenue).toLocaleString()}</Text><Text style={s.sheetKpiLbl}>الإيرادات (ر.س)</Text></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.avg_rating}★</Text><Text style={s.sheetKpiLbl}>متوسط التقييم</Text></View>
+                </View>
+              </View>
+              <View style={s.sheetCard}>
+                <Text style={s.sheetSectionTitle}>الحالات</Text>
+                {data.status_breakdown.map((row: any) => {
+                  const max = Math.max(...data.status_breakdown.map((r: any) => r.count));
+                  const pct = max > 0 ? (row.count * 100) / max : 0;
+                  return (
+                    <View key={row.status} style={s.barRow}>
+                      <Text style={s.barLabel}>{row.status}</Text>
+                      <View style={s.barTrack}><View style={[s.barFill, { width: `${pct}%` }]} /></View>
+                      <Text style={s.barValue}>{row.count}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+              <View style={s.sheetCard}>
+                <Text style={s.sheetSectionTitle}>توزيع النجوم</Text>
+                {data.star_distribution.map((row: any) => {
+                  const total = data.star_distribution.reduce((a: number, r: any) => a + r.count, 0) || 1;
+                  const pct = (row.count * 100) / total;
+                  return (
+                    <View key={row.stars} style={s.barRow}>
+                      <Text style={s.barLabel}>{'★'.repeat(row.stars) || '—'}</Text>
+                      <View style={s.barTrack}><View style={[s.barFill, { width: `${pct}%` }]} /></View>
+                      <Text style={s.barValue}>{row.count}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+              {data.recent_reviews.length > 0 && (
+                <View style={s.sheetCard}>
+                  <Text style={s.sheetSectionTitle}>💬 آخر التقييمات</Text>
+                  {data.recent_reviews.map((r: any) => (
+                    <View key={r.id} style={s.listRow}>
+                      <Text style={s.listRowText}>{r.user_name}: {r.comment}</Text>
+                      <Text style={s.listRowMeta}>{r.stars}★</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+/* ─── Competition Analytics Sheet ───────────────────────────────── */
+function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    apiCall(`/api/merchant/competitions/${competition.id}/analytics`)
+      .then(setData)
+      .catch((e: any) => Alert.alert('خطأ', e.message))
+      .finally(() => setLoading(false));
+  }, [competition.id]);
+
+  return (
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <View style={s.sheetBackdrop}>
+        <View style={[s.replySheet, { maxHeight: '90%' }]}>
+          <View style={s.sheetHandle} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <Text style={s.sheetTitle}>🏆 إحصائيات المسابقة</Text>
+            <TouchableOpacity onPress={onClose}><Ionicons name="close" size={22} color="#FFF" /></TouchableOpacity>
+          </View>
+          <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right', marginBottom: 8 }}>
+            {competition.title}
+          </Text>
+          {loading ? <ActivityIndicator color={GOLD} style={{ marginTop: 30 }} /> : !data ? (
+            <Text style={s.empty}>لا تتوفر بيانات</Text>
+          ) : (
+            <ScrollView>
+              <View style={s.sheetCard}>
+                <View style={s.sheetKpiRow}>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.total_participants}</Text><Text style={s.sheetKpiLbl}>مشارك</Text></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.unique_users}</Text><Text style={s.sheetKpiLbl}>مستخدم فريد</Text></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>+{data.kpis.followers_gained}</Text><Text style={s.sheetKpiLbl}>متابع مكتسب</Text></View>
+                </View>
+              </View>
+              <View style={s.sheetCard}>
+                <Text style={s.sheetSectionTitle}>🔗 مصادر المشاركين</Text>
+                {data.sources.map((row: any) => {
+                  const max = Math.max(...data.sources.map((r: any) => r.count));
+                  const pct = max > 0 ? (row.count * 100) / max : 0;
+                  const label: Record<string, string> = { link: 'رابط دعوة', organic: 'تصفح عادي', push: 'إشعار', social_share: 'مشاركة اجتماعية' };
+                  return (
+                    <View key={row.source} style={s.barRow}>
+                      <Text style={s.barLabel}>{label[row.source] || row.source}</Text>
+                      <View style={s.barTrack}><View style={[s.barFill, { width: `${pct}%` }]} /></View>
+                      <Text style={s.barValue}>{row.count}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+              {data.top_cities.length > 0 && (
+                <View style={s.sheetCard}>
+                  <Text style={s.sheetSectionTitle}>🏙 أعلى المدن</Text>
+                  {data.top_cities.map((row: any) => {
+                    const max = Math.max(...data.top_cities.map((r: any) => r.count));
+                    const pct = max > 0 ? (row.count * 100) / max : 0;
+                    return (
+                      <View key={row.city} style={s.barRow}>
+                        <Text style={s.barLabel}>{row.city}</Text>
+                        <View style={s.barTrack}><View style={[s.barFill, { width: `${pct}%` }]} /></View>
+                        <Text style={s.barValue}>{row.count}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+              {data.recent_participants.length > 0 && (
+                <View style={s.sheetCard}>
+                  <Text style={s.sheetSectionTitle}>👥 آخر المشاركين</Text>
+                  {data.recent_participants.map((p: any, i: number) => (
+                    <View key={i} style={s.listRow}>
+                      <Text style={s.listRowText}>{p.user_name} · {p.user_city}</Text>
+                      <Text style={s.listRowMeta}>{p.source}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+/* ─── Post Detail Sheet — viewers/likers/comments/poll ──────────── */
+function PostDetailSheet({ post, onClose, apiCall }: any) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'comments' | 'viewers' | 'likers' | 'poll'>('comments');
+  const [replyTo, setReplyTo] = useState<{ commentId: string; commentText: string } | null>(null);
+  const [replyText, setReplyText] = useState('');
+
+  const load = useCallback(() => {
+    setLoading(true);
+    apiCall(`/api/merchant/social/posts/${post.id}/detail`)
+      .then(setData)
+      .catch((e: any) => Alert.alert('خطأ', e.message))
+      .finally(() => setLoading(false));
+  }, [post.id]);
+  useEffect(() => { load(); }, [load]);
+
+  const likeAsStore = async () => {
+    try { await apiCall(`/api/merchant/social/posts/${post.id}/like-as-store`, { method: 'POST' }); load(); }
+    catch (e: any) { Alert.alert('خطأ', e.message); }
+  };
+  const sendThreadedReply = async () => {
+    if (!replyTo || !replyText.trim()) return;
+    try {
+      await apiCall(`/api/merchant/social/posts/${post.id}/comments/${replyTo.commentId}/replies`, {
+        method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
+      });
+      setReplyTo(null); setReplyText(''); load();
+    } catch (e: any) { Alert.alert('خطأ', e.message); }
+  };
+
+  return (
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <View style={s.sheetBackdrop}>
+        <View style={[s.replySheet, { maxHeight: '95%' }]}>
+          <View style={s.sheetHandle} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={s.sheetTitle}>🔎 تفاصيل المنشور</Text>
+            <TouchableOpacity onPress={onClose}><Ionicons name="close" size={22} color="#FFF" /></TouchableOpacity>
+          </View>
+          {loading ? <ActivityIndicator color={GOLD} style={{ marginTop: 30 }} /> : !data ? (
+            <Text style={s.empty}>لا تتوفر بيانات</Text>
+          ) : (
+            <>
+              <View style={s.sheetCard}>
+                {!!data.post.text && <Text style={{ color: '#FFF', fontSize: 12, textAlign: 'right', marginBottom: 6 }}>{data.post.text}</Text>}
+                <View style={s.sheetKpiRow}>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.views}</Text><Text style={s.sheetKpiLbl}>مشاهدة</Text></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.likes}</Text><Text style={s.sheetKpiLbl}>إعجاب</Text></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.comment_count}</Text><Text style={s.sheetKpiLbl}>تعليق</Text></View>
+                </View>
+                <TouchableOpacity onPress={likeAsStore} style={[s.sendBtn, { marginTop: 8 }]}>
+                  <Ionicons name="heart" size={14} color={BG} />
+                  <Text style={s.sendText}>أضف إعجاب باسم المتجر</Text>
+                </TouchableOpacity>
+              </View>
+              {/* Tabs */}
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6 }}>
+                {[
+                  { k: 'comments', label: `تعليقات (${data.kpis.comment_count})` },
+                  { k: 'viewers', label: `مشاهدون (${data.viewers.length})` },
+                  { k: 'likers', label: `إعجابات (${data.likers.length})` },
+                  ...(data.poll?.options ? [{ k: 'poll', label: 'استطلاع' }] : []),
+                ].map((t: any) => (
+                  <TouchableOpacity key={t.k} onPress={() => setTab(t.k)} style={[s.cmpBtn, tab === t.k && { backgroundColor: GOLD }]}>
+                    <Text style={[s.cmpText, tab === t.k && { color: BG }]}>{t.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <ScrollView style={{ flex: 1 }}>
+                {tab === 'comments' && data.comments.map((c: any) => (
+                  <View key={c.id} style={s.sheetCard}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>{c.user_name} · {c.user_city || ''}</Text>
+                      {!c.store_reply && (
+                        <TouchableOpacity onPress={() => { setReplyTo({ commentId: c.id, commentText: c.text }); setReplyText(''); }} style={s.replyBtn}>
+                          <Ionicons name="arrow-undo" size={11} color={BG} />
+                          <Text style={s.replyBtnText}>رد</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                    <Text style={{ color: '#E5E7EB', fontSize: 12, textAlign: 'right', marginTop: 4 }}>{c.text}</Text>
+                    {!!c.store_reply && (
+                      <View style={s.replyBadge}>
+                        <Ionicons name="checkmark-circle" size={11} color={GOLD} />
+                        <Text style={s.replyBadgeText}>ردّ المتجر: {c.store_reply}</Text>
+                      </View>
+                    )}
+                    {(c.replies || []).map((r: any) => (
+                      <View key={r.id} style={[s.replyBadge, { marginTop: 4, backgroundColor: r.is_store ? 'rgba(16,185,129,0.15)' : BG }]}>
+                        <Ionicons name={r.is_store ? 'storefront' : 'person'} size={11} color={r.is_store ? '#10B981' : GOLD} />
+                        <Text style={s.replyBadgeText}>{r.user_name}: {r.text}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+                {tab === 'viewers' && data.viewers.map((v: any, i: number) => (
+                  <View key={i} style={s.listRow}>
+                    <Text style={s.listRowText}>{v.user_name} · {v.user_city || '—'}</Text>
+                    <Text style={s.listRowMeta}>{(v.viewed_at || '').slice(0, 10)}</Text>
+                  </View>
+                ))}
+                {tab === 'likers' && data.likers.map((v: any, i: number) => (
+                  <View key={i} style={s.listRow}>
+                    <Text style={s.listRowText}>{v.user_name} · {v.user_city || '—'}</Text>
+                    <Text style={s.listRowMeta}>{(v.liked_at || '').slice(0, 10)}</Text>
+                  </View>
+                ))}
+                {tab === 'poll' && data.poll?.options?.map((opt: any, i: number) => (
+                  <View key={i} style={s.sheetCard}>
+                    <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right' }}>{opt.text}</Text>
+                    <Text style={{ color: '#E5E7EB', fontSize: 12, marginTop: 2, textAlign: 'right' }}>{opt.votes || 0} صوت</Text>
+                    {(opt.voter_list || []).slice(0, 12).map((vt: any, k: number) => (
+                      <View key={k} style={s.listRow}>
+                        <Text style={s.listRowText}>{vt.user_name} · {vt.user_city || '—'}</Text>
+                        <Text style={s.listRowMeta}>{(vt.voted_at || '').slice(0, 10)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </ScrollView>
+              {replyTo && (
+                <View style={{ borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 8, marginTop: 8 }}>
+                  <Text style={{ color: MUTED, fontSize: 11, textAlign: 'right' }}>رد على: {replyTo.commentText}</Text>
+                  <TextInput style={s.replyInput} placeholder="ردك..." placeholderTextColor={MUTED}
+                    multiline value={replyText} onChangeText={setReplyText} />
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+                    <TouchableOpacity style={s.cancelBtn} onPress={() => setReplyTo(null)}><Text style={s.cancelText}>إلغاء</Text></TouchableOpacity>
+                    <TouchableOpacity style={s.sendBtn} onPress={sendThreadedReply}>
+                      <Ionicons name="send" size={14} color={BG} />
+                      <Text style={s.sendText}>إرسال</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   previewPill: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7f1d1d', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, margin: 10 },
@@ -984,4 +1363,39 @@ const s = StyleSheet.create({
   pollRow: { position: 'relative', backgroundColor: BG, borderRadius: 6, padding: 8, overflow: 'hidden', borderWidth: 1, borderColor: BORDER },
   pollBar: { position: 'absolute', top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(245,197,24,0.2)' },
   pollText: { color: '#E5E7EB', fontSize: 11, fontWeight: '700', textAlign: 'right' },
+  // Sales overview + top strip
+  ovRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, marginBottom: 8 },
+  ovCard: { flex: 1, backgroundColor: CARD, borderRadius: 10, padding: 8, borderWidth: 1, borderColor: BORDER },
+  ovLbl: { color: MUTED, fontSize: 10, textAlign: 'right' },
+  ovVal: { color: GOLD, fontSize: 13, fontWeight: '900', marginTop: 3, textAlign: 'right' },
+  ovSub: { color: '#9CA3AF', fontSize: 9, textAlign: 'right', marginTop: 1 },
+  stripTitle: { color: GOLD, fontSize: 12, fontWeight: '900', textAlign: 'right' },
+  topCard: { width: 140, backgroundColor: CARD, borderRadius: 10, padding: 6, borderWidth: 1, borderColor: BORDER, marginLeft: 8, position: 'relative' },
+  topRank: { position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center', zIndex: 3 },
+  topRankText: { color: BG, fontWeight: '900', fontSize: 11 },
+  topImg: { width: '100%', height: 70, borderRadius: 6 },
+  topName: { color: '#FFF', fontSize: 11, fontWeight: '700', marginTop: 4, textAlign: 'right' },
+  topRev: { color: GOLD, fontSize: 12, fontWeight: '900', marginTop: 2, textAlign: 'right' },
+  topSplit: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  topSplitPos: { color: '#60A5FA', fontSize: 9, fontWeight: '800' },
+  topSplitApp: { color: '#34D399', fontSize: 9, fontWeight: '800' },
+  // Analytics buttons on service/comp cards
+  analyticsFloatBtn: { position: 'absolute', top: 8, left: 8, backgroundColor: GOLD, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 4, zIndex: 5 },
+  // Sheet common
+  sheetCard: { backgroundColor: CARD, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: BORDER, marginBottom: 10 },
+  sheetKpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  sheetKpi: { flexBasis: '30%', backgroundColor: BG, borderRadius: 8, padding: 8, borderWidth: 1, borderColor: BORDER },
+  sheetKpiVal: { color: GOLD, fontSize: 15, fontWeight: '900', textAlign: 'right' },
+  sheetKpiLbl: { color: MUTED, fontSize: 10, textAlign: 'right', marginTop: 2 },
+  sheetSectionTitle: { color: GOLD, fontSize: 12, fontWeight: '900', marginBottom: 6, textAlign: 'right' },
+  barRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  barLabel: { color: '#E5E7EB', fontSize: 11, width: 90, textAlign: 'right' },
+  barTrack: { flex: 1, height: 10, backgroundColor: BG, borderRadius: 5, overflow: 'hidden' },
+  barFill: { height: '100%', backgroundColor: GOLD },
+  barValue: { color: GOLD, fontSize: 11, fontWeight: '800', width: 44, textAlign: 'left' },
+  listRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: BORDER },
+  listRowText: { color: '#E5E7EB', fontSize: 11, textAlign: 'right', flex: 1 },
+  listRowMeta: { color: MUTED, fontSize: 10 },
+  detailBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: GOLD, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  detailBtnText: { color: BG, fontSize: 10, fontWeight: '900' },
 });

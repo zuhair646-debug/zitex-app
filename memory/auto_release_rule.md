@@ -41,10 +41,10 @@ calling `finish`:
   transiently down). The template script implements this.
 
 ## Current released versions
-- iOS: v1.10.1 (build 32) — Building/Submitting ⏳ (bugfix: text-node crashes in Live Preview)
-- Android: v1.10.1 (versionCode 33) — Building/Submitting ⏳
-- v1.10.0: submitted ✅ (Live Preview complete)
-- v1.9.0 & all prior: submitted ✅
+- iOS: v1.11.0 (build 33) — Building/Submitting ⏳ (Live Preview deep analytics)
+- Android: v1.11.0 (versionCode 34) — Building/Submitting ⏳
+- v1.10.1: submitted ✅ (hotfix)
+- v1.10.0 & prior: submitted ✅
 
 ## Version-bump quick reference
 Feature category → semver bump:

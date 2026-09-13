@@ -4208,7 +4208,10 @@ async def record_product_view(pid: str, data: ProductViewInput, request: Request
 
 @api_router.get("/merchant/products/{pid}/analytics")
 async def product_analytics(pid: str, user=Depends(get_current_user)):
-    """Detailed analytics for a product: visitors, cart adds, abandoned checkouts, sales trend."""
+    """Detailed analytics for a product: visitors, cart adds, abandoned checkouts, sales trend.
+
+    Now aggregates BOTH online orders AND POS invoices for accurate totals.
+    """
     require_merchant(user)
     prod = await db.products.find_one({"_id": ObjectId(pid)}) if ObjectId.is_valid(pid) else None
     if not prod: raise HTTPException(404, "Product not found")
@@ -4227,17 +4230,35 @@ async def product_analytics(pid: str, user=Depends(get_current_user)):
             if not has_order:
                 abandoned.append(v)
     from collections import defaultdict
-    monthly = defaultdict(lambda: {"sales": 0, "orders": 0, "units": 0})
-    orders_list = await db.orders.find({"items.product_id": pid}).to_list(2000)
+    monthly = defaultdict(lambda: {"sales": 0.0, "orders": 0, "units": 0, "pos_sales": 0.0, "app_sales": 0.0})
+    orders_list = await db.orders.find({"items.product_id": pid}).to_list(5000)
     for o in orders_list:
         month = (o.get("created_at") or "")[:7]
         for it in o.get("items", []):
             if it.get("product_id") == pid:
-                qty = int(it.get("qty", 1))
-                monthly[month]["sales"] += float(it.get("price", 0)) * qty
+                qty = int(it.get("quantity") or it.get("qty", 1))
+                price = float(it.get("price", 0))
+                monthly[month]["sales"] += price * qty
+                monthly[month]["app_sales"] += price * qty
+                monthly[month]["units"] += qty
+                monthly[month]["orders"] += 1
+    invoices_list = await db.invoices.find({"items.product_id": pid}).to_list(5000)
+    for inv in invoices_list:
+        month = (inv.get("created_at") or "")[:7]
+        for it in inv.get("items", []):
+            if it.get("product_id") == pid:
+                qty = int(it.get("quantity") or 1)
+                price = float(it.get("price", 0))
+                monthly[month]["sales"] += price * qty
+                monthly[month]["pos_sales"] += price * qty
                 monthly[month]["units"] += qty
                 monthly[month]["orders"] += 1
     monthly_series = [{"month": m, **v} for m, v in sorted(monthly.items())][-12:]
+    total_sales = sum(v["sales"] for v in monthly.values())
+    total_units = sum(v["units"] for v in monthly.values())
+    total_orders_count = sum(v["orders"] for v in monthly.values())
+    pos_share = sum(v["pos_sales"] for v in monthly.values())
+    app_share = sum(v["app_sales"] for v in monthly.values())
     visitors = [{
         "user_name": v.get("user_name") or "زائر",
         "duration_seconds": v.get("duration_seconds", 0),
@@ -4255,6 +4276,11 @@ async def product_analytics(pid: str, user=Depends(get_current_user)):
             "add_to_cart": add_to_cart, "reached_checkout": reached_checkout,
             "abandoned_count": len(abandoned), "conversion_rate": conv_rate,
             "avg_duration_seconds": avg_duration,
+            "total_sales": round(total_sales, 2),
+            "total_units_sold": total_units,
+            "total_orders": total_orders_count,
+            "pos_sales": round(pos_share, 2),
+            "app_sales": round(app_share, 2),
         },
         "monthly_series": monthly_series,
         "visitors": visitors,
@@ -4263,6 +4289,272 @@ async def product_analytics(pid: str, user=Depends(get_current_user)):
             "created_at": a.get("created_at", ""),
         } for a in abandoned[:20]],
     }
+
+# ─── Merchant overview / leaderboards ───
+@api_router.get("/merchant/analytics/top-products")
+async def top_products_analytics(user=Depends(get_current_user), limit: int = 20):
+    """Top products by revenue (from orders + invoices combined)."""
+    require_merchant(user)
+    from collections import defaultdict
+    stats = defaultdict(lambda: {"revenue": 0.0, "units": 0, "orders": 0, "pos_orders": 0, "app_orders": 0})
+    async for o in db.orders.find({}):
+        for it in o.get("items", []):
+            pid = it.get("product_id")
+            if not pid: continue
+            qty = int(it.get("quantity") or it.get("qty", 1))
+            price = float(it.get("price", 0))
+            stats[pid]["revenue"] += price * qty
+            stats[pid]["units"] += qty
+            stats[pid]["orders"] += 1
+            stats[pid]["app_orders"] += 1
+    async for inv in db.invoices.find({}):
+        for it in inv.get("items", []):
+            pid = it.get("product_id")
+            if not pid: continue
+            qty = int(it.get("quantity") or 1)
+            price = float(it.get("price", 0))
+            stats[pid]["revenue"] += price * qty
+            stats[pid]["units"] += qty
+            stats[pid]["orders"] += 1
+            stats[pid]["pos_orders"] += 1
+    # Enrich with product info
+    rows = []
+    for pid, agg in stats.items():
+        if not ObjectId.is_valid(pid): continue
+        p = await db.products.find_one({"_id": ObjectId(pid)})
+        if not p: continue
+        rows.append({
+            "product_id": pid,
+            "name": p.get("name_ar") or p.get("name_en"),
+            "image": (p.get("images") or [None])[0],
+            "price": p.get("price", 0),
+            "revenue": round(agg["revenue"], 2),
+            "units": agg["units"],
+            "orders": agg["orders"],
+            "pos_orders": agg["pos_orders"],
+            "app_orders": agg["app_orders"],
+        })
+    rows.sort(key=lambda r: r["revenue"], reverse=True)
+    return {"generated_at": datetime.now(timezone.utc).isoformat(), "top": rows[:limit]}
+
+@api_router.get("/merchant/analytics/sales-overview")
+async def sales_overview(user=Depends(get_current_user)):
+    """Combined POS + Online sales overview: today, week, month, channel split."""
+    require_merchant(user)
+    now = datetime.now(timezone.utc)
+    today = now.strftime("%Y-%m-%d")
+    week_start = (now - timedelta(days=7)).isoformat()
+    month_start = (now - timedelta(days=30)).isoformat()
+    def total(items):
+        s = 0.0
+        for x in items:
+            if x.get("total"):
+                s += float(x["total"])
+            elif x.get("items"):
+                for it in x["items"]:
+                    qty = int(it.get("quantity") or it.get("qty", 1))
+                    s += float(it.get("price", 0)) * qty
+        return s
+    orders_all = await db.orders.find({}).to_list(5000)
+    invoices_all = await db.invoices.find({}).to_list(5000)
+    orders_today = [o for o in orders_all if (o.get("created_at") or "").startswith(today)]
+    orders_week = [o for o in orders_all if (o.get("created_at") or "") >= week_start]
+    orders_month = [o for o in orders_all if (o.get("created_at") or "") >= month_start]
+    invoices_today = [o for o in invoices_all if (o.get("created_at") or "").startswith(today)]
+    invoices_week = [o for o in invoices_all if (o.get("created_at") or "") >= week_start]
+    invoices_month = [o for o in invoices_all if (o.get("created_at") or "") >= month_start]
+    # Daily breakdown for last 30 days
+    from collections import defaultdict
+    daily = defaultdict(lambda: {"pos": 0.0, "app": 0.0})
+    for inv in invoices_month:
+        d = (inv.get("created_at") or "")[:10]
+        daily[d]["pos"] += float(inv.get("total", 0))
+    for o in orders_month:
+        d = (o.get("created_at") or "")[:10]
+        for it in o.get("items", []):
+            qty = int(it.get("quantity") or it.get("qty", 1))
+            daily[d]["app"] += float(it.get("price", 0)) * qty
+    daily_series = [{"date": d, **v} for d, v in sorted(daily.items())][-30:]
+    return {
+        "today":  {"pos_sales": round(total(invoices_today), 2), "app_sales": round(total(orders_today), 2), "count": len(invoices_today) + len(orders_today)},
+        "week":   {"pos_sales": round(total(invoices_week), 2),  "app_sales": round(total(orders_week), 2),  "count": len(invoices_week) + len(orders_week)},
+        "month":  {"pos_sales": round(total(invoices_month), 2), "app_sales": round(total(orders_month), 2), "count": len(invoices_month) + len(orders_month)},
+        "daily_series": daily_series,
+    }
+
+# ─── Service analytics ───
+@api_router.get("/merchant/services/{svc_id}/analytics")
+async def service_analytics(svc_id: str, user=Depends(get_current_user)):
+    """Deep analytics for a service: bookings by status, revenue, reviews, weekly trend."""
+    require_merchant(user)
+    svc = await db.services.find_one({"_id": ObjectId(svc_id)}) if ObjectId.is_valid(svc_id) else None
+    if not svc:
+        raise HTTPException(404, "Service not found")
+    bookings = await db.service_bookings.find({"service_id": svc_id}).to_list(2000)
+    from collections import Counter, defaultdict
+    status_counts = Counter(b.get("status", "pending") for b in bookings)
+    revenue = sum(float(b.get("total_fee", 0) or 0) for b in bookings if b.get("status") in ("completed", "delivered", "in_progress"))
+    reviews = await db.service_reviews.find({"service_id": svc_id, "update_id": ""}).to_list(500)
+    avg_rating = round(sum(r.get("stars", 0) for r in reviews) / max(len(reviews), 1), 2) if reviews else 0
+    star_dist = Counter(r.get("stars", 0) for r in reviews)
+    # Weekly bookings for last 12 weeks
+    weekly = defaultdict(int)
+    for b in bookings:
+        d = (b.get("created_at") or "")[:10]
+        if d: weekly[d[:7]] += 1
+    weekly_series = [{"period": p, "count": c} for p, c in sorted(weekly.items())][-12:]
+    return {
+        "service": {"id": svc_id, "title": svc.get("title") or svc.get("name"), "base_price": svc.get("base_price", 0)},
+        "kpis": {
+            "total_bookings": len(bookings),
+            "revenue": round(revenue, 2),
+            "avg_rating": avg_rating,
+            "review_count": len(reviews),
+        },
+        "status_breakdown": [{"status": k, "count": v} for k, v in status_counts.items()],
+        "star_distribution": [{"stars": s, "count": star_dist.get(s, 0)} for s in [5, 4, 3, 2, 1]],
+        "weekly_series": weekly_series,
+        "recent_reviews": [serialize_doc(r) for r in reviews[:5]],
+    }
+
+# ─── Competition analytics with source tracking ───
+@api_router.get("/merchant/competitions/{comp_id}/analytics")
+async def competition_analytics(comp_id: str, user=Depends(get_current_user)):
+    """Deep analytics for a competition: sources, cities, followers gained, hourly trend."""
+    require_merchant(user)
+    comp = await db.competitions.find_one({"_id": ObjectId(comp_id)}) if ObjectId.is_valid(comp_id) else None
+    if not comp:
+        raise HTTPException(404, "Competition not found")
+    entries = await db.competition_entries.find({"competition_id": comp_id}).to_list(5000)
+    from collections import Counter, defaultdict
+    sources = Counter(e.get("source", "organic") for e in entries)
+    cities = Counter(e.get("user_city", "غير محدد") for e in entries).most_common(10)
+    # Daily entries trend
+    daily = defaultdict(int)
+    for e in entries:
+        d = (e.get("created_at") or "")[:10]
+        if d: daily[d] += 1
+    daily_series = [{"date": d, "count": c} for d, c in sorted(daily.items())]
+    # Estimate followers gained (unique user_ids)
+    unique_users = len({e.get("user_id") for e in entries if e.get("user_id")})
+    return {
+        "competition": {
+            "id": comp_id,
+            "title": comp.get("title"),
+            "prize": comp.get("prize"),
+            "competition_type": comp.get("competition_type"),
+            "status": comp.get("status"),
+        },
+        "kpis": {
+            "total_participants": len(entries),
+            "unique_users": unique_users,
+            "followers_gained": unique_users,  # proxy: each unique participant becomes a follower
+        },
+        "sources": [{"source": k, "count": v} for k, v in sources.most_common()],
+        "top_cities": [{"city": c, "count": n} for c, n in cities],
+        "daily_series": daily_series,
+        "recent_participants": [{
+            "user_name": e.get("user_name"),
+            "user_city": e.get("user_city"),
+            "source": e.get("source"),
+            "created_at": e.get("created_at"),
+        } for e in entries[-15:]],
+    }
+
+@api_router.get("/merchant/competitions/analytics-overview")
+async def competitions_overview(user=Depends(get_current_user)):
+    """Compare competition types — which attracts more people."""
+    require_merchant(user)
+    comps = await db.competitions.find({}).to_list(500)
+    from collections import defaultdict
+    by_type = defaultdict(lambda: {"count": 0, "total_participants": 0})
+    for c in comps:
+        t = c.get("competition_type") or "general"
+        by_type[t]["count"] += 1
+        # count from entries
+        n = await db.competition_entries.count_documents({"competition_id": str(c["_id"])})
+        by_type[t]["total_participants"] += n
+    return {"by_type": [{"type": k, **v} for k, v in sorted(by_type.items(), key=lambda x: -x[1]["total_participants"])]}
+
+# ─── Social post detail (merchant super-view) ───
+@api_router.get("/merchant/social/posts/{pid}/detail")
+async def merchant_post_detail(pid: str, user=Depends(get_current_user)):
+    """Full detail of a post — viewers, likers, comments with replies, poll voters."""
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    post = await db.social_posts.find_one({"_id": ObjectId(pid)}) if ObjectId.is_valid(pid) else None
+    if not post:
+        raise HTTPException(404, "Post not found")
+    post = serialize_doc(post)
+    # Sort viewers/likers latest-first
+    viewers = post.get("viewers", []) or []
+    likers = post.get("likers", []) or []
+    comments = post.get("comments", []) if isinstance(post.get("comments"), list) else []
+    poll = post.get("poll") or {}
+    # Enrich poll options with vote breakdown by user
+    if poll.get("options") and poll.get("voters"):
+        for i, opt in enumerate(poll["options"]):
+            opt["voter_list"] = poll["voters"].get(str(i), [])[:100]
+    return {
+        "post": {
+            "id": post.get("id"),
+            "author_name": post.get("author_name"),
+            "text": post.get("text"),
+            "images": post.get("images", []),
+            "created_at": post.get("created_at"),
+            "likes": post.get("likes", 0),
+            "views": post.get("views", 0),
+        },
+        "kpis": {
+            "views": len(viewers),
+            "unique_viewers": len({v.get("user_id") for v in viewers if v.get("user_id")}),
+            "likes": len(likers),
+            "comment_count": len(comments),
+            "reply_count": sum(len(c.get("replies", []) or []) for c in comments),
+            "answered_comments": sum(1 for c in comments if c.get("store_reply")),
+        },
+        "viewers": sorted(viewers, key=lambda x: x.get("viewed_at", ""), reverse=True)[:100],
+        "likers": sorted(likers, key=lambda x: x.get("liked_at", ""), reverse=True)[:100],
+        "comments": sorted(comments, key=lambda x: x.get("created_at", ""), reverse=True),
+        "poll": poll,
+    }
+
+@api_router.post("/merchant/social/posts/{pid}/like-as-store")
+async def like_as_store(pid: str, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    if not ObjectId.is_valid(pid): raise HTTPException(400, "Bad id")
+    # Idempotent: only $inc when merchant wasn't in store_likes
+    r = await db.social_posts.update_one(
+        {"_id": ObjectId(pid), "store_likes": {"$ne": user.get("id")}},
+        {"$addToSet": {"store_likes": user.get("id")}, "$inc": {"likes": 1}},
+    )
+    return {"ok": True, "changed": bool(r.modified_count)}
+
+@api_router.post("/merchant/social/posts/{pid}/comments/{cid}/replies")
+async def reply_to_comment_as_store(pid: str, cid: str, request: Request, user=Depends(get_current_user)):
+    """Store reply that appears as a threaded reply under a comment."""
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text: raise HTTPException(400, "text required")
+    reply = {
+        "id": str(ObjectId()),
+        "user_id": user.get("id"),
+        "user_name": f"🏪 {user.get('name', 'المتجر')}",
+        "is_store": True,
+        "text": text,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    r = await db.social_posts.update_one(
+        {"_id": ObjectId(pid), "comments.id": cid},
+        {"$push": {"comments.$.replies": reply}},
+    )
+    if r.matched_count == 0:
+        raise HTTPException(404, "Post or comment not found")
+    return {"ok": True, "reply": reply}
+
 
 @api_router.post("/merchant/abandoned-carts/{user_id}/send-offer")
 async def send_abandoned_offer(user_id: str, request: Request, user=Depends(get_current_user)):
