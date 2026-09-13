@@ -1,0 +1,89 @@
+{
+  "summary": "Zitex v1.9.0/v1.10.0 regression — merchant inventory dashboard, bookings, marketing?tab=affiliates, and live-preview (products/services/competitions/social). Backend: created /app/backend/tests/test_inventory_live_summary.py (17 pytest cases across 7 classes) — ALL 17/17 PASSED (100%). Covered: GET /api/merchant/inventory (totals + items shape + auth guard), channel=store/app filters, /alerts (only low/out rows), POST /adjust (increment then verify via re-GET; missing record → 404), /movements list, PUT /branches/{bid}/inventory/{pid} in both combined and separate modes, GET /api/competitions/live-summary (public — 32 comps returned with all keys), GET /api/merchant/services/live-summary (auth required, returns reviews/review_count/avg_rating/booking_count), POST /api/services/reviews/{id}/reply (200 with text, 400 on blank, 403 for non-merchant), and GET /api/merchant/bookings (14 bookings as spec'd). Frontend (Expo web preview, mobile viewport 390×844, https://mobile-builder-146.preview.emergentagent.com): (1) merchant login OK — token persists in localStorage['token'] and redirects to /merchant; (2) /merchant/inventory renders header 'إدارة المخزون', totals 71/47/53/2/0/4, items list shows 'مستخدم iPhone 13', 'آيفون 14 (مستعمل)' with branch 'Main Branch Riyadh' and pills 'متجر + تطبيق' + 'تطبيق فقط' + 'مخزن موحّد'/'مخازن مفصولة' + orange 'منخفض' badge; edit button (create-outline) visible on each card, +/- controls tappable; (3) /merchant/bookings header shows 'الحجوزات (14)', 5 filter tabs 'الكل (14) / قيد المراجعة (5) / مؤكد (0) / قيد التنفيذ (1) / مكتمل (7) / ملغى (0)', cards render customer_name, phone 0500000000, device iPhone 14, issue 'الشاشة مكسورة' + green status badge 'مكتمل'; Arabic empty state present, no English leak; (4) /merchant/more shows all 3 new links: 'المسوّقون والعمولات', 'كل الحجوزات', 'المخزون'; (5) /merchant/marketing?tab=affiliates auto-selects 'المسوقون' tab; (6) /merchant/live-preview live-viewer badge '0 زائر مباشر الآن' + banner strip + featured products + product cards with GOLD analytics badges (top-left) + 'مقارنة' toggle all visible in المتجر tab; الصيانة renders rich cards with cover placeholders, green warranty badges (30ي/180ي/90ي), star ratings (4.6/4.9/4.8), price+meta chips (استلام منزلي / N حجز); المسابقات renders filter chips 'نشطة/منتهية/الكل' and cards with joined_count/start-date/type/countdown chips; السوشيال shows filters 'الكل/يحتاج رد/الأكثر تفاعلاً'. Critical console-error: 50+ 'Unexpected text node: . A text node cannot be a child of a <View>' warnings emitted on الصيانة tab of live-preview — a bare text child (stray '.' or whitespace) is being rendered inside a <View> instead of wrapped in <Text>. Deprecated APIs still in use: shadow* style props (should be boxShadow) and Image style.resizeMode (should be props.resizeMode) — warnings on every screen. React Native issue count: 2. See rca_of_issue for the text-node location details.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "app/merchant/live-preview.tsx — Services tab (ServicesSection)",
+        "issue": "50+ 'Unexpected text node: . A text node cannot be a child of a <View>' console errors when الصيانة tab is active. A bare string (likely a stray '.' from a logical-and expression that evaluates to a falsy string, or a raw description outside <Text>) is being rendered as a direct child of a <View>. Repro: login as merchant → /merchant/live-preview → tap 'الصيانة'. Suspect area: the meta-chip block around lines 309-326 where each chip conditionally renders text via `{item.home_pickup && (…)}` — if any of those variables is a bare string like '' or a number, it would appear inside <View>. Please audit renderItem in ServicesSection (around lines 280-360) for any bare `{expr}` outside a <Text>.",
+        "testID": "MISSING",
+        "priority": "HIGH"
+      },
+      {
+        "component": "app/merchant/inventory.tsx",
+        "issue": "No testID attributes anywhere in the file (header, stat cards, tabs, search input, edit button, +/- buttons, modal fields). Makes E2E automation brittle. Add testID='inventory-header', 'inventory-total-units', 'inventory-tab-{key}', 'inventory-search', 'inventory-item-{pid}', 'inventory-edit-{pid}', 'inventory-plus-{pid}-{channel}', 'inventory-minus-{pid}-{channel}', 'inventory-edit-modal', 'inventory-save-btn'.",
+        "testID": "MISSING",
+        "priority": "MEDIUM"
+      },
+      {
+        "component": "app/merchant/bookings.tsx",
+        "issue": "No testID attributes. Add testID='bookings-header', 'bookings-tab-{status}', 'bookings-card-{id}', 'bookings-status-badge-{id}'.",
+        "testID": "MISSING",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Live preview — Competitions tab image loading",
+        "issue": "Multiple net::ERR_NAME_NOT_RESOLVED errors when rendering competition cards — placeholder image URLs in the seeded 32 competitions point to unreachable domains. Cards still render (fallback icon) but console is noisy.",
+        "affected_testIDs": []
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "/merchant/inventory",
+        "issues": [
+          "Seed data covers only 2 of the 3 channel pills — 'متجر فقط' (store-only) is not exercised by any of the 4 seeded rows (they're all 'both' or 'app'). Verified in code, works when data has a store-only row, but a demo item with inventory_type='store' would make the QA of the pill trivially visual."
+        ]
+      },
+      {
+        "screen": "Global",
+        "issues": [
+          "Deprecation warnings on every screen: 'shadow*' style props should migrate to 'boxShadow' (RN 0.76+), and Image style.resizeMode should move to prop-level resizeMode. Not a blocker but pollutes console and will become errors in a future RN upgrade."
+        ]
+      }
+    ],
+    "react_native_issues": [
+      {
+        "component": "app/merchant/live-preview.tsx (Services renderItem)",
+        "issue": "Bare text node rendered inside <View> — 'Unexpected text node: . A text node cannot be a child of a <View>' fires 50+ times on الصيانة tab. React Native strict rendering rule. Reference: /app/frontend/app/merchant/live-preview.tsx:280-360"
+      },
+      {
+        "component": "Global shadow* / resizeMode",
+        "issue": "Deprecated style props still used across shared UI: 'shadow*' style props should be replaced with 'boxShadow', and Image style.resizeMode should be passed as prop instead. Warnings on every screen boot. Reference: /app/frontend/src/components/ui/*, /app/frontend/app/**/*.tsx"
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_inventory_live_summary.py",
+    "/app/test_reports/pytest/inventory_live_summary.xml"
+  ],
+  "action_items": [
+    "HIGH: locate and fix the bare text node in ServicesSection renderItem of /app/frontend/app/merchant/live-preview.tsx (lines ~280-360). Grep for any `{something}` that could evaluate to a string outside a <Text> wrapper (esp. logical-and short-circuits where the left operand is a numeric or string).",
+    "MEDIUM: add testID attributes to /app/frontend/app/merchant/inventory.tsx (header, stat cards, tabs, search, item cards, edit/+/- buttons, modal) — listed in ui_bugs.",
+    "MEDIUM: add testID attributes to /app/frontend/app/merchant/bookings.tsx (header, tabs, cards, status badges).",
+    "LOW: replace 'shadow*' style props with 'boxShadow' and move Image resizeMode from style to prop across the codebase.",
+    "LOW: extend seed_data() to include one branch_inventory row with inventory_type='store' so the 'متجر فقط' pill can be visually validated.",
+    "LOW: seed competitions with reachable image URLs (or CDN placeholders) to eliminate ERR_NAME_NOT_RESOLVED noise on the competitions live-preview tab."
+  ],
+  "critical_code_review_comments": [
+    "/app/backend/server.py is now 4328 lines — the merchant section (~1500 lines: products, inventory, bookings, live-summary, services, competitions) should be split into backend/routes/merchant/*.py. Cognitive complexity is very high.",
+    "merchant_inventory_overview and merchant_inventory_alerts share a lot of logic and iterate through the same collections separately — /alerts calls the overview handler again internally which is fine, but consider a shared internal helper `_build_inventory_items(user, channel)` returning (items, totals) to avoid the coupling on route function signatures.",
+    "In /api/merchant/inventory/{bid}/{pid}/adjust body parsing there is no Pydantic model — `delta` is coerced with int() which will 500 on non-numeric input. Wrap in try/except or use a proper `AdjustInput(BaseModel)` with delta: int, channel: Literal['store','app','combined'], reason: Optional[str].",
+    "The `_normalize_inventory_doc` helper defaults `min_alert` implicitly — if a seeded row is missing 'min_alert' entirely the `.get('min_alert', 5)` default kicks in; consider making this explicit and configurable per branch.",
+    "/api/services/reviews/{review_id}/reply uses ObjectId(review_id) without try/except — an invalid ObjectId string will raise a bson.errors.InvalidId (500). Add validation.",
+    "app/merchant/live-preview.tsx is 985 lines with 4 large section components — split into services/products/competitions/social sub-files under app/merchant/live-preview/*."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_inventory_live_summary.py (new — 17 pytest cases, 7 classes)"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 pass)",
+    "frontend": "~90% — all requested screens/tabs/labels visually verified; one HIGH-priority text-node console-error cascade on services live-preview; testID coverage missing on inventory + bookings"
+  },
+  "seed_data_creation": "Tests do read/write on existing seeded inventory rows via the adjust endpoint but always revert (delta +1 followed by delta -1) and restore combined mode after separate-mode test. Merchant review reply writes 'TEST_ZTX شكراً…' to the first seeded review's merchant_reply field — not deleted (no DELETE endpoint), but overwritten by any subsequent reply. No new documents inserted besides stock_movements audit rows (2 entries per run of adjust suite).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Merchant creds 0509999999 / merchant2025 → localStorage['token'] after login. Public URL EXPO_PUBLIC_BACKEND_URL=https://mobile-builder-146.preview.emergentagent.com. Seed provides exactly 14 service_bookings, 4 branch_inventory rows (2 low-stock: 'مستخدم iPhone 13' and 'آيفون 14'), 32 competitions (mostly test residue with unreachable placeholder images), and ≥1 service_review for the reply test. Backend tests file: /app/backend/tests/test_inventory_live_summary.py (17/17 pass). Live-preview services tab produces cascading 'Unexpected text node' errors — bug lives in ServicesSection renderItem lines ~280-360. Inventory + Bookings screens have zero testID attributes — target by text (`get_by_text('إدارة المخزون')`, `get_by_text(re.compile('الحجوزات \\\\(\\\\d+\\\\)'))`) until testIDs are added. Login flow: fill input[0]=phone, input[1]=password, click element with text 'تسجيل الدخول' — token then appears in localStorage.",
+  "rca_of_issue": "N/A for a hard failure — all specced flows render. The 'Unexpected text node' warning cascade on live-preview → services tab is a React Native strict-mode invariant violation: any bare string, number, or falsy short-circuit result rendered directly inside a <View> triggers it. Location: /app/frontend/app/merchant/live-preview.tsx renderItem for ServicesSection (~lines 280-360). Highest-suspicion candidates: (a) the meta-chip conditionals `{item.home_pickup && (…)}`, `{(item.review_count || 0) > 0 && (…)}`, `{(item.booking_count || 0) > 0 && (…)}` — if `item.home_pickup` is the string 'false' (from Mongo) or `item.review_count` is a bare number returned before the &&, it prints. (b) any `{item.tags?.join(', ')}` output not inside a <Text>. Recommended fix: run `console.log(typeof item.home_pickup, typeof item.review_count, typeof item.booking_count)` while on services tab and wrap the offender in <Text>. Verification: after fix, reload /merchant/live-preview → tap 'الصيانة' → expect 0 'Unexpected text node' console errors."
+}

@@ -13,7 +13,8 @@ export default function MerchantMore() {
     { icon: 'cart', title: 'نقطة البيع POS', subtitle: 'شاشة كاشير سريعة لإصدار الفواتير', route: '/merchant/pos' },
     { icon: 'receipt', title: 'الفواتير', subtitle: 'سجل الفواتير ومبيعات اليوم', route: '/merchant/invoices' },
     { icon: 'cube', title: 'المخزون', subtitle: 'مخزون المتجر / التطبيق + تنبيهات النفاد', route: '/merchant/inventory' },
-    { icon: 'megaphone', title: 'التسويق والمسوقون', subtitle: 'إعلانات مدفوعة + برنامج المسوقين بالعمولة', route: '/merchant/marketing' },
+    { icon: 'megaphone', title: 'التسويق والإعلانات', subtitle: 'إعلانات مدفوعة وحملات مستهدفة', route: '/merchant/marketing' },
+    { icon: 'people', title: 'المسوّقون والعمولات', subtitle: 'موافقات، عمولات، نشاط، تحويلات', route: '/merchant/marketing?tab=affiliates' },
   ] as const;
 
   const marketing = [
@@ -25,6 +26,7 @@ export default function MerchantMore() {
   const operations = [
     { icon: 'briefcase', title: 'الخدمات', subtitle: 'خدماتك المقدمة للعملاء', route: '/merchant/services' },
     { icon: 'calendar', title: 'حجوزات الخدمات', subtitle: 'إدارة الحجوزات + تحديثات الفيديو', route: '/merchant/service-bookings' },
+    { icon: 'clipboard', title: 'كل الحجوزات', subtitle: 'حجوزات عامة، حالتها، إدارتها', route: '/merchant/bookings' },
     { icon: 'business', title: 'الفروع', subtitle: 'مواقع فروع المتجر', route: '/merchant/branches' },
     { icon: 'car-sport', title: 'السائقون', subtitle: 'إدارة السائقين والتعيين', route: '/merchant/drivers' },
     { icon: 'map', title: 'إعدادات التوصيل', subtitle: 'الأسعار والمناطق والأوقات', route: '/merchant/delivery-settings' },
@@ -80,7 +82,7 @@ export default function MerchantMore() {
             <ListItem icon="log-out" title="تسجيل الخروج" onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zitex Merchant v1.10.0</Text>
+          <Text style={styles.version}>Zitex Merchant v1.10.1</Text>
         </ScrollView>
       </SafeAreaView>
     </View>

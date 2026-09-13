@@ -148,7 +148,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 4 }}>
                 {banners.map((b: any, i: number) => (
                   <View key={i} style={{ marginRight: 10, width: 280, height: 120, borderRadius: 14, overflow: 'hidden', backgroundColor: CARD, borderWidth: 1, borderColor: BORDER }}>
-                    {b.image && <Image source={{ uri: mediaUrlSync(b.image) }} style={{ width: '100%', height: '100%' }} contentFit="cover" />}
+                    {!!b.image && <Image source={{ uri: mediaUrlSync(b.image) }} style={{ width: '100%', height: '100%' }} contentFit="cover" />}
                   </View>
                 ))}
               </ScrollView>
@@ -161,7 +161,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                   {featured.slice(0, 10).map((f: any) => (
                     <TouchableOpacity key={f.id} onPress={() => router.push(`/product/${f.id}?preview=1` as any)}
                       style={{ marginRight: 10, width: 130, backgroundColor: CARD, borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: BORDER }}>
-                      {f.images?.[0] && <Image source={{ uri: mediaUrlSync(f.images[0]) }} style={{ width: 130, height: 100 }} contentFit="cover" />}
+                      {!!f.images?.[0] && <Image source={{ uri: mediaUrlSync(f.images[0]) }} style={{ width: 130, height: 100 }} contentFit="cover" />}
                       <View style={{ padding: 6 }}>
                         <Text numberOfLines={1} style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800', textAlign: 'right' }}>{f.name_ar}</Text>
                         <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900', marginTop: 2 }}>{f.price} ر.س</Text>
@@ -187,7 +187,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                 router.push(`/product/${item.id}?preview=1` as any);
               }}
               onLongPress={() => onAnalytics(item)}>
-              {item.images?.[0] && (
+              {!!item.images?.[0] && (
                 <Image source={{ uri: mediaUrlSync(item.images[0]) }} style={s.pImg} contentFit="cover" />
               )}
               {liveCount > 0 && (
@@ -211,7 +211,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                 <Text style={s.pName} numberOfLines={2}>{item.name_ar || item.name}</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
                   <Text style={s.pPrice}>{item.price} ر.س</Text>
-                  {item.rating > 0 && (
+                  {(item.rating || 0) > 0 && (
                     <View style={{ flexDirection: 'row', gap: 2 }}>
                       <Ionicons name="star" size={10} color={GOLD} />
                       <Text style={s.pRating}>{item.rating}</Text>
@@ -288,13 +288,13 @@ function ServicesSection({ apiCall }: any) {
                   <Ionicons name="construct" size={40} color={GOLD} />
                 </View>
               )}
-              {item.avg_rating > 0 && (
+              {(item.avg_rating || 0) > 0 && (
                 <View style={s.svcBadge}>
                   <Ionicons name="star" size={12} color={BG} />
                   <Text style={s.svcBadgeText}>{item.avg_rating}</Text>
                 </View>
               )}
-              {item.warranty_available && (
+              {!!item.warranty_available && (
                 <View style={[s.svcBadge, { top: 8, left: 8, right: 'auto', backgroundColor: '#10B981' }]}>
                   <Ionicons name="shield-checkmark" size={12} color={BG} />
                   <Text style={[s.svcBadgeText, { color: BG }]}>ضمان {item.warranty_days || 0}ي</Text>
@@ -308,18 +308,21 @@ function ServicesSection({ apiCall }: any) {
               )}
               <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
                 <Text style={s.svcPrice2}>{item.base_price || item.price || 0} ر.س</Text>
-                {item.home_pickup && (
-                  <View style={s.svcMetaChip}><Ionicons name="car" size={11} color={GOLD} />
+                {!!item.home_pickup && (
+                  <View style={s.svcMetaChip}>
+                    <Ionicons name="car" size={11} color={GOLD} />
                     <Text style={s.svcMetaText}>استلام منزلي</Text>
                   </View>
                 )}
                 {(item.review_count || 0) > 0 && (
-                  <View style={s.svcMetaChip}><Ionicons name="chatbubbles" size={11} color={GOLD} />
+                  <View style={s.svcMetaChip}>
+                    <Ionicons name="chatbubbles" size={11} color={GOLD} />
                     <Text style={s.svcMetaText}>{item.review_count} تقييم</Text>
                   </View>
                 )}
                 {(item.booking_count || 0) > 0 && (
-                  <View style={s.svcMetaChip}><Ionicons name="calendar" size={11} color={GOLD} />
+                  <View style={s.svcMetaChip}>
+                    <Ionicons name="calendar" size={11} color={GOLD} />
                     <Text style={s.svcMetaText}>{item.booking_count} حجز</Text>
                   </View>
                 )}
@@ -470,13 +473,13 @@ function CompetitionsSection({ apiCall }: any) {
                   <Ionicons name="people" size={12} color={GOLD} />
                   <Text style={s.compMetaText}>{item.joined_count || 0} مشترك</Text>
                 </View>
-                {item.starts_at && (
+                {!!item.starts_at && (
                   <View style={s.compMetaChip}>
                     <Ionicons name="play" size={12} color={GOLD} />
                     <Text style={s.compMetaText}>بدأت {String(item.starts_at).slice(0, 10)}</Text>
                   </View>
                 )}
-                {item.ends_at && (
+                {!!item.ends_at && (
                   <View style={s.compMetaChip}>
                     <Ionicons name="hourglass" size={12} color={GOLD} />
                     <Text style={s.compMetaText}>
@@ -484,7 +487,7 @@ function CompetitionsSection({ apiCall }: any) {
                     </Text>
                   </View>
                 )}
-                {item.competition_type && (
+                {!!item.competition_type && (
                   <View style={s.compMetaChip}>
                     <Ionicons name="pricetag" size={12} color={GOLD} />
                     <Text style={s.compMetaText}>{item.competition_type}</Text>
@@ -585,9 +588,9 @@ function SocialSection({ apiCall }: any) {
               </View>
             </View>
             {!!item.text && <Text style={s.postText}>{item.text}</Text>}
-            {item.images?.[0] && <Image source={{ uri: mediaUrlSync(item.images[0]) }} style={s.postImg} contentFit="cover" />}
+            {!!item.images?.[0] && <Image source={{ uri: mediaUrlSync(item.images[0]) }} style={s.postImg} contentFit="cover" />}
             {/* Poll */}
-            {item.poll && Array.isArray(item.poll.options) && (
+            {!!item.poll && Array.isArray(item.poll.options) && (
               <View style={{ marginTop: 8, gap: 4 }}>
                 <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right' }}>🗳 {item.poll.question}</Text>
                 {item.poll.options.map((opt: any, i: number) => {
@@ -825,7 +828,7 @@ function CompareSheet({ items, onClose }: any) {
           <ScrollView horizontal contentContainerStyle={{ padding: 12 }}>
             {items.map((it: any) => (
               <View key={it.id} style={s.cmpCard}>
-                {it.image && <Image source={{ uri: mediaUrlSync(it.image) }} style={s.cmpImg} contentFit="cover" />}
+                {!!it.image && <Image source={{ uri: mediaUrlSync(it.image) }} style={s.cmpImg} contentFit="cover" />}
                 <Text style={s.cmpName} numberOfLines={2}>{it.name_ar}</Text>
                 <Text style={s.cmpPrice}>{it.price} ر.س</Text>
                 <View style={s.cmpRow}><Text style={s.cmpLbl}>مشاهدات</Text><Text style={s.cmpVal}>{it.views_count}</Text></View>
@@ -833,7 +836,7 @@ function CompareSheet({ items, onClose }: any) {
                 <View style={s.cmpRow}><Text style={s.cmpLbl}>طلبات</Text><Text style={s.cmpVal}>{it.orders_count}</Text></View>
                 <View style={s.cmpRow}><Text style={s.cmpLbl}>مبيعات</Text><Text style={s.cmpVal}>{it.sold_count}</Text></View>
                 <View style={s.cmpRow}><Text style={s.cmpLbl}>التحويل</Text><Text style={[s.cmpVal, { color: GOLD }]}>{it.conversion_rate}%</Text></View>
-                {it.rating > 0 && (
+                {(it.rating || 0) > 0 && (
                   <View style={s.cmpRow}><Text style={s.cmpLbl}>التقييم</Text>
                     <View style={{ flexDirection: 'row', gap: 2 }}>
                       <Ionicons name="star" size={12} color={GOLD} />

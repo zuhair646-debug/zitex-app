@@ -185,6 +185,15 @@ export default function MerchantInventory() {
                         <View style={[styles.modePill, item.inventory_mode === 'separate' ? styles.modePillSep : styles.modePillCombined]}>
                           <Text style={styles.modePillText}>{item.inventory_mode === 'separate' ? 'مخازن مفصولة' : 'مخزن موحّد'}</Text>
                         </View>
+                        <View style={[styles.modePill, styles.channelPill]}>
+                          <Ionicons
+                            name={item.inventory_type === 'store' ? 'storefront' : item.inventory_type === 'app' ? 'phone-portrait' : 'apps'}
+                            size={10} color={colors.brand}
+                          />
+                          <Text style={styles.modePillText}>
+                            {item.inventory_type === 'store' ? 'متجر فقط' : item.inventory_type === 'app' ? 'تطبيق فقط' : 'متجر + تطبيق'}
+                          </Text>
+                        </View>
                         {item.is_out && <Badge label="نفدت" tone="error" />}
                         {!item.is_out && item.is_low && <Badge label="منخفض" tone="warning" />}
                       </View>
@@ -438,6 +447,7 @@ const styles = StyleSheet.create({
   modePill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.pill },
   modePillCombined: { backgroundColor: colors.brandTertiary },
   modePillSep: { backgroundColor: colors.infoSoft },
+  channelPill: { backgroundColor: colors.successSoft, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.pill },
   modePillText: { ...typography.labelSmall, color: colors.onSurface, fontSize: 10 },
   editBtn: { padding: spacing.sm, borderRadius: radius.md, backgroundColor: colors.brandTertiary },
   stockRow: {

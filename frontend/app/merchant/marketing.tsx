@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Modal, RefreshControl, Platform, StatusBar,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,8 +28,9 @@ const CITIES = ['الرياض', 'جدة', 'الدمام', 'الخبر', 'مكة'
 
 export default function MarketingPanel() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ tab?: string }>();
   const { apiCall } = useAuth();
-  const [tab, setTab] = useState<Tab>('ads');
+  const [tab, setTab] = useState<Tab>((params?.tab === 'affiliates') ? 'affiliates' : 'ads');
   const [ads, setAds] = useState<any[]>([]);
   const [apps, setApps] = useState<any[]>([]);
   const [affiliates, setAffiliates] = useState<any[]>([]);
