@@ -38,8 +38,8 @@ export default function SettingsScreen() {
 
   const MenuItem = ({ icon, label, onPress, color, badge }: { icon: string; label: string; onPress?: () => void; color?: string; badge?: string }) => (
     <TouchableOpacity testID={`settings-${icon}`} style={styles.menuItem} onPress={onPress}>
-      <View style={[styles.menuIconWrap, { backgroundColor: (color || '#8833FF') + '15' }]}>
-        <Ionicons name={icon as any} size={22} color={color || '#8833FF'} />
+      <View style={[styles.menuIconWrap, { backgroundColor: (color || '#F5C518') + '15' }]}>
+        <Ionicons name={icon as any} size={22} color={color || '#F5C518'} />
       </View>
       <Text style={styles.menuLabel}>{label}</Text>
       <View style={styles.menuRight}>
@@ -57,7 +57,7 @@ export default function SettingsScreen() {
         {/* Profile Card */}
         <TouchableOpacity testID="profile-card" style={styles.profileCard}>
           <View style={styles.avatarWrap}>
-            <Ionicons name="person" size={32} color="#8833FF" />
+            <Ionicons name="person" size={32} color="#F5C518" />
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.name}</Text>
@@ -82,7 +82,7 @@ export default function SettingsScreen() {
         {/* Quick actions */}
         <View style={styles.menuSection}>
           <MenuItem icon="cart" label={t('orders.title')} onPress={() => router.push('/orders')} />
-          <MenuItem icon="construct" label={lang === 'ar' ? 'خدماتي' : 'My Services'} color="#8833FF" onPress={() => router.push('/my-services')} />
+          <MenuItem icon="construct" label={lang === 'ar' ? 'خدماتي' : 'My Services'} color="#F5C518" onPress={() => router.push('/my-services')} />
           <MenuItem icon="people" label={t('gb.title')} color="#EC4899" onPress={() => router.push('/group-buys' as any)} />
           <MenuItem icon="medal" label={t('points.title')} color="#F59E0B" onPress={() => router.push('/points' as any)} />
           <MenuItem icon="notifications" label={t('notif.title')} color="#3B82F6" onPress={() => router.push('/notifications' as any)} />
@@ -139,7 +139,7 @@ export default function SettingsScreen() {
                   <Text style={styles.langNative}>{l.nativeName}</Text>
                   <Text style={styles.langEng}>{l.name}</Text>
                 </View>
-                {lang === l.code && <Ionicons name="checkmark-circle" size={22} color="#8833FF" />}
+                {lang === l.code && <Ionicons name="checkmark-circle" size={22} color="#F5C518" />}
               </TouchableOpacity>
             ))}
             {filteredLangs.length === 0 && <Text style={styles.noResult}>{lang === 'ar' ? 'لا توجد نتائج' : 'No results'}</Text>}
@@ -154,11 +154,11 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFFFFF' },
   pageTitle: { fontSize: 24, fontWeight: '800', color: '#0A0A0A', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   profileCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, padding: 16, backgroundColor: '#F9F9FB', borderRadius: 16, marginBottom: 16 },
-  avatarWrap: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
+  avatarWrap: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
   profileInfo: { flex: 1 },
   profileName: { fontSize: 18, fontWeight: '700', color: '#0A0A0A', marginBottom: 2 },
   profilePhone: { fontSize: 14, color: '#52525B' },
-  walletCard: { flexDirection: 'row', marginHorizontal: 20, padding: 20, backgroundColor: '#8833FF', borderRadius: 16, marginBottom: 20 },
+  walletCard: { flexDirection: 'row', marginHorizontal: 20, padding: 20, backgroundColor: '#F5C518', borderRadius: 16, marginBottom: 20 },
   walletItem: { flex: 1, alignItems: 'center' },
   walletValue: { fontSize: 22, fontWeight: '800', color: '#FFFFFF', marginBottom: 4 },
   walletLabel: { fontSize: 13, color: '#FFFFFF', opacity: 0.8 },
@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
   menuIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
   menuLabel: { flex: 1, fontSize: 15, fontWeight: '500', color: '#0A0A0A' },
   menuRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  badge: { backgroundColor: '#EFE6FF', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, color: '#8833FF', fontWeight: '600' },
+  badge: { backgroundColor: '#FFF7DA', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
+  badgeText: { fontSize: 11, color: '#F5C518', fontWeight: '600' },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, paddingVertical: 16, borderRadius: 14, backgroundColor: '#FEF2F2', gap: 8 },
   logoutText: { fontSize: 16, fontWeight: '600', color: '#EF4444' },
   langHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#F4F4F5' },
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginVertical: 12, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#F4F4F5', borderRadius: 12 },
   searchInput: { flex: 1, fontSize: 14, color: '#0A0A0A', padding: 0 },
   langRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#F9F9FB' },
-  langRowActive: { backgroundColor: '#EFE6FF' },
+  langRowActive: { backgroundColor: '#FFF7DA' },
   langFlag: { fontSize: 28 },
   langNative: { fontSize: 16, fontWeight: '700', color: '#0A0A0A' },
   langEng: { fontSize: 12, color: '#71717A', marginTop: 1 },

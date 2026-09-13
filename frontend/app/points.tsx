@@ -35,7 +35,7 @@ export default function PointsScreen() {
     finally { setRedeeming(false); }
   };
 
-  if (loading || !data) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading || !data) return <View style={s.center}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   const tierColor = data.tier === 'ذهبي' || data.tier === 'Gold' ? '#FFD700' : data.tier === 'فضي' || data.tier === 'Silver' ? '#C0C0C0' : '#CD7F32';
 
@@ -101,7 +101,7 @@ const s = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
   title: { fontSize: 17, fontWeight: '800' },
-  hero: { backgroundColor: '#8833FF', padding: 24, borderRadius: 20, alignItems: 'center' },
+  hero: { backgroundColor: '#F5C518', padding: 24, borderRadius: 20, alignItems: 'center' },
   heroLabel: { color: 'rgba(255,255,255,0.85)', fontSize: 13 },
   heroValue: { color: 'white', fontSize: 56, fontWeight: '900', marginTop: 6 },
   tierBadge: { paddingHorizontal: 18, paddingVertical: 6, borderRadius: 16, marginTop: 8 },
@@ -123,6 +123,6 @@ const s = StyleSheet.create({
   modalCalc: { textAlign: 'center', color: '#10B981', fontSize: 16, fontWeight: '800', marginVertical: 12 },
   modalBtn: { flex: 1, padding: 14, borderRadius: 10, alignItems: 'center' },
   modalCancel: { backgroundColor: '#F3F4F6' },
-  modalConfirm: { backgroundColor: '#8833FF' },
+  modalConfirm: { backgroundColor: '#F5C518' },
   modalBtnText: { fontWeight: '800' },
 });

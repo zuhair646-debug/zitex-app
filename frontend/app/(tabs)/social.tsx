@@ -125,7 +125,7 @@ export default function SocialScreen() {
         </View>
       </View>
 
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> : (
+      {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> : (
         <ScrollView
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
           showsVerticalScrollIndicator={false}
@@ -143,7 +143,7 @@ export default function SocialScreen() {
             {stories.map(st => (
               <TouchableOpacity key={st.id} style={s.storyItem} onPress={() => setStoryOpen(st)}>
                 <View style={s.storyCircle}>
-                  {st.image ? <Image source={{ uri: st.image }} style={s.storyAvatarImg} /> : <View style={s.storyAvatar}><Ionicons name="storefront" size={22} color="#8833FF" /></View>}
+                  {st.image ? <Image source={{ uri: st.image }} style={s.storyAvatarImg} /> : <View style={s.storyAvatar}><Ionicons name="storefront" size={22} color="#F5C518" /></View>}
                 </View>
                 <Text style={s.storyLabel} numberOfLines={1}>{st.author || 'Store'}</Text>
               </TouchableOpacity>
@@ -212,7 +212,7 @@ export default function SocialScreen() {
                   <View style={[s.qBadge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="calendar" size={14} color="#10B981" /><Text style={[s.qBadgeText, { color: '#065F46' }]}>فعالية</Text></View>
                 )}
                 <View style={s.postHeader}>
-                  <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#8833FF" /></View>
+                  <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#F5C518" /></View>
                   <View style={s.postAuthorInfo}>
                     <Text style={s.postAuthor}>{post.author || 'Zitex'}</Text>
                     <Text style={s.postTime}>{timeAgo(post.created_at)}</Text>
@@ -248,9 +248,9 @@ export default function SocialScreen() {
                   const isSelected = userVoted === i;
                   return (
                     <TouchableOpacity key={i} style={[s.pollOption, isSelected && s.pollSelected]} onPress={() => votePoll(postId, i)}>
-                      <View style={[s.pollBarFill, { width: `${pct}%`, backgroundColor: isSelected ? '#8833FF40' : '#EFE6FF' }]} />
+                      <View style={[s.pollBarFill, { width: `${pct}%`, backgroundColor: isSelected ? '#8833FF40' : '#FFF7DA' }]} />
                       <Text style={[s.pollOptionText, isSelected && { fontWeight: '800' }]}>{opt.text}</Text>
-                      <Text style={[s.pollPct, isSelected && { color: '#8833FF' }]}>{pct}%</Text>
+                      <Text style={[s.pollPct, isSelected && { color: '#F5C518' }]}>{pct}%</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -266,7 +266,7 @@ export default function SocialScreen() {
                     <Text style={s.actionCount}>{post.comments || 0}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => toggleBookmark(postId)} style={s.actionItem}>
-                    <Ionicons name={bookmarked.has(postId) ? 'bookmark' : 'bookmark-outline'} size={20} color={bookmarked.has(postId) ? '#8833FF' : '#52525B'} />
+                    <Ionicons name={bookmarked.has(postId) ? 'bookmark' : 'bookmark-outline'} size={20} color={bookmarked.has(postId) ? '#F5C518' : '#52525B'} />
                   </TouchableOpacity>
                 </View>
 
@@ -387,7 +387,7 @@ const s = StyleSheet.create({
   storiesRow: { paddingHorizontal: 16, gap: 14, paddingVertical: 12 },
   storyItem: { alignItems: 'center', width: 68 },
   storyCircle: { width: 62, height: 62, borderRadius: 31, borderWidth: 2.5, borderColor: '#EC4899', alignItems: 'center', justifyContent: 'center', marginBottom: 4, padding: 2 },
-  storyAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center' },
+  storyAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center' },
   storyAvatarImg: { width: 50, height: 50, borderRadius: 25 },
   storyLabel: { fontSize: 10, color: '#52525B', fontWeight: '500', textAlign: 'center' },
 
@@ -409,7 +409,7 @@ const s = StyleSheet.create({
   qBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FEF3C7', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 8 },
   qBadgeText: { fontSize: 11, color: '#92400E', fontWeight: '700' },
   postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  postAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center', marginEnd: 10 },
+  postAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center', marginEnd: 10 },
   postAuthorInfo: { flex: 1 },
   postAuthor: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
   postTime: { fontSize: 11, color: '#A1A1AA' },
@@ -424,10 +424,10 @@ const s = StyleSheet.create({
   eventText: { fontSize: 12, color: '#065F46', fontWeight: '700' },
 
   pollOption: { flexDirection: 'row', alignItems: 'center', height: 44, borderRadius: 12, overflow: 'hidden', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E4E4E7', paddingHorizontal: 14, marginBottom: 6 },
-  pollSelected: { borderColor: '#8833FF', borderWidth: 2 },
-  pollBarFill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: '#EFE6FF' },
+  pollSelected: { borderColor: '#F5C518', borderWidth: 2 },
+  pollBarFill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: '#FFF7DA' },
   pollOptionText: { flex: 1, fontSize: 13, fontWeight: '600', color: '#0A0A0A', zIndex: 1 },
-  pollPct: { fontSize: 13, fontWeight: '700', color: '#8833FF', zIndex: 1 },
+  pollPct: { fontSize: 13, fontWeight: '700', color: '#F5C518', zIndex: 1 },
   totalVotesText: { fontSize: 11, color: '#A1A1AA', textAlign: 'center', marginBottom: 8 },
 
   postActions: { flexDirection: 'row', gap: 16, paddingTop: 4 },
@@ -450,12 +450,12 @@ const s = StyleSheet.create({
 
   cmtCard: { flexDirection: 'row', backgroundColor: 'white', padding: 12, borderRadius: 12, marginBottom: 6 },
   cmtMerchantStyle: { backgroundColor: '#F3E8FF' },
-  cmtAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#8833FF', alignItems: 'center', justifyContent: 'center' },
+  cmtAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F5C518', alignItems: 'center', justifyContent: 'center' },
   cmtAvText: { color: 'white', fontWeight: '800', fontSize: 12 },
   cmtName: { fontSize: 13, fontWeight: '700', color: '#0A0A0A' },
   cmtText: { fontSize: 13, color: '#374151', marginTop: 2 },
-  merchantTag: { color: '#8833FF', fontSize: 10, fontWeight: '700' },
+  merchantTag: { color: '#F5C518', fontSize: 10, fontWeight: '700' },
   commentBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingBottom: Platform.OS === 'ios' ? 28 : 12 },
   commentInput: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, textAlign: 'right' },
-  sendBtn: { backgroundColor: '#8833FF', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  sendBtn: { backgroundColor: '#F5C518', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
 });

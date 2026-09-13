@@ -100,9 +100,9 @@ const styles = StyleSheet.create({
   eyeBtn: { padding: 4 },
   forgotLink: { alignSelf: 'flex-start', marginBottom: 8 },
   forgotText: { fontSize: 13, color: '#52525B', textDecorationLine: 'underline' },
-  btn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, shadowColor: '#8833FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 3 },
+  btn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 3 },
   btnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
   bottomRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, gap: 6 },
   bottomText: { fontSize: 14, color: '#52525B' },
-  linkText: { fontSize: 14, color: '#8833FF', fontWeight: '600' },
+  linkText: { fontSize: 14, color: '#F5C518', fontWeight: '600' },
 });

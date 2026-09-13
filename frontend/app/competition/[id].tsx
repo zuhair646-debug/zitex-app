@@ -55,7 +55,7 @@ export default function CompetitionDetailScreen() {
     } catch (e: any) { Alert.alert('Error', e.message); } finally { setDrawing(false); }
   };
 
-  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
   if (!comp) return <View style={s.loadWrap}><Text>Not found</Text></View>;
 
   const isOpen = comp.status === 'open';
@@ -205,7 +205,7 @@ const s = StyleSheet.create({
   topBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 8 },
   topBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
   heroWrap: { height: 200, marginHorizontal: 20, borderRadius: 20, overflow: 'hidden', marginBottom: 20 },
-  heroBg: { flex: 1, backgroundColor: '#8833FF', alignItems: 'center', justifyContent: 'center' },
+  heroBg: { flex: 1, backgroundColor: '#F5C518', alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20 },
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginBottom: 12 },
   statusText: { fontSize: 13, fontWeight: '600' },
@@ -222,12 +222,12 @@ const s = StyleSheet.create({
   entrySection: { marginBottom: 20 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#0A0A0A', marginBottom: 8 },
   entryDesc: { fontSize: 13, color: '#52525B', marginBottom: 12 },
-  quizBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 20, alignSelf: 'flex-start' },
+  quizBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 20, alignSelf: 'flex-start' },
   quizBtnText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
   participantsSection: { marginBottom: 20 },
   participantRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F4F4F5' },
   participantAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center', marginEnd: 12 },
-  avatarText: { fontSize: 16, fontWeight: '700', color: '#8833FF' },
+  avatarText: { fontSize: 16, fontWeight: '700', color: '#F5C518' },
   participantInfo: { flex: 1 },
   participantName: { fontSize: 14, fontWeight: '600', color: '#0A0A0A' },
   participantPhone: { fontSize: 12, color: '#A1A1AA' },
@@ -242,22 +242,22 @@ const s = StyleSheet.create({
   winnerPhone: { fontSize: 12, color: '#52525B' },
   giftBtn: { backgroundColor: '#10B981', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
   giftBtnText: { color: '#FFF', fontSize: 12, fontWeight: '600' },
-  drawBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#8833FF', borderRadius: 16, paddingVertical: 18, marginBottom: 20 },
+  drawBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#F5C518', borderRadius: 16, paddingVertical: 18, marginBottom: 20 },
   drawBtnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   quizModal: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80%' },
   quizHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   quizTitle: { fontSize: 20, fontWeight: '700', color: '#0A0A0A' },
   quizInfo: { fontSize: 13, color: '#52525B', marginBottom: 16 },
-  qNumber: { fontSize: 14, fontWeight: '600', color: '#8833FF', marginBottom: 8 },
+  qNumber: { fontSize: 14, fontWeight: '600', color: '#F5C518', marginBottom: 8 },
   question: { fontSize: 16, fontWeight: '600', color: '#0A0A0A', marginBottom: 20, lineHeight: 24 },
   optionBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: '#E4E4E7', marginBottom: 10 },
-  optionSelected: { borderColor: '#8833FF', backgroundColor: '#EFE6FF' },
+  optionSelected: { borderColor: '#F5C518', backgroundColor: '#EFE6FF' },
   radioCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#E4E4E7' },
-  radioSelected: { borderColor: '#8833FF', backgroundColor: '#8833FF' },
+  radioSelected: { borderColor: '#F5C518', backgroundColor: '#F5C518' },
   optionText: { fontSize: 14, color: '#52525B' },
-  optionTextSelected: { color: '#8833FF', fontWeight: '600' },
-  nextBtn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 10 },
+  optionTextSelected: { color: '#F5C518', fontWeight: '600' },
+  nextBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 10 },
   nextBtnDisabled: { opacity: 0.5 },
   nextBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
   drawModal: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 32, alignItems: 'center' },
@@ -265,6 +265,6 @@ const s = StyleSheet.create({
   drawWinner: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, width: '100%' },
   drawRank: { fontSize: 18, fontWeight: '800', color: '#F59E0B' },
   drawName: { fontSize: 16, fontWeight: '600', color: '#0A0A0A' },
-  closeDrawBtn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 40, marginTop: 20 },
+  closeDrawBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 40, marginTop: 20 },
   closeDrawText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
 });

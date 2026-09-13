@@ -18,7 +18,7 @@ export default function TabLayout() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8833FF" />
+        <ActivityIndicator size="large" color="#F5C518" />
       </View>
     );
   }
@@ -28,7 +28,7 @@ export default function TabLayout() {
   return (
     <Tabs screenOptions={{
       headerShown: false,
-      tabBarActiveTintColor: '#8833FF',
+      tabBarActiveTintColor: '#F5C518',
       tabBarInactiveTintColor: '#A1A1AA',
       tabBarStyle: { backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#F4F4F5', height: 70, paddingBottom: 20, paddingTop: 10 },
       tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },

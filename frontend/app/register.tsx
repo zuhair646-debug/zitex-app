@@ -39,7 +39,7 @@ export default function RegisterScreen() {
 
           <View style={styles.logoWrap}>
             <View style={styles.logoCircle}>
-              <Ionicons name="person-add-outline" size={36} color="#8833FF" />
+              <Ionicons name="person-add-outline" size={36} color="#F5C518" />
             </View>
             <Text style={styles.title}>إنشاء حساب جديد</Text>
             <Text style={styles.subtitle}>أدخل بياناتك للتسجيل</Text>
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   container: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 16 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   logoWrap: { alignItems: 'center', marginBottom: 32 },
-  logoCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  logoCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   title: { fontSize: 24, fontWeight: '800', color: '#0A0A0A', marginBottom: 8 },
   subtitle: { fontSize: 15, color: '#52525B' },
   errorBox: { backgroundColor: '#FEF2F2', borderRadius: 12, padding: 12, marginBottom: 16 },
@@ -101,9 +101,9 @@ const styles = StyleSheet.create({
   inputIcon: { marginEnd: 12 },
   input: { flex: 1, fontSize: 16, color: '#0A0A0A' },
   eyeBtn: { padding: 4 },
-  btn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, shadowColor: '#8833FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 3 },
+  btn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 3 },
   btnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
   bottomRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, gap: 6, marginBottom: 32 },
   bottomText: { fontSize: 14, color: '#52525B' },
-  linkText: { fontSize: 14, color: '#8833FF', fontWeight: '600' },
+  linkText: { fontSize: 14, color: '#F5C518', fontWeight: '600' },
 });

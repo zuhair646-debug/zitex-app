@@ -39,7 +39,7 @@ export default function OrdersScreen() {
           </TouchableOpacity>
         ))}
       </View>
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
+      {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> :
         filtered.length === 0 ? (
           <View style={s.empty}><Ionicons name="bag-outline" size={48} color="#A1A1AA" /><Text style={s.emptyText}>No orders found</Text></View>
         ) : (
@@ -70,7 +70,7 @@ const s = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: '#0A0A0A' },
   filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 16 },
   filterPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 100, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7' },
-  filterActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
+  filterActive: { backgroundColor: '#F5C518', borderColor: '#F5C518' },
   filterText: { fontSize: 13, fontWeight: '500', color: '#52525B' },
   filterTextActive: { color: '#FFF' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
@@ -85,5 +85,5 @@ const s = StyleSheet.create({
   orderVal: { fontSize: 13, color: '#0A0A0A', fontWeight: '500' },
   totalRow: { borderTopWidth: 1, borderTopColor: '#E4E4E7', marginTop: 4, paddingVertical: 10 },
   totalLabel: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
-  totalVal: { fontSize: 16, fontWeight: '800', color: '#8833FF' },
+  totalVal: { fontSize: 16, fontWeight: '800', color: '#F5C518' },
 });

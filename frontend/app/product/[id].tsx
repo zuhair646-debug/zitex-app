@@ -49,7 +49,7 @@ export default function ProductDetailScreen() {
     } finally { setAdding(false); }
   };
 
-  if (loading) return <View style={styles.loadWrap}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={styles.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
   if (!product) return <View style={styles.loadWrap}><Text>المنتج غير موجود</Text></View>;
 
   const price = product.discount_price || product.price;
@@ -244,7 +244,7 @@ export default function ProductDetailScreen() {
               <Text style={styles.shipText}>توصيل مجدول (اختر الوقت المناسب)</Text>
             </View>
             <View style={styles.shipItem}>
-              <Ionicons name="cube" size={18} color="#8833FF" />
+              <Ionicons name="cube" size={18} color="#F5C518" />
               <Text style={styles.shipText}>توصيل عادي (2-3 أيام)</Text>
             </View>
 
@@ -307,9 +307,9 @@ const styles = StyleSheet.create({
   ratingVal: { fontSize: 15, fontWeight: '700', color: '#0A0A0A' },
   reviewCount: { fontSize: 13, color: '#52525B' },
   soldBadge: { backgroundColor: '#EFE6FF', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginStart: 8 },
-  soldText: { fontSize: 11, color: '#8833FF', fontWeight: '600' },
+  soldText: { fontSize: 11, color: '#F5C518', fontWeight: '600' },
   priceSection: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
-  price: { fontSize: 28, fontWeight: '800', color: '#8833FF' },
+  price: { fontSize: 28, fontWeight: '800', color: '#F5C518' },
   oldPrice: { fontSize: 16, color: '#A1A1AA', textDecorationLine: 'line-through' },
   saveBadge: { backgroundColor: '#DCFCE7', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
   saveText: { fontSize: 12, color: '#10B981', fontWeight: '600' },
@@ -317,15 +317,15 @@ const styles = StyleSheet.create({
   optionTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 10 },
   optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   colorBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: '#E4E4E7', backgroundColor: '#FFF' },
-  colorSelected: { borderColor: '#8833FF', backgroundColor: '#EFE6FF' },
+  colorSelected: { borderColor: '#F5C518', backgroundColor: '#EFE6FF' },
   colorDot: { width: 20, height: 20, borderRadius: 10 },
   colorLabel: { fontSize: 13, color: '#52525B', fontWeight: '500' },
-  colorLabelActive: { color: '#8833FF' },
-  colorSelectedName: { fontSize: 13, fontWeight: '700', color: '#8833FF' },
+  colorLabelActive: { color: '#F5C518' },
+  colorSelectedName: { fontSize: 13, fontWeight: '700', color: '#F5C518' },
   colorCircleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 8 },
   colorCircleWrap: { alignItems: 'center' },
   colorCircleOuter: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
-  colorCircleOuterActive: { borderColor: '#8833FF' },
+  colorCircleOuterActive: { borderColor: '#F5C518' },
   colorCircleInner: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)' },
   warrantyBlock: { gap: 10, marginTop: 6, marginBottom: 6 },
   warrCard: { backgroundColor: '#FFF', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' },
@@ -340,9 +340,9 @@ const styles = StyleSheet.create({
   warrBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#DBEAFE', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
   warrBtnText: { fontSize: 12, color: '#1E40AF', fontWeight: '700' },
   storageBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: '#E4E4E7', backgroundColor: '#FFF' },
-  storageSelected: { borderColor: '#8833FF', backgroundColor: '#EFE6FF' },
+  storageSelected: { borderColor: '#F5C518', backgroundColor: '#EFE6FF' },
   storageLabel: { fontSize: 14, fontWeight: '600', color: '#52525B' },
-  storageLabelActive: { color: '#8833FF' },
+  storageLabelActive: { color: '#F5C518' },
   descSection: { marginBottom: 20 },
   descText: { fontSize: 14, color: '#52525B', lineHeight: 24 },
   specsSection: { marginBottom: 20, backgroundColor: '#F9F9FB', borderRadius: 16, padding: 16 },
@@ -362,6 +362,6 @@ const styles = StyleSheet.create({
   payText: { fontSize: 11, color: '#065F46', fontWeight: '700' },
   payTextSoon: { fontSize: 11, color: '#6B7280', fontWeight: '600' },
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingBottom: 34, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F4F4F5' },
-  addToCartBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, gap: 10, shadowColor: '#8833FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
+  addToCartBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, gap: 10, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
   addToCartText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
 });

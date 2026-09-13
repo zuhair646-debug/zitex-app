@@ -82,7 +82,7 @@ export default function HomeScreen() {
   useEffect(() => { loadData(); }, []);
   const onRefresh = useCallback(async () => { setRefreshing(true); await loadData(); setRefreshing(false); }, []);
 
-  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   const catImages: Record<string, string> = {
     'Phones': 'phone-portrait', 'Tablets': 'tablet-portrait', 'Laptops': 'laptop',
@@ -126,7 +126,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8833FF" />} showsVerticalScrollIndicator={false}>
+      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F5C518" />} showsVerticalScrollIndicator={false}>
 
         {/* ─── Header ─── */}
         <View style={s.header}>
@@ -139,7 +139,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           <TouchableOpacity testID="store-selector" style={s.storeSelector}>
-            <Ionicons name="storefront-outline" size={18} color="#8833FF" />
+            <Ionicons name="storefront-outline" size={18} color="#F5C518" />
             <Text style={s.storeName}>Riyadh Store</Text>
             <Ionicons name="chevron-down" size={14} color="#52525B" />
           </TouchableOpacity>
@@ -160,7 +160,7 @@ export default function HomeScreen() {
         {affiliateCount > 0 && (
           <View style={s.tglWrap}>
             <View style={s.tglOn}>
-              <Ionicons name="storefront" size={14} color="#8833FF" />
+              <Ionicons name="storefront" size={14} color="#F5C518" />
               <Text style={s.tglOnText}>🛍 المتجر</Text>
             </View>
             <TouchableOpacity onPress={() => router.push('/my-affiliate')} style={s.tglOff}>
@@ -266,7 +266,7 @@ export default function HomeScreen() {
         <View style={s.section}>
           <View style={s.sectionHeader}>
             <View style={s.sectionTitleRow}>
-              <Ionicons name="pricetag" size={20} color="#8833FF" />
+              <Ionicons name="pricetag" size={20} color="#F5C518" />
               <Text style={s.sectionTitle}>Best deals</Text>
             </View>
             <TouchableOpacity testID="see-all-deals" onPress={() => router.push('/search')}>
@@ -293,7 +293,7 @@ export default function HomeScreen() {
                 activeBooking.status === 'ready' ? 'جاهز للاستلام' : activeBooking.status
               }</Text>
             </View>
-            <Ionicons name="chevron-back" size={22} color="#8833FF" />
+            <Ionicons name="chevron-back" size={22} color="#F5C518" />
           </TouchableOpacity>
         )}
 
@@ -307,7 +307,7 @@ export default function HomeScreen() {
             <TouchableOpacity activeOpacity={0.85} style={s.competitionBanner} onPress={() => router.push(`/competition/${topCompetition.id || topCompetition._id}` as any)}>
               <View style={s.competitionLeft}>
                 <View style={s.trophyWrap}>
-                  <Ionicons name="trophy" size={28} color="#8833FF" />
+                  <Ionicons name="trophy" size={28} color="#F5C518" />
                   {daysLeft != null && daysLeft <= 30 && <View style={s.trophyBadge}><Text style={s.trophyBadgeText}>{daysLeft}d</Text></View>}
                 </View>
               </View>
@@ -319,7 +319,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={s.progressText}>{joined}/{max} مشارك</Text>
-                  <Text style={[s.progressText, { color: '#8833FF', fontWeight: '700' }]}>اضغط للتفاصيل ←</Text>
+                  <Text style={[s.progressText, { color: '#F5C518', fontWeight: '700' }]}>اضغط للتفاصيل ←</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -336,7 +336,7 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFFFFF' },
   tglWrap: { flexDirection: 'row', marginHorizontal: 16, marginTop: 4, marginBottom: 12, backgroundColor: '#F1F1F5', borderRadius: 999, padding: 4 },
   tglOn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 999, backgroundColor: 'white' },
-  tglOnText: { color: '#8833FF', fontWeight: '800', fontSize: 13 },
+  tglOnText: { color: '#F5C518', fontWeight: '800', fontSize: 13 },
   tglOff: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 999, backgroundColor: 'transparent' },
   tglOffText: { color: '#52525B', fontWeight: '700', fontSize: 13 },
   tglBadge: { backgroundColor: '#F5C518', paddingHorizontal: 6, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
@@ -353,7 +353,7 @@ const s = StyleSheet.create({
   locationBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 12, backgroundColor: '#F9F9FB' },
   locationText: { fontSize: 11, color: '#52525B', fontWeight: '500' },
   cartBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
-  cartBadge: { position: 'absolute', top: 2, right: 2, backgroundColor: '#8833FF', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  cartBadge: { position: 'absolute', top: 2, right: 2, backgroundColor: '#F5C518', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   cartBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
 
   // Banner
@@ -362,14 +362,14 @@ const s = StyleSheet.create({
   bannerImage: { width: '100%', height: '100%' },
   dotsRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 10, gap: 6 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E4E4E7' },
-  dotActive: { backgroundColor: '#8833FF', width: 24 },
+  dotActive: { backgroundColor: '#F5C518', width: 24 },
 
   // Sections
   section: { marginBottom: 20 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 12 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#0A0A0A' },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  seeAll: { fontSize: 13, color: '#8833FF', fontWeight: '600' },
+  seeAll: { fontSize: 13, color: '#F5C518', fontWeight: '600' },
 
   // Categories
   catScroll: { paddingHorizontal: 16, gap: 12 },
@@ -388,7 +388,7 @@ const s = StyleSheet.create({
   offBadgeText: { color: '#FFF', fontSize: 12, fontWeight: '800' },
   usedDevicesTitle: { fontSize: 20, fontWeight: '800', color: '#0A0A0A', marginBottom: 4 },
   usedDevicesDesc: { fontSize: 13, color: '#52525B', lineHeight: 20, marginBottom: 12 },
-  checkNowBtn: { backgroundColor: '#8833FF', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
+  checkNowBtn: { backgroundColor: '#F5C518', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
   checkNowText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
   usedDevicesRight: { width: 100, alignItems: 'center', justifyContent: 'center' },
   usedDevicesImg: { width: 90, height: 120, borderRadius: 12 },
@@ -410,14 +410,14 @@ const s = StyleSheet.create({
   productName: { fontSize: 13, fontWeight: '600', color: '#0A0A0A', marginBottom: 4 },
   soldText: { fontSize: 11, color: '#A1A1AA', marginBottom: 6, fontWeight: '500' },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  price: { fontSize: 16, fontWeight: '800', color: '#8833FF' },
+  price: { fontSize: 16, fontWeight: '800', color: '#F5C518' },
   oldPrice: { fontSize: 12, color: '#A1A1AA', textDecorationLine: 'line-through' },
 
   // Featured Banner
   featuredBanner: { marginHorizontal: 20, borderRadius: 20, backgroundColor: '#1A1A2E', flexDirection: 'row', padding: 24, marginBottom: 20, overflow: 'hidden' },
   featuredContent: { flex: 1, justifyContent: 'center' },
   featuredTitle: { fontSize: 28, fontWeight: '800', color: '#FFFFFF', marginBottom: 12 },
-  checkOutBtn: { backgroundColor: '#8833FF', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
+  checkOutBtn: { backgroundColor: '#F5C518', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
   checkOutText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
   featuredImg: { width: 100, height: 130, borderRadius: 12 },
 
@@ -428,13 +428,13 @@ const s = StyleSheet.create({
   svcBannerTitle: { fontSize: 14, fontWeight: '900', color: '#0A0A0A', textAlign: 'right' },
   svcBannerSub: { fontSize: 12, color: '#6B7280', marginTop: 2, textAlign: 'right' },
   competitionLeft: { marginEnd: 14 },
-  trophyWrap: { width: 50, height: 50, borderRadius: 14, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center' },
+  trophyWrap: { width: 50, height: 50, borderRadius: 14, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center' },
   trophyBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   trophyBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
   competitionContent: { flex: 1 },
   competitionText: { fontSize: 13, fontWeight: '700', color: '#0A0A0A', marginBottom: 2 },
-  competitionPrize: { fontSize: 11, color: '#8833FF', marginBottom: 6, fontWeight: '600' },
+  competitionPrize: { fontSize: 11, color: '#F5C518', marginBottom: 6, fontWeight: '600' },
   progressBar: { height: 8, backgroundColor: '#E4E4E7', borderRadius: 4, marginBottom: 4 },
-  progressFill: { height: '100%', backgroundColor: '#8833FF', borderRadius: 4 },
+  progressFill: { height: '100%', backgroundColor: '#F5C518', borderRadius: 4 },
   progressText: { fontSize: 12, color: '#52525B', fontWeight: '600', textAlign: 'right' },
 });

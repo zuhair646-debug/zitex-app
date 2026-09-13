@@ -15,7 +15,7 @@ export default function WarrantiesScreen() {
 
   const daysLeft = (end: string) => { const d = Math.ceil((new Date(end).getTime() - Date.now()) / 86400000); return d > 0 ? d : 0; };
 
-  if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
@@ -66,7 +66,7 @@ const s = StyleSheet.create({
   statusText: { fontSize: 12, fontWeight: '600' },
   daysLeft: { fontSize: 12, color: '#F59E0B', fontWeight: '600' },
   productName: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 2 },
-  serviceName: { fontSize: 13, color: '#8833FF', fontWeight: '500', marginBottom: 10 },
+  serviceName: { fontSize: 13, color: '#F5C518', fontWeight: '500', marginBottom: 10 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
   infoLabel: { fontSize: 13, color: '#52525B' }, infoVal: { fontSize: 13, fontWeight: '500', color: '#0A0A0A' },
   progressWrap: { marginTop: 10 },

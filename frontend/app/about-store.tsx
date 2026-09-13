@@ -32,20 +32,20 @@ export default function AboutStoreScreen() {
         </View>
 
         <View style={s.logoSection}>
-          <View style={s.logoCircle}><Ionicons name="phone-portrait-outline" size={40} color="#8833FF" /></View>
+          <View style={s.logoCircle}><Ionicons name="phone-portrait-outline" size={40} color="#F5C518" /></View>
           <Text style={s.storeName}>Tech Store</Text>
           <Text style={s.storeDesc}>A tech store for phones and accessories</Text>
         </View>
 
         <View style={s.infoCard}>
           <View style={s.infoRow}>
-            <Ionicons name="call" size={20} color="#8833FF" />
+            <Ionicons name="call" size={20} color="#F5C518" />
             <Text style={s.infoText}>{store.phone}</Text>
             <TouchableOpacity onPress={() => Linking.openURL(`tel:${store.phone}`)}><Ionicons name="copy" size={18} color="#A1A1AA" /></TouchableOpacity>
           </View>
           <View style={s.divider} />
           <View style={s.infoRow}>
-            <Ionicons name="location" size={20} color="#8833FF" />
+            <Ionicons name="location" size={20} color="#F5C518" />
             <Text style={s.infoText}>{store.address}</Text>
             <TouchableOpacity><Ionicons name="open-outline" size={18} color="#A1A1AA" /></TouchableOpacity>
           </View>
@@ -80,11 +80,11 @@ const s = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   storeSelector: { flexDirection: 'row', gap: 10, marginBottom: 24 },
   storePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7' },
-  storePillActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
+  storePillActive: { backgroundColor: '#F5C518', borderColor: '#F5C518' },
   storePillText: { fontSize: 13, fontWeight: '600', color: '#52525B' },
   storePillTextActive: { color: '#FFF' },
   logoSection: { alignItems: 'center', marginBottom: 24 },
-  logoCircle: { width: 80, height: 80, borderRadius: 24, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  logoCircle: { width: 80, height: 80, borderRadius: 24, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   storeName: { fontSize: 22, fontWeight: '800', color: '#0A0A0A', marginBottom: 4 },
   storeDesc: { fontSize: 14, color: '#52525B' },
   infoCard: { backgroundColor: '#F9F9FB', borderRadius: 16, padding: 16, marginBottom: 20 },

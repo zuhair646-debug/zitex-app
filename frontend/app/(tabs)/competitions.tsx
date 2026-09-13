@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 
 const COMPETITIONS = [
-  { id: '1', title: 'Spend & Win: Eid Special Draw', desc: 'Spend $100 or more between April 15-May 10 and enter our Eid prize draw to win amazing gifts!', prize: 'Win 1 of 5 iPhone 15s', status: 'Still open', joined: 237, total: 1000, timeLeft: '1D 5H left', progress: 0.8, color: '#8833FF' },
+  { id: '1', title: 'Spend & Win: Eid Special Draw', desc: 'Spend $100 or more between April 15-May 10 and enter our Eid prize draw to win amazing gifts!', prize: 'Win 1 of 5 iPhone 15s', status: 'Still open', joined: 237, total: 1000, timeLeft: '1D 5H left', progress: 0.8, color: '#F5C518' },
   { id: '2', title: 'Summer Tech Giveaway', desc: 'Purchase any laptop and get a chance to win a MacBook Pro!', prize: 'Win MacBook Pro 16"', status: 'Coming soon', joined: 0, total: 500, timeLeft: 'Starts in 5D', progress: 0, color: '#3B82F6' },
   { id: '3', title: 'Accessories Bundle Draw', desc: 'Buy 3 accessories and enter the draw for a complete Apple ecosystem bundle', prize: 'Win Apple Ecosystem Bundle', status: 'Ended', joined: 500, total: 500, timeLeft: 'Ended', progress: 1, color: '#10B981' },
 ];

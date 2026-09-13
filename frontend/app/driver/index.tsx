@@ -68,7 +68,7 @@ export default function DriverDashboard() {
     else if (addr) Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`);
   };
 
-  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   const list = tab === 'active' ? active : tab === 'available' ? available : history;
 
@@ -98,11 +98,11 @@ export default function DriverDashboard() {
         </View>
         {list.length === 0 ? <Text style={s.empty}>No {tab} orders</Text> : list.map((o: any) => (
           <View key={o.id} style={s.orderCard}>
-            <View style={s.row}><Text style={s.orderNo}>#{o.id?.slice(-6).toUpperCase()}</Text><Text style={[s.orderStatus, { color: o.status === 'delivered' ? '#10B981' : o.status === 'picked_up' ? '#3B82F6' : o.status === 'assigned' ? '#8833FF' : '#F59E0B' }]}>{o.status}</Text></View>
+            <View style={s.row}><Text style={s.orderNo}>#{o.id?.slice(-6).toUpperCase()}</Text><Text style={[s.orderStatus, { color: o.status === 'delivered' ? '#10B981' : o.status === 'picked_up' ? '#3B82F6' : o.status === 'assigned' ? '#F5C518' : '#F59E0B' }]}>{o.status}</Text></View>
             <Text style={s.customer}>To: {o.address || '-'}</Text>
             <View style={s.row}><Text style={s.items}>{(o.items || []).length} items • {o.total?.toFixed(0)} SAR</Text><Text style={s.fee}>Fee: {(o.delivery_fee || 0).toFixed(2)} SAR</Text></View>
             {tab === 'available' && (
-              <TouchableOpacity style={[s.actionBtn, { backgroundColor: '#8833FF' }]} onPress={() => accept(o.id)}><Text style={s.actionText}>Accept Order</Text></TouchableOpacity>
+              <TouchableOpacity style={[s.actionBtn, { backgroundColor: '#F5C518' }]} onPress={() => accept(o.id)}><Text style={s.actionText}>Accept Order</Text></TouchableOpacity>
             )}
             {tab === 'active' && (
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
@@ -135,7 +135,7 @@ const s = StyleSheet.create({
   statSub: { fontSize: 10, color: '#9CA3AF' },
   tabs: { flexDirection: 'row', backgroundColor: 'white', borderRadius: 12, padding: 4, marginBottom: 12 },
   tab: { flex: 1, padding: 10, borderRadius: 8, alignItems: 'center' },
-  tabActive: { backgroundColor: '#8833FF' },
+  tabActive: { backgroundColor: '#F5C518' },
   tabText: { fontSize: 12, color: '#6B7280', fontWeight: '600' },
   tabTextActive: { color: 'white' },
   orderCard: { backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 10 },
@@ -144,7 +144,7 @@ const s = StyleSheet.create({
   orderStatus: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
   customer: { fontSize: 12, color: '#374151', marginVertical: 4 },
   items: { fontSize: 12, color: '#6B7280' },
-  fee: { fontSize: 13, fontWeight: '700', color: '#8833FF' },
+  fee: { fontSize: 13, fontWeight: '700', color: '#F5C518' },
   actionBtn: { padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 8 },
   actionText: { color: 'white', fontWeight: '700' },
   smBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, padding: 8, borderRadius: 8, flex: 1, justifyContent: 'center' },

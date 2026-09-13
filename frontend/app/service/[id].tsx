@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../_layout';
 import { mediaUrlSync } from '../../src/utils/upload';
 
-const PURPLE = '#8833FF';
+const PURPLE = '#F5C518';
 const { width } = Dimensions.get('window');
 
 type Tab = 'about' | 'experiences' | 'reviews';
@@ -219,7 +219,7 @@ function ExperienceCard({ exp }: { exp: any }) {
             {exp.avg_rating > 0 ? `${exp.avg_rating} • ${exp.review_count} تقييم` : 'لا توجد تقييمات بعد'}
           </Text>
           {exp.review_count > 0 && (
-            <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color="#8833FF" style={{ marginLeft: 'auto' }} />
+            <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color="#F5C518" style={{ marginLeft: 'auto' }} />
           )}
         </TouchableOpacity>
         {expanded && reviews.length > 0 && (

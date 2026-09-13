@@ -16,7 +16,7 @@ export default function ServicesScreen() {
 
   useEffect(() => { (async () => { try { const d = await apiCall('/api/services'); setServices(d); } catch {} finally { setLoading(false); } })(); }, []);
 
-  if (loading) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#F5C518" /></View>;
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -49,8 +49,8 @@ export default function ServicesScreen() {
           {services.map((svc: any) => (
             <TouchableOpacity testID={`service-${svc.id}`} key={svc.id} style={s.serviceCard}
               onPress={() => router.push({ pathname: '/service/[id]', params: { id: svc.id } })}>
-              <View style={[s.serviceIcon, { backgroundColor: (svc.color || '#8833FF') + '18' }]}>
-                <Ionicons name={(svc.icon || 'construct') as any} size={26} color={svc.color || '#8833FF'} />
+              <View style={[s.serviceIcon, { backgroundColor: (svc.color || '#F5C518') + '18' }]}>
+                <Ionicons name={(svc.icon || 'construct') as any} size={26} color={svc.color || '#F5C518'} />
               </View>
               <View style={s.serviceInfo}>
                 <Text style={s.serviceName}>{svc.name}</Text>
@@ -75,13 +75,13 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   title: { fontSize: 24, fontWeight: '800', color: '#0A0A0A' },
   searchBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
-  promoCard: { marginHorizontal: 20, borderRadius: 20, backgroundColor: '#8833FF', flexDirection: 'row', padding: 20, marginBottom: 24, overflow: 'hidden' },
+  promoCard: { marginHorizontal: 20, borderRadius: 20, backgroundColor: '#F5C518', flexDirection: 'row', padding: 20, marginBottom: 24, overflow: 'hidden' },
   promoContent: { flex: 1 },
   promoTag: { fontSize: 11, fontWeight: '700', color: '#FFF', opacity: 0.8, marginBottom: 6 },
   promoTitle: { fontSize: 22, fontWeight: '800', color: '#FFF', lineHeight: 30, marginBottom: 6 },
   promoDesc: { fontSize: 12, color: '#FFF', opacity: 0.8, marginBottom: 14 },
   promoBtn: { backgroundColor: '#FFF', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
-  promoBtnText: { fontSize: 13, fontWeight: '700', color: '#8833FF' },
+  promoBtnText: { fontSize: 13, fontWeight: '700', color: '#F5C518' },
   promoImgWrap: { width: 100, alignItems: 'center', justifyContent: 'center', opacity: 0.3 },
   section: { paddingHorizontal: 20 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
@@ -94,5 +94,5 @@ const s = StyleSheet.create({
   serviceDesc: { fontSize: 12, color: '#52525B', marginBottom: 6 },
   serviceBottom: { flexDirection: 'row', justifyContent: 'space-between' },
   serviceRequests: { fontSize: 11, color: '#A1A1AA', fontWeight: '500' },
-  servicePrice: { fontSize: 12, color: '#8833FF', fontWeight: '700' },
+  servicePrice: { fontSize: 12, color: '#F5C518', fontWeight: '700' },
 });

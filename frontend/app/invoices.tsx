@@ -19,7 +19,7 @@ export default function InvoicesScreen() {
         <TouchableOpacity testID="inv-back" style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>Invoices</Text>
       </View>
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
+      {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> :
         invoices.length === 0 ? (
           <View style={s.empty}><Ionicons name="receipt-outline" size={48} color="#A1A1AA" /><Text style={s.emptyText}>No invoices yet</Text></View>
         ) : (
@@ -58,6 +58,6 @@ const s = StyleSheet.create({
   label: { fontSize: 13, color: '#52525B' }, val: { fontSize: 13, color: '#0A0A0A' },
   totalRow: { borderTopWidth: 1, borderTopColor: '#E4E4E7', paddingTop: 8, marginTop: 4 },
   totalLabel: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
-  totalVal: { fontSize: 16, fontWeight: '800', color: '#8833FF' },
+  totalVal: { fontSize: 16, fontWeight: '800', color: '#F5C518' },
   itemsTitle: { fontSize: 12, color: '#A1A1AA', marginTop: 6 },
 });

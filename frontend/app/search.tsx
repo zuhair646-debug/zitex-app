@@ -84,7 +84,7 @@ export default function SearchScreen() {
       <Text style={styles.resultCount}>{total} results</Text>
 
       {loading ? (
-        <View style={styles.loadWrap}><ActivityIndicator size="large" color="#8833FF" /></View>
+        <View style={styles.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>
       ) : products.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Ionicons name="search" size={48} color="#A1A1AA" />
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, color: '#0A0A0A' },
   catScroll: { paddingHorizontal: 20, paddingVertical: 8, gap: 8 },
   catPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7' },
-  catPillActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
+  catPillActive: { backgroundColor: '#F5C518', borderColor: '#F5C518' },
   catPillText: { fontSize: 13, fontWeight: '600', color: '#52525B' },
   catPillTextActive: { color: '#FFFFFF' },
   resultCount: { paddingHorizontal: 20, paddingVertical: 6, fontSize: 13, color: '#A1A1AA' },
@@ -138,6 +138,6 @@ const styles = StyleSheet.create({
   productName: { fontSize: 13, fontWeight: '600', color: '#0A0A0A', marginBottom: 4, lineHeight: 20 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
   ratingVal: { fontSize: 12, fontWeight: '600', color: '#0A0A0A' },
-  price: { fontSize: 15, fontWeight: '800', color: '#8833FF' },
+  price: { fontSize: 15, fontWeight: '800', color: '#F5C518' },
   oldPrice: { fontSize: 11, color: '#A1A1AA', textDecorationLine: 'line-through' },
 });

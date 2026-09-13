@@ -68,7 +68,7 @@ export default function CartScreen() {
   const delivery = 15;
   const total = subtotal + tax + delivery;
 
-  if (loading) return <View style={styles.loadWrap}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={styles.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   emptyIconWrap: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   emptyTitle: { fontSize: 20, fontWeight: '700', color: '#0A0A0A', marginBottom: 8 },
   emptyDesc: { fontSize: 14, color: '#52525B', marginBottom: 24 },
-  browseBtn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 32 },
+  browseBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 32 },
   browseBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
   listContent: { paddingHorizontal: 20 },
   cartItem: { flexDirection: 'row', padding: 14, backgroundColor: '#F9F9FB', borderRadius: 16, marginBottom: 12 },
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   cartInfo: { flex: 1 },
   cartName: { fontSize: 14, fontWeight: '600', color: '#0A0A0A', marginBottom: 4, lineHeight: 20 },
   cartOption: { fontSize: 12, color: '#52525B', marginBottom: 2 },
-  cartPrice: { fontSize: 16, fontWeight: '800', color: '#8833FF', marginBottom: 8 },
+  cartPrice: { fontSize: 16, fontWeight: '800', color: '#F5C518', marginBottom: 8 },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   qtyBtn: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E4E4E7' },
   qtyText: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', minWidth: 24, textAlign: 'center' },
@@ -178,11 +178,11 @@ const styles = StyleSheet.create({
   summaryVal: { fontSize: 14, color: '#0A0A0A', fontWeight: '500' },
   totalRow: { borderTopWidth: 1, borderTopColor: '#E4E4E7', paddingTop: 12, marginTop: 4 },
   totalLabel: { fontSize: 16, fontWeight: '700', color: '#0A0A0A' },
-  totalVal: { fontSize: 18, fontWeight: '800', color: '#8833FF' },
+  totalVal: { fontSize: 18, fontWeight: '800', color: '#F5C518' },
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', padding: 20, paddingBottom: 34, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F4F4F5' },
   bottomInfo: { flex: 1 },
   bottomTotal: { fontSize: 20, fontWeight: '800', color: '#0A0A0A' },
   bottomCount: { fontSize: 12, color: '#52525B' },
-  orderBtn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 32, shadowColor: '#8833FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
+  orderBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 32, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
   orderBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
 });

@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { useAuth } from './_layout';
 
-const PURPLE = '#8833FF';
+const PURPLE = '#F5C518';
 
 export default function ServiceBooking() {
   const { service_id } = useLocalSearchParams<{ service_id: string }>();

@@ -26,7 +26,7 @@ export default function TrackOrder() {
   }, [id]);
   useEffect(() => { load(); const iv = setInterval(load, 8000); return () => clearInterval(iv); }, [load]);
 
-  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#F5C518" /></View>;
   if (!order) return <View style={s.center}><Text>لم يتم العثور على الطلب</Text></View>;
 
   const stepIdx = STATUS_ORDER.indexOf(order.status);
@@ -41,7 +41,7 @@ export default function TrackOrder() {
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>تتبع الطلب</Text>
-        <TouchableOpacity onPress={load}><Ionicons name="refresh" size={20} color="#8833FF" /></TouchableOpacity>
+        <TouchableOpacity onPress={load}><Ionicons name="refresh" size={20} color="#F5C518" /></TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <View style={s.orderCard}>
@@ -120,7 +120,7 @@ const s = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
   backBtn: { padding: 4 }, title: { fontSize: 18, fontWeight: '700' },
-  orderCard: { backgroundColor: '#8833FF', padding: 16, borderRadius: 16, alignItems: 'center' },
+  orderCard: { backgroundColor: '#F5C518', padding: 16, borderRadius: 16, alignItems: 'center' },
   orderNo: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700' },
   orderStatus: { color: 'white', fontSize: 18, fontWeight: '900', marginVertical: 8 },
   orderTotal: { color: '#FBBF24', fontSize: 20, fontWeight: '800' },
@@ -134,7 +134,7 @@ const s = StyleSheet.create({
   stepLabelActive: { color: '#0A0A0A', fontWeight: '600' },
   driverBox: { backgroundColor: 'white', padding: 14, borderRadius: 12, marginTop: 8 },
   driverRow: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#8833FF', alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F5C518', alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: 'white', fontSize: 18, fontWeight: '800' },
   driverName: { fontSize: 14, fontWeight: '700' },
   driverPhone: { fontSize: 12, color: '#6B7280' },

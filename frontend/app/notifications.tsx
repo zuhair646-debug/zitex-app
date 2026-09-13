@@ -54,7 +54,7 @@ export default function NotificationsScreen() {
         <Text style={s.title}>🔔 {t('notif.title')} {unread > 0 && <Text style={{ color: '#EF4444' }}>({unread})</Text>}</Text>
         {unread > 0 ? <TouchableOpacity onPress={markAll}><Text style={s.markAll}>✓ تم</Text></TouchableOpacity> : <View style={{ width: 22 }} />}
       </View>
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> : (
+      {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> : (
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 14 }}>
           {items.length === 0 && <Text style={s.empty}>{t('notif.empty')}</Text>}
           {items.map(n => (
@@ -78,10 +78,10 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F9FAFB' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
   title: { fontSize: 17, fontWeight: '800' },
-  markAll: { color: '#8833FF', fontWeight: '700', fontSize: 13 },
+  markAll: { color: '#F5C518', fontWeight: '700', fontSize: 13 },
   empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40 },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 8, gap: 10 },
-  cardUnread: { backgroundColor: '#EFE6FF' },
+  cardUnread: { backgroundColor: '#FFF7DA' },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
   nTitle: { fontSize: 14, fontWeight: '800', color: '#0A0A0A' },
   nBody: { fontSize: 12, color: '#374151', marginTop: 2 },

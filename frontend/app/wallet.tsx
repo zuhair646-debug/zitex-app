@@ -15,7 +15,7 @@ export default function WalletScreen() {
     (async () => { try { const d = await apiCall('/api/wallet'); setWallet(d); } catch {} finally { setLoading(false); } })();
   }, []);
 
-  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
@@ -44,14 +44,14 @@ export default function WalletScreen() {
           <View style={s.empty}><Text style={s.emptyText}>No transactions yet</Text></View>
         ) : (wallet?.transactions || []).map((t: any) => (
           <View key={t.id} style={s.txnRow}>
-            <View style={[s.txnIcon, { backgroundColor: t.type === 'credit' ? '#DCFCE7' : '#EFE6FF' }]}>
-              <Ionicons name={t.type === 'credit' ? 'arrow-down' : 'diamond'} size={18} color={t.type === 'credit' ? '#10B981' : '#8833FF'} />
+            <View style={[s.txnIcon, { backgroundColor: t.type === 'credit' ? '#DCFCE7' : '#FFF7DA' }]}>
+              <Ionicons name={t.type === 'credit' ? 'arrow-down' : 'diamond'} size={18} color={t.type === 'credit' ? '#10B981' : '#F5C518'} />
             </View>
             <View style={s.txnInfo}>
               <Text style={s.txnDesc}>{t.description}</Text>
               <Text style={s.txnDate}>{t.created_at?.split('T')[0]}</Text>
             </View>
-            <Text style={[s.txnAmount, { color: t.type === 'credit' ? '#10B981' : '#8833FF' }]}>
+            <Text style={[s.txnAmount, { color: t.type === 'credit' ? '#10B981' : '#F5C518' }]}>
               {t.type === 'credit' ? '+' : '+'}{t.amount} {t.type === 'points' ? 'pts' : 'SAR'}
             </Text>
           </View>
@@ -68,7 +68,7 @@ const s = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
   title: { fontSize: 22, fontWeight: '800', color: '#0A0A0A' },
   cards: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 24 },
-  balanceCard: { flex: 2, backgroundColor: '#8833FF', borderRadius: 20, padding: 20, gap: 4 },
+  balanceCard: { flex: 2, backgroundColor: '#F5C518', borderRadius: 20, padding: 20, gap: 4 },
   balanceLabel: { fontSize: 13, color: '#FFF', opacity: 0.8 },
   balanceVal: { fontSize: 28, fontWeight: '800', color: '#FFF' },
   topupBtn: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 16, alignSelf: 'flex-start', marginTop: 8 },

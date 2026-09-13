@@ -94,16 +94,22 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
   const [live, setLive] = useState<Record<string, { count: number; sample_names: string[] }>>({});
+  const [banners, setBanners] = useState<any[]>([]);
+  const [featured, setFeatured] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
-      const [d, lv] = await Promise.all([
+      const [d, lv, banners, featured] = await Promise.all([
         apiCall('/api/products'),
         apiCall('/api/merchant/products/live-viewers').catch(() => ({})),
+        apiCall('/api/banners').catch(() => []),
+        apiCall('/api/products/featured').catch(() => []),
       ]);
       setItems(Array.isArray(d) ? d : (d.products || d.items || []));
       setLive(lv || {});
+      setBanners(Array.isArray(banners) ? banners : []);
+      setFeatured(Array.isArray(featured) ? featured : (featured.products || []));
     } catch (e: any) { Alert.alert('خطأ', e.message); }
     finally { setLoading(false); }
   }, [apiCall]);
@@ -135,6 +141,41 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
         keyExtractor={(x, i) => x.id || String(i)}
         columnWrapperStyle={{ gap: 10, paddingHorizontal: 12 }}
         contentContainerStyle={{ paddingBottom: 120, gap: 10 }}
+        ListHeaderComponent={
+          <View style={{ paddingHorizontal: 12, gap: 10 }}>
+            {/* Banners (like customer home) */}
+            {banners.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 4 }}>
+                {banners.map((b: any, i: number) => (
+                  <View key={i} style={{ marginRight: 10, width: 280, height: 120, borderRadius: 14, overflow: 'hidden', backgroundColor: CARD, borderWidth: 1, borderColor: BORDER }}>
+                    {b.image && <Image source={{ uri: mediaUrlSync(b.image) }} style={{ width: '100%', height: '100%' }} contentFit="cover" />}
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+            {/* Featured strip */}
+            {featured.length > 0 && (
+              <>
+                <Text style={{ color: GOLD, fontSize: 14, fontWeight: '900', marginTop: 6, textAlign: 'right' }}>⭐ منتجات مميزة</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {featured.slice(0, 10).map((f: any) => (
+                    <TouchableOpacity key={f.id} onPress={() => router.push(`/product/${f.id}?preview=1` as any)}
+                      style={{ marginRight: 10, width: 130, backgroundColor: CARD, borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: BORDER }}>
+                      {f.images?.[0] && <Image source={{ uri: mediaUrlSync(f.images[0]) }} style={{ width: 130, height: 100 }} contentFit="cover" />}
+                      <View style={{ padding: 6 }}>
+                        <Text numberOfLines={1} style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800', textAlign: 'right' }}>{f.name_ar}</Text>
+                        <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900', marginTop: 2 }}>{f.price} ر.س</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </>
+            )}
+            {items.length > 0 && (
+              <Text style={{ color: GOLD, fontSize: 14, fontWeight: '900', marginTop: 6, textAlign: 'right' }}>🛍 كل المنتجات</Text>
+            )}
+          </View>
+        }
         renderItem={({ item }) => {
           const liveCount = live[item.id]?.count || 0;
           const selected = selectedIds.includes(item.id);
@@ -250,7 +291,12 @@ function SocialSection({ apiCall }: any) {
     catch (e: any) { Alert.alert('خطأ', e.message); }
     finally { setLoading(false); }
   }, [apiCall]);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); const iv = setInterval(load, 15000); return () => clearInterval(iv); }, [load]);
+
+  const likePost = async (pid: string) => {
+    try { await apiCall(`/api/social/posts/${pid}/like`, { method: 'POST' }); load(); }
+    catch (e: any) { Alert.alert('خطأ', e.message); }
+  };
 
   const sendReply = async () => {
     if (!replying || !replyText.trim()) return;
@@ -280,9 +326,17 @@ function SocialSection({ apiCall }: any) {
             {!!item.text && <Text style={s.postText}>{item.text}</Text>}
             {item.images?.[0] && <Image source={{ uri: mediaUrlSync(item.images[0]) }} style={s.postImg} contentFit="cover" />}
             <View style={s.postMeta}>
-              <Text style={s.postMetaText}>❤ {item.likes || 0}</Text>
+              <TouchableOpacity onPress={() => likePost(item.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="heart" size={14} color={GOLD} />
+                <Text style={s.postMetaText}>{item.likes || 0}</Text>
+              </TouchableOpacity>
               <Text style={s.postMetaText}>💬 {(item.comments || []).length}</Text>
               <Text style={s.postMetaText}>👁 {item.views || 0}</Text>
+              <View style={{ flex: 1 }} />
+              <View style={s.livePulse2}>
+                <View style={s.livePulse} />
+                <Text style={{ color: '#A7F3D0', fontSize: 10, fontWeight: '700' }}>مباشر</Text>
+              </View>
             </View>
             {/* Comments (first 3) */}
             {(item.comments || []).slice(0, 3).map((c: any) => (
@@ -526,6 +580,7 @@ const s = StyleSheet.create({
   toolbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8 },
   liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#0F5132', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   livePulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' },
+  livePulse2: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#0F5132', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
   liveText: { color: '#A7F3D0', fontSize: 11, fontWeight: '800' },
   cmpBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: CARD, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: GOLD },
   cmpText: { color: GOLD, fontSize: 12, fontWeight: '700' },

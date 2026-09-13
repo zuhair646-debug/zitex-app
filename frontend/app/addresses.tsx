@@ -19,7 +19,7 @@ export default function AddressesScreen() {
     { text: 'Delete', style: 'destructive', onPress: async () => { await apiCall(`/api/addresses/${id}`, { method: 'DELETE' }); load(); } },
   ]);
 
-  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
@@ -28,10 +28,10 @@ export default function AddressesScreen() {
           <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
         </TouchableOpacity>
         <Text style={s.title}>Address</Text>
-        <TouchableOpacity testID="add-addr-btn" style={s.addBtn}><Ionicons name="add" size={22} color="#8833FF" /></TouchableOpacity>
+        <TouchableOpacity testID="add-addr-btn" style={s.addBtn}><Ionicons name="add" size={22} color="#F5C518" /></TouchableOpacity>
       </View>
       <View style={s.locationRow}>
-        <Ionicons name="location" size={20} color="#8833FF" />
+        <Ionicons name="location" size={20} color="#F5C518" />
         <View style={s.locationInfo}>
           <Text style={s.locationLabel}>Enable location</Text>
           <Text style={s.locationDesc}>Allow location to see your correct location</Text>
@@ -43,7 +43,7 @@ export default function AddressesScreen() {
         {addresses.map((a) => (
           <View key={a.id} style={s.addrCard}>
             <View style={s.addrTop}>
-              <Ionicons name={a.label === 'My home' ? 'home' : 'business'} size={20} color="#8833FF" />
+              <Ionicons name={a.label === 'My home' ? 'home' : 'business'} size={20} color="#F5C518" />
               <Text style={s.addrLabel}>{a.label}</Text>
               {a.is_default && <View style={s.defaultBadge}><Ionicons name="checkmark" size={12} color="#10B981" /><Text style={s.defaultText}>Default</Text></View>}
             </View>
@@ -65,7 +65,7 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
   title: { flex: 1, fontSize: 22, fontWeight: '800', color: '#0A0A0A' },
-  addBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center' },
+  addBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center' },
   locationRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, padding: 16, backgroundColor: '#F9F9FB', borderRadius: 16, marginBottom: 20 },
   locationInfo: { flex: 1, marginStart: 12 },
   locationLabel: { fontSize: 14, fontWeight: '600', color: '#0A0A0A' },

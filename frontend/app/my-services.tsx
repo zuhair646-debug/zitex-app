@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { mediaUrlSync } from '../src/utils/upload';
 
-const PURPLE = '#8833FF';
+const PURPLE = '#F5C518';
 
 const STEPS = [
   { key: 'pending', label: 'قيد الاستلام', icon: 'time' },

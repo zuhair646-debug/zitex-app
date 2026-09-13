@@ -21,7 +21,7 @@ export default function SupportScreen() {
     try { await Linking.openURL(url); } catch { Alert.alert(t('common.error'), 'تعذر فتح الرابط'); }
   };
 
-  if (loading || !info) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading || !info) return <View style={s.center}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   const channels = [
     { id: 'whatsapp', label: 'واتساب', sub: info.whatsapp, icon: 'logo-whatsapp', color: '#25D366', url: info.whatsapp ? `https://wa.me/${info.whatsapp}` : '' },
@@ -82,7 +82,7 @@ const s = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
   title: { fontSize: 17, fontWeight: '800' },
-  hero: { backgroundColor: '#8833FF', padding: 24, borderRadius: 18, alignItems: 'center', marginBottom: 14 },
+  hero: { backgroundColor: '#F5C518', padding: 24, borderRadius: 18, alignItems: 'center', marginBottom: 14 },
   heroTitle: { color: 'white', fontSize: 18, fontWeight: '800', marginTop: 8 },
   heroSub: { color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 4 },
   tipBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#DBEAFE', padding: 10, borderRadius: 10, marginBottom: 14 },

@@ -98,7 +98,7 @@ export default function CheckoutScreen() {
   const tax = Math.round(subtotal * 0.15);
   const total = subtotal + tax + deliveryCost - couponDiscount;
 
-  if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   const payMethods = [
     { id: 'cash_on_delivery', label: 'الدفع عند الاستلام', icon: 'cash' },
@@ -128,17 +128,17 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
         )}
         {addresses.length === 0 ? (
-          <TouchableOpacity style={s.addAddrBtn} onPress={() => router.push('/addresses')}><Ionicons name="add" size={20} color="#8833FF" /><Text style={s.addAddrText}>إضافة عنوان</Text></TouchableOpacity>
+          <TouchableOpacity style={s.addAddrBtn} onPress={() => router.push('/addresses')}><Ionicons name="add" size={20} color="#F5C518" /><Text style={s.addAddrText}>إضافة عنوان</Text></TouchableOpacity>
         ) : addresses.map((a, i) => (
           <TouchableOpacity key={a.id} style={[s.addrCard, selectedAddr === i && s.addrActive]} onPress={() => setSelectedAddr(i)}>
-            <Ionicons name={selectedAddr === i ? 'radio-button-on' : 'radio-button-off'} size={20} color={selectedAddr === i ? '#8833FF' : '#A1A1AA'} />
+            <Ionicons name={selectedAddr === i ? 'radio-button-on' : 'radio-button-off'} size={20} color={selectedAddr === i ? '#F5C518' : '#A1A1AA'} />
             <View style={s.addrInfo}><Text style={s.addrLabel}>{a.label}</Text><Text style={s.addrText} numberOfLines={1}>{a.address}</Text></View>
           </TouchableOpacity>
         ))}
 
         {quote?.branch && (
           <View style={s.branchBox}>
-            <Ionicons name="storefront" size={18} color="#8833FF" />
+            <Ionicons name="storefront" size={18} color="#F5C518" />
             <View style={{ flex: 1, marginLeft: 8 }}>
               <Text style={s.branchName}>الفرع: {quote.branch.name}</Text>
               <Text style={s.branchDist}>{quote.branch.distance_km} كم {quote.fee?.in_zone ? `• ضمن منطقة "${quote.fee.zone_name}"` : ''}</Text>
@@ -150,7 +150,7 @@ export default function CheckoutScreen() {
         <View style={{ gap: 8 }}>
           {deliveryOpts.map(opt => (
             <TouchableOpacity key={opt.id} style={[s.shipCard, deliveryType === opt.id && s.shipActive]} onPress={() => setDeliveryType(opt.id)}>
-              <Ionicons name={deliveryType === opt.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={deliveryType === opt.id ? '#8833FF' : '#A1A1AA'} />
+              <Ionicons name={deliveryType === opt.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={deliveryType === opt.id ? '#F5C518' : '#A1A1AA'} />
               <Ionicons name={opt.icon as any} size={20} color="#52525B" />
               <View style={s.shipInfo}><Text style={s.shipLabel}>{opt.label}</Text><Text style={s.shipTime}>{opt.time}</Text></View>
               {deliveryType === opt.id && <Text style={s.shipPrice}>{deliveryFee} ر.س</Text>}
@@ -160,7 +160,7 @@ export default function CheckoutScreen() {
 
         {deliveryType === 'scheduled' && (
           <TouchableOpacity style={s.slotBtn} onPress={() => setSlotModalOpen(true)}>
-            <Ionicons name="time" size={18} color="#8833FF" />
+            <Ionicons name="time" size={18} color="#F5C518" />
             <Text style={s.slotBtnText}>{scheduledSlot ? `الفترة: ${scheduledSlot.label} (${scheduledSlot.start} - ${scheduledSlot.end})` : 'اختر فترة التوصيل ←'}</Text>
           </TouchableOpacity>
         )}
@@ -168,7 +168,7 @@ export default function CheckoutScreen() {
         <Text style={s.sectionTitle}>طريقة الدفع</Text>
         {payMethods.map(pm => (
           <TouchableOpacity key={pm.id} style={[s.payCard, paymentMethod === pm.id && s.payActive]} onPress={() => setPaymentMethod(pm.id)}>
-            <Ionicons name={paymentMethod === pm.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={paymentMethod === pm.id ? '#8833FF' : '#A1A1AA'} />
+            <Ionicons name={paymentMethod === pm.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={paymentMethod === pm.id ? '#F5C518' : '#A1A1AA'} />
             <Ionicons name={pm.icon as any} size={20} color="#52525B" />
             <Text style={s.payLabel}>{pm.label}</Text>
             {!!pm.tag && <View style={s.payTag}><Text style={s.payTagText}>{pm.tag}</Text></View>}
@@ -211,7 +211,7 @@ export default function CheckoutScreen() {
             {availableSlots.length === 0 && <Text style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 40 }}>لا توجد فترات متاحة</Text>}
             {availableSlots.map((sl, i) => (
               <TouchableOpacity key={i} style={[s.slotItem, scheduledSlot?.label === sl.label && s.slotItemActive]} onPress={() => { setScheduledSlot(sl); setSlotModalOpen(false); }}>
-                <Ionicons name="time-outline" size={20} color={scheduledSlot?.label === sl.label ? 'white' : '#8833FF'} />
+                <Ionicons name="time-outline" size={20} color={scheduledSlot?.label === sl.label ? 'white' : '#F5C518'} />
                 <View style={{ flex: 1, marginLeft: 10 }}>
                   <Text style={[s.slotLabel, scheduledSlot?.label === sl.label && { color: 'white' }]}>{sl.label}</Text>
                   <Text style={[s.slotTime, scheduledSlot?.label === sl.label && { color: 'white' }]}>{sl.start} - {sl.end}</Text>
@@ -234,32 +234,32 @@ const s = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginTop: 16, marginBottom: 10, textAlign: 'right' },
   warnBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FEF3C7', padding: 12, borderRadius: 10, marginBottom: 8 },
   warnText: { flex: 1, color: '#92400E', fontSize: 12, fontWeight: '600' },
-  addAddrBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: '#8833FF', borderStyle: 'dashed' },
-  addAddrText: { fontSize: 14, color: '#8833FF', fontWeight: '600' },
+  addAddrBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: '#F5C518', borderStyle: 'dashed' },
+  addAddrText: { fontSize: 14, color: '#F5C518', fontWeight: '600' },
   addrCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, backgroundColor: '#F9F9FB', marginBottom: 8, borderWidth: 1.5, borderColor: 'transparent' },
-  addrActive: { borderColor: '#8833FF', backgroundColor: '#EFE6FF' },
+  addrActive: { borderColor: '#F5C518', backgroundColor: '#FFF7DA' },
   addrInfo: { flex: 1 }, addrLabel: { fontSize: 14, fontWeight: '600', color: '#0A0A0A' }, addrText: { fontSize: 12, color: '#52525B' },
   branchBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3E8FF', padding: 12, borderRadius: 10, marginTop: 6 },
   branchName: { fontSize: 13, fontWeight: '700', color: '#5B21B6' },
   branchDist: { fontSize: 11, color: '#7C3AED' },
   shipCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, backgroundColor: '#F9F9FB', borderWidth: 1.5, borderColor: 'transparent' },
-  shipActive: { borderColor: '#8833FF', backgroundColor: '#EFE6FF' },
+  shipActive: { borderColor: '#F5C518', backgroundColor: '#FFF7DA' },
   shipInfo: { flex: 1 }, shipLabel: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' }, shipTime: { fontSize: 12, color: '#52525B' },
-  shipPrice: { fontSize: 14, fontWeight: '700', color: '#8833FF' },
+  shipPrice: { fontSize: 14, fontWeight: '700', color: '#F5C518' },
   slotBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F3E8FF', padding: 12, borderRadius: 10, marginTop: 8 },
   slotBtnText: { flex: 1, color: '#5B21B6', fontWeight: '700', fontSize: 13 },
   slotItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: '#E5E7EB' },
-  slotItemActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
+  slotItemActive: { backgroundColor: '#F5C518', borderColor: '#F5C518' },
   slotLabel: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
   slotTime: { fontSize: 12, color: '#6B7280', marginTop: 2 },
   payCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, backgroundColor: '#F9F9FB', marginBottom: 8, borderWidth: 1.5, borderColor: 'transparent' },
-  payActive: { borderColor: '#8833FF', backgroundColor: '#EFE6FF' },
+  payActive: { borderColor: '#F5C518', backgroundColor: '#FFF7DA' },
   payLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: '#0A0A0A' },
   payTag: { backgroundColor: '#FEF3C7', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   payTagText: { fontSize: 10, color: '#92400E', fontWeight: '600' },
   couponRow: { flexDirection: 'row', gap: 8 },
   couponInput: { flex: 1, backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, borderWidth: 1, borderColor: '#E4E4E7' },
-  couponBtn: { backgroundColor: '#8833FF', borderRadius: 12, paddingHorizontal: 20, justifyContent: 'center' },
+  couponBtn: { backgroundColor: '#F5C518', borderRadius: 12, paddingHorizontal: 20, justifyContent: 'center' },
   couponBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
   couponApplied: { fontSize: 13, color: '#10B981', fontWeight: '600', marginTop: 6 },
   notesInput: { backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, marginTop: 16, borderWidth: 1, borderColor: '#E4E4E7', height: 60, textAlign: 'right' },
@@ -268,8 +268,8 @@ const s = StyleSheet.create({
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   sLabel: { fontSize: 13, color: '#52525B' }, sVal: { fontSize: 13, color: '#0A0A0A', fontWeight: '600' },
   totalRow: { borderTopWidth: 1, borderTopColor: '#E4E4E7', paddingTop: 10, marginTop: 4 },
-  totalLabel: { fontSize: 16, fontWeight: '700', color: '#0A0A0A' }, totalVal: { fontSize: 20, fontWeight: '900', color: '#8833FF' },
+  totalLabel: { fontSize: 16, fontWeight: '700', color: '#0A0A0A' }, totalVal: { fontSize: 20, fontWeight: '900', color: '#F5C518' },
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingBottom: 34, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F4F4F5' },
-  buyBtn: { backgroundColor: '#8833FF', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
+  buyBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
   buyText: { color: '#FFF', fontSize: 17, fontWeight: '800' },
 });

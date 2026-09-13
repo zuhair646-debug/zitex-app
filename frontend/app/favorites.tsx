@@ -19,7 +19,7 @@ export default function FavoritesScreen() {
     load();
   };
 
-  if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
@@ -56,5 +56,5 @@ const s = StyleSheet.create({
   card: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#F9F9FB', borderRadius: 14, marginBottom: 10 },
   img: { width: 60, height: 60, borderRadius: 10, backgroundColor: '#FFF', marginEnd: 12 },
   info: { flex: 1 }, name: { fontSize: 14, fontWeight: '600', color: '#0A0A0A', marginBottom: 4 },
-  price: { fontSize: 15, fontWeight: '800', color: '#8833FF' },
+  price: { fontSize: 15, fontWeight: '800', color: '#F5C518' },
 });
