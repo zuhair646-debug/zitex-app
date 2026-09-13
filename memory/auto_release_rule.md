@@ -41,9 +41,9 @@ calling `finish`:
   transiently down). The template script implements this.
 
 ## Current released versions
-- iOS: v1.6.0 (build 24) — Building/Submitting ⏳
-- Android: v1.6.0 (versionCode 25) — Building/Submitting ⏳
-- v1.5.0 & all prior: submitted ✅
+- iOS: v1.9.0 (build 30) — Building/Submitting ⏳
+- Android: v1.9.0 (versionCode 31) — Building/Submitting ⏳
+- v1.8.0 & all prior: submitted ✅
 
 ## Version-bump quick reference
 Feature category → semver bump:
