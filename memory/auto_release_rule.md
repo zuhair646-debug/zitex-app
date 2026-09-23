@@ -41,10 +41,10 @@ calling `finish`:
   transiently down). The template script implements this.
 
 ## Current released versions
-- iOS: v1.11.0 (build 33) — Building/Submitting ⏳ (Live Preview deep analytics)
-- Android: v1.11.0 (versionCode 34) — Building/Submitting ⏳
-- v1.10.1: submitted ✅ (hotfix)
-- v1.10.0 & prior: submitted ✅
+- iOS: v1.11.1 (build 34) ✅ submitted to App Store Connect (17:18 UTC 23/9/2026)
+- Android: v1.11.1 (versionCode 35) — build queued on EAS, poller PID 2417 will submit automatically
+- v1.11.0: Android submitted ✅ (iOS replaced by v1.11.1)
+- v1.10.1 & prior: submitted ✅
 
 ## Version-bump quick reference
 Feature category → semver bump:
