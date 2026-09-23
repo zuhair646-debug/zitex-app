@@ -45,7 +45,7 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.11.1 ✨ إحصائيات حقيقية</Text>
+        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.11.2 ✅ تسجيل الدخول مصلح</Text>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
         </TouchableOpacity>
