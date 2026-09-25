@@ -3,7 +3,21 @@
 ## Vision
 Zitex — Comprehensive Tech Store native mobile app (iOS + Android) with e-commerce, social feed, competitions, delivery, chamber portal, and merchant admin panel.
 
-## Current release: v1.13.6 — Full Transparency Fixes
+## Current release: v1.13.7 — Competition Detail + Live Toast
+- **NEW: Competition Detail Sheet** — full-modal with hero banner + 4 tabs:
+  - نظرة عامة: KPIs, peak hour chip, daily pulse, sources bars, top cities bars
+  - المشاركون: full list with avatar/city/source/timestamp + tap-to-call
+  - الفائزون: gold gradient cards with rank/name/masked phone/prize + call button
+  - الشروط: description, prize card, numbered rules, timeline
+- **NEW: Live Toast Notifications** — animated spring-in from top:
+  - Polls unread every 15s, first-load marks existing as seen (no spam)
+  - Auto-dismiss after 6s, tap to ack on server
+  - Stack counter badge if multiple queued
+  - Severity color-coded with glass blur backdrop
+- **NEW: Test alert endpoint** — `POST /alerts/test` fires random alert to demo the flow
+- **UI:** "اختبار" button in alerts bell for demo
+
+## Previous release: v1.13.6 — Full Transparency Fixes
 - **Bug fixes from user's video review:**
   - Services: warranty badge no longer overlaps image edge (elegant bottom-right green pill)
   - Services/Products/Competitions: entire card is tappable to open analytics (not just the tiny icon)
