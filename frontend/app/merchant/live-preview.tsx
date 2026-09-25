@@ -17,12 +17,12 @@ const BORDER = '#2A2D38';
 const MUTED = '#9CA3AF';
 const { width: SCREEN } = Dimensions.get('window');
 
-type Section = 'overview' | 'products' | 'services' | 'competitions' | 'social';
+type Section = 'products' | 'services' | 'competitions' | 'social' | 'overview';
 
 export default function LivePreview() {
   const router = useRouter();
   const { apiCall } = useAuth();
-  const [section, setSection] = useState<Section>('overview');
+  const [section, setSection] = useState<Section>('products');
   const [analyticsFor, setAnalyticsFor] = useState<any>(null);
   const [serviceAnalyticsFor, setServiceAnalyticsFor] = useState<any>(null);
   const [compAnalyticsFor, setCompAnalyticsFor] = useState<any>(null);
@@ -55,11 +55,11 @@ export default function LivePreview() {
       {/* Section tabs (like customer bottom tabs, but at top for preview) */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.sectionRowWrap} contentContainerStyle={s.sectionRow}>
         {[
-          { id: 'overview', name: 'العام', icon: 'grid' },
           { id: 'products', name: 'المتجر', icon: 'storefront' },
           { id: 'services', name: 'الصيانة', icon: 'construct' },
           { id: 'competitions', name: 'المسابقات', icon: 'trophy' },
           { id: 'social', name: 'السوشيال', icon: 'chatbubbles' },
+          { id: 'overview', name: 'العام', icon: 'grid' },
         ].map(t => (
           <TouchableOpacity key={t.id} onPress={() => { setSection(t.id as Section); setCompareMode(false); setSelectedIds([]); }}
             style={[s.sectionBtn, section === t.id && s.sectionBtnActive]}>

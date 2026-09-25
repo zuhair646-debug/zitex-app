@@ -3337,31 +3337,46 @@ async def seed_data():
             {
                 "name": "الفرع الرئيسي - الرياض العليا", "address": "شارع الملك فهد، حي العليا",
                 "lat": 24.7136, "lng": 46.6753, "phone": "0114000001",
-                "open_hours": "9:00 AM - 11:00 PM", "published": True,
-                "email": "riyadh@zitex.sa", "manager_id": "", "city": "الرياض",
+                "open_hours": "9:00 AM - 11:00 PM", "opens_at": "09:00", "closes_at": "23:00",
+                "published": True,
+                "email": "riyadh@zenrex.ai", "manager_id": "", "city": "الرياض",
                 "district": "العليا", "is_main": True,
                 "working_days": ["sat", "sun", "mon", "tue", "wed", "thu"],
                 "branch_code": "RUH-01", "merchant_id": merchant_id,
+                "image": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800",
+                "in_store_revenue": 187500, "app_revenue": 92300,
+                "total_orders_today": 42, "total_orders_month": 967,
+                "monthly_target": 250000,
                 "created_at": datetime.now(timezone.utc).isoformat(),
             },
             {
                 "name": "فرع جدة - التحلية", "address": "شارع التحلية، حي الروضة",
                 "lat": 21.5433, "lng": 39.1728, "phone": "0126000002",
-                "open_hours": "10:00 AM - 12:00 AM", "published": True,
-                "email": "jeddah@zitex.sa", "manager_id": "", "city": "جدة",
+                "open_hours": "10:00 AM - 12:00 AM", "opens_at": "10:00", "closes_at": "00:00",
+                "published": True,
+                "email": "jeddah@zenrex.ai", "manager_id": "", "city": "جدة",
                 "district": "الروضة", "is_main": False,
                 "working_days": ["sat", "sun", "mon", "tue", "wed", "thu"],
                 "branch_code": "JED-01", "merchant_id": merchant_id,
+                "image": "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800",
+                "in_store_revenue": 143200, "app_revenue": 68900,
+                "total_orders_today": 31, "total_orders_month": 745,
+                "monthly_target": 200000,
                 "created_at": datetime.now(timezone.utc).isoformat(),
             },
             {
                 "name": "فرع الدمام - الشاطئ", "address": "شارع الأمير محمد بن فهد",
                 "lat": 26.4207, "lng": 50.0888, "phone": "0138000003",
-                "open_hours": "9:00 AM - 11:00 PM", "published": True,
-                "email": "dammam@zitex.sa", "manager_id": "", "city": "الدمام",
+                "open_hours": "9:00 AM - 11:00 PM", "opens_at": "09:00", "closes_at": "23:00",
+                "published": True,
+                "email": "dammam@zenrex.ai", "manager_id": "", "city": "الدمام",
                 "district": "الشاطئ", "is_main": False,
                 "working_days": ["sat", "sun", "mon", "tue", "wed", "thu"],
                 "branch_code": "DMM-01", "merchant_id": merchant_id,
+                "image": "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800",
+                "in_store_revenue": 98400, "app_revenue": 41200,
+                "total_orders_today": 18, "total_orders_month": 423,
+                "monthly_target": 150000,
                 "created_at": datetime.now(timezone.utc).isoformat(),
             },
         ])
@@ -3378,8 +3393,13 @@ async def seed_data():
                 "password_hash": hash_password("emp1234"),
                 "role": "employee", "merchant_id": merchant_id,
                 "department": "sales", "permissions": ["pos", "invoices", "orders", "customers"],
-                "salary_monthly": 4500, "branch_ids": b_ids[:1] if b_ids else [],
-                "role_id": "preset_cashier", "job_title": "كاشير",
+                "salary_monthly": 4500, "salary_type": "monthly",
+                "hourly_rate": 0, "shift_hours_per_day": 8,
+                "shift_start": "09:00", "shift_end": "17:00",
+                "hire_date": "2025-06-15",
+                "branch_ids": b_ids[:1] if b_ids else [],
+                "role_id": "preset_cashier", "job_title": "كاشير رئيسي",
+                "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
                 "active": True, "points": 0, "wallet_balance": 0,
                 "created_at": datetime.now(timezone.utc).isoformat(),
             },
@@ -3388,8 +3408,13 @@ async def seed_data():
                 "password_hash": hash_password("emp1234"),
                 "role": "employee", "merchant_id": merchant_id,
                 "department": "marketing", "permissions": ["social", "competitions", "banners"],
-                "salary_monthly": 6500, "branch_ids": b_ids[:2] if len(b_ids) >= 2 else b_ids,
+                "salary_monthly": 6500, "salary_type": "monthly",
+                "hourly_rate": 0, "shift_hours_per_day": 8,
+                "shift_start": "10:00", "shift_end": "18:00",
+                "hire_date": "2025-03-01",
+                "branch_ids": b_ids[:2] if len(b_ids) >= 2 else b_ids,
                 "role_id": "preset_marketing", "job_title": "مسؤول تسويق",
+                "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
                 "active": True, "points": 0, "wallet_balance": 0,
                 "created_at": datetime.now(timezone.utc).isoformat(),
             },
@@ -3398,8 +3423,43 @@ async def seed_data():
                 "password_hash": hash_password("emp1234"),
                 "role": "employee", "merchant_id": merchant_id,
                 "department": "management", "permissions": ["orders", "products", "inventory", "customers", "invoices", "pos"],
-                "salary_monthly": 9000, "branch_ids": [b_ids[1]] if len(b_ids) >= 2 else b_ids,
+                "salary_monthly": 9000, "salary_type": "monthly",
+                "hourly_rate": 0, "shift_hours_per_day": 9,
+                "shift_start": "09:00", "shift_end": "18:00",
+                "hire_date": "2024-11-10",
+                "branch_ids": [b_ids[1]] if len(b_ids) >= 2 else b_ids,
                 "role_id": "preset_manager", "job_title": "مدير فرع جدة",
+                "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200",
+                "active": True, "points": 0, "wallet_balance": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "phone": "0530000004", "name": "فاطمة موظفة المبيعات",
+                "password_hash": hash_password("emp1234"),
+                "role": "employee", "merchant_id": merchant_id,
+                "department": "sales", "permissions": ["pos", "invoices"],
+                "salary_monthly": 0, "salary_type": "hourly",
+                "hourly_rate": 35, "shift_hours_per_day": 6,
+                "shift_start": "16:00", "shift_end": "22:00",
+                "hire_date": "2026-01-15",
+                "branch_ids": [b_ids[2]] if len(b_ids) >= 3 else b_ids,
+                "role_id": "preset_cashier", "job_title": "موظفة مبيعات (بالساعة)",
+                "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200",
+                "active": True, "points": 0, "wallet_balance": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "phone": "0530000005", "name": "علي فني الصيانة",
+                "password_hash": hash_password("emp1234"),
+                "role": "employee", "merchant_id": merchant_id,
+                "department": "service", "permissions": ["services", "orders"],
+                "salary_monthly": 5500, "salary_type": "monthly",
+                "hourly_rate": 0, "shift_hours_per_day": 8,
+                "shift_start": "09:00", "shift_end": "17:00",
+                "hire_date": "2025-08-20",
+                "branch_ids": b_ids[:1] if b_ids else [],
+                "role_id": "preset_technician", "job_title": "فني صيانة أول",
+                "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200",
                 "active": True, "points": 0, "wallet_balance": 0,
                 "created_at": datetime.now(timezone.utc).isoformat(),
             },
@@ -3412,7 +3472,7 @@ async def seed_data():
     if not driver_user:
         res = await db.users.insert_one({
             "phone": "0540001111", "password_hash": hash_password("driver1234"),
-            "name": "محمد السائق", "email": "driver@zitex.sa",
+            "name": "محمد السائق", "email": "driver@zenrex.ai",
             "city": "Riyadh", "gender": "M", "role": "driver",
             "points": 0, "wallet_balance": 0,
             "created_at": datetime.now(timezone.utc).isoformat()
@@ -3420,14 +3480,67 @@ async def seed_data():
         uid = str(res.inserted_id)
         await db.drivers.insert_one({
             "user_id": uid, "name": "محمد السائق", "phone": "0540001111",
-            "vehicle_info": "Toyota Hilux 2022", "payment_model": "commission",
-            "commission_type": "fixed", "merchant_commission_value": 5,
-            "salary_monthly": 0, "bonus_threshold_orders": 20, "bonus_per_extra_order": 2,
-            "online": False, "current_lat": 0, "current_lng": 0,
-            "wallet_balance": 0, "total_deliveries": 0, "today_deliveries": 0,
+            "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
+            "vehicle_info": "Toyota Hilux 2022", "vehicle_plate": "أ ب ج 1234",
+            "payment_model": "commission", "commission_type": "fixed",
+            "merchant_commission_value": 5,
+            "salary_monthly": 0, "salary_type": "commission",
+            "hourly_rate": 0,
+            "shift_start": "07:00", "shift_end": "19:00", "shift_hours_per_day": 12,
+            "hire_date": "2025-04-10",
+            "bonus_threshold_orders": 20, "bonus_per_extra_order": 2,
+            "online": True, "current_lat": 24.7136, "current_lng": 46.6753,
+            "wallet_balance": 425.50,
+            "total_deliveries": 187, "today_deliveries": 8,
+            "week_deliveries": 42, "month_deliveries": 156, "year_deliveries": 187,
+            "week_earnings": 210, "month_earnings": 780, "year_earnings": 935,
+            "avg_rating": 4.7, "total_ratings": 156, "rating": 4.7,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
-        logger.info("Seeded Driver account: 0540001111/driver1234")
+        # Add 3 more sample drivers
+        for spec in [
+            {"phone": "0540002222", "name": "عبدالله السريع", "vehicle": "Nissan Sunny 2021", "plate": "س ه ر 5678",
+             "payment_model": "hourly", "hourly_rate": 25, "salary_monthly": 0, "salary_type": "hourly",
+             "total": 145, "today": 4, "week": 28, "month": 118, "year": 145,
+             "earnings_week": 175, "earnings_month": 650, "earnings_year": 780, "rating": 4.5, "ratings_count": 98,
+             "online": True, "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200"},
+            {"phone": "0540003333", "name": "خالد الشمري", "vehicle": "Honda Civic 2023", "plate": "ك م ن 9012",
+             "payment_model": "salary", "hourly_rate": 0, "salary_monthly": 4200, "salary_type": "monthly",
+             "total": 98, "today": 6, "week": 35, "month": 89, "year": 98,
+             "earnings_week": 950, "earnings_month": 4200, "earnings_year": 8400, "rating": 4.9, "ratings_count": 82,
+             "online": False, "avatar": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=200"},
+            {"phone": "0540004444", "name": "أحمد الغامدي", "vehicle": "Kia Cerato 2020", "plate": "ب ص و 3456",
+             "payment_model": "commission", "hourly_rate": 0, "salary_monthly": 0, "salary_type": "commission",
+             "total": 76, "today": 2, "week": 18, "month": 65, "year": 76,
+             "earnings_week": 90, "earnings_month": 325, "earnings_year": 380, "rating": 4.3, "ratings_count": 54,
+             "online": True, "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200"},
+        ]:
+            rr = await db.users.insert_one({
+                "phone": spec["phone"], "password_hash": hash_password("driver1234"),
+                "name": spec["name"], "role": "driver",
+                "city": "Riyadh", "gender": "M",
+                "points": 0, "wallet_balance": 0,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            await db.drivers.insert_one({
+                "user_id": str(rr.inserted_id), "name": spec["name"], "phone": spec["phone"],
+                "avatar": spec["avatar"],
+                "vehicle_info": spec["vehicle"], "vehicle_plate": spec["plate"],
+                "payment_model": spec["payment_model"],
+                "commission_type": "fixed", "merchant_commission_value": 5,
+                "salary_monthly": spec["salary_monthly"], "salary_type": spec["salary_type"],
+                "hourly_rate": spec["hourly_rate"],
+                "shift_start": "08:00", "shift_end": "20:00", "shift_hours_per_day": 12,
+                "hire_date": "2025-09-01",
+                "online": spec["online"], "current_lat": 24.7 + 0.02, "current_lng": 46.7 + 0.02,
+                "wallet_balance": 0,
+                "total_deliveries": spec["total"], "today_deliveries": spec["today"],
+                "week_deliveries": spec["week"], "month_deliveries": spec["month"], "year_deliveries": spec["year"],
+                "week_earnings": spec["earnings_week"], "month_earnings": spec["earnings_month"], "year_earnings": spec["earnings_year"],
+                "avg_rating": spec["rating"], "total_ratings": spec["ratings_count"], "rating": spec["rating"],
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        logger.info("Seeded 4 drivers with full details")
     else:
         # Ensure password is correct (idempotent)
         await db.users.update_one({"_id": driver_user["_id"]},
@@ -3740,6 +3853,40 @@ async def seed_data():
             {"author": "Tech Store", "text": "Big sale this weekend! Amazing deals on all Samsung products.", "image": "https://images.pexels.com/photos/6373185/pexels-photo-6373185.jpeg?w=400", "likes": 23100, "comments": 342, "views": 3420, "type": "post", "is_ad": True, "ad_label": "Sponsored", "created_at": datetime.now(timezone.utc).isoformat()},
         ])
         logger.info("Seeded social posts")
+
+    # Seed sample Marketers/Affiliates
+    if await db.affiliates.count_documents({}) == 0 and merchant_id:
+        # Create 5 marketer user accounts first
+        marketer_specs = [
+            {"phone": "0550100001", "name": "نواف المسوّق", "code": "NAWAF25", "clicks": 1245, "conv": 89, "sales": 34580, "commission": 3458, "avatar": "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200"},
+            {"phone": "0550100002", "name": "ريم المسوّقة", "code": "REEM99", "clicks": 987, "conv": 67, "sales": 28400, "commission": 2840, "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200"},
+            {"phone": "0550100003", "name": "بندر السوشيال", "code": "BANDER1", "clicks": 2340, "conv": 156, "sales": 62100, "commission": 6210, "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200"},
+            {"phone": "0550100004", "name": "لينا الإنستقرام", "code": "LEENA_INSTA", "clicks": 4523, "conv": 289, "sales": 118900, "commission": 11890, "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200"},
+            {"phone": "0550100005", "name": "سعود التيك توك", "code": "SAUD_TT", "clicks": 8945, "conv": 512, "sales": 231400, "commission": 23140, "avatar": "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=200"},
+        ]
+        for m in marketer_specs:
+            existing = await db.users.find_one({"phone": m["phone"]})
+            uid_m = str(existing["_id"]) if existing else str((await db.users.insert_one({
+                "phone": m["phone"], "password_hash": hash_password("aff1234"),
+                "name": m["name"], "role": "user", "is_affiliate": True,
+                "city": "الرياض", "created_at": datetime.now(timezone.utc).isoformat(),
+            })).inserted_id)
+            await db.affiliates.insert_one({
+                "user_id": uid_m, "merchant_id": merchant_id,
+                "name": m["name"], "phone": m["phone"], "avatar": m["avatar"],
+                "referral_code": m["code"], "commission_rate": 10,
+                "status": "approved", "active": True,
+                "clicks": m["clicks"], "unique_clicks": int(m["clicks"] * 0.7),
+                "conversions": m["conv"], "sales_total": m["sales"],
+                "commission_earned": m["commission"],
+                "commission_pending": round(m["commission"] * 0.15, 2),
+                "commission_paid": round(m["commission"] * 0.85, 2),
+                "posts_shared": max(5, int(m["clicks"] / 50)),
+                "top_platform": "instagram" if "insta" in m["code"].lower() else ("tiktok" if "tt" in m["code"].lower() else "twitter"),
+                "joined_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+        logger.info(f"Seeded {len(marketer_specs)} marketers/affiliates")
 
     # Indexes
     await db.users.create_index("phone", unique=True)
@@ -4790,11 +4937,21 @@ async def live_preview_overview(user=Depends(get_current_user)):
             "id": str(d.get("_id", "")),
             "name": d.get("name", "سائق"),
             "phone": d.get("phone", ""),
+            "avatar": d.get("avatar", ""),
+            "vehicle": d.get("vehicle_info", ""),
             "online": bool(d.get("online", False)),
             "total_deliveries": d.get("total_deliveries", 0),
             "today_deliveries": d.get("today_deliveries", 0),
-            "rating": d.get("rating", 4.5),
+            "week_deliveries": d.get("week_deliveries", 0),
+            "month_deliveries": d.get("month_deliveries", 0),
+            "year_deliveries": d.get("year_deliveries", 0),
+            "rating": d.get("avg_rating", d.get("rating", 4.5)),
             "wallet_balance": d.get("wallet_balance", 0),
+            "salary_type": d.get("salary_type", "commission"),
+            "hourly_rate": d.get("hourly_rate", 0),
+            "salary_monthly": d.get("salary_monthly", 0),
+            "week_earnings": d.get("week_earnings", 0),
+            "month_earnings": d.get("month_earnings", 0),
         })
     drivers_sorted = sorted(drivers, key=lambda x: x["total_deliveries"], reverse=True)
 
@@ -4803,7 +4960,6 @@ async def live_preview_overview(user=Depends(get_current_user)):
     branches = []
     for b in branches_docs:
         bid = str(b.get("_id", ""))
-        # Sales for this branch (from orders)
         orders_cnt = await db.orders.count_documents({"branch_id": bid})
         pos_sum = 0
         async for inv in db.invoices.find({"branch_id": bid}, {"total": 1}):
@@ -4813,12 +4969,18 @@ async def live_preview_overview(user=Depends(get_current_user)):
             "name": b.get("name", "فرع"),
             "city": b.get("city", ""),
             "phone": b.get("phone", ""),
-            "active": bool(b.get("active", True)),
-            "orders_count": orders_cnt,
-            "pos_revenue": round(pos_sum, 2),
+            "image": b.get("image", ""),
+            "address": b.get("address", ""),
+            "open_hours": b.get("open_hours", ""),
+            "active": bool(b.get("published", b.get("active", True))),
+            "orders_count": orders_cnt + b.get("total_orders_month", 0),
+            "pos_revenue": round(pos_sum + b.get("in_store_revenue", 0), 2),
+            "app_revenue": round(b.get("app_revenue", 0), 2),
+            "in_store_revenue": round(b.get("in_store_revenue", 0), 2),
             "employees_count": await db.users.count_documents({"branch_ids": bid, "role": "employee"}),
+            "monthly_target": b.get("monthly_target", 0),
         })
-    branches_sorted = sorted(branches, key=lambda x: x["pos_revenue"] + x["orders_count"] * 50, reverse=True)
+    branches_sorted = sorted(branches, key=lambda x: x["pos_revenue"] + x["app_revenue"], reverse=True)
 
     # Marketers (affiliates)
     marketers_docs = await db.affiliates.find({"status": "approved"}).to_list(200) if "affiliates" in await db.list_collection_names() else []
@@ -4827,13 +4989,19 @@ async def live_preview_overview(user=Depends(get_current_user)):
         marketers.append({
             "id": str(m.get("_id", "")),
             "name": m.get("name", "مسوّق"),
+            "phone": m.get("phone", ""),
+            "avatar": m.get("avatar", ""),
             "referral_code": m.get("referral_code", ""),
             "clicks": m.get("clicks", 0),
             "conversions": m.get("conversions", 0),
-            "sales_total": m.get("sales_total", 0),
-            "commission_earned": m.get("commission_earned", 0),
+            "sales_total": round(m.get("sales_total", 0), 2),
+            "commission_earned": round(m.get("commission_earned", 0), 2),
+            "commission_pending": round(m.get("commission_pending", 0), 2),
+            "commission_paid": round(m.get("commission_paid", 0), 2),
+            "posts_shared": m.get("posts_shared", 0),
+            "top_platform": m.get("top_platform", "instagram"),
         })
-    marketers_sorted = sorted(marketers, key=lambda x: x["conversions"], reverse=True)
+    marketers_sorted = sorted(marketers, key=lambda x: x["commission_earned"], reverse=True)
 
     # Employees performance summary
     emps_docs = await db.users.find({"role": "employee"}).to_list(100)
@@ -4848,6 +5016,16 @@ async def live_preview_overview(user=Depends(get_current_user)):
             "name": e.get("name", "موظف"),
             "job_title": e.get("job_title", "موظف"),
             "phone": e.get("phone", ""),
+            "avatar": e.get("avatar", ""),
+            "department": e.get("department", ""),
+            "salary_type": e.get("salary_type", "monthly"),
+            "salary_monthly": e.get("salary_monthly", 0),
+            "hourly_rate": e.get("hourly_rate", 0),
+            "shift_start": e.get("shift_start", ""),
+            "shift_end": e.get("shift_end", ""),
+            "shift_hours": e.get("shift_hours_per_day", 0),
+            "hire_date": e.get("hire_date", ""),
+            "branch_ids": e.get("branch_ids", []),
             "invoices_total": round(invoice_sum, 2),
             "orders_handled": await db.orders.count_documents({"handled_by": eid}),
         })
