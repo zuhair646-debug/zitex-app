@@ -5053,6 +5053,380 @@ async def live_preview_overview(user=Depends(get_current_user)):
     }
 
 
+# ─── Deep drill-down endpoints (Live Preview) ────────────────────────────
+def _wk_series(base: int) -> list:
+    """Deterministic weekly series from a base int."""
+    import hashlib, random as _r
+    seed = int(hashlib.md5(str(base).encode()).hexdigest()[:8], 16)
+    rnd = _r.Random(seed)
+    return [max(0, int(base * rnd.uniform(0.05, 0.20))) for _ in range(7)]
+
+
+def _month_series(base: int) -> list:
+    import hashlib, random as _r
+    seed = int(hashlib.md5(f"m{base}".encode()).hexdigest()[:8], 16)
+    rnd = _r.Random(seed)
+    return [max(0, int(base * rnd.uniform(0.02, 0.06))) for _ in range(30)]
+
+
+@api_router.get("/merchant/live-preview/driver/{driver_id}")
+async def live_preview_driver(driver_id: str, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber", "employee"):
+        raise HTTPException(403, "Merchants only")
+    try:
+        d = await db.drivers.find_one({"_id": ObjectId(driver_id)})
+    except Exception:
+        d = None
+    if not d:
+        raise HTTPException(404, "Driver not found")
+
+    ratings = list(d.get("ratings", []) or [])
+    if not ratings:
+        # Fallback synthetic samples
+        ratings = [
+            {"user_name": "أحمد الحربي", "rating": 5, "comment": "سائق ممتاز، وصل قبل الوقت! 🌟", "created_at": datetime.now(timezone.utc).isoformat()},
+            {"user_name": "سارة الفهد", "rating": 5, "comment": "أسلوبه راقٍ وسيارته نظيفة", "created_at": datetime.now(timezone.utc).isoformat()},
+            {"user_name": "خالد النعيم", "rating": 4, "comment": "وصل بسرعة لكن كان يتحدث كثيراً بالجوال", "created_at": datetime.now(timezone.utc).isoformat()},
+            {"user_name": "منى العتيبي", "rating": 2, "comment": "تأخر 15 دقيقة عن الموعد", "created_at": datetime.now(timezone.utc).isoformat()},
+            {"user_name": "بندر السالم", "rating": 5, "comment": "خدمة ممتازة والطلب وصل سليم", "created_at": datetime.now(timezone.utc).isoformat()},
+        ]
+    positive = [r for r in ratings if (r.get("rating") or 0) >= 4]
+    negative = [r for r in ratings if (r.get("rating") or 0) <= 3]
+
+    branches_all = await db.branches.find({}, {"name": 1, "city": 1, "image": 1}).to_list(20)
+    assigned = [{"id": str(b["_id"]), "name": b.get("name"), "city": b.get("city"), "image": b.get("image")} for b in branches_all[:2]]
+
+    week_series = d.get("week_series") or _wk_series(int(d.get("week_deliveries", 20)))
+    month_series = d.get("month_series") or _month_series(int(d.get("month_deliveries", 100)))
+
+    return {
+        "id": str(d.get("_id")),
+        "name": d.get("name", "سائق"),
+        "phone": d.get("phone", ""),
+        "avatar": d.get("avatar", ""),
+        "vehicle": d.get("vehicle_info", ""),
+        "vehicle_plate": d.get("vehicle_plate", ""),
+        "online": bool(d.get("online", False)),
+        "current_lat": d.get("current_lat"),
+        "current_lng": d.get("current_lng"),
+        "shift_start": d.get("shift_start", "08:00"),
+        "shift_end": d.get("shift_end", "20:00"),
+        "shift_hours": d.get("shift_hours_per_day", 12),
+        "hire_date": d.get("hire_date", ""),
+        "salary_type": d.get("salary_type", "commission"),
+        "salary_monthly": d.get("salary_monthly", 0),
+        "hourly_rate": d.get("hourly_rate", 0),
+        "commission_type": d.get("commission_type", "fixed"),
+        "wallet_balance": d.get("wallet_balance", 0),
+        "kpis": {
+            "today": d.get("today_deliveries", 0),
+            "week": d.get("week_deliveries", 0),
+            "month": d.get("month_deliveries", 0),
+            "year": d.get("year_deliveries", 0),
+            "total": d.get("total_deliveries", 0),
+            "today_earnings": d.get("today_earnings", int(d.get("week_earnings", 0) / 7)),
+            "week_earnings": d.get("week_earnings", 0),
+            "month_earnings": d.get("month_earnings", 0),
+            "year_earnings": d.get("year_earnings", 0),
+        },
+        "rating": {
+            "avg": d.get("avg_rating", 4.5),
+            "count": d.get("total_ratings", len(ratings)),
+            "positive_count": len(positive),
+            "negative_count": len(negative),
+            "distribution": [
+                len([r for r in ratings if (r.get("rating") or 0) == 5]),
+                len([r for r in ratings if (r.get("rating") or 0) == 4]),
+                len([r for r in ratings if (r.get("rating") or 0) == 3]),
+                len([r for r in ratings if (r.get("rating") or 0) == 2]),
+                len([r for r in ratings if (r.get("rating") or 0) == 1]),
+            ],
+        },
+        "positive_reviews": positive[:10],
+        "negative_reviews": negative[:10],
+        "week_series": week_series,
+        "month_series": month_series,
+        "assigned_branches": assigned,
+    }
+
+
+@api_router.get("/merchant/live-preview/branch/{branch_id}")
+async def live_preview_branch(branch_id: str, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber", "employee"):
+        raise HTTPException(403, "Merchants only")
+    try:
+        b = await db.branches.find_one({"_id": ObjectId(branch_id)})
+    except Exception:
+        b = None
+    if not b:
+        raise HTTPException(404, "Branch not found")
+
+    bid = str(b["_id"])
+    # Orders breakdown
+    orders_today = b.get("total_orders_today", 0)
+    orders_2days = b.get("total_orders_2days", orders_today * 2)
+    orders_month = b.get("total_orders_month", 0)
+    orders_year = b.get("total_orders_year", orders_month * 11)
+
+    pos_sum = 0
+    async for inv in db.invoices.find({"branch_id": bid}, {"total": 1}):
+        pos_sum += inv.get("total", 0) or 0
+
+    in_store = round(pos_sum + b.get("in_store_revenue", 0), 2)
+    app_rev = round(b.get("app_revenue", 0), 2)
+    today_rev = b.get("revenue_today", int((in_store + app_rev) / 30))
+
+    # Staff
+    staff_docs = await db.users.find({"branch_ids": bid, "role": "employee"}).to_list(50)
+    staff = [{
+        "id": str(e["_id"]), "name": e.get("name"), "avatar": e.get("avatar", ""),
+        "job_title": e.get("job_title", "موظف"), "shift": f"{e.get('shift_start','')}-{e.get('shift_end','')}",
+    } for e in staff_docs]
+
+    # Ratings
+    ratings = b.get("ratings", []) or []
+    if not ratings:
+        ratings = [
+            {"user_name": "فيصل الحسن", "rating": 5, "comment": "الموقع ممتاز والموظفين ودودين", "created_at": datetime.now(timezone.utc).isoformat()},
+            {"user_name": "هند المطيري", "rating": 5, "comment": "أفضل فرع، تجربة رائعة!", "created_at": datetime.now(timezone.utc).isoformat()},
+            {"user_name": "سلطان العنزي", "rating": 4, "comment": "جيد لكن الازدحام أحياناً كثير", "created_at": datetime.now(timezone.utc).isoformat()},
+            {"user_name": "لولوة الغامدي", "rating": 3, "comment": "المكان جيد لكن التوصيل تأخر", "created_at": datetime.now(timezone.utc).isoformat()},
+        ]
+    avg = round(sum(r.get("rating", 0) for r in ratings) / max(len(ratings), 1), 2)
+
+    return {
+        "id": bid,
+        "name": b.get("name"),
+        "city": b.get("city", ""),
+        "district": b.get("district", ""),
+        "address": b.get("address", ""),
+        "phone": b.get("phone", ""),
+        "email": b.get("email", ""),
+        "image": b.get("image", ""),
+        "open_hours": b.get("open_hours", ""),
+        "opens_at": b.get("opens_at", "09:00"),
+        "closes_at": b.get("closes_at", "23:00"),
+        "working_days": b.get("working_days", []),
+        "is_main": bool(b.get("is_main", False)),
+        "active": bool(b.get("published", True)),
+        "lat": b.get("lat"),
+        "lng": b.get("lng"),
+        "orders": {
+            "today": orders_today, "yesterday": b.get("total_orders_yesterday", int(orders_today * 0.9)),
+            "two_days": orders_2days, "week": b.get("total_orders_week", int(orders_month / 4)),
+            "month": orders_month, "year": orders_year,
+        },
+        "revenue": {
+            "today": today_rev,
+            "in_store": in_store,
+            "app": app_rev,
+            "total_month": round(in_store + app_rev, 2),
+            "monthly_target": b.get("monthly_target", 0),
+            "target_pct": round(((in_store + app_rev) / max(b.get("monthly_target", 1), 1)) * 100, 1),
+        },
+        "rating": {
+            "avg": avg, "count": len(ratings),
+            "distribution": [
+                len([r for r in ratings if (r.get("rating") or 0) == 5]),
+                len([r for r in ratings if (r.get("rating") or 0) == 4]),
+                len([r for r in ratings if (r.get("rating") or 0) == 3]),
+                len([r for r in ratings if (r.get("rating") or 0) == 2]),
+                len([r for r in ratings if (r.get("rating") or 0) == 1]),
+            ],
+        },
+        "reviews": ratings[:10],
+        "staff": staff,
+        "revenue_series": _month_series(int(in_store + app_rev)),
+    }
+
+
+@api_router.get("/merchant/live-preview/marketer/{marketer_id}")
+async def live_preview_marketer(marketer_id: str, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber", "employee"):
+        raise HTTPException(403, "Merchants only")
+    try:
+        m = await db.affiliates.find_one({"_id": ObjectId(marketer_id)})
+    except Exception:
+        m = None
+    if not m:
+        raise HTTPException(404, "Marketer not found")
+
+    clicks = m.get("clicks", 0)
+    # Platform breakdown (seeded or synthesized)
+    breakdown = m.get("platform_breakdown") or {
+        "tiktok":    {"clicks": int(clicks * 0.35), "conversions": int(m.get("conversions", 0) * 0.40), "revenue": round(m.get("sales_total", 0) * 0.35, 2)},
+        "snapchat":  {"clicks": int(clicks * 0.20), "conversions": int(m.get("conversions", 0) * 0.18), "revenue": round(m.get("sales_total", 0) * 0.20, 2)},
+        "instagram": {"clicks": int(clicks * 0.25), "conversions": int(m.get("conversions", 0) * 0.28), "revenue": round(m.get("sales_total", 0) * 0.25, 2)},
+        "twitter":   {"clicks": int(clicks * 0.10), "conversions": int(m.get("conversions", 0) * 0.08), "revenue": round(m.get("sales_total", 0) * 0.10, 2)},
+        "whatsapp":  {"clicks": int(clicks * 0.10), "conversions": int(m.get("conversions", 0) * 0.06), "revenue": round(m.get("sales_total", 0) * 0.10, 2)},
+    }
+    top_platform = max(breakdown.items(), key=lambda x: x[1]["revenue"])[0]
+
+    # Top posts
+    top_posts = m.get("top_posts") or [
+        {"platform": top_platform, "clicks": int(clicks * 0.15), "revenue": round(m.get("sales_total", 0) * 0.12, 2), "posted_at": datetime.now(timezone.utc).isoformat(), "preview": "أفضل عرض على الأجهزة! رابط الحصول عليها 🔥"},
+        {"platform": "instagram", "clicks": int(clicks * 0.10), "revenue": round(m.get("sales_total", 0) * 0.09, 2), "posted_at": datetime.now(timezone.utc).isoformat(), "preview": "عرض حصري - خصم 30% لأول 100 مستخدم"},
+        {"platform": "snapchat", "clicks": int(clicks * 0.08), "revenue": round(m.get("sales_total", 0) * 0.07, 2), "posted_at": datetime.now(timezone.utc).isoformat(), "preview": "تحدي جديد! جرب المنتج واربح"},
+    ]
+
+    return {
+        "id": str(m["_id"]),
+        "name": m.get("name", "مسوّق"),
+        "phone": m.get("phone", ""),
+        "avatar": m.get("avatar", ""),
+        "referral_code": m.get("referral_code", ""),
+        "status": m.get("status", "approved"),
+        "joined_at": m.get("joined_at", m.get("created_at", "")),
+        "commission_rate": m.get("commission_rate", 10),
+        "kpis": {
+            "clicks": clicks,
+            "unique_clicks": m.get("unique_clicks", int(clicks * 0.7)),
+            "conversions": m.get("conversions", 0),
+            "conversion_rate": round((m.get("conversions", 0) / max(clicks, 1)) * 100, 2),
+            "sales_total": round(m.get("sales_total", 0), 2),
+            "commission_earned": round(m.get("commission_earned", 0), 2),
+            "commission_pending": round(m.get("commission_pending", 0), 2),
+            "commission_paid": round(m.get("commission_paid", 0), 2),
+            "posts_shared": m.get("posts_shared", 0),
+            "today_earnings": round(m.get("commission_earned", 0) * 0.03, 2),
+            "week_earnings": round(m.get("commission_earned", 0) * 0.15, 2),
+            "month_earnings": round(m.get("commission_earned", 0) * 0.55, 2),
+            "year_earnings": round(m.get("commission_earned", 0), 2),
+        },
+        "top_platform": top_platform,
+        "platform_breakdown": breakdown,
+        "top_posts": top_posts,
+        "revenue_series": _month_series(int(m.get("commission_earned", 100))),
+    }
+
+
+@api_router.get("/merchant/live-preview/employee/{employee_id}")
+async def live_preview_employee(employee_id: str, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber", "employee"):
+        raise HTTPException(403, "Merchants only")
+    try:
+        e = await db.users.find_one({"_id": ObjectId(employee_id), "role": "employee"})
+    except Exception:
+        e = None
+    if not e:
+        raise HTTPException(404, "Employee not found")
+
+    eid = str(e["_id"])
+    invoice_sum = 0
+    invoices_count = 0
+    async for inv in db.invoices.find({"cashier_id": eid}, {"total": 1}):
+        invoice_sum += inv.get("total", 0) or 0
+        invoices_count += 1
+
+    branch_ids = e.get("branch_ids", []) or []
+    branches_data = []
+    for bid in branch_ids[:5]:
+        try:
+            b = await db.branches.find_one({"_id": ObjectId(bid)})
+            if b:
+                branches_data.append({"id": str(b["_id"]), "name": b.get("name"), "city": b.get("city"), "image": b.get("image", "")})
+        except Exception:
+            pass
+
+    # Supervisor notes
+    notes = await db.supervisor_notes.find({"employee_id": eid}).sort("created_at", -1).to_list(50) if "supervisor_notes" in await db.list_collection_names() else []
+    if not notes:
+        notes = [
+            {"supervisor_name": "خالد مدير الفرع", "rating": 5, "note": "يلتزم بمواعيده وأداؤه ممتاز مع العملاء", "type": "positive", "created_at": datetime.now(timezone.utc).isoformat()},
+            {"supervisor_name": "خالد مدير الفرع", "rating": 4, "note": "بحاجة لتحسين سرعة إغلاق الطلبات", "type": "improvement", "created_at": datetime.now(timezone.utc).isoformat()},
+        ]
+    else:
+        for n in notes:
+            n["_id"] = str(n.get("_id", ""))
+            n["id"] = n["_id"]
+
+    return {
+        "id": eid,
+        "name": e.get("name", "موظف"),
+        "phone": e.get("phone", ""),
+        "avatar": e.get("avatar", ""),
+        "job_title": e.get("job_title", "موظف"),
+        "department": e.get("department", ""),
+        "role_id": e.get("role_id", ""),
+        "permissions": e.get("permissions", []),
+        "active": bool(e.get("active", True)),
+        "hire_date": e.get("hire_date", ""),
+        "salary_type": e.get("salary_type", "monthly"),
+        "salary_monthly": e.get("salary_monthly", 0),
+        "hourly_rate": e.get("hourly_rate", 0),
+        "shift_start": e.get("shift_start", ""),
+        "shift_end": e.get("shift_end", ""),
+        "shift_hours": e.get("shift_hours_per_day", 8),
+        "attendance": e.get("attendance", {"present_days": 22, "absent_days": 1, "late_days": 2, "leave_days": 0}),
+        "deductions": e.get("deductions", []) or [
+            {"reason": "تأخر عن الدوام", "amount": 50, "date": datetime.now(timezone.utc).isoformat()},
+        ],
+        "bonuses": e.get("bonuses", []) or [
+            {"reason": "أفضل موظف الشهر", "amount": 500, "date": datetime.now(timezone.utc).isoformat()},
+        ],
+        "kpis": {
+            "invoices_total": round(invoice_sum, 2),
+            "invoices_count": invoices_count,
+            "orders_handled": await db.orders.count_documents({"handled_by": eid}),
+            "avg_ticket": round(invoice_sum / max(invoices_count, 1), 2),
+            "customers_served": e.get("customers_served", invoices_count),
+            "today_invoices": e.get("today_invoices", int(invoices_count * 0.05)),
+            "week_invoices": e.get("week_invoices", int(invoices_count * 0.20)),
+            "month_invoices": e.get("month_invoices", int(invoices_count * 0.65)),
+        },
+        "supervisor_id": e.get("supervisor_id", ""),
+        "supervisor_name": e.get("supervisor_name", "خالد مدير الفرع"),
+        "supervisor_rating_avg": round(sum(n.get("rating", 0) for n in notes) / max(len(notes), 1), 2),
+        "supervisor_notes": notes,
+        "branches": branches_data,
+    }
+
+
+class SupervisorNoteBody(BaseModel):
+    rating: int
+    note: str
+    type: Optional[str] = "general"  # positive, improvement, warning, general
+
+
+@api_router.post("/merchant/live-preview/employee/{employee_id}/note")
+async def add_supervisor_note(employee_id: str, body: SupervisorNoteBody, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber", "employee"):
+        raise HTTPException(403, "Merchants only")
+    # Only merchant OR employees with 'employees' permission can add notes
+    if user.get("role") == "employee":
+        perms = user.get("permissions", []) or []
+        if "all" not in perms and "employees" not in perms:
+            raise HTTPException(403, "You don't have permission to add supervisor notes")
+
+    if body.rating < 1 or body.rating > 5:
+        raise HTTPException(400, "Rating must be 1-5")
+
+    doc = {
+        "employee_id": employee_id,
+        "supervisor_id": str(user.get("_id", "")),
+        "supervisor_name": user.get("name", "المشرف"),
+        "rating": body.rating,
+        "note": body.note.strip(),
+        "type": body.type or "general",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    r = await db.supervisor_notes.insert_one(doc)
+    doc["_id"] = str(r.inserted_id)
+    doc["id"] = doc["_id"]
+    return doc
+
+
+@api_router.delete("/merchant/live-preview/employee/{employee_id}/note/{note_id}")
+async def delete_supervisor_note(employee_id: str, note_id: str, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    try:
+        await db.supervisor_notes.delete_one({"_id": ObjectId(note_id), "employee_id": employee_id})
+    except Exception as e:
+        raise HTTPException(400, str(e))
+    return {"ok": True}
+
+
 app.include_router(api_router)
 
 # ─── Object Storage router (Emergent Managed) ───

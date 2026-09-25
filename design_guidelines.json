@@ -1,40 +1,40 @@
 {
-  "app_name": "Zenrex Store",
+  "app_name": "Zenrex Store - Merchant Admin",
   "personality": "6 Glass / Luxe DARK",
-  "personality_one_liner": "A cinematic, executive command center that makes the merchant feel powerful, using deep black depth, gold accents, and frosted glass to elevate business intelligence.",
+  "personality_one_liner": "An ultra-premium, cinematic dark-mode command center where golden accents illuminate deep analytics and every entity is a touch away.",
   "color": {
-    "surface": "#0B0C10",
-    "onSurface": "#F5F5F7",
-    "surfaceSecondary": "#1A1C23",
-    "onSurfaceSecondary": "#E2E2E5",
-    "surfaceTertiary": "#262933",
-    "onSurfaceTertiary": "#C4C5C8",
-    "surfaceInverse": "#F5F5F7",
-    "onSurfaceInverse": "#0B0C10",
-    "brand": "#F5C518",
-    "brandPrimary": "#F5C518",
-    "onBrandPrimary": "#0B0C10",
-    "brandSecondary": "#D4A017",
-    "onBrandSecondary": "#0B0C10",
-    "brandTertiary": "#332805",
-    "onBrandTertiary": "#F5C518",
-    "success": "#34D399",
-    "onSuccess": "#022C22",
-    "warning": "#FBBF24",
-    "onWarning": "#452000",
-    "error": "#F87171",
-    "onError": "#450A0A",
-    "info": "#60A5FA",
-    "onInfo": "#1E3A8A",
-    "border": "#262933",
-    "borderStrong": "#3F4354",
-    "divider": "#1A1C23",
-    "muted": "#8E92A3",
-    "onBrand": "#0B0C10"
+    "surface": "#080808",
+    "onSurface": "#FFFFFF",
+    "surfaceSecondary": "#141414",
+    "onSurfaceSecondary": "#E0E0E0",
+    "surfaceTertiary": "#1F1F1F",
+    "onSurfaceTertiary": "#B3B3B3",
+    "surfaceInverse": "#FFFFFF",
+    "onSurfaceInverse": "#000000",
+    "brand": "#D4AF37",
+    "brandPrimary": "#D4AF37",
+    "onBrandPrimary": "#000000",
+    "brandSecondary": "#B8962E",
+    "onBrandSecondary": "#000000",
+    "brandTertiary": "#332A0D",
+    "onBrandTertiary": "#D4AF37",
+    "success": "#10B981",
+    "onSuccess": "#000000",
+    "warning": "#F59E0B",
+    "onWarning": "#000000",
+    "error": "#EF4444",
+    "onError": "#FFFFFF",
+    "info": "#3B82F6",
+    "onInfo": "#FFFFFF",
+    "border": "#262626",
+    "borderStrong": "#404040",
+    "divider": "#1A1A1A",
+    "muted": "#808080",
+    "onBrand": "#000000"
   },
   "typography": {
-    "displayFontFamily": "Cairo",
-    "textFontFamily": "IBM Plex Sans Arabic",
+    "displayFontFamily": "Tajawal",
+    "textFontFamily": "Tajawal",
     "scale": {
       "sm": 12,
       "base": 14,
@@ -44,7 +44,7 @@
     }
   },
   "spacing": {
-    "rule": "Use generous padding to maintain the luxury feel. Ensure RTL layout uses paddingStart/paddingEnd rather than left/right. Group metrics tightly, but give large breathing room between distinct sections.",
+    "rule": "Generous vertical breathing room for cinematic feel; tight grouping within KPI clusters.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -59,25 +59,24 @@
     "lg": 20,
     "pill": 999
   },
-  "shadow_tier": "0",
+  "shadow_tier": "1",
   "navigation": "bottom_tabs",
-  "icon_set": "Phosphor",
+  "icon_set": "Ionicons",
   "glassmorphism": {
     "enabled": "true",
     "do's": [
-      "Use blur on the sticky header when scrolling down.",
-      "Use blur on the 4 KPI summary cards overlaid on the hero background.",
-      "Apply translucent tinted base (surfaceSecondary at 80%) beneath text on glass."
+      "Use heavy tinted glass (bg-black/70 + strong blur) for Detail Sheets and Modal Headers.",
+      "Apply glass to the Merchant Social Overlay pills to keep the UGC content visible.",
+      "Use subtle glass for the bottom tab bar to let scrolling content peek through."
     ],
     "dont's": [
-      "Don't blur dense data list rows.",
-      "Don't blur form inputs or simple buttons.",
-      "Don't rely on blur alone for readability; always use a strong tint underneath."
+      "Do not use glass for dense KPI text containers or basic list items.",
+      "Avoid stacking more than two glass layers."
     ]
   },
   "platform_libraries": {
     "glass": {
-      "ios": "expo-blur",
+      "ios": "expo-glass-effect",
       "android": "expo-blur",
       "low_end_android_fallback": "solid surfaceSecondary"
     },
@@ -87,43 +86,72 @@
     "animation": "react-native-reanimated",
     "gesture": "react-native-gesture-handler"
   },
-  "haptics": {
-    "events": {
-      "tab_switch": "light",
-      "card_press": "light",
-      "filter_select": "medium"
-    }
-  },
   "screens": [
     {
-      "name": "Overview Tab (العام)",
-      "purpose": "A premium flagship analytics dashboard that aggregates Drivers, Branches, Marketers, and Employees into one command center.",
+      "name": "Live Preview Tab Bar",
+      "purpose": "Global RTL navigation for the merchant view.",
       "states": {
-        "loading": "Skeleton loaders with a subtle gold shimmer effect traversing the dark cards.",
-        "empty": "An elegant gold-tinted abstract illustration with a muted message 'لا توجد بيانات كافية لعرضها' (Not enough data to display).",
-        "error": "A refined error message centered on screen with a subdued red icon and a 'إعادة المحاولة' (Retry) outlined gold button."
+        "loading": "N/A",
+        "empty": "N/A",
+        "error": "N/A"
       },
-      "layout": "1. Sticky Header: Glass effect with the title 'العام'.\n2. Hero Section: A 2x2 grid of 4 KPI Summary Cards (Drivers, Branches, Marketers, Employees) overlaid on a dark, gold-streaked abstract background. Each card uses glassmorphism, displaying the number in large 'Cairo' font and a subtle trend arrow.\n3. Segmented Control: A sticky glass pill navigation just below the hero section to toggle between the 4 sub-sections.\n4. Content Area (List): Top 10 items for the selected sub-section. Each row is a surfaceSecondary card.\n5. Row Details: Leading side (right in RTL) features a rank badge (Gold for 1st, Silver for 2nd, Bronze for 3rd, muted gray for 4-10) or avatar. Middle contains name and meta-data. Trailing side (left in RTL) features the primary metric, with a glowing gold sparkline or progress bar.\n6. Real-time Indicators: Small glowing dots (success color for online, muted for offline) positioned on the avatars."
+      "layout": "RTL strict alignment. Tabs from Right to Left: المتجر (Store - Default) -> الصيانة (Maintenance) -> المسابقات (Competitions) -> السوشيال ميديا (Social Media) -> العام (General). Icons are filled when active (Gold), outlined when inactive (muted gray). Glassmorphic background."
+    },
+    {
+      "name": "General Tab Overview (العام)",
+      "purpose": "The main hub listing all key entities (Branches, Drivers, Marketers, Employees) as tappable summary cards.",
+      "states": {
+        "loading": "Shimmer skeletons for cards, maintaining the grid/list structure.",
+        "empty": "Gold-tinted minimalistic illustration of a magnifying glass over a document, text: 'لا توجد بيانات متاحة بعد' (No data available yet).",
+        "error": "Centered error text with a golden 'إعادة المحاولة' (Retry) button."
+      },
+      "layout": "Vertical scrolling view. Top: Horizontal scrollable segmented chips to filter (الكل, الفروع, السائقين, المسوقين, الموظفين). Below: Stacked Cards for each entity. Each card has an Avatar/Icon on the right (RTL), Title, 1-2 key metrics, and an arrow indicating drill-down capability. E.g., Driver card shows online status (green pulse ring)."
+    },
+    {
+      "name": "Entity Detail Sheets (Drill-downs)",
+      "purpose": "90% Gorhom Bottom Sheets providing deep, interconnected analytics for a tapped entity.",
+      "states": {
+        "loading": "Centered gold spinner.",
+        "empty": "N/A - Data should be present if sheet opens.",
+        "error": "Toast message on failure to load deep stats."
+      },
+      "layout": "Glassmorphic header with close button. Header Section: Large Entity Avatar, Name, Status Pill. Middle Section: KPI grid (2-col or 3-col horizontal scroll). Dynamic Charts (Sparklines for Revenue, Ring charts for Internal vs App orders). Interconnectivity: Horizontal lists of connected entities (e.g., 'Staff on Shift' avatars inside Branch sheet) that push a new sheet when tapped."
+    },
+    {
+      "name": "Social Media Tab (السوشيال ميديا)",
+      "purpose": "1:1 visual clone of customer feed with added merchant analytics overlay.",
+      "states": {
+        "loading": "Standard feed loading skeleton.",
+        "empty": "Illustration of a camera/feed, text: 'لم تقم بنشر أي محتوى بعد' (No posts published yet).",
+        "error": "Retry prompt."
+      },
+      "layout": "Vertical infinite scroll of rich media cards. EXACT layout of customer social feed. Added UI: A top-left glassmorphic pill on each post showing quick stats (👁️ 1.2K). Added 'إحصائيات' (Insights) golden button on the action bar. Tapping Insights opens a Bottom Sheet with detailed engagement (List of users who liked/shared, link tracking, direct reply input)."
+    },
+    {
+      "name": "Supervisor System Flow",
+      "purpose": "Allows supervisors to add notes and ratings to Employee profiles.",
+      "states": {
+        "loading": "Button shows loading indicator during submission.",
+        "empty": "No notes: 'لا توجد ملاحظات المشرف' on the employee sheet.",
+        "error": "Error toast on submit failure."
+      },
+      "layout": "Triggered via Golden FAB 'إضافة تقييم/ملاحظة' on Employee Sheet. Opens a secondary stacked Bottom Sheet. Contains a 5-star rating (or sliders for specific metrics), a large text area (`surfaceTertiary` background), and a sticky full-width submit button at the bottom."
     }
   ],
   "images": {
-    "hero_background": {
-      "url": "https://images.unsplash.com/photo-1741356474357-72188f76e801?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwYmxhY2slMjBhbmQlMjBnb2xkJTIwYWJzdHJhY3QlMjBiYWNrZ3JvdW5kJTIwdGV4dHVyZXxlbnwwfHx8fDE3OTAzMTg2NjV8MA&ixlib=rb-4.1.0&q=85",
-      "alt": "Golden light streaks against a black background"
-    },
-    "avatar_fallback": {
-      "url": "https://images.pexels.com/photos/8939108/pexels-photo-8939108.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-      "alt": "Middle Eastern businessman in a traditional attire"
+    "empty_state_general": {
+      "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop",
+      "dark": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop",
+      "alt": "Abstract minimalistic dark golden texture for empty states"
     }
   },
   "instructions_to_main_agent": [
-    "Ensure strict RTL compliance. Use `flexDirection: 'row'` but rely on `paddingStart`, `paddingEnd`, `marginStart`, and `marginEnd` instead of left/right to ensure it mirrors correctly in Arabic.",
-    "Use 'Cairo' for large numbers and primary titles. Use 'IBM Plex Sans Arabic' for lists, tabular data, and subtitles to ensure digits align correctly.",
-    "Apply Glass/Luxe Dark guidelines: Do not use drop shadows. Instead, differentiate surfaces using tonal layering (surface -> surfaceSecondary -> surfaceTertiary).",
-    "The 4 KPI summary cards at the top should have a glassmorphism effect and sit on top of the 'hero_background' image with a top-to-bottom gradient scrim (transparent to #0B0C10).",
-    "Implement the Segmented Control as a sticky header below the KPI cards, using a `surfaceSecondary` pill shape with the active state indicated by a `brandTertiary` background and `brandPrimary` text.",
-    "For the Top 10 lists, ensure ranks 1, 2, and 3 stand out visually. Use a glowing effect or metallic gradient for their rank badges (Gold, Silver, Bronze), while ranks 4-10 remain muted.",
-    "For data visualization inside the list rows, use subtle progress bars or sparklines that fill with `brandPrimary` (#F5C518) based on the metric percentage.",
-    "Remember to include real-time status indicators (a small #34D399 dot) on Employee and Driver avatars to indicate 'Online/Active' status."
+    "STRICT RTL ENFORCEMENT: All layouts must use flex-direction: row-reverse or be properly internationalized for Arabic. The Tab bar order MUST be (from right to left in UI): المتجر (Store) -> الصيانة (Maintenance) -> المسابقات (Competitions) -> السوشيال ميديا (Social Media) -> العام (General).",
+    "THEME: Implement 'Luxe Dark' strictly. Use deep obsidian (#080808) for backgrounds and Zenrex Gold (#D4AF37) for primary accents and active states. Do NOT use default blue or purple anywhere.",
+    "NAVIGATION GRAPH: The 'General' tab must act as a master list. Tapping a card must invoke a Gorhom Bottom Sheet for the drill-down (Driver, Branch, Marketer, Employee). These sheets must support stacked navigation (e.g., tapping an Employee from within a Branch sheet opens a new Employee sheet over it).",
+    "SOCIAL TAB: Re-use the existing customer social feed UI components but wrap them or inject a 'MerchantOverlay' component. This overlay is a glassmorphic pill showing stats, and triggers an 'Insights' bottom sheet for deep analytics.",
+    "COMPETITIVE EDGE 1 - AI Pulse: Add a subtle animated pulsing ring (using Reanimated) around active Drivers or highly active Branches to signify live data flow.",
+    "COMPETITIVE EDGE 2 - Haptic Charts: When implementing Sparklines or Area charts (using Victory Native or similar), attach gesture handlers that fire light haptics as the user scrubs over data points.",
+    "SUPERVISOR FLOW: Ensure the 'Add Note' capability uses a nested bottom sheet and clearly associates the created note with the specific employee. Use `surfaceTertiary` for input backgrounds."
   ]
 }

@@ -9,6 +9,8 @@ import { BlurView } from 'expo-blur';
 import Svg, { Path, G, Line, Text as SvgText, Defs, LinearGradient as SvgGrad, Stop } from 'react-native-svg';
 import { useAuth } from '../_layout';
 import { mediaUrlSync } from '../../src/utils/upload';
+import MerchantSocialFeed from '../../src/components/live-preview/MerchantSocialFeed';
+import { DriverDetailSheet, BranchDetailSheet, MarketerDetailSheet, EmployeeDetailSheet } from '../../src/components/live-preview/DetailSheets';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -46,19 +48,19 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.0 ✨ متطابق مع العميل</Text>
+        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.4 ✨ متطابق مع العميل</Text>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      {/* Section tabs (like customer bottom tabs, but at top for preview) */}
+      {/* Section tabs (Store → Maintenance → Competitions → Social → General) */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.sectionRowWrap} contentContainerStyle={s.sectionRow}>
         {[
           { id: 'products', name: 'المتجر', icon: 'storefront' },
           { id: 'services', name: 'الصيانة', icon: 'construct' },
           { id: 'competitions', name: 'المسابقات', icon: 'trophy' },
-          { id: 'social', name: 'السوشيال', icon: 'chatbubbles' },
+          { id: 'social', name: 'السوشيال ميديا', icon: 'chatbubbles' },
           { id: 'overview', name: 'العام', icon: 'grid' },
         ].map(t => (
           <TouchableOpacity key={t.id} onPress={() => { setSection(t.id as Section); setCompareMode(false); setSelectedIds([]); }}
@@ -83,7 +85,7 @@ export default function LivePreview() {
       )}
       {section === 'services' && <ServicesSection apiCall={apiCall} onAnalytics={setServiceAnalyticsFor} />}
       {section === 'competitions' && <CompetitionsSection apiCall={apiCall} onAnalytics={setCompAnalyticsFor} />}
-      {section === 'social' && <SocialSection apiCall={apiCall} onOpenPost={setPostDetailFor} />}
+      {section === 'social' && <MerchantSocialFeed apiCall={apiCall} />}
 
       {analyticsFor && (
         <ProductAnalyticsSheet product={analyticsFor} onClose={() => setAnalyticsFor(null)} apiCall={apiCall} />
@@ -1469,8 +1471,10 @@ function OverviewSection({ apiCall }: any) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'drivers' | 'branches' | 'marketers' | 'employees'>('drivers');
   const [refreshing, setRefreshing] = useState(false);
-  const [detailEntity, setDetailEntity] = useState<any>(null);
-  const [detailKind, setDetailKind] = useState<any>(null);
+  const [driverId, setDriverId] = useState<string | null>(null);
+  const [branchId, setBranchId] = useState<string | null>(null);
+  const [marketerId, setMarketerId] = useState<string | null>(null);
+  const [employeeId, setEmployeeId] = useState<string | null>(null);
 
   const load = useCallback(async (isRefresh?: boolean) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
@@ -1567,7 +1571,7 @@ function OverviewSection({ apiCall }: any) {
                   secondaryValue={`${d.today_deliveries} اليوم`}
                   progressPct={(d.total_deliveries / maxDrivers) * 100}
                   isOnline={d.online}
-                  onPress={() => { setDetailEntity(d); setDetailKind('driver'); }}
+                  onPress={() => setDriverId(d.id)}
                 />
               ))}
           </View>
@@ -1587,7 +1591,7 @@ function OverviewSection({ apiCall }: any) {
                   secondaryValue={`${b.orders_count} طلب`}
                   progressPct={((b.pos_revenue + b.app_revenue) / maxBranches) * 100}
                   isOnline={b.active}
-                  onPress={() => { setDetailEntity(b); setDetailKind('branch'); }}
+                  onPress={() => setBranchId(b.id)}
                 />
               ))}
           </View>
@@ -1611,7 +1615,7 @@ function OverviewSection({ apiCall }: any) {
                   primaryValue={`${(m.commission_earned / 1000).toFixed(1)}K`}
                   primaryLabel="ر.س"
                   progressPct={(m.commission_earned / maxMarketers) * 100}
-                  onPress={() => { setDetailEntity(m); setDetailKind('marketer'); }}
+                  onPress={() => setMarketerId(m.id)}
                 />
               ))}
           </View>
@@ -1630,13 +1634,25 @@ function OverviewSection({ apiCall }: any) {
                   primaryLabel="ر.س"
                   secondaryValue={`${e.orders_handled} طلب`}
                   progressPct={(e.invoices_total / maxEmployees) * 100}
-                  onPress={() => { setDetailEntity(e); setDetailKind('employee'); }}
+                  onPress={() => setEmployeeId(e.id)}
                 />
               ))}
           </View>
         )}
       </View>
-      <EntityDetailSheet entity={detailEntity} kind={detailKind} onClose={() => setDetailEntity(null)} />
+
+      {/* Rich drill-down sheets with cross-navigation */}
+      {driverId && <DriverDetailSheet driverId={driverId} apiCall={apiCall}
+        onClose={() => setDriverId(null)}
+        onOpenBranch={(bid: string) => { setDriverId(null); setBranchId(bid); }} />}
+      {branchId && <BranchDetailSheet branchId={branchId} apiCall={apiCall}
+        onClose={() => setBranchId(null)}
+        onOpenEmployee={(eid: string) => { setBranchId(null); setEmployeeId(eid); }} />}
+      {marketerId && <MarketerDetailSheet marketerId={marketerId} apiCall={apiCall}
+        onClose={() => setMarketerId(null)} />}
+      {employeeId && <EmployeeDetailSheet employeeId={employeeId} apiCall={apiCall}
+        onClose={() => setEmployeeId(null)}
+        onOpenBranch={(bid: string) => { setEmployeeId(null); setBranchId(bid); }} />}
     </ScrollView>
   );
 }
