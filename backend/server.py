@@ -1625,6 +1625,11 @@ class ProductInput(BaseModel):
     manufacturer_url: str = ""            # web / support portal
     manufacturer_phone: str = ""
     manufacturer_terms: str = ""
+    # ─── Return Policy (per-product, merchant-defined) ───
+    allow_return: bool = True
+    return_days: int = 15                 # customer return window in days
+    manufacturing_defect_days: int = 365  # defect claim window
+    return_conditions: str = ""           # merchant-defined terms shown to customer
 
 @api_router.post("/merchant/products")
 async def merchant_create_product(data: ProductInput, user=Depends(get_current_user)):
@@ -6294,6 +6299,38 @@ try:
     app.include_router(_build_storage_router(get_current_user, JWT_SECRET, JWT_ALGORITHM))
 except Exception as _e:
     logger.error(f"Failed to mount object_storage router: {_e}")
+
+# ─── Shipping Matrix (Phase A) ───
+try:
+    from shipping_matrix import build_router as _build_shipping_router
+    app.include_router(_build_shipping_router(db, get_current_user, require_merchant))
+    logger.info("Shipping matrix router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount shipping_matrix router: {_e}")
+
+# ─── RMA / Returns (Phase B) ───
+try:
+    from rma import build_router as _build_rma_router
+    app.include_router(_build_rma_router(db, get_current_user, require_merchant))
+    logger.info("RMA router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount rma router: {_e}")
+
+# ─── Saudi Loyalty Programs (Phase C) ───
+try:
+    from loyalty_programs import build_router as _build_loyalty_router
+    app.include_router(_build_loyalty_router(db, get_current_user, require_merchant))
+    logger.info("Loyalty programs router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount loyalty_programs router: {_e}")
+
+# ─── Tenant Feature Modules (Phase D) ───
+try:
+    from tenant_modules import build_router as _build_modules_router
+    app.include_router(_build_modules_router(db, get_current_user, require_merchant))
+    logger.info("Tenant modules router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount tenant_modules router: {_e}")
 
 @app.on_event("startup")
 async def startup():

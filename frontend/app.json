@@ -2,7 +2,7 @@
   "expo": {
     "name": "Zenrex Store",
     "slug": "zitex",
-    "version": "1.13.8",
+    "version": "1.13.9",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "zenrex",
@@ -31,7 +31,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.smartangle.zitex",
-      "versionCode": 46,
+      "versionCode": 47,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",

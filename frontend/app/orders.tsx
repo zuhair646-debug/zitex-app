@@ -55,6 +55,16 @@ export default function OrdersScreen() {
                 <View style={s.orderRow}><Text style={s.orderLabel}>Items</Text><Text style={s.orderVal}>{o.items?.length || 0} products</Text></View>
                 <View style={s.orderRow}><Text style={s.orderLabel}>Delivery</Text><Text style={s.orderVal}>{o.delivery_type}</Text></View>
                 <View style={[s.orderRow, s.totalRow]}><Text style={s.totalLabel}>TOTAL</Text><Text style={s.totalVal}>{o.total} SAR</Text></View>
+                {(o.status === 'completed' || o.status === 'delivered') && (
+                  <TouchableOpacity
+                    onPress={() => router.push(`/create-return?order_id=${o.id}` as any)}
+                    style={s.returnBtn}
+                    testID={`return-${o.id}`}
+                  >
+                    <Ionicons name="return-up-back" size={14} color="#F5C518" />
+                    <Text style={s.returnBtnText}>طلب إرجاع أو ضمان</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
           </ScrollView>
@@ -86,4 +96,6 @@ const s = StyleSheet.create({
   totalRow: { borderTopWidth: 1, borderTopColor: '#E4E4E7', marginTop: 4, paddingVertical: 10 },
   totalLabel: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
   totalVal: { fontSize: 16, fontWeight: '800', color: '#F5C518' },
+  returnBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#E4E4E7', backgroundColor: '#FFF' },
+  returnBtnText: { color: '#F5C518', fontSize: 13, fontWeight: '800' },
 });

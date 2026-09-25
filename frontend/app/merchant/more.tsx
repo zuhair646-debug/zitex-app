@@ -29,7 +29,14 @@ export default function MerchantMore() {
     { icon: 'clipboard', title: 'كل الحجوزات', subtitle: 'حجوزات عامة، حالتها، إدارتها', route: '/merchant/bookings' },
     { icon: 'business', title: 'الفروع', subtitle: 'مواقع فروع المتجر', route: '/merchant/branches' },
     { icon: 'car-sport', title: 'السائقون', subtitle: 'إدارة السائقين والتعيين', route: '/merchant/drivers' },
-    { icon: 'map', title: 'إعدادات التوصيل', subtitle: 'الأسعار والمناطق والأوقات', route: '/merchant/delivery-settings' },
+    { icon: 'map', title: 'إعدادات التوصيل الداخلي', subtitle: 'الأسطول الخاص + المناطق والأوقات', route: '/merchant/delivery-settings' },
+    { icon: 'airplane', title: 'مصفوفة الشحن الخارجي', subtitle: 'شركات الشحن حسب المدينة والفرع', route: '/merchant/shipping-matrix' },
+    { icon: 'return-up-back', title: 'الإرجاع والضمان', subtitle: 'طلبات الإرجاع من العملاء', route: '/merchant/returns' },
+  ] as const;
+
+  const growth = [
+    { icon: 'ribbon', title: 'برامج الولاء السعودية', subtitle: 'قطاف، مكافآت، الفرسان…', route: '/merchant/loyalty-programs' },
+    { icon: 'options', title: 'ميزات التطبيق', subtitle: 'فعّل أو أوقف أي ميزة', route: '/merchant/services-catalog' },
   ] as const;
 
   const admin = [
@@ -75,6 +82,7 @@ export default function MerchantMore() {
           <Section label="المبيعات والفواتير" items={sales as any} />
           <Section label="التسويق" items={marketing as any} />
           <Section label="العمليات" items={operations as any} />
+          <Section label="النمو والولاء" items={growth as any} />
           <Section label="الإدارة" items={admin as any} />
 
           <SectionHeader title="الحساب" />
@@ -82,7 +90,7 @@ export default function MerchantMore() {
             <ListItem icon="log-out" title="تسجيل الخروج" onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zenrex Store Merchant v1.12.0</Text>
+          <Text style={styles.version}>Zenrex Store Merchant v1.13.9</Text>
         </ScrollView>
       </SafeAreaView>
     </View>

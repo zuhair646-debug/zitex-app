@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import PaymentMethodsRibbon from '../src/components/PaymentAndLoyalty';
+import ShippingOptionsPicker from '../src/components/ShippingOptionsPicker';
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -27,6 +28,8 @@ export default function CheckoutScreen() {
   const [scheduledSlot, setScheduledSlot] = useState<any>(null);
   const [slotModalOpen, setSlotModalOpen] = useState(false);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [shipMode, setShipMode] = useState<'internal' | 'external'>('internal');
+  const [externalCarrier, setExternalCarrier] = useState<{ code: string; price: number; eta: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -184,6 +187,24 @@ export default function CheckoutScreen() {
         {couponApplied ? <Text style={s.couponApplied}>{couponApplied} طُبِّق! -{couponDiscount} ر.س</Text> : null}
 
         <TextInput style={s.notesInput} placeholder="ملاحظات للطلب (اختياري)" value={notes} onChangeText={setNotes} multiline />
+
+        {/* External shipping picker (KSA carriers) */}
+        <ShippingOptionsPicker
+          apiCall={apiCall}
+          branchId={quote?.branch?.id}
+          lat={userLat}
+          lng={userLng}
+          cityCode={addresses[selectedAddr]?.city_code}
+          postalCode={addresses[selectedAddr]?.postal_code}
+          weightKg={Math.max(1, cart.reduce((a, i) => a + (i.quantity || 1), 0))}
+          cod={paymentMethod === 'cash_on_delivery'}
+          selectedCarrier={externalCarrier?.code}
+          onSelect={(code, price, eta) => {
+            setExternalCarrier({ code, price, eta });
+            setShipMode('external');
+            setDeliveryFee(price);
+          }}
+        />
 
         <View style={s.summaryCard}>
           <Text style={s.summaryTitle}>ملخص الطلب</Text>

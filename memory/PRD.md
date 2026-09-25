@@ -3,7 +3,16 @@
 ## Vision
 Zitex — Comprehensive Tech Store native mobile app (iOS + Android) with e-commerce, social feed, competitions, delivery, chamber portal, and merchant admin panel.
 
-## Current release: v1.13.7 — Competition Detail + Live Toast
+## Current release: v1.13.8 — Saudi Payments + Shipping + Loyalty
+- **Payment Framework** — 15 Saudi providers seeded (Mada [SAMA-mandated], Visa, Mastercard, Apple Pay, STC Pay, urpay, Tabby [SAMA-licensed], Tamara [Sharia compliant], SADAD, Bank Transfer, COD + gateways: HyperPay, Moyasar, PayTabs, MyFatoorah). Each has brand color, category, sama_licensed, bnpl, cod flags, credentials schema. Merchant admin toggles each on/off.
+- **`PaymentMethodsRibbon`** — glass-blur sticky ribbon at bottom of checkout, mini tiles with SAMA badges + BNPL 'قسّط' pills + tap-for-details sheet with legal note
+- **Shipping Framework** — 10 Saudi carriers seeded (SMSA, Aramex, Naqel, J&T, Zajil, Aymakan, Saudi Post SPL, DHL, Fetchr, Torod aggregator) with brand colors, ETA, base+per-kg pricing, cod_supported flags
+- **Loyalty Points System** — 4 tiers (Bronze/Silver/Gold/Platinum) with escalating perks (earn multiplier, free shipping threshold, extra warranty days, priority shipping, VIP support). Auto-award on order (with tier multiplier), service, competition, review, referral, birthday
+- **`LoyaltyWidget`** — tier badge, balance, progress to next tier
+- **Loyalty History screen** — perks grid + full transaction feed with source icons
+- Backend: `GET /api/checkout/options`, `GET/PUT /merchant/settings/payments`, `GET/PUT /merchant/settings/shipping`, `GET /loyalty/balance /history`, `POST /loyalty/earn /redeem`
+
+## Previous release: v1.13.7 — Competition Detail + Live Toast
 - **NEW: Competition Detail Sheet** — full-modal with hero banner + 4 tabs:
   - نظرة عامة: KPIs, peak hour chip, daily pulse, sources bars, top cities bars
   - المشاركون: full list with avatar/city/source/timestamp + tap-to-call
@@ -97,3 +106,41 @@ Zitex — Comprehensive Tech Store native mobile app (iOS + Android) with e-comm
 - Backend: FastAPI + Motor (MongoDB)
 - Storage: Emergent Object Storage
 - CI/CD: EAS Build & Submit (auto per `/app/memory/auto_release_rule.md`)
+
+---
+## v1.13.9 — Phase A/B/C/D Complete (2026-09-25)
+
+### A. مصفوفة الشحن الذكية
+- Backend: `shipping_matrix.py` — قواعد شحن (شركة × فرع × مدينة) مع live rate calculation
+- Frontend merchant: `/merchant/shipping-matrix` — CRUD كامل بواجهة عربية
+- Frontend customer: `ShippingOptionsPicker` مدمج في checkout — يعرض تلقائياً شركات الشحن حسب الموقع
+
+### B. نظام الإرجاع والضمان (RMA) على طريقة Noon
+- Backend: `rma.py` — جدول `rmas` على مستوى المنتج داخل الطلب
+- إضافة حقول لكل منتج: `allow_return`, `return_days`, `manufacturing_defect_days`, `return_conditions`
+- 9 أسباب إرجاع + 4 حلول (استرداد/استبدال/إصلاح/محفظة)
+- تحويل استرداد ذكي: بطاقة→للبطاقة، COD→المحفظة، BNPL→للأصل
+- إيداع تلقائي للمحفظة عند الاسترداد
+- Merchant: `/merchant/returns` — Tabs + قرارات + فحص
+- Customer: `/my-returns`, `/create-return`, `/rma-detail`
+- زر "طلب إرجاع" أُضيف لكل طلب مكتمل
+
+### C. برامج الولاء السعودية (إطار Adapter)
+- Backend: `loyalty_programs.py` — 8 برامج (قطاف، مكافآت، الفرسان، وايت، ريّاض، الأهلي WOW، urpay، داخلي)
+- كل برنامج: تفعيل/إيقاف + بيانات اعتماد + وثائق قانونية
+- Merchant: `/merchant/loyalty-programs`
+- ملاحظة: التكامل الفعلي مع API الشركات يتطلب عقد شراكة رسمي
+
+### D. Feature Toggles (SaaS-ready)
+- Backend: `tenant_modules.py` — 21 ميزة في 8 فئات
+- Merchant: `/merchant/services-catalog` — يتحكم بإظهار/إخفاء أي ميزة
+- Public endpoint: `/api/tenant/modules` — الواجهة الأمامية تقرأه لإخفاء/إظهار
+- يمكّن استنساخ التطبيق لتاجر آخر بتعديل toggles فقط
+
+### Testing
+- 37/38 pytest passed (بعد إصلاحين: rename external redeem + cash_on_delivery route)
+- End-to-end RMA flow: تم اختباره كاملاً (طلب → توصيل → إرجاع → موافقة → فحص → استرداد المحفظة)
+
+### Version
+- app.json: 1.13.8 → **1.13.9**
+- versionCode: 46 → **47**
