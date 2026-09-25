@@ -11,6 +11,8 @@ import { useAuth } from '../_layout';
 import { mediaUrlSync } from '../../src/utils/upload';
 import MerchantSocialFeed from '../../src/components/live-preview/MerchantSocialFeed';
 import { DriverDetailSheet, BranchDetailSheet, MarketerDetailSheet, EmployeeDetailSheet } from '../../src/components/live-preview/DetailSheets';
+import OrderHeatmap from '../../src/components/live-preview/OrderHeatmap';
+import { AlertsBell } from '../../src/components/live-preview/AlertsAndExport';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -48,7 +50,8 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.4 ✨ متطابق مع العميل</Text>
+        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.5 ✨</Text>
+        <AlertsBell apiCall={apiCall} />
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
         </TouchableOpacity>
@@ -899,6 +902,69 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                 ))}
               </>
             )}
+
+            {/* Buyers list */}
+            {(data.buyers || []).length > 0 && (
+              <>
+                <Text style={s.sec}>🛒 المشترون ({data.buyers.length})</Text>
+                {data.buyers.slice(0, 15).map((b: any, i: number) => (
+                  <View key={i} style={s.visitor}>
+                    <View style={[s.visitorAvatar, { backgroundColor: b.source === 'pos' ? '#F5C518' : '#60A5FA' }]}>
+                      <Ionicons name={b.source === 'pos' ? 'cart' : 'phone-portrait'} size={14} color={BG} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.visitorName}>{b.user_name}</Text>
+                      <Text style={s.visitorMeta}>{b.channel} · {b.quantity} قطعة · {(b.created_at || '').slice(0, 10)}{b.branch ? ` · ${b.branch}` : ''}</Text>
+                    </View>
+                    <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(b.total).toLocaleString()} ر.س</Text>
+                  </View>
+                ))}
+              </>
+            )}
+
+            {/* Top branches selling this product */}
+            {(data.top_branches || []).length > 0 && (
+              <>
+                <Text style={s.sec}>🏢 أفضل الفروع مبيعاً لهذا المنتج</Text>
+                {data.top_branches.map((tb: any, i: number) => (
+                  <View key={tb.id} style={[s.visitor, { paddingVertical: 10 }]}>
+                    <View style={[s.visitorAvatar, { backgroundColor: '#34D399', width: 32, height: 32 }]}>
+                      <Text style={{ color: BG, fontWeight: '900', fontSize: 11 }}>{i + 1}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.visitorName}>{tb.name}</Text>
+                      <Text style={s.visitorMeta}>{tb.city} · {tb.units} قطعة · {tb.orders} فاتورة</Text>
+                    </View>
+                    <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(tb.revenue).toLocaleString()} ر.س</Text>
+                  </View>
+                ))}
+              </>
+            )}
+
+            {/* Purchase sources */}
+            {(data.purchase_sources || []).length > 0 && (
+              <>
+                <Text style={s.sec}>🔗 مصادر الوصول للمنتج</Text>
+                <View style={{ backgroundColor: '#1A1C24', borderRadius: 12, padding: 10 }}>
+                  {data.purchase_sources.map((ps: any) => {
+                    const total = data.purchase_sources.reduce((a: number, x: any) => a + x.count, 0) || 1;
+                    const pct = (ps.count / total) * 100;
+                    const labelMap: any = { direct: 'وصول مباشر', social: 'وسائل تواصل', link: 'رابط دعوة', referral: 'إحالة', ad: 'إعلان مدفوع' };
+                    return (
+                      <View key={ps.source} style={{ marginBottom: 8 }}>
+                        <View style={{ flexDirection: 'row' }}>
+                          <Text style={{ color: '#FFF', fontSize: 11, flex: 1, textAlign: 'right', fontWeight: '700' }}>{labelMap[ps.source] || ps.source}</Text>
+                          <Text style={{ color: '#F5C518', fontSize: 11, fontWeight: '900' }}>{ps.count} ({pct.toFixed(1)}%)</Text>
+                        </View>
+                        <View style={{ height: 6, backgroundColor: '#2A2D38', borderRadius: 3, marginTop: 3, overflow: 'hidden' }}>
+                          <View style={{ width: `${pct}%`, height: '100%', backgroundColor: '#F5C518' }} />
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </>
+            )}
           </ScrollView>
         </View>
       </View>
@@ -989,7 +1055,36 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
                   <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{Math.round(data.kpis.revenue).toLocaleString()}</Text><Text style={s.sheetKpiLbl}>الإيرادات (ر.س)</Text></View>
                   <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.avg_rating}★</Text><Text style={s.sheetKpiLbl}>متوسط التقييم</Text></View>
                 </View>
+                {data.kpis.avg_duration_hours > 0 && (
+                  <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#0F1116', padding: 8, borderRadius: 8 }}>
+                    <Ionicons name="timer" size={14} color={GOLD} />
+                    <Text style={{ color: '#FFF', fontSize: 12, flex: 1, textAlign: 'right' }}>متوسط وقت الإنجاز</Text>
+                    <Text style={{ color: GOLD, fontSize: 13, fontWeight: '900' }}>{data.kpis.avg_duration_hours} ساعة</Text>
+                  </View>
+                )}
               </View>
+
+              {(data.technicians || []).length > 0 && (
+                <View style={s.sheetCard}>
+                  <Text style={s.sheetSectionTitle}>🔧 الفنيون المسؤولون</Text>
+                  {data.technicians.map((t: any, i: number) => (
+                    <View key={t.id} style={{ flexDirection: 'row', paddingVertical: 8, borderBottomWidth: i < data.technicians.length - 1 ? 1 : 0, borderBottomColor: '#2A2D38', alignItems: 'center', gap: 8 }}>
+                      <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: GOLD + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: GOLD + '55' }}>
+                        <Ionicons name="construct" size={16} color={GOLD} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800', textAlign: 'right' }}>{t.name}</Text>
+                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
+                          <Text style={{ color: '#A1A1AA', fontSize: 10 }}>✅ {t.completed}/{t.count} حجز</Text>
+                          {t.avg_duration_hours > 0 && <Text style={{ color: '#A1A1AA', fontSize: 10 }}>⏱ {t.avg_duration_hours}س</Text>}
+                          {t.avg_rating > 0 && <Text style={{ color: GOLD, fontSize: 10 }}>⭐ {t.avg_rating}</Text>}
+                        </View>
+                      </View>
+                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900' }}>{Number(t.revenue).toLocaleString()} ر.س</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
               <View style={s.sheetCard}>
                 <Text style={s.sheetSectionTitle}>الحالات</Text>
                 {data.status_breakdown.map((row: any) => {
@@ -1070,7 +1165,38 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
                   <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.unique_users}</Text><Text style={s.sheetKpiLbl}>مستخدم فريد</Text></View>
                   <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>+{data.kpis.followers_gained}</Text><Text style={s.sheetKpiLbl}>متابع مكتسب</Text></View>
                 </View>
+                {typeof data.peak_hour === 'number' && (
+                  <View style={{ marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: GOLD + '20', borderWidth: 1, borderColor: GOLD + '55', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 }}>
+                      <Ionicons name="flame" size={12} color={GOLD} />
+                      <Text style={{ color: GOLD, fontSize: 11, fontWeight: '900' }}>
+                        ذروة الساعة: {data.peak_hour === 0 ? 12 : data.peak_hour > 12 ? data.peak_hour - 12 : data.peak_hour}{data.peak_hour < 12 ? 'ص' : 'م'}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#60A5FA20', borderWidth: 1, borderColor: '#60A5FA55', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 }}>
+                      <Ionicons name="trending-up" size={12} color="#60A5FA" />
+                      <Text style={{ color: '#60A5FA', fontSize: 11, fontWeight: '900' }}>معدل المشاركة: {data.kpis.engagement_rate}%</Text>
+                    </View>
+                  </View>
+                )}
               </View>
+
+              {(data.winner_details || []).length > 0 && (
+                <View style={s.sheetCard}>
+                  <Text style={s.sheetSectionTitle}>🏆 الفائزون بالتفصيل</Text>
+                  {data.winner_details.map((w: any, i: number) => (
+                    <View key={i} style={{ flexDirection: 'row', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#2A2D38', alignItems: 'center', gap: 8 }}>
+                      <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ color: BG, fontWeight: '900' }}>{i + 1}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800', textAlign: 'right' }}>{w.user_name}</Text>
+                        <Text style={{ color: '#A1A1AA', fontSize: 10, textAlign: 'right' }}>{(w.user_phone || '').slice(-4).padStart(4, '•')} · {(w.picked_at || '').slice(0, 10)}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
               <View style={s.sheetCard}>
                 <Text style={s.sheetSectionTitle}>🔗 مصادر المشاركين</Text>
                 {data.sources.map((row: any) => {
@@ -1555,6 +1681,9 @@ function OverviewSection({ apiCall }: any) {
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      {/* Order Heatmap - Best Times */}
+      <OrderHeatmap apiCall={apiCall} />
 
       <View style={{ paddingHorizontal: 12 }}>
         {tab === 'drivers' && (

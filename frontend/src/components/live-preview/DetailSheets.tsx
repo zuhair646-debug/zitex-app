@@ -6,9 +6,10 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LP, K, KM, PLATFORM_COLORS, PLATFORM_LABEL, PLATFORM_ICON } from './theme';
 import { KpiCard, Sparkline, BarChart, HBar, RatingBreakdown, EntityPill, Section } from './atoms';
+import { ExportButton } from './AlertsAndExport';
 
 /* ═════════════════════════ SHEET SHELL ═════════════════════════ */
-function SheetShell({ visible, onClose, title, subtitle, avatar, icon, accent = LP.GOLD, statusPill, children }: any) {
+function SheetShell({ visible, onClose, title, subtitle, avatar, icon, accent = LP.GOLD, statusPill, exportKind, exportId, apiCall, children }: any) {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={st.overlay}>
@@ -20,6 +21,9 @@ function SheetShell({ visible, onClose, title, subtitle, avatar, icon, accent = 
               <Ionicons name="close" size={22} color={LP.TEXT} />
             </TouchableOpacity>
             <View style={{ flex: 1 }} />
+            {exportKind && exportId && apiCall && (
+              <ExportButton kind={exportKind} entityId={exportId} apiCall={apiCall} small />
+            )}
             {statusPill}
           </BlurView>
           {/* Hero */}
@@ -80,7 +84,8 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
 
   return (
     <SheetShell visible onClose={onClose} title={d.name} subtitle={`${d.vehicle}${d.vehicle_plate ? ` · ${d.vehicle_plate}` : ''}`}
-      avatar={d.avatar} icon="car" statusPill={statusPill}>
+      avatar={d.avatar} icon="car" statusPill={statusPill}
+      exportKind="driver" exportId={driverId} apiCall={apiCall}>
       {/* Live rating chip */}
       <View style={st.centerRow}>
         <View style={st.ratingChip}>
@@ -242,7 +247,8 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
 
   return (
     <SheetShell visible onClose={onClose} title={b.name} subtitle={`${b.city}${b.district ? ' · ' + b.district : ''}`}
-      avatar={b.image} icon="business" statusPill={statusPill}>
+      avatar={b.image} icon="business" statusPill={statusPill}
+      exportKind="branch" exportId={branchId} apiCall={apiCall}>
       {/* Chips row */}
       <View style={st.centerRow}>
         {b.is_main && (
@@ -387,7 +393,8 @@ export function MarketerDetailSheet({ marketerId, apiCall, onClose }: any) {
 
   return (
     <SheetShell visible onClose={onClose} title={m.name} subtitle={`رمز: ${m.referral_code}`}
-      avatar={m.avatar} icon="megaphone" accent={LP.WARN}>
+      avatar={m.avatar} icon="megaphone" accent={LP.WARN}
+      exportKind="marketer" exportId={marketerId} apiCall={apiCall}>
       <View style={st.centerRow}>
         <View style={[st.ratingChip, { backgroundColor: PLATFORM_COLORS[m.top_platform] + '25', borderColor: PLATFORM_COLORS[m.top_platform] }]}>
           <Ionicons name={PLATFORM_ICON[m.top_platform] as any} size={12} color={PLATFORM_COLORS[m.top_platform]} />
@@ -512,7 +519,8 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
 
   return (
     <SheetShell visible onClose={onClose} title={e.name} subtitle={`${e.job_title}${e.department ? ' · ' + e.department : ''}`}
-      avatar={e.avatar} icon="person" accent={LP.MAGENTA} statusPill={statusPill}>
+      avatar={e.avatar} icon="person" accent={LP.MAGENTA} statusPill={statusPill}
+      exportKind="employee" exportId={employeeId} apiCall={apiCall}>
       <View style={st.centerRow}>
         <View style={st.ratingChip}>
           <Ionicons name="star" size={12} color={LP.GOLD} />
