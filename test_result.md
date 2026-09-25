@@ -181,9 +181,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "POS Invoice Create / List / Get endpoints"
-    - "Auth Login trim whitespace fix"
-    - "POS screen + Invoices screen registered and reachable"
+    - "Deep Analytics for Services/Competitions/Posts (v1.13.14)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -193,3 +191,17 @@ agent_communication:
       message: "Phase C (POS + Invoices) navigation is now fully wired. Also fixed auth login whitespace bug (likely cause of driver login failing in production). social.tsx warning also fixed. Please verify: (1) POS end-to-end invoice creation, (2) login works for all three roles including with padded whitespace, (3) no text warnings on Social tab. Credentials: Merchant 0509999999/merchant2025, Driver 0540001111/driver1234, Chamber 0550000000/chamber2025."
     - agent: "main"
       message: "v1.3.3 — Redesigned Marketing panel with unified campaign type picker (Regular Ad vs Affiliate Campaign). Added Affiliate Dashboard for customers (/my-affiliate). Added Store↔Affiliate toggle on home tab (only if user has ≥1 affiliate account). Please verify end-to-end: (a) merchant creates affiliate campaign with commission %, (b) customer sees campaign card in social feed with 'قدّم الآن' button, (c) tapping opens /affiliate-apply with auto-filled fields, (d) submit application, (e) merchant approves, (f) customer sees 🏆 pill on home tab, (g) opens /my-affiliate dashboard with referral link, analytics, and wallet. Also test the regular ad flow with targeting. Merchant: 0509999999/merchant2025 · Customer: 0500000000/test1234 · Driver: 0540001111/driver1234."
+    - agent: "main"
+      message: "v1.13.14 — Deep Analytics extended to Services, Competitions, and Social Posts (matching the approved Product Analytics design). Backend: /app/backend/deep_analytics.py rewrite fixes data-mapping bugs (services now use total_fee for revenue, competitions use competition_entries collection + joined_at timestamp, posts handle likes/shares as int totals). Frontend: /app/frontend/app/merchant/product-analytics.tsx now kind-aware — KPI labels, funnel stages, hero pills, and comparison headers all adapt per kind (product/service/competition/post). Screens: service-analytics.tsx, competition-analytics.tsx, post-analytics.tsx are thin wrappers reusing the same UI. Please test end-to-end with merchant 0509999999/merchant2025: open Live Preview → tap Services tab → tap any service card → verify Deep Analytics screen loads with 5 KPI rows (Views, Bookings, Cancelled, Completed, Revenue, Shares, Fill Rate) + Overview/Visitors/Bookings/Shares/Reviews/Compare tabs, all correctly labeled 'حجوزات' not 'سلة'. Repeat for Competitions tab (expects 'مشاركون', 'أماكن شاغرة', capacity %) and Social tab (expects 'الوصول', 'المعجبون', 'تعليقات', 'مشاركات', 'نقاط التفاعل')."
+
+  - task: "Deep Analytics for Services/Competitions/Posts (v1.13.14)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/deep_analytics.py, /app/frontend/app/merchant/product-analytics.tsx, /app/frontend/app/merchant/service-analytics.tsx, /app/frontend/app/merchant/competition-analytics.tsx, /app/frontend/app/merchant/post-analytics.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Extended the approved Product Analytics design (v1.13.12) to services, competitions, and posts. Fixed field mismatches: service_bookings.total_fee (revenue), competition_entries (participants collection) + joined_at, social_posts.likes/shares as int totals with liked_by/shared_by as drill-down lists. Kind-aware KPI labels: services show 'الحجوزات', competitions show 'مشاركون'/'أماكن شاغرة'/'نسبة الامتلاء', posts show 'الوصول'/'المعجبون'/'تعليقات'/'نقاط التفاعل'. Backend curl tests all 200 OK with realistic numbers. Please test the 4 kinds end-to-end via Live Preview."

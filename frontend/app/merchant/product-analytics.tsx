@@ -50,6 +50,37 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
     : kind === 'post' ? 'التفاعل'
     : 'المشترون';
 
+  // Kind-aware KPI labels & icons
+  const L = kind === 'service' ? {
+    views: 'مشاهدات الخدمة', addToCart: 'الحجوزات', addIcon: 'calendar' as any,
+    abandon: 'حجوزات ملغاة', abandonSub: 'لم تكتمل',
+    orders: 'خدمات مكتملة', ordersIcon: 'checkmark-done-circle' as any,
+    revenue: 'إيرادات الخدمة',
+    funnelCart: 'حجز خدمة', funnelCheckout: 'بدأ التنفيذ', funnelOrder: 'تم إنجاز الخدمة',
+    heroPill: 'خدمة',
+  } : kind === 'competition' ? {
+    views: 'مشاهدات المسابقة', addToCart: 'مسجلون', addIcon: 'person-add' as any,
+    abandon: 'أماكن شاغرة', abandonSub: 'من السعة الكلية',
+    orders: 'مشاركات فعلية', ordersIcon: 'trophy' as any,
+    revenue: 'قيمة المشتريات',
+    funnelCart: 'سجّل مشاركته', funnelCheckout: 'أكمل المتطلبات', funnelOrder: 'دخل السحب',
+    heroPill: 'مسابقة',
+  } : kind === 'post' ? {
+    views: 'الوصول', addToCart: 'المعجبون', addIcon: 'heart' as any,
+    abandon: 'تعليقات', abandonSub: 'تفاعل نصي',
+    orders: 'مشاركات المنشور', ordersIcon: 'paper-plane' as any,
+    revenue: 'نقاط التفاعل',
+    funnelCart: 'أعجبوا', funnelCheckout: 'علّقوا', funnelOrder: 'شاركوا',
+    heroPill: 'منشور',
+  } : {
+    views: 'مشاهدات كلية', addToCart: 'أضيف للسلة', addIcon: 'cart' as any,
+    abandon: 'سلات مهجورة', abandonSub: 'فرصة مفقودة',
+    orders: 'عمليات شراء', ordersIcon: 'checkmark-circle' as any,
+    revenue: 'إيرادات',
+    funnelCart: 'أضيف للسلة', funnelCheckout: 'بدأ الدفع', funnelOrder: 'أكمل الشراء',
+    heroPill: 'منتج',
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -109,27 +140,61 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
             <Image source={{ uri: p.images[0] }} style={s.heroImg} resizeMode="cover" />
           ) : (
             <View style={[s.heroImg, { backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' }]}>
-              <Ionicons name="cube" size={40} color={MUTED} />
+              <Ionicons name={
+                kind === 'service' ? 'construct' :
+                kind === 'competition' ? 'trophy' :
+                kind === 'post' ? 'megaphone' :
+                'cube'
+              } size={40} color={MUTED} />
             </View>
           )}
           <View style={s.heroOverlay}>
             <View style={{ flexDirection: 'row', gap: 6, marginBottom: 4 }}>
-              <View style={s.condPill}><Text style={s.condText}>{p.condition === 'new' ? 'جديد' : 'مستعمل'}</Text></View>
+              <View style={s.condPill}><Text style={s.condText}>{
+                kind === 'product' ? (p.condition === 'new' ? 'جديد' : 'مستعمل')
+                : L.heroPill
+              }</Text></View>
               {p.warranty_days > 0 && (
                 <View style={[s.condPill, { backgroundColor: PURPLE + '30', borderColor: PURPLE }]}>
                   <Text style={[s.condText, { color: PURPLE }]}>ضمان {p.warranty_days} يوم</Text>
                 </View>
               )}
+              {kind === 'competition' && k.winners_count != null && (
+                <View style={[s.condPill, { backgroundColor: GOLD + '30', borderColor: GOLD }]}>
+                  <Text style={[s.condText, { color: GOLD }]}>🏆 {k.winners_count}/{k.prize_count || '?'} فائز</Text>
+                </View>
+              )}
+              {kind === 'post' && (
+                <View style={[s.condPill, { backgroundColor: BLUE + '30', borderColor: BLUE }]}>
+                  <Text style={[s.condText, { color: BLUE }]}>وصول ~{(k.reach_estimate || k.total_views).toLocaleString()}</Text>
+                </View>
+              )}
             </View>
             <Text style={s.heroTitle} numberOfLines={2}>{p.name_ar}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 4 }}>
-              <Text style={s.priceMain}>{disc || p.price} ر.س</Text>
-              {disc && <Text style={s.priceOld}>{p.price} ر.س</Text>}
+              {kind === 'post' ? (
+                <>
+                  <Text style={s.priceMain}>{(k.engagement_score || 0).toLocaleString()}</Text>
+                  <Text style={{ color: MUTED, fontSize: 11, marginBottom: 3 }}>نقطة تفاعل</Text>
+                </>
+              ) : kind === 'competition' ? (
+                <>
+                  <Text style={s.priceMain}>{p.price > 0 ? `${p.price} ر.س` : 'مجاناً'}</Text>
+                  <Text style={{ color: MUTED, fontSize: 10, marginBottom: 3 }}>حد الإنفاق</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={s.priceMain}>{disc || p.price} ر.س</Text>
+                  {disc && <Text style={s.priceOld}>{p.price} ر.س</Text>}
+                </>
+              )}
               <View style={{ flex: 1 }} />
-              <View style={s.ratingPill}>
-                <Ionicons name="star" size={11} color={AMBER} />
-                <Text style={s.ratingText}>{p.rating} ({p.review_count})</Text>
-              </View>
+              {(kind === 'product' || kind === 'service') && (
+                <View style={s.ratingPill}>
+                  <Ionicons name="star" size={11} color={AMBER} />
+                  <Text style={s.ratingText}>{p.rating} ({p.review_count})</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -137,20 +202,26 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
         {/* Big KPIs grid */}
         <View style={{ padding: 12 }}>
           <View style={s.kpiRow}>
-            <KPI label="مشاهدات كلية" value={k.total_views.toLocaleString()} icon="eye" color={BLUE} sub={`اليوم: ${k.views_today}`} />
-            <KPI label="زوار فريدون" value={k.unique_visitors.toLocaleString()} icon="people" color={PURPLE} sub={`آخر ٧ أيام: ${k.views_week}`} />
+            <KPI label={L.views} value={k.total_views.toLocaleString()} icon="eye" color={BLUE} sub={`اليوم: ${k.views_today}`} />
+            <KPI label={kind === 'post' ? 'الوصول التقديري' : 'زوار فريدون'} value={(kind === 'post' ? (k.reach_estimate || k.total_views) : k.unique_visitors).toLocaleString()} icon="people" color={PURPLE} sub={`آخر ٧ أيام: ${k.views_week}`} />
           </View>
           <View style={s.kpiRow}>
-            <KPI label="أضيف للسلة" value={k.add_to_cart.toLocaleString()} icon="cart" color={AMBER} sub={`${k.cart_conversion_rate}% تحويل`} />
-            <KPI label="سلات مهجورة" value={k.cart_abandonments.toLocaleString()} icon="alert-circle" color={RED} sub={'فرصة مفقودة'} />
+            <KPI label={L.addToCart} value={k.add_to_cart.toLocaleString()} icon={L.addIcon} color={AMBER} sub={`${k.cart_conversion_rate}% تحويل`} />
+            <KPI label={L.abandon} value={(kind === 'post' ? k.reached_checkout : (kind === 'competition' ? Math.max(0, (p.stock || 0) - k.add_to_cart) : k.cart_abandonments)).toLocaleString()} icon={kind === 'post' ? 'chatbubbles' as any : (kind === 'competition' ? 'ellipsis-horizontal-circle' as any : 'alert-circle' as any)} color={kind === 'post' ? BLUE : RED} sub={L.abandonSub} />
           </View>
           <View style={s.kpiRow}>
-            <KPI label="عمليات شراء" value={k.total_orders.toLocaleString()} icon="checkmark-circle" color={OK} sub={`${k.purchase_conversion_rate}% معدل`} />
-            <KPI label="إيرادات" value={`${(k.total_revenue / 1000).toFixed(1)}K`} icon="cash" color={GOLD} sub={`${k.total_units} قطعة`} unit="ر.س" />
+            <KPI label={L.orders} value={k.total_orders.toLocaleString()} icon={L.ordersIcon} color={OK} sub={`${k.purchase_conversion_rate}% معدل`} />
+            <KPI label={L.revenue} value={kind === 'post' ? (k.engagement_score || 0).toLocaleString() : `${(k.total_revenue / 1000).toFixed(1)}K`} icon={kind === 'post' ? 'flash' as any : 'cash' as any} color={GOLD} sub={`${k.total_units} ${kind === 'service' ? 'حجز' : kind === 'competition' ? 'مشارك' : kind === 'post' ? 'مشاركة' : 'قطعة'}`} unit={kind === 'post' ? '' : 'ر.س'} />
           </View>
           <View style={s.kpiRow}>
             <KPI label="مشاركات" value={k.shares_total.toLocaleString()} icon="share-social" color="#EC4899" sub="على المنصات" />
-            <KPI label="متوسط الوقت" value={`${Math.round(k.avg_duration_seconds / 60)}د`} icon="time" color={BLUE} sub="لكل زيارة" />
+            <KPI label={kind === 'competition' ? 'نسبة الامتلاء' : kind === 'post' ? 'معدل التفاعل' : 'متوسط الوقت'}
+                 value={kind === 'competition' ? `${k.capacity_pct || 0}%`
+                        : kind === 'post' ? `${k.conversion_rate || 0}%`
+                        : `${Math.round(k.avg_duration_seconds / 60)}د`}
+                 icon={kind === 'competition' ? 'speedometer' as any : kind === 'post' ? 'trending-up' as any : 'time' as any}
+                 color={BLUE}
+                 sub={kind === 'competition' ? `${k.total_units}/${p.stock}` : kind === 'post' ? 'مقارنة بالوصول' : 'لكل زيارة'} />
           </View>
         </View>
 
@@ -225,9 +296,9 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               <View style={s.card}>
                 <FunnelStage label="مشاهدات" value={k.total_views} pct={100} color={BLUE} />
                 <FunnelStage label="زوار فريدون" value={k.unique_visitors} pct={Math.round(k.unique_visitors * 100 / Math.max(k.total_views, 1))} color={PURPLE} />
-                <FunnelStage label="أضيف للسلة" value={k.add_to_cart} pct={k.cart_conversion_rate} color={AMBER} />
-                <FunnelStage label="بدأ الدفع" value={k.reached_checkout} pct={k.conversion_rate} color="#EC4899" />
-                <FunnelStage label="أكمل الشراء" value={k.total_orders} pct={k.purchase_conversion_rate} color={OK} />
+                <FunnelStage label={L.funnelCart} value={k.add_to_cart} pct={k.cart_conversion_rate} color={AMBER} />
+                <FunnelStage label={L.funnelCheckout} value={k.reached_checkout} pct={k.conversion_rate} color="#EC4899" />
+                <FunnelStage label={L.funnelOrder} value={k.total_orders} pct={k.purchase_conversion_rate} color={OK} />
               </View>
             </>
           )}
@@ -395,18 +466,18 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
           {tab === 'compare' && (
             <>
-              <SectionTitle icon="stats-chart" label="مقارنة بمنتجات مشابهة" />
+              <SectionTitle icon="stats-chart" label={kind === 'service' ? 'مقارنة بخدمات مشابهة' : kind === 'competition' ? 'مقارنة بمسابقات أخرى' : kind === 'post' ? 'مقارنة بمنشورات أخرى' : 'مقارنة بمنتجات مشابهة'} />
               <View style={s.card}>
                 <View style={s.compareHeaderRow}>
-                  <Text style={[s.compareHeader, { flex: 2 }]}>المنتج</Text>
+                  <Text style={[s.compareHeader, { flex: 2 }]}>{kind === 'service' ? 'الخدمة' : kind === 'competition' ? 'المسابقة' : kind === 'post' ? 'المنشور' : 'المنتج'}</Text>
                   <Text style={s.compareHeader}>مشاهدات</Text>
-                  <Text style={s.compareHeader}>سلة</Text>
-                  <Text style={s.compareHeader}>بيعات</Text>
+                  <Text style={s.compareHeader}>{kind === 'service' ? 'حجوزات' : kind === 'competition' ? 'مشاركون' : kind === 'post' ? 'إعجاب' : 'سلة'}</Text>
+                  <Text style={s.compareHeader}>{kind === 'service' ? 'مكتمل' : kind === 'competition' ? 'دخل' : kind === 'post' ? 'مشاركات' : 'بيعات'}</Text>
                 </View>
                 <View style={[s.compareRow, { backgroundColor: GOLD + '10', borderRadius: 8 }]}>
                   <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     {p.images?.[0] && <Image source={{ uri: p.images[0] }} style={s.compareImg} />}
-                    <Text style={[s.compareName, { color: GOLD }]} numberOfLines={2}>{p.name_ar} ← هذا المنتج</Text>
+                    <Text style={[s.compareName, { color: GOLD }]} numberOfLines={2}>{p.name_ar} ← {kind === 'service' ? 'هذه الخدمة' : kind === 'competition' ? 'هذه المسابقة' : kind === 'post' ? 'هذا المنشور' : 'هذا المنتج'}</Text>
                   </View>
                   <Text style={s.compareVal}>{k.total_views}</Text>
                   <Text style={s.compareVal}>{k.add_to_cart}</Text>
