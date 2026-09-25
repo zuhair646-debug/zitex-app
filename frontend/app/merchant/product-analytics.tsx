@@ -233,7 +233,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
           </View>
           <View style={s.kpiRow}>
             <KPI label={L.orders} value={fmt(k.total_orders)} icon={L.ordersIcon} color={OK} sub={`${k.purchase_conversion_rate}% ${L.ordersSubUnit}`} />
-            <KPI label={L.revenue} value={kind === 'post' ? fmt(k.engagement_score || 0) : (k.total_revenue >= 1000 ? `${(k.total_revenue / 1000).toFixed(1)}K` : String(Math.round(k.total_revenue || 0)))} icon={kind === 'post' ? 'flash' as any : 'cash' as any} color={GOLD} sub={`${fmt(k.total_units)} ${L.unitLabel}`} unit={kind === 'post' ? '' : 'ر.س'} />
+            <KPI label={L.revenue} value={kind === 'post' ? fmt(k.engagement_score || 0) : fmt(k.total_revenue || 0)} icon={kind === 'post' ? 'flash' as any : 'cash' as any} color={GOLD} sub={`${fmt(k.total_units)} ${L.unitLabel}`} unit={kind === 'post' ? '' : 'ر.س'} />
           </View>
           <View style={s.kpiRow}>
             <KPI label={kind === 'post' ? 'المشاركات' : 'مشاركات'} value={fmt(k.shares_total)} icon="share-social" color="#EC4899" sub="على المنصات" />
