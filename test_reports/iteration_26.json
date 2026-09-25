@@ -1,0 +1,62 @@
+{
+  "summary": "Deep Analytics v1.13.15 regression + new-feature test PASSED end-to-end. Backend pytest: 9 passed / 1 skipped (0 failures) — /app/backend/tests/test_deep_analytics_v1_13_15.py. Verified: (a) service deep-analytics response contains returns[] + complaints[] + kpis.returns_count + kpis.complaints_count with all documented fields (user_name, phone, reason, status, amount, created_at for returns; user_name, text, category, status, reply, created_at for complaints); picked service 6ab6206a71b6ad54069c12ce has r=2 c=3, and 10+ services expose non-empty returns/complaints combined (>=26 returns and >=25 complaints total across all services, matching seed target). (b) competition deep-analytics response contains winners[] with (user_name, rank, prize_value, claim_status, city, prize_name, announced_at) AND videos[] with (title, url, thumbnail, duration, views) — all 5 sampled competitions returned winners_count 3-5 and videos_count 2-4 matching the spec. kpis.videos_count and kpis.winners_count both present. (c) social posts count = 56 (>= 50 requirement). Sample post 6ab706773c61931724b7ab9d exposes likes_total, comments_total, reach_estimate KPIs. Frontend UI (mobile 390x844, Expo web): Service analytics screen renders 5 KPI rows with 5th row exactly 'طلبات إرجاع' + 'الشكاوى'; tab bar shows 'الإرجاعات' and 'الشكاوى'; KPI subtitles use correct Arabic terminology (مشاهدات الخدمة / الحجوزات with '% معدل الحجز' — NO 'أضيف للسلة' leaking). Competition analytics screen renders 5 KPI rows with 5th row 'الفائزون' + 'فيديوهات ترويجية' (5/100 winners, 4 videos), participants subtitle '% معدل المشاركة', tab bar contains 'الفائزون' and 'الفيديوهات', winners tab shows prize value in ريال + city + claim status pill, videos tab shows 'محفوظ للأبد' note + duration badge + views count. Post analytics screen renders 5 KPI rows with 5th row 'التعليقات' + 'معدل التفاعل', likes KPI subtitle correctly reads '1.96% من الوصول' (NOT 'تحويل'). Number formatter working: 17.8K / 34.5K / 24.9K / 2.2K / 1.3K all visible on-screen with no overflow. No 'أضيف للسلة' leaking into service, competition, or post screens.",
+  "status_per_area": {
+    "1_backend_endpoints": "PASS — 3/3 endpoints return correct shape; services deep-analytics, competitions deep-analytics, social posts list all validated by pytest.",
+    "2_service_returns_tab": "PASS — 'الإرجاعات' tab present; returns[] array populated (r=2 for sample sid=...12ce); item shape validated (reason, status, amount).",
+    "3_service_complaints_tab": "PASS — 'الشكاوى' tab present; complaints[] populated (c=3 for sample); item shape validated (category, status, reply).",
+    "4_competition_winners_tab": "PASS — 'الفائزون' tab present; winners[] populated (5 winners for sample); each has user_name, rank, prize_value, claim_status, city.",
+    "5_competition_videos_tab": "PASS — 'الفيديوهات' tab present; videos[] populated (4 videos for sample); each has title, url, thumbnail, duration, views; '💾 محفوظ للأبد' note visible.",
+    "6_terminology_correctness": "PASS — No 'أضيف للسلة' appears in service/competition/post screens. Service uses 'الحجوزات' + '% معدل الحجز'. Competition uses 'المشتركون' + '% معدل المشاركة'. Post uses 'الإعجابات' + '% من الوصول'.",
+    "7_number_formatter": "PASS — Values ≥10000 render as K (e.g. 17.8K, 34.5K, 24.9K); values ≥1000 render with locale separators; no overflow observed. Revenue uses same K threshold via a local conditional (line 236)."
+  },
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/merchant/services/{sid}/deep-analytics",
+        "issue": "Fallback amplification (bookings*6 for total_views) still in place from v1.13.14. Reference: /app/backend/deep_analytics.py:62."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "global (Expo web)", "issue": "'shadow*' style props deprecated warnings — pre-existing, not introduced by v1.13.15. Migrate to 'boxShadow'. Reference: multiple screens."},
+      {"component": "global (Expo web)", "issue": "Image style.resizeMode deprecated — should use props.resizeMode. Pre-existing."},
+      {"component": "global (Expo web)", "issue": "props.pointerEvents deprecated — should use style.pointerEvents. Pre-existing."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_deep_analytics_v1_13_15.py",
+    "/app/test_reports/pytest/deep_analytics_v1_13_15.xml",
+    "/app/test_reports/svc_main.png",
+    "/app/test_reports/svc_returns.png",
+    "/app/test_reports/comp_main.png",
+    "/app/test_reports/comp_winners.png",
+    "/app/test_reports/comp_videos.png",
+    "/app/test_reports/post_main.png"
+  ],
+  "action_items": [
+    "None blocking. Optional: add testID attributes to product-analytics.tsx tabs (returns/complaints/winners/videos) so future regressions can be selector-driven rather than Arabic-text-driven.",
+    "Optional: extract the K/M formatter (product-analytics.tsx:97-104) into a shared util so revenue's inline formatter at line 236 uses the same threshold consistently (current inline uses >=1000 for K, while fmt() uses >=10000 for K — behaves fine for values<10000 but inconsistent semantically).",
+    "Optional: migrate deprecated shadow*, resizeMode, pointerEvents props (global, pre-existing warnings)."
+  ],
+  "critical_code_review_comments": [
+    "product-analytics.tsx is 775 lines — exceeds the 700-line guideline. Consider splitting KPI grid, tab renderer, and StyleSheet into modules.",
+    "deep_analytics.py correctly excludes MongoDB _id in all payloads. New fields (returns_count, complaints_count, winners_count, videos_count) are additive and non-breaking.",
+    "The revenue conditional K formatter at product-analytics.tsx:236 uses `>= 1000` threshold, whereas the fmt() util uses `>= 10_000`. Behaviour is fine for the tested data but inconsistent — unify via fmt().",
+    "seed_rich_content.py is idempotent (guards on existing counts) — safe to re-run on production DB without duplication."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_deep_analytics_v1_13_15.py (new)",
+    "/app/test_reports/pytest/deep_analytics_v1_13_15.xml (new)"
+  ],
+  "success_rate": {"backend": "100% (9 passed, 1 benign skip)", "frontend": "100% (all 7 report areas PASS)"},
+  "seed_data_creation": "No new seed data created — used seed_rich_content.py-generated content (56 posts observed >= 50 target, per-service returns/complaints distribution matching r+c totals per iteration, 5 competitions each with winners+videos).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Deep Analytics v1.13.15 is fully green. Reusable test file: /app/backend/tests/test_deep_analytics_v1_13_15.py. Frontend uses Arabic text selectors (no testIDs). Sample IDs for regression: service with returns/complaints = 6ab6206a71b6ad54069c12ce; competition with winners+videos = 6ab6206a71b6ad54069c12be; post = 6ab706773c61931724b7ab9d. Merchant login: /login with 0509999999 / merchant2025; token stored in localStorage as 'token'.",
+  "rca_of_issue": "N/A — no defects found."
+}

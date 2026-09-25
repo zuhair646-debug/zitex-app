@@ -175,3 +175,37 @@ Kind-aware label set (`L`) drives:
 - iOS build: 45 → **46**
 - Android versionCode: 51 → **52**
 - EAS build triggered for both platforms — auto-submit poller running
+
+## v1.13.15 — Rich Content + Returns/Complaints/Winners/Videos Tabs
+### Terminology Fixed (KSA-standard from research)
+- Social Media: منشور، التفاعل، الوصول، الانطباعات، المشاركات، الإعجابات، التعليقات
+- Competitions: مشترك، فائز، مرشح، جائزة السحب، معدل المشاركة
+- Removed all "أضيف للسلة" leaks from non-product analytics screens
+
+### New Analytics Sections
+- **Services**: 5th KPI row (طلبات إرجاع + الشكاوى) + tabs (الإرجاعات، الشكاوى with reply thread)
+- **Competitions**: 5th KPI row (الفائزون + فيديوهات ترويجية) + tabs (الفائزون with prize_value/city/claim_status، الفيديوهات archive that survives past competition end)
+- **Posts**: 5th KPI row (التعليقات + معدل التفاعل)
+
+### Layout Fixes
+- fmt() number formatter (K/M) prevents overflow: 17.8K, 1.2M
+- adjustsFontSizeToFit + numberOfLines=1 on every KPI text
+- Unified across all 4 kinds
+
+### Rich Seed Content (backend/seed_rich_content.py)
+- 52 diverse social posts (9 types: event, live_update, announcement, tip, tech_news, challenge, meme, poll)
+- 26 service returns with realistic reasons & statuses
+- 25 service complaints (categories: جودة, تأخير, سعر, تواصل الموظف, نظافة, ضمان) with merchant replies
+- 68 realistic service reviews (weighted 5-star bias)
+- Competition winners: 3-5 per competition with prize_value, city, claim_status
+- 2-4 organic-style Pexels promo videos per competition (18-28s clips, no explicit branding)
+
+### Testing
+- Backend 3/3 endpoints + Frontend 7/7 areas pass testing_agent (iteration_26.json)
+- Production VPS verified live via curl on https://api.zenrex.ai
+
+### Version
+- app.json: 1.13.14 → **1.13.15**
+- iOS build: 46 → **47**
+- Android versionCode: 52 → **53**
+- EAS build triggered; auto-submit poller running
