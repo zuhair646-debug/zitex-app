@@ -13,6 +13,8 @@ import MerchantSocialFeed from '../../src/components/live-preview/MerchantSocial
 import { DriverDetailSheet, BranchDetailSheet, MarketerDetailSheet, EmployeeDetailSheet } from '../../src/components/live-preview/DetailSheets';
 import OrderHeatmap from '../../src/components/live-preview/OrderHeatmap';
 import { AlertsBell } from '../../src/components/live-preview/AlertsAndExport';
+import CompetitionDetailSheet from '../../src/components/live-preview/CompetitionDetailSheet';
+import LiveToastNotifications from '../../src/components/live-preview/LiveToastNotifications';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -50,7 +52,7 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.6 ✨</Text>
+        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.7 ✨</Text>
         <AlertsBell apiCall={apiCall} />
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
@@ -97,7 +99,7 @@ export default function LivePreview() {
         <ServiceAnalyticsSheet service={serviceAnalyticsFor} onClose={() => setServiceAnalyticsFor(null)} apiCall={apiCall} />
       )}
       {compAnalyticsFor && (
-        <CompetitionAnalyticsSheet competition={compAnalyticsFor} onClose={() => setCompAnalyticsFor(null)} apiCall={apiCall} />
+        <CompetitionDetailSheet competitionId={compAnalyticsFor.id} onClose={() => setCompAnalyticsFor(null)} apiCall={apiCall} />
       )}
       {postDetailFor && (
         <PostDetailSheet post={postDetailFor} onClose={() => setPostDetailFor(null)} apiCall={apiCall} />
@@ -105,6 +107,9 @@ export default function LivePreview() {
       {compareData && (
         <CompareSheet items={compareData} onClose={() => { setCompareData(null); setSelectedIds([]); setCompareMode(false); }} />
       )}
+
+      {/* Live merchant toast notifications */}
+      <LiveToastNotifications apiCall={apiCall} insetTop={0} />
     </SafeAreaView>
   );
 }

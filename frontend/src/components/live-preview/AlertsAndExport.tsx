@@ -79,6 +79,12 @@ export function AlertsBell({ apiCall }: any) {
             <View style={s.sheetHead}>
               <TouchableOpacity onPress={() => setOpen(false)}><Ionicons name="close" size={22} color={LP.TEXT} /></TouchableOpacity>
               <Text style={s.sheetTitle}>التنبيهات ({unread} جديد)</Text>
+              <TouchableOpacity
+                onPress={async () => { try { await apiCall('/api/merchant/live-preview/alerts/test', { method: 'POST' }); await load(); } catch {} }}
+                style={s.testBtn}>
+                <Ionicons name="flash" size={11} color={LP.GOLD} />
+                <Text style={{ color: LP.GOLD, fontSize: 10, fontWeight: '900' }}>اختبار</Text>
+              </TouchableOpacity>
               <TouchableOpacity onPress={ackAll} style={s.ackAllBtn}>
                 <Ionicons name="checkmark-done" size={12} color={LP.BG} />
                 <Text style={{ color: LP.BG, fontSize: 10, fontWeight: '900' }}>قراءة الكل</Text>
@@ -171,6 +177,7 @@ const s = StyleSheet.create({
   sheetHead: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: 1, borderBottomColor: LP.BORDER, gap: 10 },
   sheetTitle: { flex: 1, color: LP.GOLD, fontSize: 15, fontWeight: '900', textAlign: 'right' },
   ackAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: LP.GOLD, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  testBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: LP.CARD_2, borderWidth: 1, borderColor: LP.GOLD, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   alertRow: {
     flexDirection: 'row', alignItems: 'flex-start',
     backgroundColor: LP.CARD_2, borderWidth: 1, borderColor: LP.BORDER_SOFT,

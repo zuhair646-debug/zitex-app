@@ -4841,14 +4841,22 @@ async def competition_analytics(comp_id: str, user=Depends(get_current_user)):
         "competition": {
             "id": comp_id,
             "title": comp.get("title"),
+            "description": comp.get("description", ""),
             "prize": comp.get("prize"),
+            "prize_details": comp.get("prize_details", ""),
+            "image": comp.get("image") or comp.get("banner_image", ""),
             "competition_type": comp.get("competition_type"),
             "status": comp.get("status"),
+            "starts_at": comp.get("starts_at", comp.get("start_at", "")),
+            "ends_at": comp.get("ends_at", comp.get("end_at", "")),
+            "rules": comp.get("rules", ["اتّباع شروط المسابقة", "المشاركة متاحة للمقيمين في المملكة", "قرار اللجنة نهائي"]),
+            "max_winners": comp.get("max_winners", comp.get("winners_count", 1)),
+            "created_at": comp.get("created_at", ""),
         },
         "kpis": {
             "total_participants": len(entries),
             "unique_users": unique_users,
-            "followers_gained": unique_users,  # proxy: each unique participant becomes a follower
+            "followers_gained": unique_users,
             "engagement_rate": round(unique_users * 100.0 / max(len(entries), 1), 2),
         },
         "sources": [{"source": k, "count": v} for k, v in sources.most_common()],
@@ -4859,13 +4867,23 @@ async def competition_analytics(comp_id: str, user=Depends(get_current_user)):
         "peak_day_of_week": peak_dow,
         "recent_participants": [{
             "user_name": e.get("user_name"),
+            "user_phone": e.get("user_phone", ""),
             "user_city": e.get("user_city"),
             "source": e.get("source"),
             "created_at": e.get("created_at"),
         } for e in entries[-15:]],
+        "all_participants": [{
+            "user_name": e.get("user_name"),
+            "user_phone": e.get("user_phone", ""),
+            "user_city": e.get("user_city", ""),
+            "source": e.get("source", ""),
+            "created_at": e.get("created_at", ""),
+        } for e in entries][-100:],
         "winner_details": [
             {"user_name": w.get("user_name"), "user_phone": w.get("user_phone", ""),
-             "prize_position": w.get("prize_position", 0), "picked_at": w.get("picked_at", "")}
+             "user_city": w.get("user_city", ""), "prize_position": w.get("prize_position", 0),
+             "prize_awarded": w.get("prize_awarded", comp.get("prize", "")),
+             "picked_at": w.get("picked_at", "")}
             for w in (comp.get("winners") or [])[:20]
         ],
     }
@@ -5679,6 +5697,34 @@ async def ack_all_alerts(user=Depends(get_current_user)):
         raise HTTPException(403, "Merchants only")
     r = await db.merchant_alerts.update_many({"ack": False}, {"$set": {"ack": True, "acked_at": datetime.now(timezone.utc).isoformat()}})
     return {"ok": True, "count": r.modified_count}
+
+
+@api_router.post("/merchant/live-preview/alerts/test")
+async def fire_test_alert(user=Depends(get_current_user)):
+    """Fire a random demo alert (for testing the live toast on merchant screen)."""
+    if user.get("role") not in ("merchant", "chamber", "employee"):
+        raise HTTPException(403, "Merchants only")
+    import random as _r
+    templates = [
+        {"kind": "large_order", "title": "🚨 طلب كبير!", "message": f"طلب بقيمة {_r.randint(2000, 8500)} ر.س من عميل VIP", "icon": "cart", "severity": "info"},
+        {"kind": "negative_review", "title": "⭐ تعليق سلبي", "message": "عميل أعطى الفرع تقييم منخفض — يحتاج تدخل فوري", "icon": "star", "severity": "warning"},
+        {"kind": "target_hit", "title": "🎯 هدف محقق!", "message": f"الفرع تخطى {_r.randint(105, 130)}% من الهدف الشهري", "icon": "flag", "severity": "success"},
+        {"kind": "employee_praise", "title": "🏅 أداء متميز", "message": f"موظف أنجز {_r.randint(40, 80)} فاتورة اليوم", "icon": "medal", "severity": "success"},
+        {"kind": "low_stock", "title": "📦 مخزون منخفض", "message": f"{_r.randint(2, 8)} منتجات وصلت لحد الأمان", "icon": "cube", "severity": "warning"},
+        {"kind": "new_follower", "title": "👥 متابع جديد", "message": f"{_r.randint(5, 30)} مستخدم جديد تابع متجرك", "icon": "person-add", "severity": "info"},
+        {"kind": "competition_winner", "title": "🏆 فائز مسابقة", "message": "تم اختيار فائز جديد في المسابقة", "icon": "trophy", "severity": "success"},
+        {"kind": "peak_hour", "title": "🔥 ذروة!", "message": f"عدد الزيارات ارتفع {_r.randint(120, 250)}% في آخر ساعة", "icon": "flame", "severity": "info"},
+    ]
+    t = _r.choice(templates)
+    doc = {
+        **t,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "ack": False,
+        "meta": {"is_test": True},
+    }
+    r = await db.merchant_alerts.insert_one(doc)
+    doc["_id"] = str(r.inserted_id)
+    return serialize_doc(doc)
 
 
 # ─── Live Preview: PDF-style HTML export for any entity ─────────
