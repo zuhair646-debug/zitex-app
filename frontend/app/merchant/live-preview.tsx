@@ -52,7 +52,7 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.12 ✨</Text>
+        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.13 ✨</Text>
         <AlertsBell apiCall={apiCall} />
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
@@ -88,9 +88,9 @@ export default function LivePreview() {
           openCompare={openCompare}
         />
       )}
-      {section === 'services' && <ServicesSection apiCall={apiCall} onAnalytics={setServiceAnalyticsFor} />}
-      {section === 'competitions' && <CompetitionsSection apiCall={apiCall} onAnalytics={setCompAnalyticsFor} />}
-      {section === 'social' && <MerchantSocialFeed apiCall={apiCall} />}
+      {section === 'services' && <ServicesSection apiCall={apiCall} onAnalytics={(svc: any) => router.push(`/merchant/service-analytics?id=${svc.id}` as any)} />}
+      {section === 'competitions' && <CompetitionsSection apiCall={apiCall} onAnalytics={(comp: any) => router.push(`/merchant/competition-analytics?id=${comp.id}` as any)} />}
+      {section === 'social' && <MerchantSocialFeed apiCall={apiCall} onOpenPost={(post: any) => router.push(`/merchant/post-analytics?id=${post.id || post._id}` as any)} />}
 
       {analyticsFor && (
         <ProductAnalyticsSheet product={analyticsFor} onClose={() => setAnalyticsFor(null)} apiCall={apiCall} />

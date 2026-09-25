@@ -23,25 +23,43 @@ const PLATFORM_COLORS: Record<string, string> = {
   'سنابشات': '#FFFC00', 'تيليجرام': '#0088CC',
 };
 
-export default function ProductAnalyticsScreen() {
+export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = '' }: { kind?: 'product' | 'service' | 'competition' | 'post'; id?: string } = {} as any) {
   const router = useRouter();
   const { apiCall } = useAuth();
   const params = useLocalSearchParams<{ id?: string }>();
-  const pid = String(params.id || '');
+  const pid = String(idProp || params.id || '');
   const [d, setD] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'overview' | 'visitors' | 'buyers' | 'shares' | 'reviews' | 'compare'>('overview');
 
+  const endpoint = kind === 'service'
+    ? `/api/merchant/services/${pid}/deep-analytics`
+    : kind === 'competition'
+      ? `/api/merchant/competitions/${pid}/deep-analytics`
+      : kind === 'post'
+        ? `/api/merchant/social/posts/${pid}/deep-analytics`
+        : `/api/merchant/products/${pid}/deep-analytics`;
+
+  const kindLabel = kind === 'service' ? 'تحليلات الخدمة العميقة'
+    : kind === 'competition' ? 'تحليلات المسابقة العميقة'
+    : kind === 'post' ? 'تحليلات المنشور العميقة'
+    : 'تحليلات المنتج العميقة';
+
+  const buyersLabel = kind === 'service' ? 'الحجوزات'
+    : kind === 'competition' ? 'المشاركون'
+    : kind === 'post' ? 'التفاعل'
+    : 'المشترون';
+
   useEffect(() => {
     (async () => {
       try {
-        const data = await apiCall(`/api/merchant/products/${pid}/deep-analytics`);
+        const data = await apiCall(endpoint);
         setD(data);
       } catch (e: any) {
         Alert.alert('خطأ', e?.message);
       } finally { setLoading(false); }
     })();
-  }, [pid]);
+  }, [pid, endpoint]);
 
   if (loading) return (<SafeAreaView style={s.safe}><ActivityIndicator color={GOLD} style={{ marginTop: 40 }} /></SafeAreaView>);
   if (!d) return (
@@ -74,7 +92,7 @@ export default function ProductAnalyticsScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.title} numberOfLines={1}>{p.name_ar}</Text>
-          <Text style={s.sub}>تحليلات المنتج العميقة</Text>
+          <Text style={s.sub}>{kindLabel}</Text>
         </View>
         {d.category_ranking && (
           <View style={s.rankBadge}>
@@ -141,7 +159,7 @@ export default function ProductAnalyticsScreen() {
           {[
             { code: 'overview', label: 'نظرة عامة', icon: 'grid' },
             { code: 'visitors', label: 'الزوار', icon: 'people', count: d.top_visitors.length },
-            { code: 'buyers', label: 'المشترون', icon: 'bag-check', count: d.buyers.length },
+            { code: 'buyers', label: buyersLabel, icon: 'bag-check', count: d.buyers.length },
             { code: 'shares', label: 'المشاركات', icon: 'share-social', count: d.recent_shares.length },
             { code: 'reviews', label: 'التقييمات', icon: 'star', count: d.reviews.length + d.questions.length },
             { code: 'compare', label: 'مقارنة', icon: 'stats-chart', count: d.comparison.length },

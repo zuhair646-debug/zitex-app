@@ -24,7 +24,7 @@ const timeAgo = (iso?: string) => {
  *   - Bottom Analytics Sheet showing likers, sharers, links, direct-reply
  *   - Filter chips (all / needs reply / top)
  */
-export default function MerchantSocialFeed({ apiCall }: any) {
+export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
   const [posts, setPosts] = useState<any[]>([]);
   const [stories, setStories] = useState<any[]>([]);
   const [storeInfo, setStoreInfo] = useState<any>(null);
@@ -186,7 +186,7 @@ export default function MerchantSocialFeed({ apiCall }: any) {
           return (
             <View key={postId} style={s.postCard}>
               {/* Merchant overlay pill — insights */}
-              <TouchableOpacity style={s.insightsFab} onPress={() => openInsights(post, 'stats')}>
+              <TouchableOpacity style={s.insightsFab} onPress={() => onOpenPost ? onOpenPost(post) : openInsights(post, 'stats')}>
                 <BlurView intensity={40} tint="dark" style={s.insightsPill}>
                   <Ionicons name="analytics" size={14} color={LP.GOLD} />
                   <Text style={{ color: LP.GOLD, fontSize: 11, fontWeight: '900' }}>إحصائيات</Text>
@@ -263,7 +263,7 @@ export default function MerchantSocialFeed({ apiCall }: any) {
                   <Text style={s.actionCount}>{KM(post.shares || 0)}</Text>
                 </TouchableOpacity>
                 <View style={{ flex: 1 }} />
-                <TouchableOpacity style={s.detailsInlineBtn} onPress={() => openInsights(post, 'stats')}>
+                <TouchableOpacity style={s.detailsInlineBtn} onPress={() => onOpenPost ? onOpenPost(post) : openInsights(post, 'stats')}>
                   <Ionicons name="analytics" size={14} color={LP.BG} />
                   <Text style={{ color: LP.BG, fontSize: 11, fontWeight: '900' }}>التفاصيل</Text>
                 </TouchableOpacity>

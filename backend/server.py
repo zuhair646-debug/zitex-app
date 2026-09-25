@@ -6565,6 +6565,14 @@ try:
 except Exception as _e:
     logger.error(f"Failed to mount tenant_modules router: {_e}")
 
+# ─── Deep Analytics for Services/Competitions/Posts (v1.13.13) ───
+try:
+    from deep_analytics import build_router as _build_deep_router
+    app.include_router(_build_deep_router(db, get_current_user, require_merchant))
+    logger.info("Deep analytics router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount deep_analytics router: {_e}")
+
 @app.on_event("startup")
 async def startup():
     await seed_data()
