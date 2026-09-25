@@ -258,10 +258,14 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                   <Text style={s.pLiveText}>{liveCount}</Text>
                 </View>
               )}
-              {/* Analytics button — always visible tap target */}
+              {/* Analytics button — always visible tap target with expanded hit area */}
               {!compareMode && (
-                <TouchableOpacity onPress={(e) => { e.stopPropagation(); onAnalytics(item); }} style={s.pAnalyticsBtn}>
-                  <Ionicons name="stats-chart" size={14} color={BG} />
+                <TouchableOpacity
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  activeOpacity={0.7}
+                  onPress={(e) => { e.stopPropagation(); onAnalytics(item); }}
+                  style={s.pAnalyticsBtn}>
+                  <Ionicons name="stats-chart" size={16} color={BG} />
                 </TouchableOpacity>
               )}
               {compareMode && (
@@ -343,8 +347,12 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
           <View style={s.svcCard2}>
             {/* Cover image with badges */}
             <View style={{ position: 'relative' }}>
-              <TouchableOpacity onPress={() => onAnalytics && onAnalytics(item)} style={s.analyticsFloatBtn}>
-                <Ionicons name="stats-chart" size={16} color={BG} />
+              <TouchableOpacity
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                activeOpacity={0.7}
+                onPress={() => onAnalytics && onAnalytics(item)}
+                style={s.analyticsFloatBtn}>
+                <Ionicons name="stats-chart" size={18} color={BG} />
               </TouchableOpacity>
               {(item.images?.[0] || item.cover || item.image) ? (
                 <Image source={{ uri: mediaUrlSync(item.images?.[0] || item.cover || item.image) }} style={s.svcCover} contentFit="cover" />
@@ -518,8 +526,12 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
           const isLive = !isEnded && (item.remaining_ms == null || item.remaining_ms > 0);
           return (
             <LinearGradient colors={isEnded ? ['#1F2937', '#0F1116'] : ['#332905', '#1A1401']} style={s.compCard}>
-              <TouchableOpacity onPress={() => onAnalytics && onAnalytics(item)} style={[s.analyticsFloatBtn, { top: 10, left: 10 }]}>
-                <Ionicons name="stats-chart" size={16} color={BG} />
+              <TouchableOpacity
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                activeOpacity={0.7}
+                onPress={() => onAnalytics && onAnalytics(item)}
+                style={[s.analyticsFloatBtn, { top: 10, left: 10 }]}>
+                <Ionicons name="stats-chart" size={18} color={BG} />
               </TouchableOpacity>
               {/* Banner image (matches customer view) */}
               {!!(item.image || item.banner_image) && (
@@ -1567,7 +1579,7 @@ const s = StyleSheet.create({
   cmpLbl: { color: MUTED, fontSize: 10 },
   cmpVal: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
   // Analytics button on product card
-  pAnalyticsBtn: { position: 'absolute', top: 6, left: 6, backgroundColor: GOLD, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 4 },
+  pAnalyticsBtn: { position: 'absolute', top: 6, left: 6, backgroundColor: GOLD, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 8, zIndex: 10 },
   // Services rich card
   svcCard2: { backgroundColor: CARD, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: BORDER, overflow: 'hidden' },
   svcCover: { width: '100%', height: 160 },
@@ -1614,7 +1626,7 @@ const s = StyleSheet.create({
   topSplitPos: { color: '#60A5FA', fontSize: 9, fontWeight: '800' },
   topSplitApp: { color: '#34D399', fontSize: 9, fontWeight: '800' },
   // Analytics buttons on service/comp cards
-  analyticsFloatBtn: { position: 'absolute', top: 8, left: 8, backgroundColor: GOLD, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 4, zIndex: 5 },
+  analyticsFloatBtn: { position: 'absolute', top: 8, left: 8, backgroundColor: GOLD, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 10, zIndex: 20 },
   // Sheet common
   sheetCard: { backgroundColor: CARD, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: BORDER, marginBottom: 10 },
   sheetKpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
