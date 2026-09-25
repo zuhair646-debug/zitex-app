@@ -144,3 +144,34 @@ Zitex — Comprehensive Tech Store native mobile app (iOS + Android) with e-comm
 ### Version
 - app.json: 1.13.8 → **1.13.9**
 - versionCode: 46 → **47**
+
+## v1.13.14 — Kind-aware Deep Analytics (Live Preview)
+### Scope
+Applied the approved "Product Analytics" design pattern (Design Lock 2026-09-26) to:
+- Services (`/merchant/service-analytics?id=…`)
+- Competitions (`/merchant/competition-analytics?id=…`)
+- Social Posts (`/merchant/post-analytics?id=…`)
+
+### Backend fixes (`deep_analytics.py`)
+- Services: revenue now derived from `service_bookings.total_fee` (was 0)
+- Competitions: read from `competition_entries` collection using `joined_at` ts + `capacity_pct`, `winners_count`, `prize_count`
+- Posts: `likes`/`shares` as int totals; `liked_by`/`shared_by` as drill-down lists; adds `reach_estimate`, `engagement_score`
+- Traffic sources, top visitors, buyer/booker/participant lists, comparison table — all populated per kind
+
+### Frontend (`product-analytics.tsx`)
+Kind-aware label set (`L`) drives:
+- KPI grid (10 tiles per kind, e.g. services show "الحجوزات/إيرادات الخدمة", competitions show "مسجلون/نسبة الامتلاء", posts show "الوصول/نقاط التفاعل")
+- Funnel stages (services "حجز → تنفيذ → إنجاز", competitions "سجّل → أكمل → دخل السحب", posts "أعجبوا → علّقوا → شاركوا")
+- Hero pills (winners badge for competitions, reach badge for posts)
+- Comparison table headers per kind
+
+### Testing
+- Backend 4/4 endpoints pass pytest (`test_deep_analytics_v1_13_14.py`)
+- Frontend 4/4 flows pass end-to-end via testing_agent (iteration_25.json)
+- Production VPS verified live via curl on https://api.zenrex.ai
+
+### Version
+- app.json: 1.13.13 → **1.13.14**
+- iOS build: 45 → **46**
+- Android versionCode: 51 → **52**
+- EAS build triggered for both platforms — auto-submit poller running

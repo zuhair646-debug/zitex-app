@@ -1,0 +1,63 @@
+{
+  "summary": "Deep Analytics v1.13.14 end-to-end tested. Backend: all 4 endpoints PASS (4/4 pytest, 100%). Product endpoint remains healthy (regression). New service/competition/social-post endpoints return the correct shape (product, kpis, top_visitors, buyers, shares_by_platform, reviews, comparison, monthly_series, traffic_sources) and satisfy every KPI requirement: service total_views=507 with add_to_cart(bookings)=14 and total_revenue=2000.0 (>0 because bookings expose total_fee), competition total_views=130, add_to_cart(participants)=26, capacity_pct=26.0, and post likes_total=3150, shares_total=486, engagement_score=4618, reach_estimate=16555. Frontend: all 4 UI flows PASS via /merchant/{service|competition|post|product}-analytics?id=... Hero pills render correctly per kind (خدمة / مسابقة / منشور / جديد), all Arabic KPI labels match the spec (مشاهدات الخدمة / الحجوزات NOT أضيف للسلة / حجوزات ملغاة / خدمات مكتملة / إيرادات الخدمة for services; مشاهدات المسابقة / مسجلون / أماكن شاغرة / مشاركات فعلية / قيمة المشتريات / نسبة الامتلاء plus 🏆 X/Y فائز winners badge for competitions; الوصول / المعجبون / تعليقات / مشاركات المنشور / نقاط التفاعل / معدل التفاعل plus وصول~N reach badge for posts). Funnel labels verified for all three new kinds (حجز خدمة/بدأ التنفيذ/تم إنجاز الخدمة, سجّل مشاركته/أكمل المتطلبات/دخل السحب, أعجبوا/علّقوا/شاركوا). All six tabs render (نظرة عامة, الزوار, [الحجوزات|المشاركون|المشاركات], [المشاركات|—|—], التقييمات, مقارنة) and the compare tab correctly renders 'مقارنة بخدمات مشابهة' / 'مقارنة بمسابقات أخرى' / 'مقارنة بمنشورات أخرى'. Live-preview section tabs (المتجر, الصيانة, المسابقات, السوشيال ميديا, العام) load correctly, confirming wiring at live-preview.tsx:91-93 works. No red screens, no broken images, no console errors beyond pre-existing shadow*/resizeMode deprecation warnings.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/merchant/services/{sid}/deep-analytics",
+        "issue": "Fallback amplification in views KPI (bookings*6) may over-inflate 'total_views' when the service_views collection is empty. Same fallback logic exists for competitions (participants*5) and posts (max heuristic). Values look reasonable for demo data but consider gating behind a flag if real analytics traffic starts flowing."
+      },
+      {
+        "endpoint": "GET /api/merchant/competitions/{cid}/deep-analytics",
+        "issue": "'total_revenue' is computed as spend_requirement * participants. If future competitions have zero spend_requirement (free draws), total_revenue will be 0 even when participants>0. Consider surfacing an explicit revenue field vs implied. Reference: /app/backend/deep_analytics.py:361."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {
+        "component": "global (Expo web)",
+        "issue": "Deprecated style props 'shadow*' and 'style.resizeMode' emit warnings on every screen (pre-existing, not introduced by v1.13.14). Reference: console logs during navigation."
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_deep_analytics_v1_13_14.py",
+    "/app/test_reports/pytest/deep_analytics_v1_13_14.xml"
+  ],
+  "action_items": [
+    "None blocking — all 4 endpoints and all 4 frontend flows pass. Consider tightening the demo fallback amplification for total_views once real telemetry is wired.",
+    "Optional: add testID attributes to product-analytics.tsx (KPI cards, tab buttons, hero pill) so future regressions can be selector-driven instead of Arabic-text-driven."
+  ],
+  "critical_code_review_comments": [
+    "product-analytics.tsx is 605 lines — approaching the 700-line guideline. The kind-aware refactor is well done (single component driven by props), but consider extracting the KPI/funnel label maps and StyleSheet to a separate module.",
+    "deep_analytics.py correctly excludes MongoDB _id in all payloads and consistently reuses the 'product' key for UI compatibility.",
+    "The 'add_to_cart' KPI is overloaded to mean bookings/participants/likes depending on kind. The frontend maps this correctly via labelSet, but backend consumers of the raw JSON might be confused — a comment or an alias field (e.g., 'primary_engagement') would help future readers.",
+    "No testIDs anywhere in product-analytics.tsx or live-preview.tsx — all interactive elements rely on Arabic text selectors for automated testing.",
+    "server.py still 6350+ lines; deep_analytics correctly split into its own module — same pattern should be applied to the monolith."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_deep_analytics_v1_13_14.py"
+  ],
+  "success_rate": {"backend": "100% (4/4 endpoints)", "frontend": "100% (4/4 flows)"},
+  "endpoint_status": {
+    "GET /api/merchant/products/{pid}/deep-analytics": "PASS",
+    "GET /api/merchant/services/{sid}/deep-analytics": "PASS — total_views=507, add_to_cart(bookings)=14, total_revenue=2000.0",
+    "GET /api/merchant/competitions/{cid}/deep-analytics": "PASS — total_views=130, add_to_cart(participants)=26, capacity_pct=26.0, winners_count=3",
+    "GET /api/merchant/social/posts/{pid}/deep-analytics": "PASS — likes_total=3150, shares_total=486, engagement_score=4618, reach_estimate=16555"
+  },
+  "frontend_flow_status": {
+    "service-analytics screen": "PASS — hero='خدمة', all KPI labels correct (bookings NOT cart), funnel labels correct, compare tab renders 'مقارنة بخدمات مشابهة'",
+    "competition-analytics screen": "PASS — hero='مسابقة', winners badge '🏆 3/100 فائز' visible, all 6 KPI labels correct, funnel + compare tab correct",
+    "post-analytics screen": "PASS — hero='منشور', reach badge 'وصول ~16,555' visible, all 6 KPI labels correct, funnel + compare tab correct",
+    "product-analytics screen (regression)": "PASS — legacy layout preserved (hero='جديد'/'مستعمل', KPIs unchanged)"
+  },
+  "seed_data_creation": "No new seed data created. Used pre-seeded merchant demo entities: SID=6ab6206a71b6ad54069c12cc (إصلاح الشاشة), CID=6ab6206a71b6ad54069c12be (المتسوق الأول), PID(post)=6ab6206a71b6ad54069c12e2 (Big sale this weekend), PID(product)=6ab6de22e0ac8916314aa31a (Watch Ultra 2).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Deep Analytics v1.13.14 is fully functional. Test file /app/backend/tests/test_deep_analytics_v1_13_14.py covers all 4 endpoints and is safe to reuse as regression. Frontend test uses text-based Arabic selectors (no testIDs exist). Merchant login flow is /login with phone 0509999999 / password merchant2025; token is stored in localStorage as 'token'.",
+  "rca_of_issue": "N/A — no defects found in v1.13.14."
+}
