@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator, Alert, Dimensions, FlatList, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator, Alert, Dimensions, FlatList, TextInput, RefreshControl } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import Svg, { Path, G, Line, Text as SvgText, Defs, LinearGradient as SvgGrad, Stop } from 'react-native-svg';
 import { useAuth } from '../_layout';
 import { mediaUrlSync } from '../../src/utils/upload';
@@ -52,7 +53,7 @@ export default function LivePreview() {
       </View>
 
       {/* Section tabs (like customer bottom tabs, but at top for preview) */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.sectionRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.sectionRowWrap} contentContainerStyle={s.sectionRow}>
         {[
           { id: 'overview', name: 'العام', icon: 'grid' },
           { id: 'products', name: 'المتجر', icon: 'storefront' },
@@ -1319,171 +1320,210 @@ function SharersView({ postId, apiCall }: any) {
   );
 }
 
-/* ─── Overview Section — drivers/branches/marketers/employees ─────── */
+/* ─── Overview Section — Luxe Glass Command Center ─────────────── */
+const MEDAL_COLORS: Record<number, { bg: string; border: string; label: string }> = {
+  0: { bg: '#F5C518', border: '#FCD34D', label: '🥇' },
+  1: { bg: '#D4D4D8', border: '#E5E7EB', label: '🥈' },
+  2: { bg: '#CD7F32', border: '#EAB308', label: '🥉' },
+};
+
+function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondaryValue, progressPct, isOnline }: any) {
+  const medal = MEDAL_COLORS[rank];
+  return (
+    <View style={s.luxeRow}>
+      {/* Medal or rank badge */}
+      <View style={[s.luxeMedal, medal ? { backgroundColor: medal.bg + '30', borderColor: medal.border } : { backgroundColor: BORDER, borderColor: BORDER }]}>
+        {medal ? <Text style={{ fontSize: 18 }}>{medal.label}</Text>
+          : <Text style={{ color: MUTED, fontSize: 13, fontWeight: '800' }}>{rank + 1}</Text>}
+      </View>
+      {/* Info */}
+      <View style={{ flex: 1, marginHorizontal: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={s.luxeRowName} numberOfLines={1}>{name}</Text>
+          {isOnline && <View style={s.onlineDot} />}
+        </View>
+        <Text style={s.luxeRowSub} numberOfLines={1}>{subtitle}</Text>
+        {/* Progress bar */}
+        <View style={s.progressBg}>
+          <LinearGradient
+            colors={[GOLD, '#D4A017']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={[s.progressFill, { width: `${Math.max(4, Math.min(100, progressPct))}%` }]}
+          />
+        </View>
+      </View>
+      {/* Metric */}
+      <View style={{ alignItems: 'flex-end', minWidth: 62 }}>
+        <Text style={s.luxeMetric}>{primaryValue}</Text>
+        <Text style={s.luxeMetricLabel}>{primaryLabel}</Text>
+        {secondaryValue !== undefined && <Text style={s.luxeMetricSecondary}>{secondaryValue}</Text>}
+      </View>
+    </View>
+  );
+}
+
 function OverviewSection({ apiCall }: any) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'drivers' | 'branches' | 'marketers' | 'employees'>('drivers');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (isRefresh?: boolean) => {
+    if (isRefresh) setRefreshing(true); else setLoading(true);
     try { setData(await apiCall('/api/merchant/live-preview/overview')); }
     catch (e: any) { Alert.alert('خطأ', e.message); }
-    finally { setLoading(false); }
+    finally { setLoading(false); setRefreshing(false); }
   }, [apiCall]);
-  useEffect(() => { load(); const iv = setInterval(load, 25000); return () => clearInterval(iv); }, [load]);
+  useEffect(() => { load(); const iv = setInterval(() => load(true), 25000); return () => clearInterval(iv); }, [load]);
 
-  if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
+  if (loading) return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 60 }}>
+      <ActivityIndicator size="large" color={GOLD} />
+      <Text style={{ color: MUTED, marginTop: 12, fontSize: 12 }}>جاري تحميل داشبورد الأداء...</Text>
+    </View>
+  );
   if (!data) return <Text style={s.empty}>لا تتوفر بيانات</Text>;
 
   const summary = [
-    { icon: 'car', color: '#3B82F6', label: 'السائقون', value: data.drivers.total, sub: `${data.drivers.online} متصل` },
-    { icon: 'business', color: '#10B981', label: 'الفروع', value: data.branches.total, sub: `${data.branches.active} نشط` },
-    { icon: 'megaphone', color: '#F59E0B', label: 'المسوّقون', value: data.marketers.total, sub: `${data.marketers.total_commission} ر.س عمولات` },
-    { icon: 'people', color: '#EC4899', label: 'الموظفون', value: data.employees.total, sub: 'إجمالي' },
+    { icon: 'car', color: '#60A5FA', label: 'السائقون', value: data.drivers.total, sub: `${data.drivers.online} متصل الآن` },
+    { icon: 'business', color: '#34D399', label: 'الفروع', value: data.branches.total, sub: `${data.branches.active} فرع نشط` },
+    { icon: 'megaphone', color: '#F59E0B', label: 'المسوّقون', value: data.marketers.total, sub: `${Math.round(data.marketers.total_commission).toLocaleString()} ر.س` },
+    { icon: 'people', color: '#F472B6', label: 'الموظفون', value: data.employees.total, sub: `${data.employees.list.length} نشط` },
   ];
 
+  // Max value for progress bars per tab
+  const maxDrivers = Math.max(...data.drivers.top.map((d: any) => d.total_deliveries || 0), 1);
+  const maxBranches = Math.max(...data.branches.top.map((b: any) => b.pos_revenue || 0), 1);
+  const maxMarketers = Math.max(...data.marketers.top.map((m: any) => m.commission_earned || 0), 1);
+  const maxEmployees = Math.max(...data.employees.list.map((e: any) => e.invoices_total || 0), 1);
+
   return (
-    <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 100 }}>
-      {/* Summary KPIs */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
-        {summary.map((k, i) => (
-          <View key={i} style={[s.sheetCard, { flex: 1, minWidth: '46%', margin: 0 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ backgroundColor: k.color + '30', width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name={k.icon as any} size={18} color={k.color} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: MUTED, fontSize: 10, textAlign: 'right' }}>{k.label}</Text>
-                <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900', textAlign: 'right' }}>{k.value}</Text>
-              </View>
-            </View>
-            <Text style={{ color: GOLD, fontSize: 10, textAlign: 'right', marginTop: 4 }}>{k.sub}</Text>
+    <ScrollView
+      contentContainerStyle={{ paddingBottom: 100 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={GOLD} />}
+    >
+      {/* Hero header with gold streak */}
+      <LinearGradient
+        colors={['#1A1401', '#0B0C10']}
+        style={s.luxeHero}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+      >
+        <View style={s.luxeHeroGoldStreak} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <Ionicons name="analytics" size={26} color={GOLD} />
+          <View>
+            <Text style={s.luxeHeroTitle}>مركز القيادة</Text>
+            <Text style={s.luxeHeroSub}>نظرة شاملة على أداء المتجر</Text>
           </View>
+        </View>
+      </LinearGradient>
+
+      {/* Glass KPI cards */}
+      <View style={s.luxeKpiRow}>
+        {summary.map((k, i) => (
+          <BlurView key={i} intensity={30} tint="dark" style={s.luxeKpi}>
+            <View style={[s.luxeKpiIconWrap, { backgroundColor: k.color + '25', borderColor: k.color + '55' }]}>
+              <Ionicons name={k.icon as any} size={20} color={k.color} />
+            </View>
+            <Text style={s.luxeKpiValue}>{k.value}</Text>
+            <Text style={s.luxeKpiLabel}>{k.label}</Text>
+            <Text style={[s.luxeKpiSub, { color: k.color }]}>{k.sub}</Text>
+          </BlurView>
         ))}
       </View>
 
-      {/* Tab selector */}
-      <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+      {/* Tab pills - premium style */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.luxeTabRow}>
         {[
-          { k: 'drivers', label: '🚗 السائقون' },
-          { k: 'branches', label: '🏢 الفروع' },
-          { k: 'marketers', label: '📣 المسوقون' },
-          { k: 'employees', label: '👥 الموظفون' },
+          { k: 'drivers', label: 'السائقون', icon: 'car' },
+          { k: 'branches', label: 'الفروع', icon: 'business' },
+          { k: 'marketers', label: 'المسوّقون', icon: 'megaphone' },
+          { k: 'employees', label: 'الموظفون', icon: 'people' },
         ].map(t => (
           <TouchableOpacity key={t.k} onPress={() => setTab(t.k as any)}
-            style={[s.cmpBtn, tab === t.k && { backgroundColor: GOLD }]}>
-            <Text style={[s.cmpText, tab === t.k && { color: BG }]}>{t.label}</Text>
+            style={[s.luxeTab, tab === t.k && s.luxeTabActive]}>
+            <Ionicons name={t.icon as any} size={16} color={tab === t.k ? BG : GOLD} />
+            <Text style={[s.luxeTabText, tab === t.k && { color: BG, fontWeight: '900' }]}>{t.label}</Text>
           </TouchableOpacity>
         ))}
+      </ScrollView>
+
+      <View style={{ paddingHorizontal: 12 }}>
+        {tab === 'drivers' && (
+          <View>
+            <Text style={s.luxeSectionTitle}>🏆 أفضل السائقين حسب التوصيلات</Text>
+            {data.drivers.top.length === 0 ? <Text style={s.empty}>لا يوجد سائقون بعد</Text> :
+              data.drivers.top.map((d: any, i: number) => (
+                <LeaderRow key={d.id} rank={i}
+                  name={d.name}
+                  subtitle={`${d.phone}${d.rating ? ` · ⭐ ${d.rating.toFixed(1)}` : ''}`}
+                  primaryValue={d.total_deliveries}
+                  primaryLabel="توصيلة"
+                  secondaryValue={`${d.today_deliveries} اليوم`}
+                  progressPct={(d.total_deliveries / maxDrivers) * 100}
+                  isOnline={d.online}
+                />
+              ))}
+          </View>
+        )}
+
+        {tab === 'branches' && (
+          <View>
+            <Text style={s.luxeSectionTitle}>🏆 أفضل الفروع حسب المبيعات</Text>
+            {data.branches.top.length === 0 ? <Text style={s.empty}>لا يوجد فروع بعد</Text> :
+              data.branches.top.map((b: any, i: number) => (
+                <LeaderRow key={b.id} rank={i}
+                  name={b.name}
+                  subtitle={`${b.city} · ${b.employees_count} موظف`}
+                  primaryValue={`${(b.pos_revenue / 1000).toFixed(1)}K`}
+                  primaryLabel="ر.س"
+                  secondaryValue={`${b.orders_count} طلب`}
+                  progressPct={(b.pos_revenue / maxBranches) * 100}
+                  isOnline={b.active}
+                />
+              ))}
+          </View>
+        )}
+
+        {tab === 'marketers' && (
+          <View>
+            <Text style={s.luxeSectionTitle}>🏆 أفضل المسوقين حسب التحويلات</Text>
+            {data.marketers.top.length === 0 ?
+              <View style={s.luxeEmpty}>
+                <Ionicons name="megaphone-outline" size={40} color={MUTED} />
+                <Text style={s.luxeEmptyTitle}>لا يوجد مسوّقون معتمدون بعد</Text>
+                <Text style={s.luxeEmptySub}>افتح باب التسويق بالعمولة من إعدادات المتجر</Text>
+              </View>
+              :
+              data.marketers.top.map((m: any, i: number) => (
+                <LeaderRow key={m.id} rank={i}
+                  name={m.name}
+                  subtitle={`رمز: ${m.referral_code} · ${m.clicks} نقرة · ${m.conversions} تحويل`}
+                  primaryValue={`${Math.round(m.commission_earned).toLocaleString()}`}
+                  primaryLabel="ر.س عمولة"
+                  progressPct={(m.commission_earned / maxMarketers) * 100}
+                />
+              ))}
+          </View>
+        )}
+
+        {tab === 'employees' && (
+          <View>
+            <Text style={s.luxeSectionTitle}>🏆 أفضل الموظفين حسب الفواتير</Text>
+            {data.employees.list.length === 0 ? <Text style={s.empty}>لا يوجد موظفون بعد</Text> :
+              data.employees.list.map((e: any, i: number) => (
+                <LeaderRow key={e.id} rank={i}
+                  name={e.name}
+                  subtitle={`${e.job_title} · ${e.phone}`}
+                  primaryValue={`${(e.invoices_total / 1000).toFixed(1)}K`}
+                  primaryLabel="ر.س"
+                  secondaryValue={`${e.orders_handled} طلب`}
+                  progressPct={(e.invoices_total / maxEmployees) * 100}
+                />
+              ))}
+          </View>
+        )}
       </View>
-
-      {tab === 'drivers' && (
-        <View>
-          <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>
-            🏆 أفضل السائقين (حسب التوصيلات)
-          </Text>
-          {data.drivers.top.length === 0 ? <Text style={s.empty}>لا يوجد سائقون بعد</Text> :
-            data.drivers.top.map((d: any, i: number) => (
-              <View key={d.id} style={s.sheetCard}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>#{i + 1}</Text>
-                      <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>{d.name}</Text>
-                      {d.online && <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' }} />}
-                    </View>
-                    <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{d.phone}</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '900' }}>{d.total_deliveries}</Text>
-                    <Text style={{ color: MUTED, fontSize: 10 }}>توصيلة</Text>
-                    <Text style={{ color: GOLD, fontSize: 10, marginTop: 2 }}>{d.today_deliveries} اليوم</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-        </View>
-      )}
-
-      {tab === 'branches' && (
-        <View>
-          <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>
-            🏆 أفضل الفروع (حسب المبيعات)
-          </Text>
-          {data.branches.top.length === 0 ? <Text style={s.empty}>لا يوجد فروع بعد</Text> :
-            data.branches.top.map((b: any, i: number) => (
-              <View key={b.id} style={s.sheetCard}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>#{i + 1}</Text>
-                      <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>{b.name}</Text>
-                    </View>
-                    <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{b.city} · {b.employees_count} موظف</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '900' }}>{b.pos_revenue.toLocaleString()} ر.س</Text>
-                    <Text style={{ color: GOLD, fontSize: 10, marginTop: 2 }}>{b.orders_count} طلب</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-        </View>
-      )}
-
-      {tab === 'marketers' && (
-        <View>
-          <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>
-            🏆 أفضل المسوقين (حسب التحويلات)
-          </Text>
-          {data.marketers.top.length === 0 ? <Text style={s.empty}>لا يوجد مسوّقون معتمدون بعد</Text> :
-            data.marketers.top.map((m: any, i: number) => (
-              <View key={m.id} style={s.sheetCard}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>#{i + 1}</Text>
-                      <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>{m.name}</Text>
-                    </View>
-                    <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>رمز: {m.referral_code}</Text>
-                    <Text style={{ color: MUTED, fontSize: 10 }}>{m.clicks} نقرة · {m.conversions} تحويل</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '900' }}>{m.commission_earned.toLocaleString()} ر.س</Text>
-                    <Text style={{ color: GOLD, fontSize: 10, marginTop: 2 }}>عمولات</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-        </View>
-      )}
-
-      {tab === 'employees' && (
-        <View>
-          <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>
-            🏆 أفضل الموظفين (حسب الفواتير)
-          </Text>
-          {data.employees.list.length === 0 ? <Text style={s.empty}>لا يوجد موظفون بعد</Text> :
-            data.employees.list.map((e: any, i: number) => (
-              <View key={e.id} style={s.sheetCard}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>#{i + 1}</Text>
-                      <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>{e.name}</Text>
-                    </View>
-                    <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{e.job_title} · {e.phone}</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '900' }}>{e.invoices_total.toLocaleString()} ر.س</Text>
-                    <Text style={{ color: GOLD, fontSize: 10, marginTop: 2 }}>{e.orders_handled} طلب</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-        </View>
-      )}
     </ScrollView>
   );
 }
@@ -1494,8 +1534,9 @@ const s = StyleSheet.create({
   previewPill: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7f1d1d', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, margin: 10 },
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
   previewText: { flex: 1, color: '#FFFFFF', fontSize: 12, fontWeight: '700', textAlign: 'right' },
-  sectionRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 10, paddingBottom: 8 },
-  sectionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: CARD, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: BORDER },
+  sectionRowWrap: { maxHeight: 52, flexGrow: 0 },
+  sectionRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 10, paddingBottom: 8, alignItems: 'center' },
+  sectionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: CARD, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: BORDER },
   sectionBtnActive: { backgroundColor: GOLD, borderColor: GOLD },
   sectionText: { color: GOLD, fontSize: 12, fontWeight: '800' },
   toolbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8 },
@@ -1644,4 +1685,33 @@ const s = StyleSheet.create({
   listRowMeta: { color: MUTED, fontSize: 10 },
   detailBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: GOLD, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   detailBtnText: { color: BG, fontSize: 10, fontWeight: '900' },
+  /* ─── Luxe Glass Command Center styles ───────────────────────────── */
+  luxeHero: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 18, overflow: 'hidden', position: 'relative' },
+  luxeHeroGoldStreak: { position: 'absolute', width: 300, height: 300, borderRadius: 150, backgroundColor: '#F5C518', opacity: 0.05, top: -160, right: -80 },
+  luxeHeroTitle: { color: '#F5F5F7', fontSize: 22, fontWeight: '900', textAlign: 'right' },
+  luxeHeroSub: { color: MUTED, fontSize: 11, textAlign: 'right', marginTop: 2 },
+  luxeKpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 12, marginTop: -8, marginBottom: 16 },
+  luxeKpi: { flex: 1, minWidth: '46%', padding: 12, borderRadius: 16, borderWidth: 1, borderColor: '#3F435466', overflow: 'hidden', backgroundColor: '#1A1C2380' },
+  luxeKpiIconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: 8 },
+  luxeKpiValue: { color: '#F5F5F7', fontSize: 26, fontWeight: '900', textAlign: 'right' },
+  luxeKpiLabel: { color: MUTED, fontSize: 11, textAlign: 'right', marginTop: 1 },
+  luxeKpiSub: { fontSize: 10, textAlign: 'right', marginTop: 4, fontWeight: '700' },
+  luxeTabRow: { paddingHorizontal: 12, gap: 8, marginBottom: 14, flexDirection: 'row' },
+  luxeTab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, backgroundColor: '#1A1C23', borderWidth: 1, borderColor: '#3F435466' },
+  luxeTabActive: { backgroundColor: GOLD, borderColor: GOLD },
+  luxeTabText: { color: '#E5E7EB', fontSize: 12, fontWeight: '700' },
+  luxeSectionTitle: { color: GOLD, fontSize: 13, fontWeight: '900', textAlign: 'right', marginBottom: 12, marginTop: 4 },
+  luxeRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12, backgroundColor: '#1A1C23', borderRadius: 14, marginBottom: 8, borderWidth: 1, borderColor: '#262933' },
+  luxeMedal: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
+  luxeRowName: { color: '#F5F5F7', fontSize: 14, fontWeight: '800', textAlign: 'right', flex: 1 },
+  luxeRowSub: { color: MUTED, fontSize: 10, textAlign: 'right', marginTop: 3 },
+  luxeMetric: { color: '#F5F5F7', fontSize: 18, fontWeight: '900', textAlign: 'left' },
+  luxeMetricLabel: { color: MUTED, fontSize: 9, textAlign: 'left' },
+  luxeMetricSecondary: { color: GOLD, fontSize: 10, textAlign: 'left', marginTop: 3, fontWeight: '700' },
+  onlineDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#34D399', shadowColor: '#34D399', shadowOpacity: 1, shadowRadius: 4, shadowOffset: { width: 0, height: 0 }, elevation: 4 },
+  progressBg: { height: 4, backgroundColor: '#262933', borderRadius: 2, marginTop: 8, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 2 },
+  luxeEmpty: { alignItems: 'center', padding: 30, backgroundColor: '#1A1C23', borderRadius: 14, borderWidth: 1, borderColor: '#262933' },
+  luxeEmptyTitle: { color: '#E5E7EB', fontSize: 13, fontWeight: '800', marginTop: 10 },
+  luxeEmptySub: { color: MUTED, fontSize: 10, marginTop: 4, textAlign: 'center' },
 });
