@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import { LoyaltyWidget } from '../src/components/PaymentAndLoyalty';
 
 export default function WalletScreen() {
   const router = useRouter();
@@ -37,6 +38,9 @@ export default function WalletScreen() {
           <Text style={s.pointsLabel}>Points</Text>
           <Text style={s.pointsVal}>{wallet?.points || 0}</Text>
         </View>
+      </View>
+      <View style={{ paddingHorizontal: 16 }}>
+        <LoyaltyWidget apiCall={apiCall} onOpenHistory={() => router.push('/loyalty-history' as any)} />
       </View>
       <Text style={s.sectionTitle}>Transaction History</Text>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.list}>

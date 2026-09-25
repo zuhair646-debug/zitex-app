@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import PaymentMethodsRibbon from '../src/components/PaymentAndLoyalty';
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -193,6 +194,9 @@ export default function CheckoutScreen() {
           <View style={[s.summaryRow, s.totalRow]}><Text style={s.totalLabel}>المجموع</Text><Text style={s.totalVal}>{total} ر.س</Text></View>
         </View>
       </ScrollView>
+
+      {/* Saudi payment methods ribbon */}
+      <PaymentMethodsRibbon apiCall={apiCall} />
 
       <View style={s.bottomBar}>
         <TouchableOpacity style={s.buyBtn} onPress={placeOrder} disabled={ordering}>

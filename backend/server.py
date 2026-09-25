@@ -885,6 +885,28 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     result = await db.orders.insert_one(order_doc)
+    # Auto-award loyalty points on order creation
+    try:
+        settings = await _ensure_merchant_settings()
+        if settings["loyalty"]["enabled"]:
+            uid = str(user.get("id") or user.get("_id"))
+            last = await db.loyalty_transactions.find_one({"user_id": uid}, sort=[("created_at", -1)])
+            balance = last.get("balance_after", 0) if last else 0
+            tier = _user_tier(balance, settings["loyalty"]["tier_thresholds"])
+            multiplier = settings["loyalty"]["tier_perks"].get(tier, {}).get("earn_multiplier", 1.0)
+            points = int(round(total * settings["loyalty"]["earn_rate"] * multiplier))
+            if points > 0:
+                new_balance = balance + points
+                await db.loyalty_transactions.insert_one({
+                    "user_id": uid, "points": points, "kind": "earn", "source": "order",
+                    "description": f"طلب بقيمة {total} ر.س", "ref_id": str(result.inserted_id),
+                    "balance_after": new_balance,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                })
+                order_doc["points_earned"] = points
+                await db.orders.update_one({"_id": result.inserted_id}, {"$set": {"points_earned": points}})
+    except Exception as e:
+        logger.warning(f"Loyalty award failed: {e}")
     # Decrement `stock_app` for online orders
     if branch_id:
         for it in items:
@@ -6002,6 +6024,266 @@ async def seed_demo_now(user=Depends(get_current_user)):
                     })
     await _seed_preview_analytics()
     return {"ok": True}
+
+
+# ─── Saudi Payment & Shipping providers + Loyalty ─────
+SAUDI_PAYMENT_PROVIDERS = [
+    {"code": "mada",        "name_ar": "مدى",                 "name_en": "Mada",          "logo": "💳", "brand_color": "#1D4A9C", "category": "card",     "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": False, "cod": False, "note": "شبكة المدفوعات الوطنية السعودية — إلزامية", "credential_fields": ["merchant_id", "api_key"]},
+    {"code": "visa",        "name_ar": "فيزا",                "name_en": "Visa",          "logo": "💳", "brand_color": "#1A1F71", "category": "card",     "sama_licensed": False, "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["merchant_id", "api_key"]},
+    {"code": "mastercard",  "name_ar": "ماستركارد",            "name_en": "Mastercard",    "logo": "💳", "brand_color": "#EB001B", "category": "card",     "sama_licensed": False, "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["merchant_id", "api_key"]},
+    {"code": "apple_pay",   "name_ar": "آبل باي",             "name_en": "Apple Pay",     "logo": "", "brand_color": "#000000", "category": "wallet",   "sama_licensed": False, "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["merchant_id"]},
+    {"code": "stc_pay",     "name_ar": "STC Pay",             "name_en": "STC Pay",       "logo": "📱", "brand_color": "#4F0080", "category": "wallet",   "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["merchant_id", "api_key"]},
+    {"code": "urpay",       "name_ar": "urpay",               "name_en": "urpay",         "logo": "📲", "brand_color": "#1F5FDD", "category": "wallet",   "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["merchant_id", "api_key"]},
+    {"code": "tabby",       "name_ar": "تابي",                "name_en": "Tabby",         "logo": "🟢", "brand_color": "#3BFFC1", "category": "bnpl",     "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": True,  "cod": False, "installments": 4,  "max_amount": 50000, "note": "قسّمها على ٤ دفعات بدون فوائد", "credential_fields": ["merchant_id", "api_key", "secret_key"]},
+    {"code": "tamara",      "name_ar": "تمارا",               "name_en": "Tamara",        "logo": "🌸", "brand_color": "#FFB6E1", "category": "bnpl",     "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": True,  "cod": False, "installments": 3,  "max_amount": 30000, "note": "متوافقة مع الشريعة — ادفع لاحقاً", "credential_fields": ["merchant_id", "api_key"]},
+    {"code": "sadad",       "name_ar": "سداد",                "name_en": "SADAD",         "logo": "🏦", "brand_color": "#0A6E30", "category": "transfer", "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["biller_code"]},
+    {"code": "bank_transfer","name_ar": "تحويل بنكي",         "name_en": "Bank Transfer", "logo": "🏛️", "brand_color": "#6B7280", "category": "transfer", "sama_licensed": False, "requires_kyc": False, "is_bnpl": False, "cod": False, "credential_fields": ["iban", "bank_name", "account_name"]},
+    {"code": "cod",         "name_ar": "الدفع عند الاستلام",  "name_en": "Cash on Delivery","logo": "💵","brand_color": "#059669", "category": "cash",     "sama_licensed": False, "requires_kyc": False, "is_bnpl": False, "cod": True,  "credential_fields": []},
+    # Gateway providers (merchant chooses one to process cards)
+    {"code": "hyperpay",    "name_ar": "HyperPay",            "name_en": "HyperPay",      "logo": "⚡", "brand_color": "#003F7F", "category": "gateway",  "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["entity_id", "access_token"]},
+    {"code": "moyasar",     "name_ar": "ميسر",                "name_en": "Moyasar",       "logo": "🔷", "brand_color": "#3EB6DE", "category": "gateway",  "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["publishable_key", "secret_key"]},
+    {"code": "paytabs",     "name_ar": "PayTabs",             "name_en": "PayTabs",       "logo": "🔵", "brand_color": "#0066CC", "category": "gateway",  "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["profile_id", "server_key"]},
+    {"code": "myfatoorah",  "name_ar": "MyFatoorah",          "name_en": "MyFatoorah",    "logo": "🧾", "brand_color": "#00A651", "category": "gateway",  "sama_licensed": True,  "requires_kyc": True,  "is_bnpl": False, "cod": False, "credential_fields": ["api_token"]},
+]
+
+SAUDI_SHIPPING_PROVIDERS = [
+    {"code": "smsa",        "name_ar": "SMSA اكسبرس",     "name_en": "SMSA Express", "logo": "🚚", "brand_color": "#E31E24", "coverage": "domestic",     "cod_supported": True,  "avg_days": "1-3", "base_price": 25.0, "per_kg_price": 5.0, "credential_fields": ["account_number", "password", "passkey"]},
+    {"code": "aramex",      "name_ar": "أرامكس",           "name_en": "Aramex",       "logo": "📦", "brand_color": "#DD1B23", "coverage": "international","cod_supported": True,  "avg_days": "1-4", "base_price": 30.0, "per_kg_price": 6.0, "credential_fields": ["username", "password", "account_number", "account_pin", "account_country_code"]},
+    {"code": "naqel",       "name_ar": "ناقل اكسبرس",       "name_en": "Naqel Express","logo": "🛻", "brand_color": "#F58220", "coverage": "domestic",     "cod_supported": True,  "avg_days": "1-3", "base_price": 22.0, "per_kg_price": 4.5, "credential_fields": ["client_id", "password"]},
+    {"code": "jt_express",  "name_ar": "J&T اكسبرس",       "name_en": "J&T Express",  "logo": "🚛", "brand_color": "#E30613", "coverage": "domestic",     "cod_supported": True,  "avg_days": "1-2", "base_price": 20.0, "per_kg_price": 4.0, "credential_fields": ["api_token"]},
+    {"code": "zajil",       "name_ar": "زاجل اكسبرس",       "name_en": "Zajil Express","logo": "🚐", "brand_color": "#00A859", "coverage": "domestic",     "cod_supported": True,  "avg_days": "1-3", "base_price": 22.0, "per_kg_price": 4.5, "credential_fields": ["api_key"]},
+    {"code": "aymakan",     "name_ar": "أي مكان",           "name_en": "Aymakan",      "logo": "🗺️","brand_color": "#0067AC", "coverage": "domestic",     "cod_supported": True,  "avg_days": "1-2", "base_price": 25.0, "per_kg_price": 5.0, "credential_fields": ["api_key"]},
+    {"code": "saudi_post",  "name_ar": "البريد السعودي (سبل)","name_en": "Saudi Post SPL","logo": "📮","brand_color": "#005826", "coverage": "domestic",     "cod_supported": True,  "avg_days": "2-5", "base_price": 15.0, "per_kg_price": 3.0, "credential_fields": ["client_id", "client_secret"]},
+    {"code": "dhl",         "name_ar": "DHL",              "name_en": "DHL",          "logo": "✈️", "brand_color": "#FFCC00", "coverage": "international","cod_supported": False, "avg_days": "1-3", "base_price": 45.0, "per_kg_price": 8.0, "credential_fields": ["site_id", "password", "account_number"]},
+    {"code": "fetchr",      "name_ar": "فيتشر",             "name_en": "Fetchr",       "logo": "📍", "brand_color": "#EB2929", "coverage": "domestic",     "cod_supported": True,  "avg_days": "1-2", "base_price": 20.0, "per_kg_price": 4.0, "credential_fields": ["api_key"]},
+    {"code": "torod",       "name_ar": "طرود",              "name_en": "Torod",        "logo": "🔀", "brand_color": "#0EA5E9", "coverage": "domestic",     "cod_supported": True,  "avg_days": "1-3", "base_price": 22.0, "per_kg_price": 4.5, "note": "منصّة موحّدة للعديد من الشركات",  "credential_fields": ["api_key"]},
+]
+
+
+async def _ensure_merchant_settings():
+    """Seed default merchant_settings doc with all Saudi providers (disabled by default)."""
+    existing = await db.merchant_settings.find_one({"key": "global"})
+    if existing:
+        return existing
+    doc = {
+        "key": "global",
+        "payment_providers": [{
+            **p,
+            "enabled": p["code"] in ("mada", "cod", "bank_transfer"),  # legal minimum enabled by default
+            "credentials": {},
+        } for p in SAUDI_PAYMENT_PROVIDERS],
+        "shipping_providers": [{
+            **s,
+            "enabled": s["code"] in ("smsa", "aramex", "saudi_post"),
+            "credentials": {},
+        } for s in SAUDI_SHIPPING_PROVIDERS],
+        "loyalty": {
+            "enabled": True,
+            "earn_rate": 1,               # 1 point per 1 SAR
+            "redeem_rate": 0.10,          # 1 point = 0.10 SAR discount
+            "service_multiplier": 1.5,
+            "competition_bonus": 50,
+            "review_bonus": 20,
+            "referral_bonus": 200,
+            "birthday_bonus": 500,
+            "tier_thresholds": {"bronze": 0, "silver": 500, "gold": 2000, "platinum": 5000},
+            "tier_perks": {
+                "bronze":   {"earn_multiplier": 1.0, "free_shipping_over": 500, "extra_warranty_days": 0},
+                "silver":   {"earn_multiplier": 1.2, "free_shipping_over": 300, "extra_warranty_days": 15},
+                "gold":     {"earn_multiplier": 1.5, "free_shipping_over": 200, "extra_warranty_days": 30, "priority_shipping": True},
+                "platinum": {"earn_multiplier": 2.0, "free_shipping_over": 0,   "extra_warranty_days": 60, "priority_shipping": True, "vip_support": True},
+            },
+        },
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.merchant_settings.insert_one(doc)
+    return doc
+
+
+def _user_tier(balance: int, thresholds: dict) -> str:
+    if balance >= thresholds.get("platinum", 5000): return "platinum"
+    if balance >= thresholds.get("gold", 2000): return "gold"
+    if balance >= thresholds.get("silver", 500): return "silver"
+    return "bronze"
+
+
+@api_router.get("/checkout/options")
+async def checkout_options(user=Depends(get_current_user)):
+    """Return enabled payment methods + shipping carriers + loyalty context for checkout UI."""
+    settings = await _ensure_merchant_settings()
+    payments = [p for p in settings["payment_providers"] if p.get("enabled")]
+    shipping = [s for s in settings["shipping_providers"] if s.get("enabled")]
+    # User's loyalty balance
+    uid = str(user.get("id") or user.get("_id"))
+    balance_doc = await db.loyalty_transactions.find_one({"user_id": uid}, sort=[("created_at", -1)])
+    balance = balance_doc.get("balance_after", 0) if balance_doc else 0
+    tier = _user_tier(balance, settings["loyalty"]["tier_thresholds"])
+    return {
+        "payments": payments,
+        "shipping": shipping,
+        "loyalty": {
+            "enabled": settings["loyalty"]["enabled"],
+            "balance": balance,
+            "tier": tier,
+            "perks": settings["loyalty"]["tier_perks"].get(tier, {}),
+            "earn_rate": settings["loyalty"]["earn_rate"],
+            "redeem_rate": settings["loyalty"]["redeem_rate"],
+        },
+    }
+
+
+@api_router.get("/merchant/settings/payments")
+async def get_payment_settings(user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    settings = await _ensure_merchant_settings()
+    return {"providers": settings["payment_providers"]}
+
+
+class ProviderToggleBody(BaseModel):
+    code: str
+    enabled: bool
+    credentials: Optional[dict] = None
+
+
+@api_router.put("/merchant/settings/payments")
+async def toggle_payment(body: ProviderToggleBody, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    settings = await _ensure_merchant_settings()
+    for p in settings["payment_providers"]:
+        if p["code"] == body.code:
+            p["enabled"] = body.enabled
+            if body.credentials is not None:
+                p["credentials"] = body.credentials
+            break
+    await db.merchant_settings.update_one({"key": "global"}, {"$set": {"payment_providers": settings["payment_providers"]}})
+    return {"ok": True}
+
+
+@api_router.get("/merchant/settings/shipping")
+async def get_shipping_settings(user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    settings = await _ensure_merchant_settings()
+    return {"providers": settings["shipping_providers"]}
+
+
+@api_router.put("/merchant/settings/shipping")
+async def toggle_shipping(body: ProviderToggleBody, user=Depends(get_current_user)):
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    settings = await _ensure_merchant_settings()
+    for s in settings["shipping_providers"]:
+        if s["code"] == body.code:
+            s["enabled"] = body.enabled
+            if body.credentials is not None:
+                s["credentials"] = body.credentials
+            break
+    await db.merchant_settings.update_one({"key": "global"}, {"$set": {"shipping_providers": settings["shipping_providers"]}})
+    return {"ok": True}
+
+
+@api_router.get("/loyalty/balance")
+async def loyalty_balance(user=Depends(get_current_user)):
+    uid = str(user.get("id") or user.get("_id"))
+    settings = await _ensure_merchant_settings()
+    last = await db.loyalty_transactions.find_one({"user_id": uid}, sort=[("created_at", -1)])
+    balance = last.get("balance_after", 0) if last else 0
+    thresholds = settings["loyalty"]["tier_thresholds"]
+    tier = _user_tier(balance, thresholds)
+    # Find next tier
+    tier_order = ["bronze", "silver", "gold", "platinum"]
+    idx = tier_order.index(tier)
+    next_tier = tier_order[idx + 1] if idx < 3 else None
+    to_next = thresholds.get(next_tier, balance) - balance if next_tier else 0
+    return {
+        "balance": balance,
+        "tier": tier,
+        "next_tier": next_tier,
+        "points_to_next": max(0, to_next),
+        "perks": settings["loyalty"]["tier_perks"].get(tier, {}),
+        "redeem_rate": settings["loyalty"]["redeem_rate"],
+    }
+
+
+@api_router.get("/loyalty/history")
+async def loyalty_history(user=Depends(get_current_user), limit: int = 50):
+    uid = str(user.get("id") or user.get("_id"))
+    txs = await db.loyalty_transactions.find({"user_id": uid}).sort("created_at", -1).to_list(limit)
+    # Auto-seed a few demo transactions if empty
+    if not txs:
+        import random as _r
+        settings = await _ensure_merchant_settings()
+        balance = 0
+        demo = []
+        sources = [
+            ("earn", "order", "طلب #1024 - ايفون 14", _r.randint(80, 240)),
+            ("earn", "service", "حجز صيانة شاشة", _r.randint(30, 90)),
+            ("earn", "competition", "المشاركة في مسابقة", 50),
+            ("earn", "review", "تقييم منتج", 20),
+            ("earn", "birthday", "🎂 هدية عيد الميلاد", 500),
+            ("redeem", "checkout", "خصم على طلب #1030", -_r.randint(50, 150)),
+            ("earn", "order", "طلب #1035 - سماعات", _r.randint(60, 180)),
+            ("earn", "referral", "دعوة صديق نجحت", 200),
+        ]
+        for kind, source, desc, pts in sources:
+            balance += pts
+            doc = {
+                "user_id": uid, "points": pts, "kind": kind, "source": source,
+                "description": desc, "balance_after": balance,
+                "created_at": (datetime.now(timezone.utc) - timedelta(days=_r.randint(0, 60))).isoformat(),
+            }
+            await db.loyalty_transactions.insert_one(doc)
+            demo.append(doc)
+        txs = sorted(demo, key=lambda x: x["created_at"], reverse=True)
+    return {"transactions": [serialize_doc(t) if "_id" in t else t for t in txs]}
+
+
+class LoyaltyEarnBody(BaseModel):
+    points: int
+    source: str
+    description: Optional[str] = ""
+    ref_id: Optional[str] = ""
+
+
+@api_router.post("/loyalty/earn")
+async def loyalty_earn(body: LoyaltyEarnBody, user=Depends(get_current_user)):
+    """Award loyalty points to current user."""
+    uid = str(user.get("id") or user.get("_id"))
+    last = await db.loyalty_transactions.find_one({"user_id": uid}, sort=[("created_at", -1)])
+    balance = (last.get("balance_after", 0) if last else 0) + int(body.points)
+    doc = {
+        "user_id": uid, "points": int(body.points), "kind": "earn", "source": body.source,
+        "description": body.description, "ref_id": body.ref_id, "balance_after": balance,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.loyalty_transactions.insert_one(doc)
+    return {"balance": balance, "earned": int(body.points)}
+
+
+class LoyaltyRedeemBody(BaseModel):
+    points: int
+    order_id: Optional[str] = ""
+
+
+@api_router.post("/loyalty/redeem")
+async def loyalty_redeem(body: LoyaltyRedeemBody, user=Depends(get_current_user)):
+    uid = str(user.get("id") or user.get("_id"))
+    last = await db.loyalty_transactions.find_one({"user_id": uid}, sort=[("created_at", -1)])
+    balance = last.get("balance_after", 0) if last else 0
+    if balance < body.points:
+        raise HTTPException(400, "رصيد النقاط غير كافٍ")
+    settings = await _ensure_merchant_settings()
+    discount = round(body.points * settings["loyalty"]["redeem_rate"], 2)
+    new_balance = balance - body.points
+    await db.loyalty_transactions.insert_one({
+        "user_id": uid, "points": -int(body.points), "kind": "redeem", "source": "checkout",
+        "description": f"استبدال نقاط بخصم {discount} ر.س",
+        "ref_id": body.order_id or "", "balance_after": new_balance,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"discount": discount, "new_balance": new_balance}
 
 
 app.include_router(api_router)

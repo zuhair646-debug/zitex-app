@@ -1,40 +1,40 @@
 {
-  "app_name": "Zenrex Store Merchant Live Preview",
+  "app_name": "Zenrex Store",
   "personality": "6 Glass / Luxe DARK",
-  "personality_one_liner": "A cinematic, expensive, and hyper-transparent command center wrapped in smoked glass and antique gold.",
+  "personality_one_liner": "A cinematic and premium e-commerce experience with deep midnight surfaces, rich gold accents, and frosted glass depth that puts high-end functionality first.",
   "color": {
-    "surface": "#080808",
-    "onSurface": "#F5F5F5",
-    "surfaceSecondary": "#151515",
-    "onSurfaceSecondary": "#E0E0E0",
-    "surfaceTertiary": "#222222",
-    "onSurfaceTertiary": "#CCCCCC",
-    "surfaceInverse": "#FAFAFA",
-    "onSurfaceInverse": "#0A0A0A",
+    "surface": "#0D0D0D",
+    "onSurface": "#F7F7F7",
+    "surfaceSecondary": "#1A1A1A",
+    "onSurfaceSecondary": "#EBEBEB",
+    "surfaceTertiary": "#262626",
+    "onSurfaceTertiary": "#D4D4D4",
+    "surfaceInverse": "#FFFFFF",
+    "onSurfaceInverse": "#000000",
     "brand": "#D4AF37",
     "brandPrimary": "#D4AF37",
-    "onBrandPrimary": "#0A0A0A",
-    "brandSecondary": "#C5A017",
-    "onBrandSecondary": "#0A0A0A",
-    "brandTertiary": "#4A3E10",
-    "onBrandTertiary": "#EADD9B",
-    "success": "#2E4A2E",
-    "onSuccess": "#95C795",
-    "warning": "#5A4A1E",
-    "onWarning": "#D4B86A",
-    "error": "#5C2020",
-    "onError": "#E08585",
-    "info": "#2B2B2B",
-    "onInfo": "#B0B0B0",
-    "border": "#222222",
-    "borderStrong": "#333333",
-    "divider": "#1A1A1A",
-    "muted": "#7A7A7A",
+    "onBrandPrimary": "#000000",
+    "brandSecondary": "#F4C744",
+    "onBrandSecondary": "#000000",
+    "brandTertiary": "#8F7523",
+    "onBrandTertiary": "#F7F7F7",
+    "success": "#2D6A4F",
+    "onSuccess": "#FFFFFF",
+    "warning": "#D4AF37",
+    "onWarning": "#000000",
+    "error": "#9B2226",
+    "onError": "#FFFFFF",
+    "info": "#4A4E69",
+    "onInfo": "#FFFFFF",
+    "border": "#333333",
+    "borderStrong": "#555555",
+    "divider": "#1F1F1F",
+    "muted": "#888888",
     "onBrand": "#000000"
   },
   "typography": {
     "displayFontFamily": "Fraunces",
-    "textFontFamily": "Switzer",
+    "textFontFamily": "Geist",
     "scale": {
       "sm": 12,
       "base": 14,
@@ -44,7 +44,7 @@
     }
   },
   "spacing": {
-    "rule": "Generous cinematic spacing. Content must breathe. Use md/lg for internal card padding, xl for section separation.",
+    "rule": "Generous spacing. Cinematic feel. Empty space is content on purpose.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -63,15 +63,17 @@
   "navigation": "bottom_tabs",
   "icon_set": "Phosphor",
   "glassmorphism": {
-    "enabled": "true",
+    "enabled": true,
     "do's": [
-      "Use heavy glass (expo-blur) over brandTertiary tint for all bottom sheets and drawer overlays",
-      "Apply frosted glass to the warranty badge on Services",
-      "Use glass headers for sheets that scroll"
+      "Sticky headers over scrolling content",
+      "Sticky payment ribbon at bottom of checkout",
+      "Bottom-sheet headers and drag handles",
+      "Floating panels and premium status surfaces"
     ],
     "dont's": [
-      "Do not blur dense form fields or reply inputs",
-      "Do not stack more than 2 glass surfaces (e.g., sheet + sticky header is max)"
+      "Form fields",
+      "Dense cards in list rows",
+      "Body text regions"
     ]
   },
   "platform_libraries": {
@@ -88,41 +90,89 @@
   },
   "screens": [
     {
-      "name": "LivePreview_Tabs",
-      "purpose": "Provides complete transparency and rich drill-down capabilities into every merchant vertical without dead-ends.",
+      "name": "Checkout Flow",
+      "purpose": "A unified single-screen checkout with dynamic shipping discovery and an elegant bottom-anchored payment ribbon.",
       "states": {
-        "loading": "Cinematic shimmer skeleton across widgets, ensuring the frame remains dark and stable.",
-        "empty": "Gold-tinted abstract illustrations with a distinct call to action.",
-        "error": "Frosted glass error card with a 'إعادة المحاولة' (Retry) primary CTA."
+        "loading": "Centered premium gold spinner on midnight background.",
+        "empty": "N/A for checkout",
+        "error": "Readable ruby-tinted message with a retry button."
       },
-      "layout": "Tab 1: Store (المتجر) - Fix Analytics sheet data binding.\nTab 2: Services (الخدمات) - Rich detail sheets triggered by full card tap.\nTab 3: Competitions (المسابقات) - Detail sheets covering participants, outcomes, and winners.\nTab 4: Social - Feed with transparent access to likers, sharers, and direct store replies.\nGlobal: Robust error boundaries for heatmap and drill-downs."
+      "layout": "Stacked card layout with generous spacing. Sections: 1. Location Map (العنوان على الخريطة), 2. Delivery Mode (طريقة التوصيل - Auto-decided based on map radius), 3. Shipping Carrier Selection (شركات الشحن - logo, name, ETA, cost), 4. Warranty Summary (الضمان), 5. Payment Selection (طرق الدفع - BNPL previews included), 6. Loyalty Points Slider (استبدال النقاط). Crucial: A fixed bottom glass ribbon over scrolling content that contains 'Confirm' button, Total, and horizontal scroll of supported payment mini-logos."
+    },
+    {
+      "name": "Merchant Payment Settings (Admin)",
+      "purpose": "Allows merchants to configure and input credentials for multiple payment gateways.",
+      "states": {
+        "loading": "Skeleton rows of payment providers.",
+        "empty": "N/A",
+        "error": "Error loading configurations, with retry."
+      },
+      "layout": "List of available providers (Mada, Apple Pay, STC Pay, Tabby, Tamara, etc.). Each row has an enable/disable switch. Tapping a row opens a bottom sheet or modal for entering credentials (API keys, secret keys). Display 'معتمد قانونياً في المملكة' SAMA badge for approved gateways. Include Bulk Enable preset chips at the top."
+    },
+    {
+      "name": "Merchant Shipping Settings (Admin)",
+      "purpose": "Allows merchants to toggle Saudi shipping carriers and enter API keys.",
+      "states": {
+        "loading": "Skeleton rows of shipping providers.",
+        "empty": "N/A",
+        "error": "Error loading shipping settings."
+      },
+      "layout": "List of carriers (SMSA, SPL, Aramex, etc.) with switches. Tapping reveals a credential modal. Fields include base price, per-kg price, COD support toggle. Map delivery radius configuration is included at the top."
+    },
+    {
+      "name": "Loyalty & Rewards Hub",
+      "purpose": "Showcases the user's loyalty tier, point balance, and redeemable rewards.",
+      "states": {
+        "loading": "Spinner",
+        "empty": "Illustration of empty wallet with 'ابدأ التسوق لجمع النقاط' (Start shopping to collect points)",
+        "error": "Failed to load balance."
+      },
+      "layout": "Hero section with a dark abstract gold background and frosted glass overlay displaying 'رصيد نقاط الولاء: X نقطة' and a progress bar to the next tier (Bronze/Silver/Gold/Platinum). Below, a grid of rewards (Rewards Shop) and recent transaction history."
     }
   ],
   "images": {
-    "empty_competitions": {
-      "url": "https://images.unsplash.com/photo-1633526543814-9718c8922b7a?auto=format&fit=crop&q=80&w=800",
-      "dark": "https://images.unsplash.com/photo-1633526543814-9718c8922b7a?auto=format&fit=crop&q=80&w=800",
-      "alt": "Abstract dark cinematic podium for empty competitions"
+    "mada_logo": {
+      "url": "https://images.unsplash.com/photo-1618200469989-152fab5d41a2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwxfHxtYWRhJTIwbG9nbyUyMHRyYW5zcGFyZW50fGVufDB8fHx8MTc5MDM1NDQwN3ww&ixlib=rb-4.1.0&q=85",
+      "alt": "Mada Payment"
     },
-    "empty_comments": {
-      "url": "https://images.unsplash.com/photo-1520697830682-8f19293a9035?auto=format&fit=crop&q=80&w=800",
-      "dark": "https://images.unsplash.com/photo-1520697830682-8f19293a9035?auto=format&fit=crop&q=80&w=800",
-      "alt": "Abstract floating dark glass for empty social interactions"
+    "loyalty_bg": {
+      "url": "https://images.unsplash.com/photo-1513346940221-6f673d962e97?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwxfHxsb3lhbHR5JTIwZ29sZCUyMGFic3RyYWN0JTIwZGFyayUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzkwMzU0NDA3fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Loyalty Gold Abstract Background"
+    },
+    "stc_pay_logo": {
+      "url": "Fallback initials: 'STC' | Original query: 'stc pay logo transparent'",
+      "alt": "STC Pay Logo"
+    },
+    "tabby_logo": {
+      "url": "Fallback initials: 'TAB' | Original query: 'tabby logo transparent'",
+      "alt": "Tabby Logo"
+    },
+    "tamara_logo": {
+      "url": "Fallback initials: 'TAM' | Original query: 'tamara logo transparent'",
+      "alt": "Tamara Logo"
+    },
+    "aramex_logo": {
+      "url": "Fallback initials: 'ARA' | Original query: 'aramex logo transparent'",
+      "alt": "Aramex Logo"
+    },
+    "smsa_logo": {
+      "url": "Fallback initials: 'SMS' | Original query: 'smsa express logo transparent'",
+      "alt": "SMSA Express Logo"
     }
   },
   "haptics": {
-    "card_tap": "impactLight",
-    "sheet_open": "impactMedium",
-    "reply_submit": "notificationSuccess",
-    "like_press": "impactLight",
-    "error_state": "notificationError"
+    "primary_cta_press": "impactMedium",
+    "loyalty_slider_commit": "impactLight",
+    "toggle_payment_provider": "selection",
+    "select_shipping_carrier": "selection"
   },
   "instructions_to_main_agent": [
-    "A. INTERACTION REPAIR: 1) Store Tab: Trace the '📊 إحصائيات' button in ProductsSection. The 'لا بيانات' state is triggering before data resolves. Add a skeleton loader in the sheet and fix the data prop passing. 2) Services & Competitions: Wrap the entire image/card in a Pressable. Tapping it must trigger 'ServiceDetailSheet' and 'CompetitionDetailSheet' respectively. Add a subtle 'اعرض التفاصيل' glass pill or chevron on the card as a tap hint.",
-    "B. CONTENT SECTIONS IN SHEETS: 1) ServiceDetailSheet: Header (Image + Glass Title) -> Quick KPIs -> Technician Info -> Reviews/Comments List -> Likers row. 2) CompetitionDetailSheet: Header -> Event Status/Outcome -> Winners & Prizes (if ended) -> Participants Funnel -> Comments.",
-    "C. DESIGN CORRECTIONS: In ServicesSection, locate the warranty badge ('ضمان 30 يوم'). Change its position to 'absolute', 'bottom: 12', 'right: 12' inside the image container. Use a glassmorphism pill (`expo-blur`) with `brandPrimary` text and an icon. Ensure `hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}` on all interactive badges.",
-    "D. COMPLETE TRANSPARENCY (SOCIAL): 1) LikersSheet: Triggered by tapping the '❤️ 12.4k' text. Show a bottom sheet with a FlatList of avatars, names, and timestamps. 2) SharersSheet: Show External Sharers categorized by platform (TikTok, Snap, IG, WA) with counts and user lists. 3) CommentsSheet: Implement a 'Reply as Store' form at the bottom of the comments list. Allow editing/deleting merchant replies.",
-    "E. EMPTY/ERROR STATES: Implement global ErrorBoundary for the 'General' tab to catch 'Not Found' 404s and replace infinite spinners with a 'بيانات غير متوفرة' state with a Retry button. For Heatmap, ensure it delays rendering until the container is measured (cold start fix).",
-    "F. DELIGHTFUL COMPETITIVE EDGE (MICRO-INTERACTIONS): When the merchant taps a user in the 'LikersSheet' or 'CommentsSheet', use Reanimated to expand that row inline instantly, revealing a gold-tinted mini-dashboard for that user: 'القيمة الدائمة (LTV): 450 SAR | الطلبات: 5 | القسم المفضل: عطور'. No extra network request if possible (mock inline), accompanied by a 'selection' haptic."
+    "Design heavily around the Glass / Luxe DARK personality. No blue colors anywhere. Default primary accents are Zenrex Gold.",
+    "Implement a highly prominent, elegant glassmorphic sticky ribbon anchored at the bottom of the checkout flow containing the total amount, the primary 'Confirm' CTA, and horizontally scrolling mini-logos of the supported Saudi payment providers.",
+    "The checkout screen MUST be a unified single-page scroll layout containing Location, Delivery, Shipping Options, Warranty, Payment, and Loyalty sliders, strictly following progressive disclosure patterns.",
+    "Implement the map-based auto-detection logic: compare user's location radius to the branch delivery zone. If outside, auto-show the Shipping Carriers component. Hide local delivery.",
+    "In Admin screens, implement bottom sheet modals for entering exact credentials per provider. Display an official SAMA badge ('معتمد قانونياً في المملكة') on Mada and licensed BNPL (Tabby/Tamara).",
+    "Loyalty tier progress, point redemption sliders, and dynamic BNPL text (e.g., '4 دفعات بقيمة 125 ر.س') must be fully baked into the checkout schema.",
+    "Use Arabic texts as requested for primary labels and English for system structures."
   ]
 }
