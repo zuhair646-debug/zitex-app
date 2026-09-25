@@ -1,40 +1,40 @@
 {
-  "app_name": "Zitex Arabic Merchant Hub",
-  "personality": "7 Dark-First Utility with 6 Glass / Luxe DARK fusion",
-  "personality_one_liner": "An operational, high-density command center bathed in cinematic dark tones with premium gold accents, built exclusively for RTL commerce management.",
+  "app_name": "Zenrex Store",
+  "personality": "6 Glass / Luxe DARK",
+  "personality_one_liner": "A cinematic, executive command center that makes the merchant feel powerful, using deep black depth, gold accents, and frosted glass to elevate business intelligence.",
   "color": {
     "surface": "#0B0C10",
-    "onSurface": "#F8F9FA",
+    "onSurface": "#F5F5F7",
     "surfaceSecondary": "#1A1C23",
-    "onSurfaceSecondary": "#E0E2E6",
-    "surfaceTertiary": "#252830",
-    "onSurfaceTertiary": "#C1C4CB",
-    "surfaceInverse": "#F5C518",
+    "onSurfaceSecondary": "#E2E2E5",
+    "surfaceTertiary": "#262933",
+    "onSurfaceTertiary": "#C4C5C8",
+    "surfaceInverse": "#F5F5F7",
     "onSurfaceInverse": "#0B0C10",
     "brand": "#F5C518",
-    "onBrand": "#0B0C10",
     "brandPrimary": "#F5C518",
     "onBrandPrimary": "#0B0C10",
-    "brandSecondary": "#D4A90C",
+    "brandSecondary": "#D4A017",
     "onBrandSecondary": "#0B0C10",
-    "brandTertiary": "rgba(245, 197, 24, 0.15)",
+    "brandTertiary": "#332805",
     "onBrandTertiary": "#F5C518",
-    "success": "#28A745",
-    "onSuccess": "#FFFFFF",
-    "warning": "#FFC107",
-    "onWarning": "#0B0C10",
-    "error": "#DC3545",
-    "onError": "#FFFFFF",
-    "info": "#17A2B8",
-    "onInfo": "#FFFFFF",
-    "border": "#2A2D35",
-    "borderStrong": "#4A4D55",
-    "divider": "#1F2128",
-    "muted": "#8A8D93"
+    "success": "#34D399",
+    "onSuccess": "#022C22",
+    "warning": "#FBBF24",
+    "onWarning": "#452000",
+    "error": "#F87171",
+    "onError": "#450A0A",
+    "info": "#60A5FA",
+    "onInfo": "#1E3A8A",
+    "border": "#262933",
+    "borderStrong": "#3F4354",
+    "divider": "#1A1C23",
+    "muted": "#8E92A3",
+    "onBrand": "#0B0C10"
   },
   "typography": {
     "displayFontFamily": "Cairo",
-    "textFontFamily": "Tajawal",
+    "textFontFamily": "IBM Plex Sans Arabic",
     "scale": {
       "sm": 12,
       "base": 14,
@@ -44,7 +44,7 @@
     }
   },
   "spacing": {
-    "rule": "Generous vertical breathing room for charts, tight metrics grouping. Arabic RTL needs proper horizontal padding to avoid edge collisions. Ensure flexDirection: 'row-reverse' is respected at the root of grouped components.",
+    "rule": "Use generous padding to maintain the luxury feel. Ensure RTL layout uses paddingStart/paddingEnd rather than left/right. Group metrics tightly, but give large breathing room between distinct sections.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -59,24 +59,25 @@
     "lg": 20,
     "pill": 999
   },
-  "shadow_tier": "1",
+  "shadow_tier": "0",
   "navigation": "bottom_tabs",
   "icon_set": "Phosphor",
   "glassmorphism": {
     "enabled": "true",
     "do's": [
-      "Use heavy tinted glass for the bottom tab bar background to allow product imagery to subtly pass underneath",
-      "Use frosted glass on the 'Live Preview' top pill and bottom sheet headers",
-      "Ensure text on glass uses onSurface and the base tint is ≥75% surface for dark mode readability"
+      "Use blur on the sticky header when scrolling down.",
+      "Use blur on the 4 KPI summary cards overlaid on the hero background.",
+      "Apply translucent tinted base (surfaceSecondary at 80%) beneath text on glass."
     ],
     "dont's": [
-      "Don't blur dense data tables or charts",
-      "Don't use glass on generic list items"
+      "Don't blur dense data list rows.",
+      "Don't blur form inputs or simple buttons.",
+      "Don't rely on blur alone for readability; always use a strong tint underneath."
     ]
   },
   "platform_libraries": {
     "glass": {
-      "ios": "expo-glass-effect",
+      "ios": "expo-blur",
       "android": "expo-blur",
       "low_end_android_fallback": "solid surfaceSecondary"
     },
@@ -86,62 +87,43 @@
     "animation": "react-native-reanimated",
     "gesture": "react-native-gesture-handler"
   },
+  "haptics": {
+    "events": {
+      "tab_switch": "light",
+      "card_press": "light",
+      "filter_select": "medium"
+    }
+  },
   "screens": [
     {
-      "name": "Merchant Tab Bar Layout",
-      "purpose": "Root navigation for merchants, featuring a prominent 64px central FAB to trigger Live Preview.",
+      "name": "Overview Tab (العام)",
+      "purpose": "A premium flagship analytics dashboard that aggregates Drivers, Branches, Marketers, and Employees into one command center.",
       "states": {
-        "loading": "Standard native splash",
-        "empty": "N/A",
-        "error": "N/A"
+        "loading": "Skeleton loaders with a subtle gold shimmer effect traversing the dark cards.",
+        "empty": "An elegant gold-tinted abstract illustration with a muted message 'لا توجد بيانات كافية لعرضها' (Not enough data to display).",
+        "error": "A refined error message centered on screen with a subdued red icon and a 'إعادة المحاولة' (Retry) outlined gold button."
       },
-      "layout": "Custom View wrapped in a glass container (absolute bottom, left 0, right 0). Height ~80pt + safe area. Use flexDirection: 'row-reverse' so array [Right2, Right1, Center, Left1, Left2] renders RTL. The FAB (64x64px, brandPrimary, pill radius, lifted shadow) sits in the center slot, slightly overlapping the top of the bar."
-    },
-    {
-      "name": "Live Preview Mode",
-      "purpose": "Simulates customer app view but with merchant analytics overlaid.",
-      "states": {
-        "loading": "Spinner overlaid on customer view",
-        "empty": "N/A",
-        "error": "Error boundary with 'Exit Preview' CTA"
-      },
-      "layout": "Wraps the existing customer product screens. Displays a floating Glass pill at top: '🔴 وضع المعاينة' + X to close. In product detail, injects a floating '📊 إحصائيات هذا المنتج' gold CTA fixed above bottom safe area, triggering the Gorhom Bottom Sheet."
-    },
-    {
-      "name": "Product Analytics Insights (Bottom Sheet)",
-      "purpose": "Deep dive into specific product metrics, visitor timelines, and cart abandonment actions.",
-      "states": {
-        "loading": "Skeleton UI over 3x2 grid",
-        "empty": "Empty state illustration with 'No data yet' message.",
-        "error": "Retry loading metrics."
-      },
-      "layout": "Full-screen-capable bottom sheet. Top section: 3x2 bento grid of KPI cards (DAU, Sessions, Cart Drops). Middle section: Monthly sales wave/line chart + visitor bar chart. Bottom section: List of abandoned cart users with an inline 'أرسل خصم' (Send 20% Off) CTA per row."
+      "layout": "1. Sticky Header: Glass effect with the title 'العام'.\n2. Hero Section: A 2x2 grid of 4 KPI Summary Cards (Drivers, Branches, Marketers, Employees) overlaid on a dark, gold-streaked abstract background. Each card uses glassmorphism, displaying the number in large 'Cairo' font and a subtle trend arrow.\n3. Segmented Control: A sticky glass pill navigation just below the hero section to toggle between the 4 sub-sections.\n4. Content Area (List): Top 10 items for the selected sub-section. Each row is a surfaceSecondary card.\n5. Row Details: Leading side (right in RTL) features a rank badge (Gold for 1st, Silver for 2nd, Bronze for 3rd, muted gray for 4-10) or avatar. Middle contains name and meta-data. Trailing side (left in RTL) features the primary metric, with a glowing gold sparkline or progress bar.\n6. Real-time Indicators: Small glowing dots (success color for online, muted for offline) positioned on the avatars."
     }
   ],
   "images": {
-    "analytics_header_bg": {
-      "url": "https://images.unsplash.com/photo-1645290099737-23f17b0b7dd8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwxfHxibGFjayUyMGdvbGQlMjBhYnN0cmFjdCUyMHRleHR1cmUlMjBiYWNrZ3JvdW5kfGVufDB8fHxibGFja3wxNzg5MjUyMjA5fDA&ixlib=rb-4.1.0&q=85",
-      "alt": "Dark abstract gold swirl texture"
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1741356474357-72188f76e801?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwYmxhY2slMjBhbmQlMjBnb2xkJTIwYWJzdHJhY3QlMjBiYWNrZ3JvdW5kJTIwdGV4dHVyZXxlbnwwfHx8fDE3OTAzMTg2NjV8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Golden light streaks against a black background"
     },
-    "product_placeholder": {
-      "url": "https://images.unsplash.com/photo-1670177257750-9b47927f68eb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBnb2xkJTIwd2F0Y2glMjBwcm9kdWN0fGVufDB8fHx8MTc4OTI1MjIwOXww&ixlib=rb-4.1.0&q=85",
-      "alt": "Luxury gold watch on a rock"
-    },
-    "empty_store_state": {
-      "url": "https://images.unsplash.com/photo-1546213290-e1b492ab3eee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjByZXRhaWwlMjBzdG9yZSUyMGludGVyaW9yfGVufDB8fHx8MTc4OTI1MjIwOXww&ixlib=rb-4.1.0&q=85",
-      "alt": "Modern retail store interior"
+    "avatar_fallback": {
+      "url": "https://images.pexels.com/photos/8939108/pexels-photo-8939108.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Middle Eastern businessman in a traditional attire"
     }
   },
   "instructions_to_main_agent": [
-    "1. Redesign `/app/frontend/app/merchant/_layout.tsx`. Build a custom bottom tab bar. Use `flexDirection: 'row-reverse'` to handle RTL. Slots: [Tab 1, Tab 2, FAB, Tab 3, Tab 4]. The FAB is a 64x64px circular button labeled 'بث مباشر للمتجر'.",
-    "2. Build the Live Preview transition. Tapping the FAB navigates to a new `live-preview` wrapper route that renders the customer-facing stack. Show a floating absolute pill at `top: safeArea.top + 16` reading '🔴 أنت الآن في وضع المعاينة' with an exit (X) button.",
-    "3. On `/app/frontend/app/product/[id].tsx` (when in preview mode), display a floating button at the bottom: '📊 إحصائيات هذا المنتج'. Tapping this triggers a `@gorhom/bottom-sheet` containing the Product Analytics UI.",
-    "4. Analytics UI implementation: Use `react-native-svg-charts` or `victory-native` for the wave-line yearly sales chart and monthly bars. Build a 3x2 KPI grid for visitor counts, sessions, and checkout abandons.",
-    "5. Build the abandoned carts list in the bottom sheet. Each row shows the visitor name, session duration, and an 'أرسل خصم' (Send Discount) CTA.",
-    "6. Update `/app/frontend/app/(tabs)/social.tsx`. If the merchant is viewing it in preview mode, allow them to tap a 'Reply as Store' action. The reply composer should feature a gold verified badge next to the store name.",
-    "7. Backend Data Model Requirements: Create `product_views`, `product_sessions`, and `abandoned_carts` tables/collections in your DB layer. Establish foreign keys to `product_id` and `user_id`.",
-    "8. Required API Endpoints in `server.py`: `GET /api/merchant/products/{id}/analytics` (returns timeseries data and KPIs), `GET /api/merchant/products/{id}/abandoned-carts` (returns list of users), `POST /api/merchant/abandoned-carts/{id}/send-offer` (triggers push notification), and update `PUT /api/social/posts/{id}/comments/{cid}/reply` to accept a `merchant_flag` parameter.",
-    "9. MVP Scope Trade-offs: Real-time web sockets for live visitor tracking can be skipped for MVP in favor of polling or pull-to-refresh. Keep chart rendering simple (SVG lines) before adding complex D3 interactions.",
-    "10. Ensure text on top of images (like product headers) always uses the vertical gradient scrim overlay (Layer 0: Image, Layer 1: expo-linear-gradient transparent to ≥70% surfaceInverse, Layer 2: Text)."
+    "Ensure strict RTL compliance. Use `flexDirection: 'row'` but rely on `paddingStart`, `paddingEnd`, `marginStart`, and `marginEnd` instead of left/right to ensure it mirrors correctly in Arabic.",
+    "Use 'Cairo' for large numbers and primary titles. Use 'IBM Plex Sans Arabic' for lists, tabular data, and subtitles to ensure digits align correctly.",
+    "Apply Glass/Luxe Dark guidelines: Do not use drop shadows. Instead, differentiate surfaces using tonal layering (surface -> surfaceSecondary -> surfaceTertiary).",
+    "The 4 KPI summary cards at the top should have a glassmorphism effect and sit on top of the 'hero_background' image with a top-to-bottom gradient scrim (transparent to #0B0C10).",
+    "Implement the Segmented Control as a sticky header below the KPI cards, using a `surfaceSecondary` pill shape with the active state indicated by a `brandTertiary` background and `brandPrimary` text.",
+    "For the Top 10 lists, ensure ranks 1, 2, and 3 stand out visually. Use a glowing effect or metallic gradient for their rank badges (Gold, Silver, Bronze), while ranks 4-10 remain muted.",
+    "For data visualization inside the list rows, use subtle progress bars or sparklines that fill with `brandPrimary` (#F5C518) based on the metric percentage.",
+    "Remember to include real-time status indicators (a small #34D399 dot) on Employee and Driver avatars to indicate 'Online/Active' status."
   ]
 }
