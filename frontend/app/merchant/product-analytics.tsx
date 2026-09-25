@@ -1,0 +1,500 @@
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, ActivityIndicator, Alert, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../_layout';
+
+const GOLD = '#F5C518';
+const BG = '#0B0C10';
+const CARD = '#151721';
+const CARD2 = '#1D1F2A';
+const BORDER = '#2A2D38';
+const TEXT = '#F5F5F7';
+const MUTED = '#9CA3AF';
+const OK = '#10B981';
+const RED = '#EF4444';
+const BLUE = '#3B82F6';
+const PURPLE = '#8B5CF6';
+const AMBER = '#F59E0B';
+
+const PLATFORM_COLORS: Record<string, string> = {
+  'واتساب': '#25D366', 'تويتر': '#1DA1F2', 'انستقرام': '#E4405F',
+  'سنابشات': '#FFFC00', 'تيليجرام': '#0088CC',
+};
+
+export default function ProductAnalyticsScreen() {
+  const router = useRouter();
+  const { apiCall } = useAuth();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const pid = String(params.id || '');
+  const [d, setD] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'overview' | 'visitors' | 'buyers' | 'shares' | 'reviews' | 'compare'>('overview');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiCall(`/api/merchant/products/${pid}/deep-analytics`);
+        setD(data);
+      } catch (e: any) {
+        Alert.alert('خطأ', e?.message);
+      } finally { setLoading(false); }
+    })();
+  }, [pid]);
+
+  if (loading) return (<SafeAreaView style={s.safe}><ActivityIndicator color={GOLD} style={{ marginTop: 40 }} /></SafeAreaView>);
+  if (!d) return (<SafeAreaView style={s.safe}><Text style={{ color: MUTED, textAlign: 'center', marginTop: 40 }}>لم يتم العثور على المنتج</Text></SafeAreaView>);
+
+  const k = d.kpis; const p = d.product;
+  const disc = p.discount_price;
+
+  return (
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="light-content" />
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => router.back()} style={s.back}>
+          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={s.title} numberOfLines={1}>{p.name_ar}</Text>
+          <Text style={s.sub}>تحليلات المنتج العميقة</Text>
+        </View>
+        {d.category_ranking && (
+          <View style={s.rankBadge}>
+            <Ionicons name="trophy" size={11} color={GOLD} />
+            <Text style={s.rankText}>#{d.category_ranking.rank}/{d.category_ranking.total}</Text>
+          </View>
+        )}
+      </View>
+
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        {/* Product hero */}
+        <View style={s.hero}>
+          {p.images?.[0] ? (
+            <Image source={{ uri: p.images[0] }} style={s.heroImg} resizeMode="cover" />
+          ) : (
+            <View style={[s.heroImg, { backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' }]}>
+              <Ionicons name="cube" size={40} color={MUTED} />
+            </View>
+          )}
+          <View style={s.heroOverlay}>
+            <View style={{ flexDirection: 'row', gap: 6, marginBottom: 4 }}>
+              <View style={s.condPill}><Text style={s.condText}>{p.condition === 'new' ? 'جديد' : 'مستعمل'}</Text></View>
+              {p.warranty_days > 0 && (
+                <View style={[s.condPill, { backgroundColor: PURPLE + '30', borderColor: PURPLE }]}>
+                  <Text style={[s.condText, { color: PURPLE }]}>ضمان {p.warranty_days} يوم</Text>
+                </View>
+              )}
+            </View>
+            <Text style={s.heroTitle} numberOfLines={2}>{p.name_ar}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 4 }}>
+              <Text style={s.priceMain}>{disc || p.price} ر.س</Text>
+              {disc && <Text style={s.priceOld}>{p.price} ر.س</Text>}
+              <View style={{ flex: 1 }} />
+              <View style={s.ratingPill}>
+                <Ionicons name="star" size={11} color={AMBER} />
+                <Text style={s.ratingText}>{p.rating} ({p.review_count})</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Big KPIs grid */}
+        <View style={{ padding: 12 }}>
+          <View style={s.kpiRow}>
+            <KPI label="مشاهدات كلية" value={k.total_views.toLocaleString()} icon="eye" color={BLUE} sub={`اليوم: ${k.views_today}`} />
+            <KPI label="زوار فريدون" value={k.unique_visitors.toLocaleString()} icon="people" color={PURPLE} sub={`آخر ٧ أيام: ${k.views_week}`} />
+          </View>
+          <View style={s.kpiRow}>
+            <KPI label="أضيف للسلة" value={k.add_to_cart.toLocaleString()} icon="cart" color={AMBER} sub={`${k.cart_conversion_rate}% تحويل`} />
+            <KPI label="سلات مهجورة" value={k.cart_abandonments.toLocaleString()} icon="alert-circle" color={RED} sub={'فرصة مفقودة'} />
+          </View>
+          <View style={s.kpiRow}>
+            <KPI label="عمليات شراء" value={k.total_orders.toLocaleString()} icon="checkmark-circle" color={OK} sub={`${k.purchase_conversion_rate}% معدل`} />
+            <KPI label="إيرادات" value={`${(k.total_revenue / 1000).toFixed(1)}K`} icon="cash" color={GOLD} sub={`${k.total_units} قطعة`} unit="ر.س" />
+          </View>
+          <View style={s.kpiRow}>
+            <KPI label="مشاركات" value={k.shares_total.toLocaleString()} icon="share-social" color="#EC4899" sub="على المنصات" />
+            <KPI label="متوسط الوقت" value={`${Math.round(k.avg_duration_seconds / 60)}د`} icon="time" color={BLUE} sub="لكل زيارة" />
+          </View>
+        </View>
+
+        {/* Tabs */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 10, gap: 6 }}>
+          {[
+            { code: 'overview', label: 'نظرة عامة', icon: 'grid' },
+            { code: 'visitors', label: 'الزوار', icon: 'people', count: d.top_visitors.length },
+            { code: 'buyers', label: 'المشترون', icon: 'bag-check', count: d.buyers.length },
+            { code: 'shares', label: 'المشاركات', icon: 'share-social', count: d.recent_shares.length },
+            { code: 'reviews', label: 'التقييمات', icon: 'star', count: d.reviews.length + d.questions.length },
+            { code: 'compare', label: 'مقارنة', icon: 'stats-chart', count: d.comparison.length },
+          ].map((t) => (
+            <TouchableOpacity key={t.code}
+              onPress={() => setTab(t.code as any)}
+              style={[s.tab, tab === t.code && s.tabActive]}>
+              <Ionicons name={t.icon as any} size={12} color={tab === t.code ? BG : TEXT} />
+              <Text style={[s.tabText, tab === t.code && { color: BG }]}>{t.label}</Text>
+              {t.count != null && t.count > 0 && (
+                <View style={[s.tabBadge, tab === t.code && { backgroundColor: BG + '30' }]}>
+                  <Text style={[s.tabBadgeText, tab === t.code && { color: BG }]}>{t.count}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={{ padding: 12, paddingBottom: 40 }}>
+          {tab === 'overview' && (
+            <>
+              <SectionTitle icon="pie-chart" label="مصادر الزيارات" />
+              <View style={s.card}>
+                {d.traffic_sources.map((t: any, i: number) => (
+                  <View key={i} style={s.trafficRow}>
+                    <View style={s.trafficBar}>
+                      <View style={[s.trafficFill, { width: `${t.pct}%`, backgroundColor: [GOLD, BLUE, PURPLE, OK, RED, AMBER][i % 6] }]} />
+                    </View>
+                    <Text style={s.trafficLabel}>{
+                      t.source === 'direct' ? 'مباشر' :
+                      t.source === 'social' ? 'وسائل التواصل' :
+                      t.source === 'referral' ? 'إحالة' :
+                      t.source === 'search' ? 'بحث' : t.source
+                    }</Text>
+                    <Text style={s.trafficVal}>{t.count} · {t.pct}%</Text>
+                  </View>
+                ))}
+              </View>
+
+              <SectionTitle icon="trending-up" label="اتجاه المبيعات — آخر 12 شهر" />
+              <View style={s.card}>
+                {d.monthly_series.length === 0 ? (
+                  <Text style={{ color: MUTED, textAlign: 'center', padding: 20 }}>لا توجد بيانات مبيعات بعد</Text>
+                ) : (
+                  <>
+                    {d.monthly_series.map((m: any, i: number) => {
+                      const maxSales = Math.max(...d.monthly_series.map((x: any) => x.sales), 1);
+                      return (
+                        <View key={i} style={s.monthRow}>
+                          <Text style={s.monthLabel}>{m.month}</Text>
+                          <View style={s.monthBar}>
+                            <View style={[s.monthFill, { width: `${(m.sales * 100) / maxSales}%` }]} />
+                          </View>
+                          <Text style={s.monthVal}>{m.sales.toLocaleString()} ر.س</Text>
+                        </View>
+                      );
+                    })}
+                  </>
+                )}
+              </View>
+
+              <SectionTitle icon="funnel" label="قمع التحويل" />
+              <View style={s.card}>
+                <FunnelStage label="مشاهدات" value={k.total_views} pct={100} color={BLUE} />
+                <FunnelStage label="زوار فريدون" value={k.unique_visitors} pct={Math.round(k.unique_visitors * 100 / Math.max(k.total_views, 1))} color={PURPLE} />
+                <FunnelStage label="أضيف للسلة" value={k.add_to_cart} pct={k.cart_conversion_rate} color={AMBER} />
+                <FunnelStage label="بدأ الدفع" value={k.reached_checkout} pct={k.conversion_rate} color="#EC4899" />
+                <FunnelStage label="أكمل الشراء" value={k.total_orders} pct={k.purchase_conversion_rate} color={OK} />
+              </View>
+            </>
+          )}
+
+          {tab === 'visitors' && (
+            <>
+              <SectionTitle icon="people" label={`أكثر الزوار نشاطاً (${d.top_visitors.length})`} />
+              {d.top_visitors.map((v: any, i: number) => (
+                <View key={i} style={s.userCard}>
+                  <View style={[s.avatar, { backgroundColor: BLUE + '30' }]}>
+                    <Text style={{ color: BLUE, fontWeight: '900' }}>{(v.user_name || 'ز').charAt(0)}</Text>
+                  </View>
+                  <View style={{ flex: 1, marginHorizontal: 10 }}>
+                    <Text style={s.userName}>{v.user_name}</Text>
+                    <Text style={s.userMeta}>{v.count} زيارة · آخر ظهور: {(v.last_seen || '').slice(0, 10)}</Text>
+                  </View>
+                  {v.cart_adds > 0 && (
+                    <View style={s.miniPill}>
+                      <Ionicons name="cart" size={10} color={AMBER} />
+                      <Text style={[s.miniPillText, { color: AMBER }]}>{v.cart_adds}</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+
+              <SectionTitle icon="alert-circle" label={`سلات مهجورة (${d.cart_abandonments.length})`} />
+              {d.cart_abandonments.length === 0 && <Text style={s.emptyText}>لا توجد سلات مهجورة 🎉</Text>}
+              {d.cart_abandonments.map((a: any, i: number) => (
+                <View key={i} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: RED }]}>
+                  <View style={[s.avatar, { backgroundColor: RED + '30' }]}>
+                    <Text style={{ color: RED, fontWeight: '900' }}>{(a.user_name || '?').charAt(0)}</Text>
+                  </View>
+                  <View style={{ flex: 1, marginHorizontal: 10 }}>
+                    <Text style={s.userName}>{a.user_name}</Text>
+                    <Text style={s.userMeta}>أضاف للسلة: {(a.added_at || '').slice(0, 16).replace('T', ' ')}</Text>
+                    {a.reached_checkout && <Text style={{ color: AMBER, fontSize: 10, marginTop: 2 }}>⚠️ وصل الدفع ولم يكمل</Text>}
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
+
+          {tab === 'buyers' && (
+            <>
+              <SectionTitle icon="bag-check" label={`المشترون (${d.buyers.length})`} />
+              {d.buyers.length === 0 && <Text style={s.emptyText}>لا مشتريات بعد</Text>}
+              {d.buyers.map((b: any, i: number) => (
+                <View key={i} style={s.userCard}>
+                  <View style={[s.avatar, { backgroundColor: OK + '30' }]}>
+                    <Text style={{ color: OK, fontWeight: '900' }}>{(b.user_name || 'ع').charAt(0)}</Text>
+                  </View>
+                  <View style={{ flex: 1, marginHorizontal: 10 }}>
+                    <Text style={s.userName}>{b.user_name} <Text style={{ color: MUTED, fontSize: 10, fontWeight: '400' }}>· {b.phone || ''}</Text></Text>
+                    <Text style={s.userMeta}>{(b.created_at || '').slice(0, 10)} · {b.address}</Text>
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 3 }}>
+                      <View style={s.miniPill}><Text style={s.miniPillText}>{b.payment_method}</Text></View>
+                      <View style={[s.miniPill, { backgroundColor: b.status === 'delivered' ? OK + '20' : AMBER + '20' }]}>
+                        <Text style={[s.miniPillText, { color: b.status === 'delivered' ? OK : AMBER }]}>{b.status}</Text>
+                      </View>
+                      {b.source === 'pos' && <View style={s.miniPill}><Text style={s.miniPillText}>POS</Text></View>}
+                    </View>
+                  </View>
+                  <View style={{ alignItems: 'flex-start' }}>
+                    <Text style={{ color: GOLD, fontSize: 13, fontWeight: '900' }}>{b.total} ر.س</Text>
+                    <Text style={{ color: MUTED, fontSize: 10 }}>×{b.quantity}</Text>
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
+
+          {tab === 'shares' && (
+            <>
+              <SectionTitle icon="share-social" label="المشاركات حسب المنصة" />
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {d.shares_by_platform.map((sp: any) => (
+                  <View key={sp.platform} style={[s.platCard, { borderColor: PLATFORM_COLORS[sp.platform] || GOLD }]}>
+                    <Text style={[s.platName, { color: PLATFORM_COLORS[sp.platform] || GOLD }]}>{sp.platform}</Text>
+                    <Text style={s.platCount}>{sp.count}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <SectionTitle icon="paper-plane" label={`آخر ${d.recent_shares.length} مشاركة`} />
+              {d.recent_shares.length === 0 && <Text style={s.emptyText}>لم يتم مشاركة المنتج بعد</Text>}
+              {d.recent_shares.map((r: any, i: number) => (
+                <View key={i} style={s.userCard}>
+                  <View style={[s.avatar, { backgroundColor: (PLATFORM_COLORS[r.platform] || GOLD) + '30' }]}>
+                    <Ionicons name="paper-plane" size={14} color={PLATFORM_COLORS[r.platform] || GOLD} />
+                  </View>
+                  <View style={{ flex: 1, marginHorizontal: 10 }}>
+                    <Text style={s.userName}>{r.user_name}</Text>
+                    <Text style={s.userMeta}>شارك عبر <Text style={{ color: PLATFORM_COLORS[r.platform] || GOLD, fontWeight: '900' }}>{r.platform}</Text> {r.shared_to ? `→ ${r.shared_to}` : ''}</Text>
+                    <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{(r.created_at || '').slice(0, 16).replace('T', ' ')}</Text>
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
+
+          {tab === 'reviews' && (
+            <>
+              <View style={s.card}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View>
+                    <Text style={{ color: TEXT, fontSize: 26, fontWeight: '900' }}>{k.avg_rating} ⭐</Text>
+                    <Text style={{ color: MUTED, fontSize: 11 }}>{k.review_count_real} تقييم</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    {[5, 4, 3, 2, 1].map((star) => {
+                      const count = d.reviews.filter((r: any) => r.rating === star).length;
+                      const pct = count * 100 / Math.max(d.reviews.length, 1);
+                      return (
+                        <View key={star} style={{ alignItems: 'center' }}>
+                          <Text style={{ color: MUTED, fontSize: 9 }}>{star}</Text>
+                          <View style={{ width: 4, height: 40, backgroundColor: CARD2, borderRadius: 2, marginTop: 2, overflow: 'hidden', justifyContent: 'flex-end' }}>
+                            <View style={{ width: '100%', height: `${pct}%`, backgroundColor: AMBER }} />
+                          </View>
+                          <Text style={{ color: MUTED, fontSize: 9, marginTop: 2 }}>{count}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+
+              <SectionTitle icon="chatbubbles" label={`التعليقات والتقييمات (${d.reviews.length})`} />
+              {d.reviews.map((r: any, i: number) => (
+                <View key={i} style={s.reviewCard}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={[s.avatar, { backgroundColor: AMBER + '30' }]}>
+                      <Text style={{ color: AMBER, fontWeight: '900' }}>{(r.user_name || '?').charAt(0)}</Text>
+                    </View>
+                    <View style={{ flex: 1, marginHorizontal: 10 }}>
+                      <Text style={s.userName}>{r.user_name}</Text>
+                      <Text style={{ color: MUTED, fontSize: 10 }}>{(r.created_at || '').slice(0, 10)}</Text>
+                    </View>
+                    <Text style={{ color: AMBER, fontWeight: '900', fontSize: 14 }}>{'★'.repeat(r.rating)}</Text>
+                  </View>
+                  <Text style={s.reviewText}>{r.text}</Text>
+                </View>
+              ))}
+
+              {d.questions.length > 0 && (
+                <>
+                  <SectionTitle icon="help-circle" label={`أسئلة العملاء (${d.questions.length})`} />
+                  {d.questions.map((q: any, i: number) => (
+                    <View key={i} style={[s.reviewCard, { borderLeftWidth: 3, borderLeftColor: PURPLE }]}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={[s.avatar, { backgroundColor: PURPLE + '30' }]}>
+                          <Text style={{ color: PURPLE, fontWeight: '900' }}>؟</Text>
+                        </View>
+                        <View style={{ flex: 1, marginHorizontal: 10 }}>
+                          <Text style={s.userName}>{q.user_name}</Text>
+                          <Text style={{ color: MUTED, fontSize: 10 }}>{(q.created_at || '').slice(0, 10)}</Text>
+                        </View>
+                      </View>
+                      <Text style={s.reviewText}>{q.text}</Text>
+                    </View>
+                  ))}
+                </>
+              )}
+            </>
+          )}
+
+          {tab === 'compare' && (
+            <>
+              <SectionTitle icon="stats-chart" label="مقارنة بمنتجات مشابهة" />
+              <View style={s.card}>
+                <View style={s.compareHeaderRow}>
+                  <Text style={[s.compareHeader, { flex: 2 }]}>المنتج</Text>
+                  <Text style={s.compareHeader}>مشاهدات</Text>
+                  <Text style={s.compareHeader}>سلة</Text>
+                  <Text style={s.compareHeader}>بيعات</Text>
+                </View>
+                <View style={[s.compareRow, { backgroundColor: GOLD + '10', borderRadius: 8 }]}>
+                  <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {p.images?.[0] && <Image source={{ uri: p.images[0] }} style={s.compareImg} />}
+                    <Text style={[s.compareName, { color: GOLD }]} numberOfLines={2}>{p.name_ar} ← هذا المنتج</Text>
+                  </View>
+                  <Text style={s.compareVal}>{k.total_views}</Text>
+                  <Text style={s.compareVal}>{k.add_to_cart}</Text>
+                  <Text style={s.compareVal}>{k.total_orders}</Text>
+                </View>
+                {d.comparison.map((c: any, i: number) => (
+                  <View key={i} style={s.compareRow}>
+                    <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      {c.image && <Image source={{ uri: c.image }} style={s.compareImg} />}
+                      <Text style={s.compareName} numberOfLines={2}>{c.name_ar}</Text>
+                    </View>
+                    <Text style={s.compareVal}>{c.views}</Text>
+                    <Text style={s.compareVal}>{c.cart_adds}</Text>
+                    <Text style={s.compareVal}>{c.orders}</Text>
+                  </View>
+                ))}
+              </View>
+              {d.category_ranking && (
+                <View style={[s.card, { backgroundColor: GOLD + '10', borderColor: GOLD }]}>
+                  <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900', textAlign: 'right' }}>
+                    🏆 هذا المنتج مصنّف #{d.category_ranking.rank} من أصل {d.category_ranking.total} منتج في فئته
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const KPI = ({ label, value, icon, color, sub, unit }: any) => (
+  <View style={[s.kpi, { borderColor: color + '50' }]}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <View style={[s.kpiIcon, { backgroundColor: color + '25' }]}>
+        <Ionicons name={icon} size={12} color={color} />
+      </View>
+      <Text style={s.kpiLabel}>{label}</Text>
+    </View>
+    <Text style={s.kpiValue}>
+      {value}<Text style={{ fontSize: 10, color: MUTED }}> {unit || ''}</Text>
+    </Text>
+    {!!sub && <Text style={[s.kpiSub, { color }]}>{sub}</Text>}
+  </View>
+);
+
+const SectionTitle = ({ icon, label }: any) => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 16, marginBottom: 8 }}>
+    <Ionicons name={icon} size={14} color={GOLD} />
+    <Text style={{ color: GOLD, fontSize: 13, fontWeight: '900', textAlign: 'right' }}>{label}</Text>
+  </View>
+);
+
+const FunnelStage = ({ label, value, pct, color }: any) => (
+  <View style={{ marginBottom: 8 }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+      <Text style={{ color: TEXT, fontSize: 11, fontWeight: '700' }}>{label}</Text>
+      <Text style={{ color: color, fontSize: 12, fontWeight: '900' }}>{value.toLocaleString()} · {pct}%</Text>
+    </View>
+    <View style={{ height: 8, backgroundColor: CARD2, borderRadius: 4, overflow: 'hidden' }}>
+      <View style={{ height: '100%', width: `${Math.max(pct, 2)}%`, backgroundColor: color, borderRadius: 4 }} />
+    </View>
+  </View>
+);
+
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: BG },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER, gap: 8 },
+  back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
+  title: { color: GOLD, fontSize: 14, fontWeight: '900', textAlign: 'right' },
+  sub: { color: MUTED, fontSize: 10, textAlign: 'right' },
+  rankBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: GOLD + '20', borderColor: GOLD, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  rankText: { color: GOLD, fontSize: 10, fontWeight: '900' },
+  hero: { position: 'relative', height: 220 },
+  heroImg: { width: '100%', height: '100%' },
+  heroOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 14, backgroundColor: 'rgba(11,12,16,0.85)' },
+  condPill: { backgroundColor: OK + '30', borderColor: OK, borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  condText: { color: OK, fontSize: 9, fontWeight: '900' },
+  heroTitle: { color: TEXT, fontSize: 16, fontWeight: '900', textAlign: 'right' },
+  priceMain: { color: GOLD, fontSize: 20, fontWeight: '900' },
+  priceOld: { color: MUTED, fontSize: 12, textDecorationLine: 'line-through' },
+  ratingPill: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(245,158,11,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  ratingText: { color: AMBER, fontSize: 10, fontWeight: '900' },
+  kpiRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  kpi: { flex: 1, backgroundColor: CARD, borderRadius: 12, borderWidth: 1, padding: 10 },
+  kpiIcon: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  kpiLabel: { color: MUTED, fontSize: 10, flex: 1, textAlign: 'right' },
+  kpiValue: { color: TEXT, fontSize: 18, fontWeight: '900', textAlign: 'right', marginTop: 6 },
+  kpiSub: { fontSize: 9, textAlign: 'right', marginTop: 2, fontWeight: '700' },
+  tab: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: BORDER, backgroundColor: CARD, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
+  tabActive: { backgroundColor: GOLD, borderColor: GOLD },
+  tabText: { color: TEXT, fontSize: 11, fontWeight: '900' },
+  tabBadge: { backgroundColor: BG, paddingHorizontal: 5, borderRadius: 999, minWidth: 18, alignItems: 'center' },
+  tabBadgeText: { color: TEXT, fontSize: 9, fontWeight: '900' },
+  card: { backgroundColor: CARD, borderRadius: 12, borderWidth: 1, borderColor: BORDER, padding: 12, marginBottom: 4 },
+  trafficRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 4, gap: 8 },
+  trafficBar: { flex: 1, height: 8, backgroundColor: CARD2, borderRadius: 4, overflow: 'hidden' },
+  trafficFill: { height: '100%', borderRadius: 4 },
+  trafficLabel: { color: TEXT, fontSize: 11, fontWeight: '700', minWidth: 90, textAlign: 'right' },
+  trafficVal: { color: MUTED, fontSize: 10, minWidth: 70, textAlign: 'left' },
+  monthRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 3 },
+  monthLabel: { color: MUTED, fontSize: 10, width: 55 },
+  monthBar: { flex: 1, height: 8, backgroundColor: CARD2, borderRadius: 4, overflow: 'hidden', marginHorizontal: 6 },
+  monthFill: { height: '100%', backgroundColor: GOLD, borderRadius: 4 },
+  monthVal: { color: TEXT, fontSize: 10, fontWeight: '700', width: 85, textAlign: 'left' },
+  userCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, padding: 10, borderRadius: 10, marginBottom: 6 },
+  avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  userName: { color: TEXT, fontSize: 12, fontWeight: '900', textAlign: 'right' },
+  userMeta: { color: MUTED, fontSize: 10, textAlign: 'right', marginTop: 2 },
+  miniPill: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: BG, borderWidth: 1, borderColor: BORDER, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  miniPillText: { color: TEXT, fontSize: 9, fontWeight: '700' },
+  emptyText: { color: MUTED, textAlign: 'center', padding: 20, fontSize: 11 },
+  platCard: { width: (Dimensions.get('window').width - 30) / 3, alignItems: 'center', padding: 12, borderWidth: 1.5, borderRadius: 12, backgroundColor: CARD },
+  platName: { fontSize: 11, fontWeight: '900', marginBottom: 4 },
+  platCount: { color: TEXT, fontSize: 20, fontWeight: '900' },
+  reviewCard: { backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, padding: 12, borderRadius: 10, marginBottom: 6 },
+  reviewText: { color: TEXT, fontSize: 12, textAlign: 'right', marginTop: 8, lineHeight: 18 },
+  compareHeaderRow: { flexDirection: 'row', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: BORDER },
+  compareHeader: { color: MUTED, fontSize: 10, textAlign: 'center', flex: 1, fontWeight: '900' },
+  compareRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 4 },
+  compareImg: { width: 30, height: 30, borderRadius: 6, backgroundColor: BG },
+  compareName: { color: TEXT, fontSize: 10, fontWeight: '700', flex: 1, textAlign: 'right' },
+  compareVal: { color: TEXT, fontSize: 12, fontWeight: '900', flex: 1, textAlign: 'center' },
+});

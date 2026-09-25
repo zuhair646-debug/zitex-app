@@ -80,7 +80,7 @@ export default function LivePreview() {
       {section === 'products' && (
         <ProductsSection
           apiCall={apiCall}
-          onAnalytics={setAnalyticsFor}
+          onAnalytics={(item: any) => router.push(`/merchant/product-analytics?id=${item.id}` as any)}
           compareMode={compareMode}
           selectedIds={selectedIds}
           setSelectedIds={setSelectedIds}
@@ -232,7 +232,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                 <Text style={{ color: GOLD, fontSize: 14, fontWeight: '900', marginTop: 6, textAlign: 'right' }}>⭐ منتجات مميزة</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {featured.slice(0, 10).map((f: any) => (
-                    <TouchableOpacity key={f.id} onPress={() => router.push(`/product/${f.id}?preview=1` as any)}
+                    <TouchableOpacity key={f.id} onPress={() => onAnalytics(f)}
                       style={{ marginRight: 10, width: 130, backgroundColor: CARD, borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: BORDER }}>
                       {!!f.images?.[0] && <Image source={{ uri: mediaUrlSync(f.images[0]) }} style={{ width: 130, height: 100 }} contentFit="cover" />}
                       <View style={{ padding: 6 }}>
@@ -277,8 +277,8 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
               )}
               {!compareMode && (
                 <View style={s.pDetailHint}>
-                  <Ionicons name="chevron-back" size={12} color={GOLD} />
-                  <Text style={s.pDetailHintText}>تفاصيل</Text>
+                  <Ionicons name="stats-chart" size={12} color={GOLD} />
+                  <Text style={s.pDetailHintText}>تحليلات</Text>
                 </View>
               )}
               <View style={{ padding: 10 }}>

@@ -4645,6 +4645,239 @@ async def product_analytics(pid: str, user=Depends(get_current_user)):
     }
 
 # ─── Merchant overview / leaderboards ───
+@api_router.get("/merchant/products/{pid}/deep-analytics")
+async def product_deep_analytics(pid: str, user=Depends(get_current_user)):
+    """Rich in-app analytics for a single product: KPIs, visitors, buyers, cart-abandonments,
+    shares by platform + who shared with whom, reviews & questions, similar products for comparison.
+    """
+    require_merchant(user)
+    if not ObjectId.is_valid(pid):
+        raise HTTPException(400, "Invalid product id")
+    prod = await db.products.find_one({"_id": ObjectId(pid)})
+    if not prod:
+        raise HTTPException(404, "Product not found")
+
+    from collections import Counter, defaultdict
+    now = datetime.now(timezone.utc)
+    today_cutoff = (now - timedelta(days=1)).isoformat()
+    week_cutoff = (now - timedelta(days=7)).isoformat()
+    month_cutoff = (now - timedelta(days=30)).isoformat()
+
+    # ── Views ──
+    views = await db.product_views.find({"product_id": pid}).sort("created_at", -1).to_list(2000)
+    total_views = len(views)
+    views_today = sum(1 for v in views if v.get("created_at", "") >= today_cutoff)
+    views_week = sum(1 for v in views if v.get("created_at", "") >= week_cutoff)
+    views_month = sum(1 for v in views if v.get("created_at", "") >= month_cutoff)
+    unique_users_ids = {v.get("user_id") for v in views if v.get("user_id")}
+    unique_visitors = len(unique_users_ids)
+    add_to_cart = sum(1 for v in views if v.get("added_to_cart"))
+    reached_checkout = sum(1 for v in views if v.get("reached_checkout"))
+    avg_duration = round(sum(v.get("duration_seconds", 0) for v in views) / max(total_views, 1))
+
+    # Traffic source breakdown
+    src_c = Counter(v.get("source", "direct") for v in views)
+    traffic_sources = [{"source": k, "count": v, "pct": round(v * 100 / max(total_views, 1), 1)}
+                       for k, v in src_c.most_common()]
+
+    # ── Visitor per-user aggregation ──
+    per_user_views = defaultdict(lambda: {"count": 0, "cart_adds": 0, "last_seen": ""})
+    for v in views:
+        uid = v.get("user_id") or "anon"
+        per_user_views[uid]["count"] += 1
+        per_user_views[uid]["last_seen"] = max(per_user_views[uid]["last_seen"], v.get("created_at", ""))
+        per_user_views[uid]["user_name"] = v.get("user_name") or "زائر"
+        if v.get("added_to_cart"):
+            per_user_views[uid]["cart_adds"] += 1
+
+    # ── Orders (app + POS invoices) ──
+    orders_list = await db.orders.find({"items.product_id": pid}).sort("created_at", -1).to_list(2000)
+    buyers = []
+    monthly = defaultdict(lambda: {"sales": 0.0, "units": 0, "orders": 0})
+    for o in orders_list:
+        month = (o.get("created_at") or "")[:7]
+        for it in o.get("items", []):
+            if it.get("product_id") == pid:
+                qty = int(it.get("quantity") or it.get("qty", 1))
+                price = float(it.get("price", 0))
+                monthly[month]["sales"] += price * qty
+                monthly[month]["units"] += qty
+                monthly[month]["orders"] += 1
+                buyers.append({
+                    "user_id": o.get("user_id"),
+                    "user_name": o.get("user_name") or o.get("customer_name") or "عميل",
+                    "phone": o.get("phone", ""),
+                    "quantity": qty,
+                    "total": round(price * qty, 2),
+                    "payment_method": o.get("payment_method", ""),
+                    "status": o.get("status", ""),
+                    "created_at": o.get("created_at", ""),
+                    "address": o.get("address", ""),
+                    "source": "app",
+                })
+    invoices_list = await db.invoices.find({"items.product_id": pid}).sort("created_at", -1).to_list(2000)
+    for inv in invoices_list:
+        month = (inv.get("created_at") or "")[:7]
+        for it in inv.get("items", []):
+            if it.get("product_id") == pid:
+                qty = int(it.get("quantity") or 1)
+                price = float(it.get("price", 0))
+                monthly[month]["sales"] += price * qty
+                monthly[month]["units"] += qty
+                monthly[month]["orders"] += 1
+                buyers.append({
+                    "user_name": inv.get("customer_name") or "زبون فرع",
+                    "quantity": qty,
+                    "total": round(price * qty, 2),
+                    "payment_method": inv.get("payment_method", "نقدي"),
+                    "status": "مكتمل",
+                    "created_at": inv.get("created_at", ""),
+                    "address": inv.get("branch_name", ""),
+                    "source": "pos",
+                })
+    total_revenue = sum(m["sales"] for m in monthly.values())
+    total_units = sum(m["units"] for m in monthly.values())
+    total_orders = sum(m["orders"] for m in monthly.values())
+
+    # Buyer set for identifying users who added-to-cart but didn't buy
+    buyer_ids = {o.get("user_id") for o in orders_list if o.get("user_id")}
+    cart_abandonments = []
+    seen_abandon = set()
+    for v in views:
+        uid = v.get("user_id")
+        if v.get("added_to_cart") and uid and uid not in buyer_ids and uid not in seen_abandon:
+            cart_abandonments.append({
+                "user_id": uid, "user_name": v.get("user_name") or "زائر",
+                "added_at": v.get("created_at", ""),
+                "reached_checkout": v.get("reached_checkout", False),
+            })
+            seen_abandon.add(uid)
+    cart_abandonments.sort(key=lambda x: x["added_at"], reverse=True)
+
+    # Top visitors (by count)
+    top_visitors = sorted(
+        [{"user_id": uid, **v} for uid, v in per_user_views.items()],
+        key=lambda x: x["count"], reverse=True
+    )[:20]
+
+    # ── Shares ──
+    shares = await db.share_events.find({"product_id": pid}).sort("created_at", -1).to_list(500)
+    plat_c = Counter(s.get("platform", "غير محدد") for s in shares)
+    shares_by_platform = [{"platform": p, "count": c} for p, c in plat_c.most_common()]
+    recent_shares = [{
+        "user_name": s.get("user_name", "زائر"),
+        "platform": s.get("platform", ""),
+        "shared_to": s.get("shared_to", ""),
+        "created_at": s.get("created_at", ""),
+    } for s in shares[:30]]
+
+    # ── Reviews + Questions ──
+    reviews = await db.product_reviews.find({"product_id": pid}).sort("created_at", -1).to_list(200)
+    reviews_only = [r for r in reviews if r.get("type") != "question" and r.get("rating", 0) > 0]
+    questions = [r for r in reviews if r.get("type") == "question"]
+    avg_rating = round(sum(r.get("rating", 0) for r in reviews_only) / max(len(reviews_only), 1), 2)
+
+    def _clean_review(r):
+        return {
+            "user_name": r.get("user_name", "زائر"),
+            "rating": r.get("rating", 0),
+            "text": r.get("text", ""),
+            "created_at": r.get("created_at", ""),
+        }
+
+    # ── Similar products for comparison ──
+    similar = await db.products.find({
+        "_id": {"$ne": ObjectId(pid)},
+        "category_id": prod.get("category_id"),
+    }).limit(3).to_list(3)
+
+    comparison = []
+    for sp in similar:
+        spid = str(sp["_id"])
+        s_views = await db.product_views.count_documents({"product_id": spid})
+        s_cart = await db.product_views.count_documents({"product_id": spid, "added_to_cart": True})
+        s_orders = await db.orders.count_documents({"items.product_id": spid})
+        comparison.append({
+            "id": spid,
+            "name_ar": sp.get("name_ar"),
+            "image": (sp.get("images") or [""])[0] if sp.get("images") else "",
+            "price": sp.get("price"),
+            "views": s_views,
+            "cart_adds": s_cart,
+            "orders": s_orders,
+            "rating": sp.get("rating", 0),
+            "sold_count": sp.get("sold_count", 0),
+        })
+
+    # Rankings within category
+    cat_id = prod.get("category_id", "")
+    cat_ranking = None
+    if cat_id:
+        cat_products = await db.products.find({"category_id": cat_id}).to_list(100)
+        scored = []
+        for cp in cat_products:
+            cpid = str(cp["_id"])
+            v = await db.product_views.count_documents({"product_id": cpid})
+            o = await db.orders.count_documents({"items.product_id": cpid})
+            scored.append({"pid": cpid, "score": v + o * 3})
+        scored.sort(key=lambda x: x["score"], reverse=True)
+        for i, s in enumerate(scored, 1):
+            if s["pid"] == pid:
+                cat_ranking = {"rank": i, "total": len(scored)}
+                break
+
+    conv_rate = round(reached_checkout * 100.0 / max(total_views, 1), 2)
+    cart_conv = round(add_to_cart * 100.0 / max(total_views, 1), 2)
+    purchase_conv = round(total_orders * 100.0 / max(total_views, 1), 2)
+
+    return {
+        "product": {
+            "id": pid, "name_ar": prod.get("name_ar"), "name_en": prod.get("name_en"),
+            "images": prod.get("images", []),
+            "price": prod.get("price"), "discount_price": prod.get("discount_price"),
+            "sold_count": prod.get("sold_count", 0),
+            "stock": prod.get("stock", 0), "in_stock": prod.get("in_stock", True),
+            "rating": prod.get("rating", 0),
+            "review_count": prod.get("review_count", 0),
+            "condition": prod.get("condition", "new"),
+            "warranty_days": prod.get("warranty_days", 0),
+            "warranty_type": prod.get("warranty_type", ""),
+        },
+        "kpis": {
+            "total_views": total_views,
+            "views_today": views_today,
+            "views_week": views_week,
+            "views_month": views_month,
+            "unique_visitors": unique_visitors,
+            "add_to_cart": add_to_cart,
+            "reached_checkout": reached_checkout,
+            "cart_abandonments": len(cart_abandonments),
+            "total_orders": total_orders,
+            "total_units": total_units,
+            "total_revenue": round(total_revenue, 2),
+            "conversion_rate": conv_rate,
+            "cart_conversion_rate": cart_conv,
+            "purchase_conversion_rate": purchase_conv,
+            "avg_duration_seconds": avg_duration,
+            "avg_rating": avg_rating,
+            "review_count_real": len(reviews_only),
+            "questions_count": len(questions),
+            "shares_total": len(shares),
+        },
+        "monthly_series": [{"month": m, **v} for m, v in sorted(monthly.items())][-12:],
+        "traffic_sources": traffic_sources,
+        "top_visitors": top_visitors,
+        "cart_abandonments": cart_abandonments[:30],
+        "buyers": buyers[:50],
+        "shares_by_platform": shares_by_platform,
+        "recent_shares": recent_shares,
+        "reviews": [_clean_review(r) for r in reviews_only[:30]],
+        "questions": [_clean_review(r) for r in questions[:20]],
+        "comparison": comparison,
+        "category_ranking": cat_ranking,
+    }
+
+
 @api_router.get("/merchant/analytics/top-products")
 async def top_products_analytics(user=Depends(get_current_user), limit: int = 20):
     """Top products by revenue (from orders + invoices combined)."""
