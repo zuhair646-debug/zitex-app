@@ -82,7 +82,7 @@ export default function MerchantMore() {
             <ListItem icon="log-out" title="تسجيل الخروج" onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zitex Merchant v1.11.2</Text>
+          <Text style={styles.version}>Zenrex Store Merchant v1.12.0</Text>
         </ScrollView>
       </SafeAreaView>
     </View>

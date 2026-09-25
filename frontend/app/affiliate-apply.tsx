@@ -97,7 +97,7 @@ export default function AffiliateApply() {
 
           <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
             <Ionicons name="megaphone" size={40} color="#0A0A0A" />
-            <Text style={s.heroTitle}>{commission ? `اربح ${commission}% عمولة` : 'كن مسوّق Zitex'}</Text>
+            <Text style={s.heroTitle}>{commission ? `اربح ${commission}% عمولة` : 'كن مسوّق Zenrex Store'}</Text>
             <Text style={s.heroSubtitle}>من كل عملية شراء تتم عبر رابطك الفريد</Text>
           </LinearGradient>
 

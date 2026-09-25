@@ -214,7 +214,7 @@ export default function SocialScreen() {
                 <View style={s.postHeader}>
                   <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#F5C518" /></View>
                   <View style={s.postAuthorInfo}>
-                    <Text style={s.postAuthor}>{post.author || 'Zitex'}</Text>
+                    <Text style={s.postAuthor}>{post.author || 'Zenrex Store'}</Text>
                     <Text style={s.postTime}>{timeAgo(post.created_at)}</Text>
                   </View>
                   <View style={s.postViews}>

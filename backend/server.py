@@ -3320,7 +3320,7 @@ async def seed_data():
     if await db.users.count_documents({"phone": "0509999999"}) == 0:
         await db.users.insert_one({
             "phone": "0509999999", "password_hash": hash_password("merchant2025"),
-            "name": "Zitex Store", "email": "owner@zitex.sa",
+            "name": "Zenrex Store", "email": "owner@zenrex.ai",
             "city": "Riyadh", "gender": "", "role": "merchant",
             "points": 0, "wallet_balance": 0,
             "created_at": datetime.now(timezone.utc).isoformat()

@@ -48,7 +48,7 @@ export default function LoginScreen() {
             <View style={styles.logoCircle}>
               <Image source={require('../assets/images/icon.png')} style={styles.logoImg} />
             </View>
-            <Text style={styles.title}>أهلاً بك في Zitex</Text>
+            <Text style={styles.title}>أهلاً بك في Zenrex Store</Text>
             <Text style={styles.subtitle}>سجّل دخولك للمتابعة</Text>
           </View>
 

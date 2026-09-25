@@ -1,5 +1,5 @@
 /**
- * Zitex i18n — Global Multilingual Support (20 languages)
+ * Zenrex Store i18n — Global Multilingual Support (20 languages)
  * Languages: AR, EN, UR, FA, HE (RTL) + ES, FR, DE, IT, PT, RU, TR, ZH, JA, KO, HI, BN, ID, MS, TH
  * Auto-detects from device locale on first launch.
  */
@@ -63,7 +63,7 @@ const T: Record<Lang, Record<string, string>> = {
     'common.settings': 'الإعدادات', 'common.save': 'حفظ', 'common.cancel': 'إلغاء', 'common.delete': 'حذف',
     'common.edit': 'تعديل', 'common.confirm': 'تأكيد', 'common.back': 'رجوع', 'common.loading': 'جارٍ التحميل...',
     'common.error': 'خطأ', 'common.success': 'تم بنجاح', 'common.yes': 'نعم', 'common.no': 'لا', 'common.currency': 'ر.س',
-    'auth.welcome': 'أهلاً بك في Zitex', 'auth.subtitle': 'سجّل دخولك للمتابعة',
+    'auth.welcome': 'أهلاً بك في Zenrex Store', 'auth.subtitle': 'سجّل دخولك للمتابعة',
     'auth.phone': 'رقم الجوال', 'auth.password': 'كلمة المرور', 'auth.signin': 'تسجيل الدخول', 'auth.signup': 'إنشاء حساب',
     'auth.forgot': 'نسيت كلمة المرور؟', 'auth.noAccount': 'ليس لديك حساب؟', 'auth.logout': 'تسجيل الخروج',
     'auth.invalidCredentials': 'رقم الجوال أو كلمة المرور غير صحيحة', 'auth.networkError': 'تعذر الاتصال بالخادم',
@@ -86,7 +86,7 @@ const T: Record<Lang, Record<string, string>> = {
     'common.settings': 'Settings', 'common.save': 'Save', 'common.cancel': 'Cancel', 'common.delete': 'Delete',
     'common.edit': 'Edit', 'common.confirm': 'Confirm', 'common.back': 'Back', 'common.loading': 'Loading...',
     'common.error': 'Error', 'common.success': 'Success', 'common.yes': 'Yes', 'common.no': 'No', 'common.currency': 'SAR',
-    'auth.welcome': 'Welcome to Zitex', 'auth.subtitle': 'Sign in to continue',
+    'auth.welcome': 'Welcome to Zenrex Store', 'auth.subtitle': 'Sign in to continue',
     'auth.phone': 'Phone number', 'auth.password': 'Password', 'auth.signin': 'Sign in', 'auth.signup': 'Sign up',
     'auth.forgot': 'Forgot password?', 'auth.noAccount': "Don't have an account?", 'auth.logout': 'Logout',
     'auth.invalidCredentials': 'Invalid phone or password', 'auth.networkError': 'Connection failed',
@@ -107,7 +107,7 @@ const T: Record<Lang, Record<string, string>> = {
   ur: {
     'common.home': 'ہوم', 'common.search': 'تلاش', 'common.cart': 'کارٹ', 'common.profile': 'پروفائل',
     'common.settings': 'سیٹنگز', 'common.save': 'محفوظ کریں', 'common.cancel': 'منسوخ', 'common.back': 'واپس',
-    'auth.welcome': 'Zitex میں خوش آمدید', 'auth.signin': 'سائن ان', 'auth.signup': 'سائن اپ',
+    'auth.welcome': 'Zenrex Store میں خوش آمدید', 'auth.signin': 'سائن ان', 'auth.signup': 'سائن اپ',
     'auth.phone': 'فون نمبر', 'auth.password': 'پاس ورڈ', 'auth.logout': 'لاگ آؤٹ',
     'tabs.home': 'ہوم', 'tabs.services': 'خدمات', 'tabs.social': 'سوشل', 'tabs.competitions': 'مقابلے', 'tabs.settings': 'سیٹنگز',
     'product.addToCart': 'کارٹ میں شامل کریں', 'product.buyNow': 'ابھی خریدیں',
@@ -117,7 +117,7 @@ const T: Record<Lang, Record<string, string>> = {
   fa: {
     'common.home': 'خانه', 'common.search': 'جستجو', 'common.cart': 'سبد', 'common.profile': 'پروفایل',
     'common.settings': 'تنظیمات', 'common.save': 'ذخیره', 'common.cancel': 'لغو', 'common.back': 'بازگشت',
-    'auth.welcome': 'به Zitex خوش آمدید', 'auth.signin': 'ورود', 'auth.signup': 'ثبت نام',
+    'auth.welcome': 'به Zenrex Store خوش آمدید', 'auth.signin': 'ورود', 'auth.signup': 'ثبت نام',
     'auth.phone': 'شماره تلفن', 'auth.password': 'رمز عبور', 'auth.logout': 'خروج',
     'tabs.home': 'خانه', 'tabs.services': 'خدمات', 'tabs.social': 'اجتماعی', 'tabs.competitions': 'مسابقات', 'tabs.settings': 'تنظیمات',
     'product.addToCart': 'افزودن به سبد', 'product.buyNow': 'خرید',
@@ -127,7 +127,7 @@ const T: Record<Lang, Record<string, string>> = {
   he: {
     'common.home': 'בית', 'common.search': 'חיפוש', 'common.cart': 'עגלה', 'common.profile': 'פרופיל',
     'common.settings': 'הגדרות', 'common.save': 'שמור', 'common.cancel': 'בטל', 'common.back': 'חזור',
-    'auth.welcome': 'ברוכים הבאים ל-Zitex', 'auth.signin': 'התחבר', 'auth.signup': 'הירשם',
+    'auth.welcome': 'ברוכים הבאים ל-Zenrex Store', 'auth.signin': 'התחבר', 'auth.signup': 'הירשם',
     'auth.phone': 'מספר טלפון', 'auth.password': 'סיסמה', 'auth.logout': 'התנתק',
     'tabs.home': 'בית', 'tabs.services': 'שירותים', 'tabs.social': 'חברתי', 'tabs.competitions': 'תחרויות', 'tabs.settings': 'הגדרות',
     'product.addToCart': 'הוסף לעגלה', 'product.buyNow': 'קנה',
@@ -136,7 +136,7 @@ const T: Record<Lang, Record<string, string>> = {
   es: {
     'common.home': 'Inicio', 'common.search': 'Buscar', 'common.cart': 'Carrito', 'common.profile': 'Perfil',
     'common.settings': 'Ajustes', 'common.save': 'Guardar', 'common.cancel': 'Cancelar', 'common.back': 'Volver',
-    'auth.welcome': 'Bienvenido a Zitex', 'auth.signin': 'Iniciar sesión', 'auth.signup': 'Registrarse',
+    'auth.welcome': 'Bienvenido a Zenrex Store', 'auth.signin': 'Iniciar sesión', 'auth.signup': 'Registrarse',
     'auth.phone': 'Teléfono', 'auth.password': 'Contraseña', 'auth.logout': 'Cerrar sesión',
     'tabs.home': 'Inicio', 'tabs.services': 'Servicios', 'tabs.social': 'Social', 'tabs.competitions': 'Concursos', 'tabs.settings': 'Ajustes',
     'product.addToCart': 'Agregar al carrito', 'product.buyNow': 'Comprar',
@@ -146,7 +146,7 @@ const T: Record<Lang, Record<string, string>> = {
   fr: {
     'common.home': 'Accueil', 'common.search': 'Rechercher', 'common.cart': 'Panier', 'common.profile': 'Profil',
     'common.settings': 'Paramètres', 'common.save': 'Enregistrer', 'common.cancel': 'Annuler', 'common.back': 'Retour',
-    'auth.welcome': 'Bienvenue sur Zitex', 'auth.signin': 'Se connecter', 'auth.signup': "S'inscrire",
+    'auth.welcome': 'Bienvenue sur Zenrex Store', 'auth.signin': 'Se connecter', 'auth.signup': "S'inscrire",
     'auth.phone': 'Téléphone', 'auth.password': 'Mot de passe', 'auth.logout': 'Déconnexion',
     'tabs.home': 'Accueil', 'tabs.services': 'Services', 'tabs.social': 'Social', 'tabs.competitions': 'Concours', 'tabs.settings': 'Paramètres',
     'product.addToCart': 'Ajouter au panier', 'product.buyNow': 'Acheter',
@@ -156,7 +156,7 @@ const T: Record<Lang, Record<string, string>> = {
   de: {
     'common.home': 'Startseite', 'common.search': 'Suchen', 'common.cart': 'Warenkorb', 'common.profile': 'Profil',
     'common.settings': 'Einstellungen', 'common.save': 'Speichern', 'common.cancel': 'Abbrechen', 'common.back': 'Zurück',
-    'auth.welcome': 'Willkommen bei Zitex', 'auth.signin': 'Anmelden', 'auth.signup': 'Registrieren',
+    'auth.welcome': 'Willkommen bei Zenrex Store', 'auth.signin': 'Anmelden', 'auth.signup': 'Registrieren',
     'auth.phone': 'Telefon', 'auth.password': 'Passwort', 'auth.logout': 'Abmelden',
     'tabs.home': 'Startseite', 'tabs.services': 'Dienste', 'tabs.social': 'Sozial', 'tabs.competitions': 'Wettbewerbe', 'tabs.settings': 'Einstellungen',
     'product.addToCart': 'In den Warenkorb', 'product.buyNow': 'Jetzt kaufen',
@@ -166,7 +166,7 @@ const T: Record<Lang, Record<string, string>> = {
   it: {
     'common.home': 'Home', 'common.search': 'Cerca', 'common.cart': 'Carrello', 'common.profile': 'Profilo',
     'common.settings': 'Impostazioni', 'common.save': 'Salva', 'common.cancel': 'Annulla', 'common.back': 'Indietro',
-    'auth.welcome': 'Benvenuto in Zitex', 'auth.signin': 'Accedi', 'auth.signup': 'Registrati',
+    'auth.welcome': 'Benvenuto in Zenrex Store', 'auth.signin': 'Accedi', 'auth.signup': 'Registrati',
     'auth.phone': 'Telefono', 'auth.password': 'Password', 'auth.logout': 'Esci',
     'tabs.home': 'Home', 'tabs.services': 'Servizi', 'tabs.social': 'Social', 'tabs.competitions': 'Concorsi', 'tabs.settings': 'Impostazioni',
     'product.addToCart': 'Aggiungi al carrello', 'product.buyNow': 'Compra',
@@ -175,7 +175,7 @@ const T: Record<Lang, Record<string, string>> = {
   pt: {
     'common.home': 'Início', 'common.search': 'Pesquisar', 'common.cart': 'Carrinho', 'common.profile': 'Perfil',
     'common.settings': 'Definições', 'common.save': 'Guardar', 'common.cancel': 'Cancelar', 'common.back': 'Voltar',
-    'auth.welcome': 'Bem-vindo ao Zitex', 'auth.signin': 'Entrar', 'auth.signup': 'Registar',
+    'auth.welcome': 'Bem-vindo ao Zenrex Store', 'auth.signin': 'Entrar', 'auth.signup': 'Registar',
     'auth.phone': 'Telefone', 'auth.password': 'Palavra-passe', 'auth.logout': 'Sair',
     'tabs.home': 'Início', 'tabs.services': 'Serviços', 'tabs.social': 'Social', 'tabs.competitions': 'Concursos', 'tabs.settings': 'Definições',
     'product.addToCart': 'Adicionar ao carrinho', 'product.buyNow': 'Comprar',
@@ -184,7 +184,7 @@ const T: Record<Lang, Record<string, string>> = {
   ru: {
     'common.home': 'Главная', 'common.search': 'Поиск', 'common.cart': 'Корзина', 'common.profile': 'Профиль',
     'common.settings': 'Настройки', 'common.save': 'Сохранить', 'common.cancel': 'Отмена', 'common.back': 'Назад',
-    'auth.welcome': 'Добро пожаловать в Zitex', 'auth.signin': 'Войти', 'auth.signup': 'Регистрация',
+    'auth.welcome': 'Добро пожаловать в Zenrex Store', 'auth.signin': 'Войти', 'auth.signup': 'Регистрация',
     'auth.phone': 'Телефон', 'auth.password': 'Пароль', 'auth.logout': 'Выйти',
     'tabs.home': 'Главная', 'tabs.services': 'Услуги', 'tabs.social': 'Соц.', 'tabs.competitions': 'Конкурсы', 'tabs.settings': 'Настройки',
     'product.addToCart': 'В корзину', 'product.buyNow': 'Купить',
@@ -193,7 +193,7 @@ const T: Record<Lang, Record<string, string>> = {
   tr: {
     'common.home': 'Ana sayfa', 'common.search': 'Ara', 'common.cart': 'Sepet', 'common.profile': 'Profil',
     'common.settings': 'Ayarlar', 'common.save': 'Kaydet', 'common.cancel': 'İptal', 'common.back': 'Geri',
-    'auth.welcome': "Zitex'e hoş geldiniz", 'auth.signin': 'Giriş yap', 'auth.signup': 'Kaydol',
+    'auth.welcome': "Zenrex Store'e hoş geldiniz", 'auth.signin': 'Giriş yap', 'auth.signup': 'Kaydol',
     'auth.phone': 'Telefon', 'auth.password': 'Şifre', 'auth.logout': 'Çıkış',
     'tabs.home': 'Ana sayfa', 'tabs.services': 'Hizmetler', 'tabs.social': 'Sosyal', 'tabs.competitions': 'Yarışmalar', 'tabs.settings': 'Ayarlar',
     'product.addToCart': 'Sepete ekle', 'product.buyNow': 'Şimdi al',
@@ -202,7 +202,7 @@ const T: Record<Lang, Record<string, string>> = {
   zh: {
     'common.home': '主页', 'common.search': '搜索', 'common.cart': '购物车', 'common.profile': '个人资料',
     'common.settings': '设置', 'common.save': '保存', 'common.cancel': '取消', 'common.back': '返回',
-    'auth.welcome': '欢迎来到 Zitex', 'auth.signin': '登录', 'auth.signup': '注册',
+    'auth.welcome': '欢迎来到 Zenrex Store', 'auth.signin': '登录', 'auth.signup': '注册',
     'auth.phone': '电话', 'auth.password': '密码', 'auth.logout': '退出',
     'tabs.home': '主页', 'tabs.services': '服务', 'tabs.social': '社交', 'tabs.competitions': '竞赛', 'tabs.settings': '设置',
     'product.addToCart': '加入购物车', 'product.buyNow': '立即购买',
@@ -211,7 +211,7 @@ const T: Record<Lang, Record<string, string>> = {
   ja: {
     'common.home': 'ホーム', 'common.search': '検索', 'common.cart': 'カート', 'common.profile': 'プロフィール',
     'common.settings': '設定', 'common.save': '保存', 'common.cancel': 'キャンセル', 'common.back': '戻る',
-    'auth.welcome': 'Zitexへようこそ', 'auth.signin': 'サインイン', 'auth.signup': 'サインアップ',
+    'auth.welcome': 'Zenrex Storeへようこそ', 'auth.signin': 'サインイン', 'auth.signup': 'サインアップ',
     'auth.phone': '電話番号', 'auth.password': 'パスワード', 'auth.logout': 'ログアウト',
     'tabs.home': 'ホーム', 'tabs.services': 'サービス', 'tabs.social': 'ソーシャル', 'tabs.competitions': 'コンテスト', 'tabs.settings': '設定',
     'product.addToCart': 'カートに追加', 'product.buyNow': '今すぐ購入',
@@ -220,7 +220,7 @@ const T: Record<Lang, Record<string, string>> = {
   ko: {
     'common.home': '홈', 'common.search': '검색', 'common.cart': '장바구니', 'common.profile': '프로필',
     'common.settings': '설정', 'common.save': '저장', 'common.cancel': '취소', 'common.back': '뒤로',
-    'auth.welcome': 'Zitex에 오신 것을 환영합니다', 'auth.signin': '로그인', 'auth.signup': '가입',
+    'auth.welcome': 'Zenrex Store에 오신 것을 환영합니다', 'auth.signin': '로그인', 'auth.signup': '가입',
     'auth.phone': '전화번호', 'auth.password': '비밀번호', 'auth.logout': '로그아웃',
     'tabs.home': '홈', 'tabs.services': '서비스', 'tabs.social': '소셜', 'tabs.competitions': '대회', 'tabs.settings': '설정',
     'product.addToCart': '장바구니에 추가', 'product.buyNow': '구매',
@@ -229,7 +229,7 @@ const T: Record<Lang, Record<string, string>> = {
   hi: {
     'common.home': 'होम', 'common.search': 'खोज', 'common.cart': 'कार्ट', 'common.profile': 'प्रोफ़ाइल',
     'common.settings': 'सेटिंग्स', 'common.save': 'सहेजें', 'common.cancel': 'रद्द', 'common.back': 'वापस',
-    'auth.welcome': 'Zitex में आपका स्वागत है', 'auth.signin': 'साइन इन', 'auth.signup': 'साइन अप',
+    'auth.welcome': 'Zenrex Store में आपका स्वागत है', 'auth.signin': 'साइन इन', 'auth.signup': 'साइन अप',
     'auth.phone': 'फ़ोन', 'auth.password': 'पासवर्ड', 'auth.logout': 'लॉगआउट',
     'tabs.home': 'होम', 'tabs.services': 'सेवाएं', 'tabs.social': 'सोशल', 'tabs.competitions': 'प्रतियोगिता', 'tabs.settings': 'सेटिंग्स',
     'product.addToCart': 'कार्ट में जोड़ें', 'product.buyNow': 'अभी खरीदें',
@@ -238,7 +238,7 @@ const T: Record<Lang, Record<string, string>> = {
   bn: {
     'common.home': 'হোম', 'common.search': 'অনুসন্ধান', 'common.cart': 'কার্ট', 'common.profile': 'প্রোফাইল',
     'common.settings': 'সেটিংস', 'common.save': 'সংরক্ষণ', 'common.cancel': 'বাতিল', 'common.back': 'ফিরে যান',
-    'auth.welcome': 'Zitex-এ স্বাগতম', 'auth.signin': 'সাইন ইন', 'auth.signup': 'সাইন আপ',
+    'auth.welcome': 'Zenrex Store-এ স্বাগতম', 'auth.signin': 'সাইন ইন', 'auth.signup': 'সাইন আপ',
     'auth.phone': 'ফোন', 'auth.password': 'পাসওয়ার্ড', 'auth.logout': 'লগআউট',
     'tabs.home': 'হোম', 'tabs.services': 'পরিষেবা', 'tabs.social': 'সামাজিক', 'tabs.competitions': 'প্রতিযোগিতা', 'tabs.settings': 'সেটিংস',
     'product.addToCart': 'কার্টে যোগ করুন', 'product.buyNow': 'এখন কিনুন',
@@ -247,7 +247,7 @@ const T: Record<Lang, Record<string, string>> = {
   id: {
     'common.home': 'Beranda', 'common.search': 'Cari', 'common.cart': 'Keranjang', 'common.profile': 'Profil',
     'common.settings': 'Pengaturan', 'common.save': 'Simpan', 'common.cancel': 'Batal', 'common.back': 'Kembali',
-    'auth.welcome': 'Selamat datang di Zitex', 'auth.signin': 'Masuk', 'auth.signup': 'Daftar',
+    'auth.welcome': 'Selamat datang di Zenrex Store', 'auth.signin': 'Masuk', 'auth.signup': 'Daftar',
     'auth.phone': 'Telepon', 'auth.password': 'Kata sandi', 'auth.logout': 'Keluar',
     'tabs.home': 'Beranda', 'tabs.services': 'Layanan', 'tabs.social': 'Sosial', 'tabs.competitions': 'Kompetisi', 'tabs.settings': 'Pengaturan',
     'product.addToCart': 'Tambah ke keranjang', 'product.buyNow': 'Beli sekarang',
@@ -256,7 +256,7 @@ const T: Record<Lang, Record<string, string>> = {
   ms: {
     'common.home': 'Laman utama', 'common.search': 'Cari', 'common.cart': 'Troli', 'common.profile': 'Profil',
     'common.settings': 'Tetapan', 'common.save': 'Simpan', 'common.cancel': 'Batal', 'common.back': 'Kembali',
-    'auth.welcome': 'Selamat datang ke Zitex', 'auth.signin': 'Log masuk', 'auth.signup': 'Daftar',
+    'auth.welcome': 'Selamat datang ke Zenrex Store', 'auth.signin': 'Log masuk', 'auth.signup': 'Daftar',
     'auth.phone': 'Telefon', 'auth.password': 'Kata laluan', 'auth.logout': 'Log keluar',
     'tabs.home': 'Utama', 'tabs.services': 'Perkhidmatan', 'tabs.social': 'Sosial', 'tabs.competitions': 'Pertandingan', 'tabs.settings': 'Tetapan',
     'product.addToCart': 'Tambah ke troli', 'product.buyNow': 'Beli sekarang',
@@ -265,7 +265,7 @@ const T: Record<Lang, Record<string, string>> = {
   th: {
     'common.home': 'หน้าแรก', 'common.search': 'ค้นหา', 'common.cart': 'ตะกร้า', 'common.profile': 'โปรไฟล์',
     'common.settings': 'ตั้งค่า', 'common.save': 'บันทึก', 'common.cancel': 'ยกเลิก', 'common.back': 'กลับ',
-    'auth.welcome': 'ยินดีต้อนรับสู่ Zitex', 'auth.signin': 'เข้าสู่ระบบ', 'auth.signup': 'สมัคร',
+    'auth.welcome': 'ยินดีต้อนรับสู่ Zenrex Store', 'auth.signin': 'เข้าสู่ระบบ', 'auth.signup': 'สมัคร',
     'auth.phone': 'โทรศัพท์', 'auth.password': 'รหัสผ่าน', 'auth.logout': 'ออกจากระบบ',
     'tabs.home': 'หน้าแรก', 'tabs.services': 'บริการ', 'tabs.social': 'โซเชียล', 'tabs.competitions': 'การแข่งขัน', 'tabs.settings': 'ตั้งค่า',
     'product.addToCart': 'เพิ่มลงตะกร้า', 'product.buyNow': 'ซื้อเลย',

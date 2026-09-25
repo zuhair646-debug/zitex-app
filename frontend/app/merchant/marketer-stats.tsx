@@ -37,7 +37,7 @@ export default function MarketerStats() {
   const maxSales = Math.max(1, ...daily.map((d: any) => d.sales || 0));
 
   const shareCode = async () => {
-    try { await Share.share({ message: `استخدم رمز الإحالة ${a.referral_code} عند الطلب من Zitex واحصل على منتجاتك المفضلة!` }); } catch {}
+    try { await Share.share({ message: `استخدم رمز الإحالة ${a.referral_code} عند الطلب من Zenrex Store واحصل على منتجاتك المفضلة!` }); } catch {}
   };
 
   return (

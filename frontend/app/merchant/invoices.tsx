@@ -28,7 +28,7 @@ export default function Invoices() {
   const sendWhatsapp = (inv: any) => {
     if (!inv.customer_phone) { Alert.alert('لا يوجد رقم', 'العميل بدون رقم جوال'); return; }
     const phone = String(inv.customer_phone).replace(/[^0-9]/g, '');
-    const msg = `مرحباً ${inv.customer_name || ''}%0A%0Aفاتورتك من Zitex:%0A${inv.invoice_number}%0Aالمجموع: ${inv.total?.toFixed(2)} ر.س%0A%0Aشكراً لك 🌟`;
+    const msg = `مرحباً ${inv.customer_name || ''}%0A%0Aفاتورتك من Zenrex Store:%0A${inv.invoice_number}%0Aالمجموع: ${inv.total?.toFixed(2)} ر.س%0A%0Aشكراً لك 🌟`;
     Linking.openURL(`https://wa.me/${phone}?text=${msg}`).catch(() => Alert.alert('خطأ', 'تعذّر فتح واتساب'));
   };
 

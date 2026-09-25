@@ -96,7 +96,7 @@ export default function UGCContest() {
 
   const shareVideo = async (v: any) => {
     try {
-      await Share.share({ message: `شاهد فيديو ${v.user_name} في مسابقة ${comp?.title || 'Zitex'}!\n\nصوت له الآن على تطبيق Zitex.` });
+      await Share.share({ message: `شاهد فيديو ${v.user_name} في مسابقة ${comp?.title || 'Zenrex Store'}!\n\nصوت له الآن على تطبيق Zenrex Store.` });
       apiCall(`/api/competitions/${id}/videos/${v.id}/share`, { method: 'POST' }).catch(() => {});
     } catch {}
   };

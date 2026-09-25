@@ -37,11 +37,11 @@ export default function MyAffiliate() {
   };
   const shareLink = async () => {
     if (!refLink) return;
-    try { await Share.share({ message: `اطلب من Zitex عبر رابطي وادعمني 🎁\n${refLink}` }); } catch {}
+    try { await Share.share({ message: `اطلب من Zenrex Store عبر رابطي وادعمني 🎁\n${refLink}` }); } catch {}
   };
   const shareWhatsApp = () => {
     if (!refLink) return;
-    const url = `https://wa.me/?text=${encodeURIComponent(`اطلب من Zitex عبر رابطي 🎁\n${refLink}`)}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(`اطلب من Zenrex Store عبر رابطي 🎁\n${refLink}`)}`;
     if (Platform.OS === 'web') window.open(url, '_blank');
   };
 
@@ -95,7 +95,7 @@ export default function MyAffiliate() {
           <LinearGradient colors={['#F5C518', '#D4A017']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
             <Text style={s.heroLabel}>عمولتك من كل عملية شراء</Text>
             <Text style={s.heroValue}>{cur.commission_percent}%</Text>
-            <Text style={s.heroSub}>تاجر: {cur.merchant_name || 'Zitex Store'}</Text>
+            <Text style={s.heroSub}>تاجر: {cur.merchant_name || 'Zenrex Store'}</Text>
           </LinearGradient>
 
           {/* Referral link */}

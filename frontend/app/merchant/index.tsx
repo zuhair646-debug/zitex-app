@@ -74,7 +74,7 @@ export default function MerchantHome() {
             <View style={{ flex: 1 }}>
               <Text style={styles.greeting}>مرحباً 👋</Text>
               <Text style={styles.merchantName}>{user?.name || 'التاجر'}</Text>
-              <Text style={styles.merchantRole}>لوحة تحكم Zitex</Text>
+              <Text style={styles.merchantRole}>لوحة تحكم Zenrex Store</Text>
             </View>
             <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications')} activeOpacity={0.7}>
               <Ionicons name="notifications-outline" size={22} color={colors.onSurface} />
