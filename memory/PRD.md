@@ -3,8 +3,18 @@
 ## Vision
 Zitex — Comprehensive Tech Store native mobile app (iOS + Android) with e-commerce, social feed, competitions, delivery, chamber portal, and merchant admin panel.
 
-## Current release: v1.12.0 — Zenrex Store
-- **Rebrand (NEW):**
+## Current release: v1.13.4 — Live Preview Deep Drill-Down
+- **NEW: Merchant Live Preview 2.0** — every entity is now tappable and opens a rich detail sheet:
+  - **Driver Sheet**: KPIs (today/week/month/year deliveries + earnings), 7-day sparkline, positive/negative reviews with ratings, employment info, assigned branches
+  - **Branch Sheet**: Orders breakdown (today/yesterday/2days/week/month/year), revenue split (in-store vs app), monthly-target progress bar, 30-day sales pulse, full staff list (tap → employee sheet)
+  - **Marketer Sheet**: Platform breakdown (TikTok/Snapchat/Instagram/Twitter/WhatsApp) with clicks/conversions/revenue per channel, top posts, commission timeline
+  - **Employee Sheet**: Performance KPIs, salary/hours/attendance, bonuses & deductions, **Supervisor Notes system** (add/view rating + note, type: positive/improvement/warning)
+- **NEW: Social Media Parity** — merchant now sees the exact same feed as customers (same visual style: light cards, stories row, poll bars, contact chips) with a glassmorphic "إحصائيات" overlay pill and a dedicated Insights sheet showing likers, sharers, comments, and one-tap direct reply
+- **Cross-navigation**: driver ↔ branch, branch ↔ employees, employee ↔ branches
+- **Tab order**: المتجر → الصيانة → المسابقات → السوشيال ميديا → العام (last)
+
+## Previous release: v1.12.0 — Zenrex Store
+- **Rebrand:**
   - App renamed `Zitex` → `Zenrex Store` (bundle ID unchanged: `com.smartangle.zitex`)
   - New gold ornate "Z with crown" logo across icon, splash, adaptive-icon, favicon, notification
   - All user-visible strings updated across 20 languages (i18n.tsx)
