@@ -3,11 +3,17 @@
 ## Vision
 Zitex — Comprehensive Tech Store native mobile app (iOS + Android) with e-commerce, social feed, competitions, delivery, chamber portal, and merchant admin panel.
 
-## Current release: v1.9.1
-- **Backend migrated to Hetzner VPS (NEW)**:
+## Current release: v1.12.0 — Zenrex Store
+- **Rebrand (NEW):**
+  - App renamed `Zitex` → `Zenrex Store` (bundle ID unchanged: `com.smartangle.zitex`)
+  - New gold ornate "Z with crown" logo across icon, splash, adaptive-icon, favicon, notification
+  - All user-visible strings updated across 20 languages (i18n.tsx)
+  - Merchant seed name updated to "Zenrex Store" (email `owner@zenrex.ai`)
+- **Backend migrated to Hetzner VPS:**
   - New production API: `https://api.zenrex.ai` (Let's Encrypt SSL, auto-renew)
   - Isolated MongoDB on port 27018 (does not conflict with user's other sites)
   - FastAPI on port 8100 behind Nginx reverse proxy
+  - Daily backup at 3 AM (systemd timer, 14-day retention)
   - Deploy script fixed: python-dotenv/pyjwt/multipart, workers=1 (no seed race)
   - `frontend/.env.production` now points to `https://api.zenrex.ai`
 - **Phase C-2 Multi-type Inventory**:
