@@ -56,8 +56,8 @@ calling `finish`:
   transiently down). The template script implements this.
 
 ## Current released versions
-- iOS: v1.12.0 (build 36) — Zenrex Store rebrand + Hetzner backend — build in progress (poller PID 5775 will auto-submit)
-- Android: v1.12.0 (versionCode 37) — Zenrex Store rebrand + Hetzner backend — build in progress (poller PID 5775 will auto-submit)
+- iOS: v1.13.0 (build 37) — Zenrex Store rebrand + Hetzner backend — build in progress (poller PID 13125 will auto-submit)
+- Android: v1.13.0 (versionCode 38) — Zenrex Store rebrand + Hetzner backend — build in progress (poller PID 13125 will auto-submit)
 - v1.11.2: Android submitted ✅ (23/9/2026)
 - v1.11.1: iOS submitted ✅ (17:18 UTC 23/9/2026)
 - v1.10.1 & prior: submitted ✅
