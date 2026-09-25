@@ -37,9 +37,28 @@ export default function MerchantSocialFeed({ apiCall }: any) {
 
   // Insights sheet
   const [insightsPost, setInsightsPost] = useState<any>(null);
+  const [insightsDetail, setInsightsDetail] = useState<any>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsTab, setInsightsTab] = useState<'stats' | 'likers' | 'sharers' | 'comments'>('stats');
+
+  const openInsights = useCallback(async (post: any, tab: 'stats' | 'likers' | 'sharers' | 'comments' = 'stats') => {
+    setInsightsPost(post);
+    setInsightsTab(tab);
+    setInsightsLoading(true);
+    setInsightsDetail(null);
+    try {
+      const detail = await apiCall(`/api/merchant/social/posts/${post.id}/detail`);
+      setInsightsDetail(detail);
+    } catch (e: any) {
+      // Fallback to embedded data
+      setInsightsDetail({ post, likers: post.liked_by || [], sharers: post.shared_by || [], comments: post.comments || [], kpis: { views: post.views, likes: post.likes, comment_count: (post.comments || []).length, shares: post.shares } });
+    } finally {
+      setInsightsLoading(false);
+    }
+  }, [apiCall]);
 
   // Merchant reply modal (from a specific comment)
-  const [replying, setReplying] = useState<{ postId: string; commentId: string; commentText: string } | null>(null);
+  const [replying, setReplying] = useState<{ postId: string; commentId: string; commentText: string; userName: string } | null>(null);
   const [replyText, setReplyText] = useState('');
 
   const load = useCallback(async () => {
@@ -86,6 +105,18 @@ export default function MerchantSocialFeed({ apiCall }: any) {
         method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
       });
       Alert.alert('تم', 'تم إرسال ردك باسم المتجر ✨');
+      // Optimistic update: inject reply into current post
+      const rt = replyText.trim();
+      const rid = replying.commentId;
+      const pid = replying.postId;
+      setPosts(prev => prev.map(p => p.id === pid ? {
+        ...p,
+        comments: (p.comments || []).map((c: any) => c.id === rid ? { ...c, store_reply: rt } : c),
+      } : p));
+      setInsightsPost((prev: any) => prev ? {
+        ...prev,
+        comments: (prev.comments || []).map((c: any) => c.id === rid ? { ...c, store_reply: rt } : c),
+      } : prev);
       setReplying(null); setReplyText(''); load();
     } catch (e: any) { Alert.alert('خطأ', e.message); }
   };
@@ -155,7 +186,7 @@ export default function MerchantSocialFeed({ apiCall }: any) {
           return (
             <View key={postId} style={s.postCard}>
               {/* Merchant overlay pill — insights */}
-              <TouchableOpacity style={s.insightsFab} onPress={() => setInsightsPost(post)}>
+              <TouchableOpacity style={s.insightsFab} onPress={() => openInsights(post, 'stats')}>
                 <BlurView intensity={40} tint="dark" style={s.insightsPill}>
                   <Ionicons name="analytics" size={14} color={LP.GOLD} />
                   <Text style={{ color: LP.GOLD, fontSize: 11, fontWeight: '900' }}>إحصائيات</Text>
@@ -219,20 +250,20 @@ export default function MerchantSocialFeed({ apiCall }: any) {
               {isPoll && <Text style={s.totalVotesText}>{totalVotes} صوت</Text>}
 
               <View style={s.postActions}>
-                <View style={s.actionItem}>
+                <TouchableOpacity style={s.actionItem} onPress={() => openInsights(post, 'likers')}>
                   <Ionicons name="heart" size={22} color="#EF4444" />
                   <Text style={s.actionCount}>{KM(post.likes || 0)}</Text>
-                </View>
-                <View style={s.actionItem}>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.actionItem} onPress={() => openInsights(post, 'comments')}>
                   <Ionicons name="chatbubble-outline" size={20} color="#52525B" />
                   <Text style={s.actionCount}>{commentCount}</Text>
-                </View>
-                <View style={s.actionItem}>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.actionItem} onPress={() => openInsights(post, 'sharers')}>
                   <Ionicons name="share-social-outline" size={20} color="#52525B" />
                   <Text style={s.actionCount}>{KM(post.shares || 0)}</Text>
-                </View>
+                </TouchableOpacity>
                 <View style={{ flex: 1 }} />
-                <TouchableOpacity style={s.detailsInlineBtn} onPress={() => setInsightsPost(post)}>
+                <TouchableOpacity style={s.detailsInlineBtn} onPress={() => openInsights(post, 'stats')}>
                   <Ionicons name="analytics" size={14} color={LP.BG} />
                   <Text style={{ color: LP.BG, fontSize: 11, fontWeight: '900' }}>التفاصيل</Text>
                 </TouchableOpacity>
@@ -257,88 +288,72 @@ export default function MerchantSocialFeed({ apiCall }: any) {
       </Modal>
 
       {/* Insights Sheet — Merchant Analytics Overlay */}
-      <Modal visible={!!insightsPost} animationType="slide" transparent onRequestClose={() => setInsightsPost(null)}>
+      <Modal visible={!!insightsPost} animationType="slide" transparent onRequestClose={() => { setInsightsPost(null); setInsightsDetail(null); }}>
         <View style={s.overlay}>
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
-              <TouchableOpacity onPress={() => setInsightsPost(null)}><Ionicons name="close" size={22} color={LP.TEXT} /></TouchableOpacity>
-              <Text style={s.sheetTitle}>إحصائيات المنشور</Text>
+              <TouchableOpacity onPress={() => { setInsightsPost(null); setInsightsDetail(null); }}><Ionicons name="close" size={22} color={LP.TEXT} /></TouchableOpacity>
+              <Text style={s.sheetTitle}>إحصائيات المنشور — شفافية كاملة</Text>
               <View style={{ width: 22 }} />
             </View>
 
-            <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
-              {insightsPost && (
-                <>
-                  {/* Content preview */}
-                  <View style={s.previewCard}>
-                    {(insightsPost.image || insightsPost.images?.[0]) && (
-                      <Image source={{ uri: insightsPost.image || insightsPost.images[0] }} style={{ width: '100%', height: 150, borderRadius: 12, marginBottom: 8 }} />
-                    )}
-                    {!!insightsPost.text && <Text style={{ color: LP.TEXT, fontSize: 13, textAlign: 'right' }} numberOfLines={3}>{insightsPost.text}</Text>}
-                  </View>
-
-                  {/* KPI grid */}
-                  <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-                    <StatMini icon="eye" label="مشاهدات" value={KM(insightsPost.views || 0)} color={LP.INFO} />
-                    <StatMini icon="heart" label="إعجابات" value={KM(insightsPost.likes || 0)} color="#EF4444" />
-                    <StatMini icon="chatbubble" label="تعليقات" value={KM(Array.isArray(insightsPost.comments) ? insightsPost.comments.length : (insightsPost.comments || 0))} color={LP.WARN} />
-                    <StatMini icon="share-social" label="مشاركات" value={KM(insightsPost.shares || 0)} color={LP.SUCCESS} />
-                  </View>
-
-                  {/* Likers */}
-                  {Array.isArray(insightsPost.liked_by) && insightsPost.liked_by.length > 0 && (
-                    <>
-                      <SheetSection icon="heart" title={`المُعجبون (${insightsPost.liked_by.length})`} />
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
-                        {insightsPost.liked_by.slice(0, 20).map((u: any, i: number) => (
-                          <View key={i} style={s.avatarChip}>
-                            <View style={s.avatarCircle}><Text style={{ color: LP.BG, fontWeight: '900' }}>{(u.user_name || '?')[0]}</Text></View>
-                            <Text style={{ color: LP.TEXT, fontSize: 10, marginTop: 3 }} numberOfLines={1}>{u.user_name || 'مستخدم'}</Text>
-                          </View>
-                        ))}
-                      </ScrollView>
-                    </>
-                  )}
-
-                  {/* Sharers */}
-                  {Array.isArray(insightsPost.shared_by) && insightsPost.shared_by.length > 0 && (
-                    <>
-                      <SheetSection icon="share-social" title={`المشاركون (${insightsPost.shared_by.length})`} />
-                      {insightsPost.shared_by.slice(0, 15).map((sh: any, i: number) => (
-                        <View key={i} style={s.linkRow}>
-                          <Ionicons name="link" size={12} color={LP.GOLD} />
-                          <Text style={{ color: LP.TEXT, fontSize: 11, flex: 1, textAlign: 'right', marginHorizontal: 6 }} numberOfLines={1}>{sh.user_name || 'مستخدم'}</Text>
-                          <Text style={{ color: LP.MUTED, fontSize: 10 }}>{sh.platform || '—'}</Text>
-                        </View>
-                      ))}
-                    </>
-                  )}
-
-                  {/* Comments with direct reply */}
-                  <SheetSection icon="chatbubbles" title={`التعليقات (${Array.isArray(insightsPost.comments) ? insightsPost.comments.length : 0})`} />
-                  {Array.isArray(insightsPost.comments) && insightsPost.comments.map((c: any) => (
-                    <View key={c.id} style={s.commentCard}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ color: LP.GOLD, fontSize: 11, fontWeight: '900', textAlign: 'right' }}>{c.user_name}</Text>
-                        <Text style={{ color: LP.TEXT, fontSize: 12, marginTop: 2, textAlign: 'right' }}>{c.text}</Text>
-                        {!!c.store_reply && (
-                          <View style={s.storeReply}>
-                            <Ionicons name="checkmark-circle" size={11} color={LP.GOLD} />
-                            <Text style={{ color: LP.GOLD, fontSize: 11, fontWeight: '700', flex: 1, textAlign: 'right', marginHorizontal: 4 }}>{c.store_reply}</Text>
-                          </View>
-                        )}
+            {/* Tabs */}
+            {insightsPost && (
+              <View style={s.insightsTabRow}>
+                {[
+                  { k: 'stats', l: 'نظرة عامة', i: 'stats-chart', count: null },
+                  { k: 'likers', l: 'المُعجبون', i: 'heart', count: (insightsDetail?.likers || insightsPost.liked_by || []).length },
+                  { k: 'comments', l: 'التعليقات', i: 'chatbubbles', count: (insightsDetail?.comments || insightsPost.comments || []).length },
+                  { k: 'sharers', l: 'المشاركات', i: 'share-social', count: (insightsDetail?.sharers || insightsPost.shared_by || []).length },
+                ].map((t: any) => (
+                  <TouchableOpacity key={t.k} onPress={() => setInsightsTab(t.k)} style={[s.insightsTab, insightsTab === t.k && s.insightsTabActive]}>
+                    <Ionicons name={t.i as any} size={12} color={insightsTab === t.k ? LP.BG : LP.MUTED} />
+                    <Text style={[s.insightsTabText, insightsTab === t.k && { color: LP.BG, fontWeight: '900' }]}>{t.l}</Text>
+                    {t.count != null && t.count > 0 && (
+                      <View style={[s.tabBadge, insightsTab === t.k && { backgroundColor: LP.BG + 'AA' }]}>
+                        <Text style={[s.tabBadgeText, insightsTab === t.k && { color: LP.GOLD }]}>{t.count}</Text>
                       </View>
-                      {!c.store_reply && (
-                        <TouchableOpacity style={s.replyBtnMerc} onPress={() => { setReplying({ postId: insightsPost.id, commentId: c.id, commentText: c.text }); setReplyText(''); }}>
-                          <Ionicons name="arrow-undo" size={11} color={LP.BG} />
-                          <Text style={{ color: LP.BG, fontSize: 10, fontWeight: '900' }}>رد</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  ))}
-                  {(!insightsPost.comments || insightsPost.comments.length === 0) && (
-                    <Text style={{ color: LP.MUTED, textAlign: 'center', padding: 20 }}>لا توجد تعليقات بعد</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
+              {insightsLoading && <ActivityIndicator color={LP.GOLD} style={{ marginTop: 40 }} />}
+              {!insightsLoading && insightsPost && (
+                <>
+                  {insightsTab === 'stats' && (
+                    <>
+                      <View style={s.previewCard}>
+                        {(insightsPost.image || insightsPost.images?.[0]) && (
+                          <Image source={{ uri: insightsPost.image || insightsPost.images[0] }} style={{ width: '100%', height: 150, borderRadius: 12, marginBottom: 8 }} />
+                        )}
+                        {!!insightsPost.text && <Text style={{ color: LP.TEXT, fontSize: 13, textAlign: 'right' }} numberOfLines={3}>{insightsPost.text}</Text>}
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                        <StatMini icon="eye" label="مشاهدات" value={KM(insightsDetail?.kpis?.views ?? insightsPost.views ?? 0)} color={LP.INFO} onPress={null} />
+                        <StatMini icon="heart" label="إعجابات" value={KM(insightsDetail?.kpis?.likes ?? insightsPost.likes ?? 0)} color="#EF4444" onPress={() => setInsightsTab('likers')} />
+                        <StatMini icon="chatbubble" label="تعليقات" value={KM(insightsDetail?.kpis?.comment_count ?? (insightsPost.comments || []).length)} color={LP.WARN} onPress={() => setInsightsTab('comments')} />
+                        <StatMini icon="share-social" label="مشاركات" value={KM(insightsDetail?.kpis?.shares ?? insightsPost.shares ?? 0)} color={LP.SUCCESS} onPress={() => setInsightsTab('sharers')} />
+                      </View>
+                    </>
+                  )}
+
+                  {insightsTab === 'likers' && (
+                    <LikersView likers={insightsDetail?.likers || insightsPost.liked_by || []} totalLikes={insightsDetail?.kpis?.likes ?? insightsPost.likes ?? 0} />
+                  )}
+
+                  {insightsTab === 'sharers' && (
+                    <SharersView sharers={insightsDetail?.sharers || insightsPost.shared_by || []} totalShares={insightsDetail?.kpis?.shares ?? insightsPost.shares ?? 0} />
+                  )}
+
+                  {insightsTab === 'comments' && (
+                    <CommentsView
+                      comments={insightsDetail?.comments || insightsPost.comments || []}
+                      onReply={(c: any) => { setReplying({ postId: insightsPost.id, commentId: c.id, commentText: c.text, userName: c.user_name }); setReplyText(''); }}
+                    />
                   )}
                 </>
               )}
@@ -353,7 +368,7 @@ export default function MerchantSocialFeed({ apiCall }: any) {
           <View style={[s.sheet, { maxHeight: '70%' }]}>
             <View style={s.sheetHandle} />
             <View style={{ padding: 16 }}>
-              <Text style={s.sheetTitle}>رد باسم المتجر ✨</Text>
+              <Text style={s.sheetTitle}>رد على {replying?.userName || 'التعليق'} باسم المتجر ✨</Text>
               {replying && (
                 <View style={s.commentPreview}>
                   <Text style={{ color: LP.MUTED, fontSize: 11, textAlign: 'right' }}>تعليق العميل:</Text>
@@ -380,15 +395,177 @@ export default function MerchantSocialFeed({ apiCall }: any) {
 }
 
 /* ─────── HELPERS ─────── */
-function StatMini({ icon, label, value, color }: any) {
+function StatMini({ icon, label, value, color, onPress }: any) {
+  const Wrap: any = onPress ? TouchableOpacity : View;
   return (
-    <View style={s.statMini}>
+    <Wrap onPress={onPress} activeOpacity={0.75} style={s.statMini}>
       <View style={[s.statIcon, { backgroundColor: color + '25' }]}>
         <Ionicons name={icon} size={16} color={color} />
       </View>
       <Text style={{ color: LP.TEXT, fontSize: 18, fontWeight: '900', textAlign: 'right' }}>{value}</Text>
       <Text style={{ color: LP.MUTED, fontSize: 10, textAlign: 'right' }}>{label}</Text>
-    </View>
+      {onPress && (
+        <View style={{ position: 'absolute', bottom: 6, left: 6 }}>
+          <Ionicons name="chevron-back" size={12} color={LP.MUTED} />
+        </View>
+      )}
+    </Wrap>
+  );
+}
+
+function LikersView({ likers, totalLikes }: any) {
+  const showing = likers?.length || 0;
+  if (showing === 0) {
+    return (
+      <View style={{ alignItems: 'center', padding: 40 }}>
+        <Ionicons name="heart-outline" size={40} color={LP.MUTED} />
+        <Text style={{ color: LP.MUTED, marginTop: 8 }}>لم يعجب أحد بعد</Text>
+      </View>
+    );
+  }
+  return (
+    <>
+      <View style={s.headerNote}>
+        <Ionicons name="heart" size={14} color="#EF4444" />
+        <Text style={s.headerNoteText}>{totalLikes.toLocaleString('ar-SA')} إعجاب — عرض {showing} مستخدم</Text>
+      </View>
+      {likers.map((u: any, i: number) => (
+        <View key={u.user_id || i} style={s.userRow}>
+          <View style={[s.userAvatar, { backgroundColor: '#EF4444' + '30' }]}>
+            {u.user_avatar ? <Image source={{ uri: u.user_avatar }} style={{ width: 40, height: 40, borderRadius: 20 }} /> :
+              <Text style={{ color: '#EF4444', fontWeight: '900', fontSize: 14 }}>{(u.user_name || '?')[0]}</Text>}
+          </View>
+          <View style={{ flex: 1, marginHorizontal: 10 }}>
+            <Text style={s.userName}>{u.user_name || 'مستخدم'}</Text>
+            <Text style={s.userMeta}>❤️ {timeAgo(u.created_at)}</Text>
+          </View>
+          <Ionicons name="heart" size={16} color="#EF4444" />
+        </View>
+      ))}
+    </>
+  );
+}
+
+const PLATFORM_META: any = {
+  tiktok:    { icon: 'logo-tiktok',    color: '#FE2C55', label: 'تيك توك' },
+  snapchat:  { icon: 'logo-snapchat',  color: '#FFFC00', label: 'سناب شات' },
+  instagram: { icon: 'logo-instagram', color: '#E1306C', label: 'إنستقرام' },
+  whatsapp:  { icon: 'logo-whatsapp',  color: '#25D366', label: 'واتساب' },
+  twitter:   { icon: 'logo-twitter',   color: '#1DA1F2', label: 'إكس' },
+  copy_link: { icon: 'link',           color: LP.GOLD,   label: 'نسخ الرابط' },
+};
+
+function SharersView({ sharers, totalShares }: any) {
+  if (!sharers || sharers.length === 0) {
+    return (
+      <View style={{ alignItems: 'center', padding: 40 }}>
+        <Ionicons name="share-social-outline" size={40} color={LP.MUTED} />
+        <Text style={{ color: LP.MUTED, marginTop: 8 }}>لم يشارك أحد المنشور بعد</Text>
+      </View>
+    );
+  }
+  // Group by platform
+  const groups: any = {};
+  sharers.forEach((sh: any) => {
+    const p = sh.platform || 'copy_link';
+    if (!groups[p]) groups[p] = [];
+    groups[p].push(sh);
+  });
+  const entries = Object.entries(groups).sort((a: any, b: any) => b[1].length - a[1].length);
+  return (
+    <>
+      <View style={s.headerNote}>
+        <Ionicons name="share-social" size={14} color={LP.SUCCESS} />
+        <Text style={s.headerNoteText}>{totalShares.toLocaleString('ar-SA')} مشاركة إجمالية — عرض {sharers.length} مستخدم</Text>
+      </View>
+      {/* Platform summary chips */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 6, marginBottom: 8 }}>
+        {entries.map(([plat, list]: any) => {
+          const meta = PLATFORM_META[plat] || PLATFORM_META.copy_link;
+          return (
+            <View key={plat} style={[s.platformChip, { borderColor: meta.color, backgroundColor: meta.color + '15' }]}>
+              <Ionicons name={meta.icon} size={12} color={meta.color} />
+              <Text style={[s.platformChipText, { color: meta.color }]}>{meta.label}</Text>
+              <View style={[s.platformCount, { backgroundColor: meta.color }]}>
+                <Text style={{ color: '#0B0C10', fontSize: 10, fontWeight: '900' }}>{list.length}</Text>
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
+      {/* Grouped list */}
+      {entries.map(([plat, list]: any) => {
+        const meta = PLATFORM_META[plat] || PLATFORM_META.copy_link;
+        return (
+          <View key={plat} style={{ marginBottom: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <View style={[s.platformIcon2, { backgroundColor: meta.color + '25' }]}>
+                <Ionicons name={meta.icon} size={12} color={meta.color} />
+              </View>
+              <Text style={[s.groupTitle, { color: meta.color }]}>{meta.label} ({list.length})</Text>
+            </View>
+            {list.map((sh: any, i: number) => (
+              <View key={i} style={s.userRow}>
+                <View style={[s.userAvatar, { backgroundColor: meta.color + '30' }]}>
+                  <Text style={{ color: meta.color, fontWeight: '900', fontSize: 14 }}>{(sh.user_name || '?')[0]}</Text>
+                </View>
+                <View style={{ flex: 1, marginHorizontal: 10 }}>
+                  <Text style={s.userName}>{sh.user_name || 'مستخدم'}</Text>
+                  <Text style={s.userMeta}>شارك عبر {meta.label} · {timeAgo(sh.created_at)}</Text>
+                </View>
+                <Ionicons name={meta.icon} size={16} color={meta.color} />
+              </View>
+            ))}
+          </View>
+        );
+      })}
+    </>
+  );
+}
+
+function CommentsView({ comments, onReply }: any) {
+  if (!comments || comments.length === 0) {
+    return (
+      <View style={{ alignItems: 'center', padding: 40 }}>
+        <Ionicons name="chatbubbles-outline" size={40} color={LP.MUTED} />
+        <Text style={{ color: LP.MUTED, marginTop: 8 }}>لا توجد تعليقات بعد</Text>
+      </View>
+    );
+  }
+  const unread = comments.filter((c: any) => !c.store_reply).length;
+  return (
+    <>
+      <View style={s.headerNote}>
+        <Ionicons name="chatbubbles" size={14} color={LP.WARN} />
+        <Text style={s.headerNoteText}>{comments.length} تعليق — {unread} يحتاج رد</Text>
+      </View>
+      {comments.map((c: any) => (
+        <View key={c.id} style={s.commentCard}>
+          <View style={[s.userAvatar, { backgroundColor: LP.GOLD + '30', width: 36, height: 36, borderRadius: 18 }]}>
+            <Text style={{ color: LP.GOLD, fontWeight: '900', fontSize: 13 }}>{(c.user_name || '?')[0]}</Text>
+          </View>
+          <View style={{ flex: 1, marginHorizontal: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ color: LP.GOLD, fontSize: 12, fontWeight: '900' }}>{c.user_name}</Text>
+              <Text style={{ color: LP.MUTED, fontSize: 10 }}>· {timeAgo(c.created_at)}</Text>
+            </View>
+            <Text style={{ color: LP.TEXT, fontSize: 12, marginTop: 3, textAlign: 'right' }}>{c.text}</Text>
+            {!!c.store_reply && (
+              <View style={s.storeReply}>
+                <Ionicons name="checkmark-circle" size={11} color={LP.GOLD} />
+                <Text style={{ color: LP.GOLD, fontSize: 11, fontWeight: '700', flex: 1, textAlign: 'right', marginHorizontal: 4 }}>ردّ المتجر: {c.store_reply}</Text>
+              </View>
+            )}
+            {!c.store_reply && (
+              <TouchableOpacity style={s.replyBtnMerc} onPress={() => onReply(c)}>
+                <Ionicons name="arrow-undo" size={11} color={LP.BG} />
+                <Text style={{ color: LP.BG, fontSize: 10, fontWeight: '900' }}>رد باسم المتجر</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      ))}
+    </>
   );
 }
 
@@ -488,4 +665,25 @@ const s = StyleSheet.create({
   replyInput: { backgroundColor: LP.CARD, borderWidth: 1, borderColor: LP.BORDER, color: LP.TEXT, borderRadius: 12, padding: 12, textAlign: 'right', minHeight: 90, marginTop: 12 },
   btnGhost: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, backgroundColor: LP.CARD, borderWidth: 1, borderColor: LP.BORDER },
   btnPrimary: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 12, backgroundColor: LP.GOLD },
+
+  // Insights tabs
+  insightsTabRow: { flexDirection: 'row', gap: 4, paddingHorizontal: 10, paddingTop: 8, paddingBottom: 4 },
+  insightsTab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, backgroundColor: LP.CARD_2, borderWidth: 1, borderColor: LP.BORDER_SOFT, paddingVertical: 8, borderRadius: 999 },
+  insightsTabActive: { backgroundColor: LP.GOLD, borderColor: LP.GOLD },
+  insightsTabText: { color: LP.MUTED, fontSize: 10, fontWeight: '700' },
+  tabBadge: { minWidth: 16, height: 16, paddingHorizontal: 3, borderRadius: 8, backgroundColor: LP.GOLD, alignItems: 'center', justifyContent: 'center' },
+  tabBadgeText: { color: LP.BG, fontSize: 9, fontWeight: '900' },
+
+  // User rows for likers/sharers/comments
+  headerNote: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: LP.CARD_2, borderWidth: 1, borderColor: LP.BORDER_SOFT, padding: 10, borderRadius: 12, marginBottom: 10 },
+  headerNoteText: { color: LP.TEXT, fontSize: 12, fontWeight: '700', flex: 1, textAlign: 'right' },
+  userRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: LP.CARD_2, borderWidth: 1, borderColor: LP.BORDER_SOFT, padding: 10, borderRadius: 12, marginBottom: 6 },
+  userAvatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  userName: { color: LP.TEXT, fontSize: 12, fontWeight: '800', textAlign: 'right' },
+  userMeta: { color: LP.MUTED, fontSize: 10, textAlign: 'right', marginTop: 2 },
+  platformChip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  platformChipText: { fontSize: 11, fontWeight: '900' },
+  platformCount: { minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  platformIcon2: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  groupTitle: { fontSize: 11, fontWeight: '900', flex: 1, textAlign: 'right' },
 });

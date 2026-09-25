@@ -4888,42 +4888,54 @@ async def competitions_overview(user=Depends(get_current_user)):
 # ─── Social post detail (merchant super-view) ───
 @api_router.get("/merchant/social/posts/{pid}/detail")
 async def merchant_post_detail(pid: str, user=Depends(get_current_user)):
-    """Full detail of a post — viewers, likers, comments with replies, poll voters."""
+    """Full detail of a post — viewers, likers, sharers, comments with replies, poll voters."""
     if user.get("role") not in ("merchant", "chamber"):
         raise HTTPException(403, "Merchants only")
     post = await db.social_posts.find_one({"_id": ObjectId(pid)}) if ObjectId.is_valid(pid) else None
     if not post:
         raise HTTPException(404, "Post not found")
     post = serialize_doc(post)
-    # Sort viewers/likers latest-first
     viewers = post.get("viewers", []) or []
-    likers = post.get("likers", []) or []
+    # Support both "likers" and "liked_by" for backward-compat
+    likers = (post.get("likers") or post.get("liked_by") or [])
+    # Sharers can be stored as "sharers" or "shared_by"
+    sharers = (post.get("sharers") or post.get("shared_by") or [])
     comments = post.get("comments", []) if isinstance(post.get("comments"), list) else []
     poll = post.get("poll") or {}
-    # Enrich poll options with vote breakdown by user
     if poll.get("options") and poll.get("voters"):
         for i, opt in enumerate(poll["options"]):
             opt["voter_list"] = poll["voters"].get(str(i), [])[:100]
+    # Normalize sharer records to have created_at from possible aliases
+    for sh in sharers:
+        if not sh.get("created_at"):
+            sh["created_at"] = sh.get("shared_at", "")
+    for lk in likers:
+        if not lk.get("created_at"):
+            lk["created_at"] = lk.get("liked_at", "")
     return {
         "post": {
             "id": post.get("id"),
-            "author_name": post.get("author_name"),
+            "author_name": post.get("author_name") or post.get("author"),
             "text": post.get("text"),
             "images": post.get("images", []),
+            "image": post.get("image"),
             "created_at": post.get("created_at"),
-            "likes": post.get("likes", 0),
+            "likes": post.get("likes", len(likers)),
             "views": post.get("views", 0),
+            "shares": post.get("shares", len(sharers)),
         },
         "kpis": {
-            "views": len(viewers),
+            "views": post.get("views", len(viewers)),
             "unique_viewers": len({v.get("user_id") for v in viewers if v.get("user_id")}),
-            "likes": len(likers),
+            "likes": post.get("likes", len(likers)),
+            "shares": post.get("shares", len(sharers)),
             "comment_count": len(comments),
             "reply_count": sum(len(c.get("replies", []) or []) for c in comments),
             "answered_comments": sum(1 for c in comments if c.get("store_reply")),
         },
         "viewers": sorted(viewers, key=lambda x: x.get("viewed_at", ""), reverse=True)[:100],
-        "likers": sorted(likers, key=lambda x: x.get("liked_at", ""), reverse=True)[:100],
+        "likers": sorted(likers, key=lambda x: x.get("created_at", ""), reverse=True)[:100],
+        "sharers": sorted(sharers, key=lambda x: x.get("created_at", ""), reverse=True)[:100],
         "comments": sorted(comments, key=lambda x: x.get("created_at", ""), reverse=True),
         "poll": poll,
     }
@@ -5776,6 +5788,176 @@ async def export_entity_report(kind: str, entity_id: str, user=Depends(get_curre
     return HTMLResponse(_pdf_html_wrap(title, body))
 
 
+# ─── Live Preview: Seed rich analytics data (idempotent) ─────
+async def _seed_preview_analytics():
+    """Seed realistic analytics data if missing so the merchant preview never shows all zeros."""
+    import random as _r
+    # 1) Product views + orders + invoices for a few top products
+    products = await db.products.find({}).limit(8).to_list(8)
+    branches_all = await db.branches.find({}).to_list(10)
+    if not products or not branches_all:
+        return
+
+    existing_views = await db.product_views.count_documents({})
+    if existing_views < 30:
+        arabic_names = ["أحمد الحربي", "فيصل السالم", "سارة الفهد", "بندر النعيم", "منى العتيبي", "خالد الشمري", "هند المطيري", "لولوة الغامدي", "سلطان العنزي", "نورة الدوسري"]
+        cities = ["الرياض", "جدة", "الدمام", "مكة", "المدينة", "الطائف", "أبها", "تبوك"]
+        for p in products:
+            pid = str(p["_id"])
+            for _ in range(_r.randint(8, 25)):
+                added_to_cart = _r.random() < 0.35
+                reached_checkout = added_to_cart and _r.random() < 0.55
+                await db.product_views.insert_one({
+                    "product_id": pid,
+                    "user_id": f"demo_user_{_r.randint(1, 30)}",
+                    "user_name": _r.choice(arabic_names),
+                    "user_city": _r.choice(cities),
+                    "duration_seconds": _r.randint(15, 240),
+                    "added_to_cart": added_to_cart,
+                    "reached_checkout": reached_checkout,
+                    "source": _r.choice(["direct", "direct", "social", "link", "referral", "ad"]),
+                    "created_at": (datetime.now(timezone.utc) - timedelta(days=_r.randint(0, 30), hours=_r.randint(0, 23))).isoformat(),
+                })
+
+    # 2) Orders and invoices for revenue analytics
+    existing_invoices = await db.invoices.count_documents({})
+    if existing_invoices < 20:
+        for _ in range(30):
+            p = _r.choice(products)
+            b = _r.choice(branches_all)
+            qty = _r.randint(1, 3)
+            price = float(p.get("price", 100))
+            await db.invoices.insert_one({
+                "branch_id": str(b["_id"]),
+                "branch_name": b.get("name"),
+                "cashier_id": "",
+                "customer_name": _r.choice(["زبون فرع", "أبو محمد", "أم سارة", "خالد", "نورة"]),
+                "items": [{"product_id": str(p["_id"]), "name": p.get("name_ar"), "price": price, "quantity": qty}],
+                "total": round(price * qty, 2),
+                "created_at": (datetime.now(timezone.utc) - timedelta(days=_r.randint(0, 30), hours=_r.randint(0, 23))).isoformat(),
+            })
+    existing_orders = await db.orders.count_documents({})
+    if existing_orders < 15:
+        for _ in range(20):
+            p = _r.choice(products)
+            b = _r.choice(branches_all)
+            qty = _r.randint(1, 2)
+            price = float(p.get("price", 100))
+            await db.orders.insert_one({
+                "user_id": f"demo_customer_{_r.randint(1, 20)}",
+                "user_name": _r.choice(["أحمد", "سارة", "خالد", "منى", "بندر"]),
+                "customer_name": _r.choice(["أحمد", "سارة", "خالد", "منى", "بندر"]),
+                "branch_id": str(b["_id"]),
+                "branch_name": b.get("name"),
+                "items": [{"product_id": str(p["_id"]), "name": p.get("name_ar"), "price": price, "quantity": qty}],
+                "total": round(price * qty, 2),
+                "status": _r.choice(["delivered", "delivered", "delivered", "in_transit", "processing"]),
+                "source": _r.choice(["app", "app", "social", "ad"]),
+                "created_at": (datetime.now(timezone.utc) - timedelta(days=_r.randint(0, 25), hours=_r.randint(0, 23))).isoformat(),
+            })
+
+    # 3) Competition entries
+    comps = await db.competitions.find({}).to_list(10)
+    for c in comps:
+        cid = str(c["_id"])
+        existing = await db.competition_entries.count_documents({"competition_id": cid})
+        if existing >= 15:
+            continue
+        arabic_names = ["أحمد الحربي", "فيصل السالم", "سارة الفهد", "بندر النعيم", "منى العتيبي", "خالد الشمري", "هند المطيري", "لولوة الغامدي", "سلطان العنزي", "نورة الدوسري", "طلال الحسن", "دانة الزهراني"]
+        cities = ["الرياض", "جدة", "الدمام", "مكة", "المدينة", "الطائف", "أبها", "تبوك"]
+        for i in range(_r.randint(25, 60)):
+            await db.competition_entries.insert_one({
+                "competition_id": cid,
+                "user_id": f"comp_user_{i}",
+                "user_name": _r.choice(arabic_names),
+                "user_phone": f"05{_r.randint(10, 99)}{_r.randint(100000, 999999)}",
+                "user_city": _r.choice(cities),
+                "source": _r.choice(["link", "organic", "organic", "social_share", "push", "social_share"]),
+                "created_at": (datetime.now(timezone.utc) - timedelta(days=_r.randint(0, 20), hours=_r.randint(0, 23), minutes=_r.randint(0, 59))).isoformat(),
+            })
+
+    # 4) Enrich social posts with likers, sharers, comments
+    posts = await db.social_posts.find({}).to_list(20)
+    for post in posts:
+        pid = post["_id"]
+        likers = post.get("liked_by") or []
+        if len(likers) < 8:
+            demo_likers = [
+                {"user_id": f"liker_{i}", "user_name": _r.choice(["أحمد", "سارة", "خالد", "منى", "بندر", "نورة", "طلال", "لولوة", "فيصل", "هند"]),
+                 "user_avatar": "", "created_at": (datetime.now(timezone.utc) - timedelta(hours=_r.randint(0, 72))).isoformat()}
+                for i in range(_r.randint(15, 35))
+            ]
+            await db.social_posts.update_one({"_id": pid}, {"$set": {"liked_by": demo_likers, "likes": len(demo_likers) * _r.randint(50, 400)}})
+        sharers = post.get("shared_by") or []
+        if len(sharers) < 5:
+            platforms = ["tiktok", "snapchat", "instagram", "whatsapp", "twitter", "copy_link"]
+            demo_sharers = [
+                {"user_id": f"sharer_{i}", "user_name": _r.choice(["مشعل", "ريما", "عبدالله", "دانة", "يارا", "تركي", "وفاء"]),
+                 "platform": _r.choice(platforms),
+                 "created_at": (datetime.now(timezone.utc) - timedelta(hours=_r.randint(0, 72))).isoformat()}
+                for i in range(_r.randint(6, 15))
+            ]
+            await db.social_posts.update_one({"_id": pid}, {"$set": {"shared_by": demo_sharers, "shares": len(demo_sharers) * _r.randint(10, 80)}})
+        comments = post.get("comments") if isinstance(post.get("comments"), list) else []
+        if len(comments) < 3:
+            demo_comments = [
+                {"id": str(ObjectId()), "user_id": f"c_{i}", "user_name": _r.choice(["أحمد", "سارة", "خالد", "منى", "طلال", "نورة"]),
+                 "text": _r.choice([
+                     "منتج ممتاز، اشتريته وأنصح فيه 👍",
+                     "متى نزل المخزون؟ أبيه ضروري",
+                     "السعر مناسب جدا",
+                     "شكراً على الخدمة الرائعة ❤️",
+                     "الجودة ممتازة، شكراً Zenrex",
+                     "هل يتوفر باللون الأزرق؟",
+                     "أفضل متجر في المملكة!",
+                 ]),
+                 "store_reply": "",
+                 "created_at": (datetime.now(timezone.utc) - timedelta(hours=_r.randint(0, 48))).isoformat()}
+                for i in range(_r.randint(4, 10))
+            ]
+            await db.social_posts.update_one({"_id": pid}, {"$set": {"comments": demo_comments, "views": _r.randint(500, 3000)}})
+
+
+@api_router.post("/merchant/live-preview/seed-demo")
+async def seed_demo_now(user=Depends(get_current_user)):
+    """Manually trigger seeding of demo analytics data. For dev use."""
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    # 5) Service bookings and reviews
+    import random as _r
+    services = await db.services.find({}).to_list(10)
+    if services:
+        for svc in services:
+            sid = str(svc["_id"])
+            existing_book = await db.service_bookings.count_documents({"service_id": sid})
+            if existing_book < 5:
+                arabic_names = ["أحمد", "سارة", "خالد", "منى", "بندر", "نورة", "طلال", "دانة", "فيصل", "هند"]
+                statuses = ["completed", "completed", "completed", "in_progress", "pending", "delivered"]
+                for i in range(_r.randint(6, 15)):
+                    created = datetime.now(timezone.utc) - timedelta(days=_r.randint(0, 30), hours=_r.randint(1, 20))
+                    st = _r.choice(statuses)
+                    completed_at = (created + timedelta(hours=_r.randint(2, 48))).isoformat() if st in ("completed", "delivered") else ""
+                    await db.service_bookings.insert_one({
+                        "service_id": sid, "user_id": f"svc_user_{i}", "user_name": _r.choice(arabic_names),
+                        "status": st, "total_fee": float(svc.get("base_price", 100)) * _r.randint(1, 2),
+                        "technician_id": "", "created_at": created.isoformat(), "completed_at": completed_at,
+                    })
+            existing_rev = await db.service_reviews.count_documents({"service_id": sid, "update_id": ""})
+            if existing_rev < 3:
+                comments_pool = ["خدمة ممتازة جداً، سرعة وإتقان! 🌟", "أفضل مركز صيانة", "الأسعار مناسبة والجودة عالية",
+                                 "الفني محترف وأنجز بسرعة", "شكرا Zenrex ❤️", "أنصح فيهم بشدة"]
+                for i in range(_r.randint(4, 10)):
+                    await db.service_reviews.insert_one({
+                        "service_id": sid, "user_id": f"svc_rev_user_{i}",
+                        "user_name": _r.choice(["أحمد الحربي", "سارة الفهد", "خالد النعيم", "منى العتيبي", "بندر", "نورة", "لولوة"]),
+                        "stars": _r.choices([5, 5, 4, 4, 5, 3], k=1)[0],
+                        "comment": _r.choice(comments_pool), "update_id": "", "merchant_reply": "",
+                        "created_at": (datetime.now(timezone.utc) - timedelta(days=_r.randint(0, 20))).isoformat(),
+                    })
+    await _seed_preview_analytics()
+    return {"ok": True}
+
+
 app.include_router(api_router)
 
 # ─── Object Storage router (Emergent Managed) ───
@@ -5788,6 +5970,10 @@ except Exception as _e:
 @app.on_event("startup")
 async def startup():
     await seed_data()
+    try:
+        await _seed_preview_analytics()
+    except Exception as e:
+        logger.warning(f"Preview analytics seed failed (non-fatal): {e}")
     try:
         _init_storage()
         logger.info("Object storage initialized")

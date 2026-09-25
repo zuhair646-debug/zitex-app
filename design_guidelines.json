@@ -1,40 +1,40 @@
 {
-  "app_name": "Zenrex Store - Merchant Admin",
+  "app_name": "Zenrex Store Merchant Live Preview",
   "personality": "6 Glass / Luxe DARK",
-  "personality_one_liner": "An ultra-premium, cinematic dark-mode command center where golden accents illuminate deep analytics and every entity is a touch away.",
+  "personality_one_liner": "A cinematic, expensive, and hyper-transparent command center wrapped in smoked glass and antique gold.",
   "color": {
     "surface": "#080808",
-    "onSurface": "#FFFFFF",
-    "surfaceSecondary": "#141414",
+    "onSurface": "#F5F5F5",
+    "surfaceSecondary": "#151515",
     "onSurfaceSecondary": "#E0E0E0",
-    "surfaceTertiary": "#1F1F1F",
-    "onSurfaceTertiary": "#B3B3B3",
-    "surfaceInverse": "#FFFFFF",
-    "onSurfaceInverse": "#000000",
+    "surfaceTertiary": "#222222",
+    "onSurfaceTertiary": "#CCCCCC",
+    "surfaceInverse": "#FAFAFA",
+    "onSurfaceInverse": "#0A0A0A",
     "brand": "#D4AF37",
     "brandPrimary": "#D4AF37",
-    "onBrandPrimary": "#000000",
-    "brandSecondary": "#B8962E",
-    "onBrandSecondary": "#000000",
-    "brandTertiary": "#332A0D",
-    "onBrandTertiary": "#D4AF37",
-    "success": "#10B981",
-    "onSuccess": "#000000",
-    "warning": "#F59E0B",
-    "onWarning": "#000000",
-    "error": "#EF4444",
-    "onError": "#FFFFFF",
-    "info": "#3B82F6",
-    "onInfo": "#FFFFFF",
-    "border": "#262626",
-    "borderStrong": "#404040",
+    "onBrandPrimary": "#0A0A0A",
+    "brandSecondary": "#C5A017",
+    "onBrandSecondary": "#0A0A0A",
+    "brandTertiary": "#4A3E10",
+    "onBrandTertiary": "#EADD9B",
+    "success": "#2E4A2E",
+    "onSuccess": "#95C795",
+    "warning": "#5A4A1E",
+    "onWarning": "#D4B86A",
+    "error": "#5C2020",
+    "onError": "#E08585",
+    "info": "#2B2B2B",
+    "onInfo": "#B0B0B0",
+    "border": "#222222",
+    "borderStrong": "#333333",
     "divider": "#1A1A1A",
-    "muted": "#808080",
+    "muted": "#7A7A7A",
     "onBrand": "#000000"
   },
   "typography": {
-    "displayFontFamily": "Tajawal",
-    "textFontFamily": "Tajawal",
+    "displayFontFamily": "Fraunces",
+    "textFontFamily": "Switzer",
     "scale": {
       "sm": 12,
       "base": 14,
@@ -44,7 +44,7 @@
     }
   },
   "spacing": {
-    "rule": "Generous vertical breathing room for cinematic feel; tight grouping within KPI clusters.",
+    "rule": "Generous cinematic spacing. Content must breathe. Use md/lg for internal card padding, xl for section separation.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -59,19 +59,19 @@
     "lg": 20,
     "pill": 999
   },
-  "shadow_tier": "1",
+  "shadow_tier": "0",
   "navigation": "bottom_tabs",
-  "icon_set": "Ionicons",
+  "icon_set": "Phosphor",
   "glassmorphism": {
     "enabled": "true",
     "do's": [
-      "Use heavy tinted glass (bg-black/70 + strong blur) for Detail Sheets and Modal Headers.",
-      "Apply glass to the Merchant Social Overlay pills to keep the UGC content visible.",
-      "Use subtle glass for the bottom tab bar to let scrolling content peek through."
+      "Use heavy glass (expo-blur) over brandTertiary tint for all bottom sheets and drawer overlays",
+      "Apply frosted glass to the warranty badge on Services",
+      "Use glass headers for sheets that scroll"
     ],
     "dont's": [
-      "Do not use glass for dense KPI text containers or basic list items.",
-      "Avoid stacking more than two glass layers."
+      "Do not blur dense form fields or reply inputs",
+      "Do not stack more than 2 glass surfaces (e.g., sheet + sticky header is max)"
     ]
   },
   "platform_libraries": {
@@ -88,70 +88,41 @@
   },
   "screens": [
     {
-      "name": "Live Preview Tab Bar",
-      "purpose": "Global RTL navigation for the merchant view.",
+      "name": "LivePreview_Tabs",
+      "purpose": "Provides complete transparency and rich drill-down capabilities into every merchant vertical without dead-ends.",
       "states": {
-        "loading": "N/A",
-        "empty": "N/A",
-        "error": "N/A"
+        "loading": "Cinematic shimmer skeleton across widgets, ensuring the frame remains dark and stable.",
+        "empty": "Gold-tinted abstract illustrations with a distinct call to action.",
+        "error": "Frosted glass error card with a 'إعادة المحاولة' (Retry) primary CTA."
       },
-      "layout": "RTL strict alignment. Tabs from Right to Left: المتجر (Store - Default) -> الصيانة (Maintenance) -> المسابقات (Competitions) -> السوشيال ميديا (Social Media) -> العام (General). Icons are filled when active (Gold), outlined when inactive (muted gray). Glassmorphic background."
-    },
-    {
-      "name": "General Tab Overview (العام)",
-      "purpose": "The main hub listing all key entities (Branches, Drivers, Marketers, Employees) as tappable summary cards.",
-      "states": {
-        "loading": "Shimmer skeletons for cards, maintaining the grid/list structure.",
-        "empty": "Gold-tinted minimalistic illustration of a magnifying glass over a document, text: 'لا توجد بيانات متاحة بعد' (No data available yet).",
-        "error": "Centered error text with a golden 'إعادة المحاولة' (Retry) button."
-      },
-      "layout": "Vertical scrolling view. Top: Horizontal scrollable segmented chips to filter (الكل, الفروع, السائقين, المسوقين, الموظفين). Below: Stacked Cards for each entity. Each card has an Avatar/Icon on the right (RTL), Title, 1-2 key metrics, and an arrow indicating drill-down capability. E.g., Driver card shows online status (green pulse ring)."
-    },
-    {
-      "name": "Entity Detail Sheets (Drill-downs)",
-      "purpose": "90% Gorhom Bottom Sheets providing deep, interconnected analytics for a tapped entity.",
-      "states": {
-        "loading": "Centered gold spinner.",
-        "empty": "N/A - Data should be present if sheet opens.",
-        "error": "Toast message on failure to load deep stats."
-      },
-      "layout": "Glassmorphic header with close button. Header Section: Large Entity Avatar, Name, Status Pill. Middle Section: KPI grid (2-col or 3-col horizontal scroll). Dynamic Charts (Sparklines for Revenue, Ring charts for Internal vs App orders). Interconnectivity: Horizontal lists of connected entities (e.g., 'Staff on Shift' avatars inside Branch sheet) that push a new sheet when tapped."
-    },
-    {
-      "name": "Social Media Tab (السوشيال ميديا)",
-      "purpose": "1:1 visual clone of customer feed with added merchant analytics overlay.",
-      "states": {
-        "loading": "Standard feed loading skeleton.",
-        "empty": "Illustration of a camera/feed, text: 'لم تقم بنشر أي محتوى بعد' (No posts published yet).",
-        "error": "Retry prompt."
-      },
-      "layout": "Vertical infinite scroll of rich media cards. EXACT layout of customer social feed. Added UI: A top-left glassmorphic pill on each post showing quick stats (👁️ 1.2K). Added 'إحصائيات' (Insights) golden button on the action bar. Tapping Insights opens a Bottom Sheet with detailed engagement (List of users who liked/shared, link tracking, direct reply input)."
-    },
-    {
-      "name": "Supervisor System Flow",
-      "purpose": "Allows supervisors to add notes and ratings to Employee profiles.",
-      "states": {
-        "loading": "Button shows loading indicator during submission.",
-        "empty": "No notes: 'لا توجد ملاحظات المشرف' on the employee sheet.",
-        "error": "Error toast on submit failure."
-      },
-      "layout": "Triggered via Golden FAB 'إضافة تقييم/ملاحظة' on Employee Sheet. Opens a secondary stacked Bottom Sheet. Contains a 5-star rating (or sliders for specific metrics), a large text area (`surfaceTertiary` background), and a sticky full-width submit button at the bottom."
+      "layout": "Tab 1: Store (المتجر) - Fix Analytics sheet data binding.\nTab 2: Services (الخدمات) - Rich detail sheets triggered by full card tap.\nTab 3: Competitions (المسابقات) - Detail sheets covering participants, outcomes, and winners.\nTab 4: Social - Feed with transparent access to likers, sharers, and direct store replies.\nGlobal: Robust error boundaries for heatmap and drill-downs."
     }
   ],
   "images": {
-    "empty_state_general": {
-      "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop",
-      "dark": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop",
-      "alt": "Abstract minimalistic dark golden texture for empty states"
+    "empty_competitions": {
+      "url": "https://images.unsplash.com/photo-1633526543814-9718c8922b7a?auto=format&fit=crop&q=80&w=800",
+      "dark": "https://images.unsplash.com/photo-1633526543814-9718c8922b7a?auto=format&fit=crop&q=80&w=800",
+      "alt": "Abstract dark cinematic podium for empty competitions"
+    },
+    "empty_comments": {
+      "url": "https://images.unsplash.com/photo-1520697830682-8f19293a9035?auto=format&fit=crop&q=80&w=800",
+      "dark": "https://images.unsplash.com/photo-1520697830682-8f19293a9035?auto=format&fit=crop&q=80&w=800",
+      "alt": "Abstract floating dark glass for empty social interactions"
     }
   },
+  "haptics": {
+    "card_tap": "impactLight",
+    "sheet_open": "impactMedium",
+    "reply_submit": "notificationSuccess",
+    "like_press": "impactLight",
+    "error_state": "notificationError"
+  },
   "instructions_to_main_agent": [
-    "STRICT RTL ENFORCEMENT: All layouts must use flex-direction: row-reverse or be properly internationalized for Arabic. The Tab bar order MUST be (from right to left in UI): المتجر (Store) -> الصيانة (Maintenance) -> المسابقات (Competitions) -> السوشيال ميديا (Social Media) -> العام (General).",
-    "THEME: Implement 'Luxe Dark' strictly. Use deep obsidian (#080808) for backgrounds and Zenrex Gold (#D4AF37) for primary accents and active states. Do NOT use default blue or purple anywhere.",
-    "NAVIGATION GRAPH: The 'General' tab must act as a master list. Tapping a card must invoke a Gorhom Bottom Sheet for the drill-down (Driver, Branch, Marketer, Employee). These sheets must support stacked navigation (e.g., tapping an Employee from within a Branch sheet opens a new Employee sheet over it).",
-    "SOCIAL TAB: Re-use the existing customer social feed UI components but wrap them or inject a 'MerchantOverlay' component. This overlay is a glassmorphic pill showing stats, and triggers an 'Insights' bottom sheet for deep analytics.",
-    "COMPETITIVE EDGE 1 - AI Pulse: Add a subtle animated pulsing ring (using Reanimated) around active Drivers or highly active Branches to signify live data flow.",
-    "COMPETITIVE EDGE 2 - Haptic Charts: When implementing Sparklines or Area charts (using Victory Native or similar), attach gesture handlers that fire light haptics as the user scrubs over data points.",
-    "SUPERVISOR FLOW: Ensure the 'Add Note' capability uses a nested bottom sheet and clearly associates the created note with the specific employee. Use `surfaceTertiary` for input backgrounds."
+    "A. INTERACTION REPAIR: 1) Store Tab: Trace the '📊 إحصائيات' button in ProductsSection. The 'لا بيانات' state is triggering before data resolves. Add a skeleton loader in the sheet and fix the data prop passing. 2) Services & Competitions: Wrap the entire image/card in a Pressable. Tapping it must trigger 'ServiceDetailSheet' and 'CompetitionDetailSheet' respectively. Add a subtle 'اعرض التفاصيل' glass pill or chevron on the card as a tap hint.",
+    "B. CONTENT SECTIONS IN SHEETS: 1) ServiceDetailSheet: Header (Image + Glass Title) -> Quick KPIs -> Technician Info -> Reviews/Comments List -> Likers row. 2) CompetitionDetailSheet: Header -> Event Status/Outcome -> Winners & Prizes (if ended) -> Participants Funnel -> Comments.",
+    "C. DESIGN CORRECTIONS: In ServicesSection, locate the warranty badge ('ضمان 30 يوم'). Change its position to 'absolute', 'bottom: 12', 'right: 12' inside the image container. Use a glassmorphism pill (`expo-blur`) with `brandPrimary` text and an icon. Ensure `hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}` on all interactive badges.",
+    "D. COMPLETE TRANSPARENCY (SOCIAL): 1) LikersSheet: Triggered by tapping the '❤️ 12.4k' text. Show a bottom sheet with a FlatList of avatars, names, and timestamps. 2) SharersSheet: Show External Sharers categorized by platform (TikTok, Snap, IG, WA) with counts and user lists. 3) CommentsSheet: Implement a 'Reply as Store' form at the bottom of the comments list. Allow editing/deleting merchant replies.",
+    "E. EMPTY/ERROR STATES: Implement global ErrorBoundary for the 'General' tab to catch 'Not Found' 404s and replace infinite spinners with a 'بيانات غير متوفرة' state with a Retry button. For Heatmap, ensure it delays rendering until the container is measured (cold start fix).",
+    "F. DELIGHTFUL COMPETITIVE EDGE (MICRO-INTERACTIONS): When the merchant taps a user in the 'LikersSheet' or 'CommentsSheet', use Reanimated to expand that row inline instantly, revealing a gold-tinted mini-dashboard for that user: 'القيمة الدائمة (LTV): 450 SAR | الطلبات: 5 | القسم المفضل: عطور'. No extra network request if possible (mock inline), accompanied by a 'selection' haptic."
   ]
 }

@@ -50,7 +50,7 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.5 ✨</Text>
+        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.6 ✨</Text>
         <AlertsBell apiCall={apiCall} />
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
@@ -249,12 +249,13 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
           const selected = selectedIds.includes(item.id);
           return (
             <TouchableOpacity style={[s.pCard, selected && s.pCardSelected]}
+              activeOpacity={0.85}
               onPress={() => {
                 if (compareMode) { toggle(item.id); return; }
-                // Deep-link to the actual customer product page (with a preview flag)
-                router.push(`/product/${item.id}?preview=1` as any);
+                // In merchant preview: tap opens rich analytics (not customer page)
+                onAnalytics(item);
               }}
-              onLongPress={() => onAnalytics(item)}>
+              onLongPress={() => router.push(`/product/${item.id}?preview=1` as any)}>
               {!!item.images?.[0] && (
                 <Image source={{ uri: mediaUrlSync(item.images[0]) }} style={s.pImg} contentFit="cover" />
               )}
@@ -264,19 +265,15 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                   <Text style={s.pLiveText}>{liveCount}</Text>
                 </View>
               )}
-              {/* Analytics button — always visible tap target with expanded hit area */}
-              {!compareMode && (
-                <TouchableOpacity
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  activeOpacity={0.7}
-                  onPress={(e) => { e.stopPropagation(); onAnalytics(item); }}
-                  style={s.pAnalyticsBtn}>
-                  <Ionicons name="stats-chart" size={16} color={BG} />
-                </TouchableOpacity>
-              )}
               {compareMode && (
                 <View style={[s.checkbox, selected && s.checkboxOn]}>
                   {selected && <Ionicons name="checkmark" size={14} color={BG} />}
+                </View>
+              )}
+              {!compareMode && (
+                <View style={s.pDetailHint}>
+                  <Ionicons name="chevron-back" size={12} color={GOLD} />
+                  <Text style={s.pDetailHintText}>تفاصيل</Text>
                 </View>
               )}
               <View style={{ padding: 10 }}>
@@ -350,16 +347,9 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
         keyExtractor={(x, i) => x.id || String(i)}
         contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
         renderItem={({ item }) => (
-          <View style={s.svcCard2}>
+          <TouchableOpacity style={s.svcCard2} activeOpacity={0.85} onPress={() => onAnalytics && onAnalytics(item)}>
             {/* Cover image with badges */}
             <View style={{ position: 'relative' }}>
-              <TouchableOpacity
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                activeOpacity={0.7}
-                onPress={() => onAnalytics && onAnalytics(item)}
-                style={s.analyticsFloatBtn}>
-                <Ionicons name="stats-chart" size={18} color={BG} />
-              </TouchableOpacity>
               {(item.images?.[0] || item.cover || item.image) ? (
                 <Image source={{ uri: mediaUrlSync(item.images?.[0] || item.cover || item.image) }} style={s.svcCover} contentFit="cover" />
               ) : (
@@ -367,18 +357,28 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                   <Ionicons name="construct" size={40} color={GOLD} />
                 </View>
               )}
+              {/* Dark gradient overlay at bottom for readability */}
+              <LinearGradient colors={['transparent', 'rgba(11,12,16,0.85)']} style={s.svcOverlay} />
+
+              {/* Rating badge — top-right */}
               {(item.avg_rating || 0) > 0 && (
-                <View style={s.svcBadge}>
-                  <Ionicons name="star" size={12} color={BG} />
+                <View style={s.svcRatingBadge}>
+                  <Ionicons name="star" size={11} color={BG} />
                   <Text style={s.svcBadgeText}>{item.avg_rating}</Text>
                 </View>
               )}
+              {/* Warranty pill — inside dark overlay, bottom-right */}
               {!!item.warranty_available && (
-                <View style={[s.svcBadge, { top: 8, left: 8, right: 'auto', backgroundColor: '#10B981' }]}>
-                  <Ionicons name="shield-checkmark" size={12} color={BG} />
-                  <Text style={[s.svcBadgeText, { color: BG }]}>ضمان {item.warranty_days || 0}ي</Text>
+                <View style={s.svcWarrantyPill}>
+                  <Ionicons name="shield-checkmark" size={11} color="#10B981" />
+                  <Text style={s.svcWarrantyText}>ضمان {item.warranty_days || 0} يوم</Text>
                 </View>
               )}
+              {/* Details hint — bottom-left */}
+              <View style={s.svcDetailHint}>
+                <Ionicons name="chevron-back" size={14} color={GOLD} />
+                <Text style={s.svcDetailHintText}>التفاصيل</Text>
+              </View>
             </View>
             <View style={{ padding: 12, gap: 4 }}>
               <Text style={s.svcName2}>{item.title || item.name}</Text>
@@ -441,7 +441,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                 </View>
               )}
             </View>
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={<Text style={s.empty}>لا توجد خدمات</Text>}
       />
@@ -531,18 +531,19 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
           const isEnded = item.status === 'ended' || (item.winners || []).length > 0;
           const isLive = !isEnded && (item.remaining_ms == null || item.remaining_ms > 0);
           return (
+            <TouchableOpacity activeOpacity={0.9} onPress={() => onAnalytics && onAnalytics(item)}>
             <LinearGradient colors={isEnded ? ['#1F2937', '#0F1116'] : ['#332905', '#1A1401']} style={s.compCard}>
-              <TouchableOpacity
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                activeOpacity={0.7}
-                onPress={() => onAnalytics && onAnalytics(item)}
-                style={[s.analyticsFloatBtn, { top: 10, left: 10 }]}>
-                <Ionicons name="stats-chart" size={18} color={BG} />
-              </TouchableOpacity>
               {/* Banner image (matches customer view) */}
               {!!(item.image || item.banner_image) && (
-                <Image source={{ uri: mediaUrlSync(item.image || item.banner_image) }}
-                  style={{ width: '100%', height: 130, borderRadius: 12, marginBottom: 10 }} contentFit="cover" />
+                <View style={{ position: 'relative', marginBottom: 10 }}>
+                  <Image source={{ uri: mediaUrlSync(item.image || item.banner_image) }}
+                    style={{ width: '100%', height: 130, borderRadius: 12 }} contentFit="cover" />
+                  <LinearGradient colors={['transparent', 'rgba(11,12,16,0.7)']} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 60, borderRadius: 12 }} />
+                  <View style={s.svcDetailHint}>
+                    <Ionicons name="chevron-back" size={14} color={GOLD} />
+                    <Text style={s.svcDetailHintText}>التفاصيل الكاملة</Text>
+                  </View>
+                </View>
               )}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <View style={s.trophy}>
@@ -600,6 +601,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
                 </View>
               )}
             </LinearGradient>
+            </TouchableOpacity>
           );
         }}
         ListEmptyComponent={<Text style={s.empty}>{filter === 'ended' ? 'لا مسابقات منتهية' : 'لا مسابقات نشطة'}</Text>}
@@ -1879,11 +1881,34 @@ const s = StyleSheet.create({
   cmpVal: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
   // Analytics button on product card
   pAnalyticsBtn: { position: 'absolute', top: 6, left: 6, backgroundColor: GOLD, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 8, zIndex: 10 },
+  pDetailHint: {
+    position: 'absolute', top: 8, left: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 2,
+    backgroundColor: 'rgba(11,12,16,0.85)', borderWidth: 1, borderColor: GOLD,
+    paddingHorizontal: 6, paddingVertical: 3, borderRadius: 999, zIndex: 10,
+  },
+  pDetailHintText: { color: GOLD, fontSize: 9, fontWeight: '900' },
   // Services rich card
   svcCard2: { backgroundColor: CARD, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: BORDER, overflow: 'hidden' },
   svcCover: { width: '100%', height: 160 },
+  svcOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 70 },
   svcBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: GOLD, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   svcBadgeText: { color: BG, fontSize: 10, fontWeight: '900' },
+  svcRatingBadge: { position: 'absolute', top: 10, right: 10, backgroundColor: GOLD, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  svcWarrantyPill: {
+    position: 'absolute', bottom: 10, right: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1, borderColor: '#10B981',
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999,
+  },
+  svcWarrantyText: { color: '#10B981', fontSize: 10, fontWeight: '900' },
+  svcDetailHint: {
+    position: 'absolute', bottom: 10, left: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: 'rgba(11,12,16,0.85)', borderWidth: 1, borderColor: GOLD,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999,
+  },
+  svcDetailHintText: { color: GOLD, fontSize: 10, fontWeight: '900' },
   svcName2: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', textAlign: 'right' },
   svcDesc2: { color: MUTED, fontSize: 12, marginTop: 2, textAlign: 'right', lineHeight: 18 },
   svcPrice2: { color: GOLD, fontSize: 15, fontWeight: '900' },
