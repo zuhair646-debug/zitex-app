@@ -3,7 +3,15 @@
 ## Vision
 Zitex — Comprehensive Tech Store native mobile app (iOS + Android) with e-commerce, social feed, competitions, delivery, chamber portal, and merchant admin panel.
 
-## Current release: v1.13.4 — Live Preview Deep Drill-Down
+## Current release: v1.13.5 — Live Preview Command Center
+- **NEW: Order Heatmap** — 7×24 grid in General tab showing peak day + peak hour with color intensity
+- **NEW: Real-time Alerts Bell** — glassmorphic bell in banner with unread badge, sheet with severity colors (info/success/warning), one-tap ack + "قراءة الكل"
+- **NEW: PDF Export** — every Driver/Branch/Marketer/Employee sheet exports print-optimized HTML report with gold branded template
+- **Enhanced Product Analytics Sheet**: buyers list (name, quantity, source POS/App, branch), top branches selling this product, purchase source breakdown (direct/social/link/referral/ad)
+- **Enhanced Service Analytics Sheet**: technicians with completed count, avg duration, revenue per tech, avg rating
+- **Enhanced Competition Analytics Sheet**: peak hour chip, engagement rate, detailed winners with phones + picked_at
+
+## Previous release: v1.13.4 — Live Preview Deep Drill-Down
 - **NEW: Merchant Live Preview 2.0** — every entity is now tappable and opens a rich detail sheet:
   - **Driver Sheet**: KPIs (today/week/month/year deliveries + earnings), 7-day sparkline, positive/negative reviews with ratings, employment info, assigned branches
   - **Branch Sheet**: Orders breakdown (today/yesterday/2days/week/month/year), revenue split (in-store vs app), monthly-target progress bar, 30-day sales pulse, full staff list (tap → employee sheet)
