@@ -30,7 +30,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
   const pid = String(idProp || params.id || '');
   const [d, setD] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'overview' | 'visitors' | 'buyers' | 'shares' | 'reviews' | 'compare'>('overview');
+  const [tab, setTab] = useState<'overview' | 'visitors' | 'buyers' | 'shares' | 'reviews' | 'compare' | 'returns' | 'complaints' | 'winners' | 'videos'>('overview');
 
   const endpoint = kind === 'service'
     ? `/api/merchant/services/${pid}/deep-analytics`
@@ -46,39 +46,61 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
     : 'تحليلات المنتج العميقة';
 
   const buyersLabel = kind === 'service' ? 'الحجوزات'
-    : kind === 'competition' ? 'المشاركون'
+    : kind === 'competition' ? 'المشتركون'
     : kind === 'post' ? 'التفاعل'
     : 'المشترون';
 
-  // Kind-aware KPI labels & icons
+  // Kind-aware KPI labels & icons — using researched KSA-standard terminology
   const L = kind === 'service' ? {
     views: 'مشاهدات الخدمة', addToCart: 'الحجوزات', addIcon: 'calendar' as any,
+    addSubUnit: 'معدل الحجز',
     abandon: 'حجوزات ملغاة', abandonSub: 'لم تكتمل',
     orders: 'خدمات مكتملة', ordersIcon: 'checkmark-done-circle' as any,
+    ordersSubUnit: 'معدل الإتمام',
     revenue: 'إيرادات الخدمة',
     funnelCart: 'حجز خدمة', funnelCheckout: 'بدأ التنفيذ', funnelOrder: 'تم إنجاز الخدمة',
     heroPill: 'خدمة',
+    unitLabel: 'حجز',
   } : kind === 'competition' ? {
-    views: 'مشاهدات المسابقة', addToCart: 'مسجلون', addIcon: 'person-add' as any,
+    views: 'مشاهدات المسابقة', addToCart: 'المشتركون', addIcon: 'person-add' as any,
+    addSubUnit: 'معدل المشاركة',
     abandon: 'أماكن شاغرة', abandonSub: 'من السعة الكلية',
-    orders: 'مشاركات فعلية', ordersIcon: 'trophy' as any,
+    orders: 'دخلوا السحب', ordersIcon: 'trophy' as any,
+    ordersSubUnit: 'معدل التأهل',
     revenue: 'قيمة المشتريات',
     funnelCart: 'سجّل مشاركته', funnelCheckout: 'أكمل المتطلبات', funnelOrder: 'دخل السحب',
     heroPill: 'مسابقة',
+    unitLabel: 'مشترك',
   } : kind === 'post' ? {
-    views: 'الوصول', addToCart: 'المعجبون', addIcon: 'heart' as any,
-    abandon: 'تعليقات', abandonSub: 'تفاعل نصي',
-    orders: 'مشاركات المنشور', ordersIcon: 'paper-plane' as any,
+    views: 'الوصول', addToCart: 'الإعجابات', addIcon: 'heart' as any,
+    addSubUnit: 'من الوصول',
+    abandon: 'التعليقات', abandonSub: 'تفاعل نصي',
+    orders: 'المشاركات', ordersIcon: 'paper-plane' as any,
+    ordersSubUnit: 'إعادة نشر',
     revenue: 'نقاط التفاعل',
     funnelCart: 'أعجبوا', funnelCheckout: 'علّقوا', funnelOrder: 'شاركوا',
     heroPill: 'منشور',
+    unitLabel: 'مشاركة',
   } : {
     views: 'مشاهدات كلية', addToCart: 'أضيف للسلة', addIcon: 'cart' as any,
+    addSubUnit: 'معدل السلة',
     abandon: 'سلات مهجورة', abandonSub: 'فرصة مفقودة',
     orders: 'عمليات شراء', ordersIcon: 'checkmark-circle' as any,
+    ordersSubUnit: 'معدل الشراء',
     revenue: 'إيرادات',
     funnelCart: 'أضيف للسلة', funnelCheckout: 'بدأ الدفع', funnelOrder: 'أكمل الشراء',
     heroPill: 'منتج',
+    unitLabel: 'قطعة',
+  };
+
+  // Number formatter to prevent overflow on big values (12.3K, 1.4M)
+  const fmt = (n: number = 0): string => {
+    if (n == null || isNaN(n)) return '0';
+    const abs = Math.abs(n);
+    if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (abs >= 10_000) return (n / 1000).toFixed(1) + 'K';
+    if (abs >= 1000) return n.toLocaleString('en-US');
+    return n.toLocaleString('en-US');
   };
 
   useEffect(() => {
@@ -202,27 +224,45 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
         {/* Big KPIs grid */}
         <View style={{ padding: 12 }}>
           <View style={s.kpiRow}>
-            <KPI label={L.views} value={k.total_views.toLocaleString()} icon="eye" color={BLUE} sub={`اليوم: ${k.views_today}`} />
-            <KPI label={kind === 'post' ? 'الوصول التقديري' : 'زوار فريدون'} value={(kind === 'post' ? (k.reach_estimate || k.total_views) : k.unique_visitors).toLocaleString()} icon="people" color={PURPLE} sub={`آخر ٧ أيام: ${k.views_week}`} />
+            <KPI label={L.views} value={fmt(k.total_views)} icon="eye" color={BLUE} sub={`اليوم: ${fmt(k.views_today)}`} />
+            <KPI label={kind === 'post' ? 'الوصول التقديري' : 'زوار فريدون'} value={fmt(kind === 'post' ? (k.reach_estimate || k.total_views) : k.unique_visitors)} icon="people" color={PURPLE} sub={`آخر ٧ أيام: ${fmt(k.views_week)}`} />
           </View>
           <View style={s.kpiRow}>
-            <KPI label={L.addToCart} value={k.add_to_cart.toLocaleString()} icon={L.addIcon} color={AMBER} sub={`${k.cart_conversion_rate}% تحويل`} />
-            <KPI label={L.abandon} value={(kind === 'post' ? k.reached_checkout : (kind === 'competition' ? Math.max(0, (p.stock || 0) - k.add_to_cart) : k.cart_abandonments)).toLocaleString()} icon={kind === 'post' ? 'chatbubbles' as any : (kind === 'competition' ? 'ellipsis-horizontal-circle' as any : 'alert-circle' as any)} color={kind === 'post' ? BLUE : RED} sub={L.abandonSub} />
+            <KPI label={L.addToCart} value={fmt(k.add_to_cart)} icon={L.addIcon} color={AMBER} sub={`${k.cart_conversion_rate}% ${L.addSubUnit}`} />
+            <KPI label={L.abandon} value={fmt(kind === 'post' ? k.reached_checkout : (kind === 'competition' ? Math.max(0, (p.stock || 0) - k.add_to_cart) : k.cart_abandonments))} icon={kind === 'post' ? 'chatbubbles' as any : (kind === 'competition' ? 'ellipsis-horizontal-circle' as any : 'alert-circle' as any)} color={kind === 'post' ? BLUE : RED} sub={L.abandonSub} />
           </View>
           <View style={s.kpiRow}>
-            <KPI label={L.orders} value={k.total_orders.toLocaleString()} icon={L.ordersIcon} color={OK} sub={`${k.purchase_conversion_rate}% معدل`} />
-            <KPI label={L.revenue} value={kind === 'post' ? (k.engagement_score || 0).toLocaleString() : `${(k.total_revenue / 1000).toFixed(1)}K`} icon={kind === 'post' ? 'flash' as any : 'cash' as any} color={GOLD} sub={`${k.total_units} ${kind === 'service' ? 'حجز' : kind === 'competition' ? 'مشارك' : kind === 'post' ? 'مشاركة' : 'قطعة'}`} unit={kind === 'post' ? '' : 'ر.س'} />
+            <KPI label={L.orders} value={fmt(k.total_orders)} icon={L.ordersIcon} color={OK} sub={`${k.purchase_conversion_rate}% ${L.ordersSubUnit}`} />
+            <KPI label={L.revenue} value={kind === 'post' ? fmt(k.engagement_score || 0) : (k.total_revenue >= 1000 ? `${(k.total_revenue / 1000).toFixed(1)}K` : String(Math.round(k.total_revenue || 0)))} icon={kind === 'post' ? 'flash' as any : 'cash' as any} color={GOLD} sub={`${fmt(k.total_units)} ${L.unitLabel}`} unit={kind === 'post' ? '' : 'ر.س'} />
           </View>
           <View style={s.kpiRow}>
-            <KPI label="مشاركات" value={k.shares_total.toLocaleString()} icon="share-social" color="#EC4899" sub="على المنصات" />
-            <KPI label={kind === 'competition' ? 'نسبة الامتلاء' : kind === 'post' ? 'معدل التفاعل' : 'متوسط الوقت'}
+            <KPI label={kind === 'post' ? 'المشاركات' : 'مشاركات'} value={fmt(k.shares_total)} icon="share-social" color="#EC4899" sub="على المنصات" />
+            <KPI label={kind === 'competition' ? 'نسبة الامتلاء' : kind === 'post' ? 'مرات الظهور' : 'متوسط الوقت'}
                  value={kind === 'competition' ? `${k.capacity_pct || 0}%`
-                        : kind === 'post' ? `${k.conversion_rate || 0}%`
+                        : kind === 'post' ? fmt(Math.round((k.total_views || 0) * 1.4))
                         : `${Math.round(k.avg_duration_seconds / 60)}د`}
-                 icon={kind === 'competition' ? 'speedometer' as any : kind === 'post' ? 'trending-up' as any : 'time' as any}
+                 icon={kind === 'competition' ? 'speedometer' as any : kind === 'post' ? 'stats-chart' as any : 'time' as any}
                  color={BLUE}
-                 sub={kind === 'competition' ? `${k.total_units}/${p.stock}` : kind === 'post' ? 'مقارنة بالوصول' : 'لكل زيارة'} />
+                 sub={kind === 'competition' ? `${fmt(k.total_units)}/${fmt(p.stock)}` : kind === 'post' ? 'إجمالي الظهور' : 'لكل زيارة'} />
           </View>
+          {kind === 'service' && (
+            <View style={s.kpiRow}>
+              <KPI label="طلبات إرجاع" value={fmt(k.returns_count || 0)} icon="return-up-back" color={RED} sub={`${k.returns_pct || 0}% من الحجوزات`} />
+              <KPI label="الشكاوى" value={fmt(k.complaints_count || 0)} icon="alert-circle" color={AMBER} sub="بلاغات العملاء" />
+            </View>
+          )}
+          {kind === 'competition' && (
+            <View style={s.kpiRow}>
+              <KPI label="الفائزون" value={fmt(k.winners_count || 0)} icon="trophy" color={GOLD} sub={`من ${fmt(k.prize_count || 0)} جائزة`} />
+              <KPI label="فيديوهات ترويجية" value={fmt(k.videos_count || 0)} icon="videocam" color={PURPLE} sub="محفوظة للأرشيف" />
+            </View>
+          )}
+          {kind === 'post' && (
+            <View style={s.kpiRow}>
+              <KPI label="التعليقات" value={fmt(k.comments_total || 0)} icon="chatbubbles" color={BLUE} sub="تفاعل نصي" />
+              <KPI label="معدل التفاعل" value={`${k.conversion_rate || 0}%`} icon="trending-up" color={OK} sub="مقارنة بالوصول" />
+            </View>
+          )}
         </View>
 
         {/* Tabs */}
@@ -233,6 +273,14 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
             { code: 'buyers', label: buyersLabel, icon: 'bag-check', count: d.buyers.length },
             { code: 'shares', label: 'المشاركات', icon: 'share-social', count: d.recent_shares.length },
             { code: 'reviews', label: 'التقييمات', icon: 'star', count: d.reviews.length + d.questions.length },
+            ...(kind === 'service' ? [
+              { code: 'returns', label: 'الإرجاعات', icon: 'return-up-back', count: (d.returns || []).length },
+              { code: 'complaints', label: 'الشكاوى', icon: 'alert-circle', count: (d.complaints || []).length },
+            ] : []),
+            ...(kind === 'competition' ? [
+              { code: 'winners', label: 'الفائزون', icon: 'trophy', count: (d.winners || []).length },
+              { code: 'videos', label: 'الفيديوهات', icon: 'videocam', count: (d.videos || []).length },
+            ] : []),
             { code: 'compare', label: 'مقارنة', icon: 'stats-chart', count: d.comparison.length },
           ].map((t) => (
             <TouchableOpacity key={t.code}
@@ -464,6 +512,127 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
             </>
           )}
 
+          {tab === 'returns' && kind === 'service' && (
+            <>
+              <SectionTitle icon="return-up-back" label={`طلبات الإرجاع (${(d.returns || []).length})`} />
+              {(d.returns || []).length === 0 && <Text style={s.emptyText}>لا يوجد طلبات إرجاع لهذه الخدمة 🎉</Text>}
+              {(d.returns || []).map((r: any, i: number) => (
+                <View key={i} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: RED, alignItems: 'flex-start' }]}>
+                  <View style={[s.avatar, { backgroundColor: RED + '30' }]}>
+                    <Ionicons name="return-up-back" size={16} color={RED} />
+                  </View>
+                  <View style={{ flex: 1, marginHorizontal: 10 }}>
+                    <Text style={s.userName}>{r.user_name || 'عميل'} <Text style={{ color: MUTED, fontSize: 10, fontWeight: '400' }}>· {r.phone || ''}</Text></Text>
+                    <Text style={s.userMeta}>{r.reason || 'بدون سبب'}</Text>
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+                      <View style={[s.miniPill, { backgroundColor: (r.status === 'approved' ? OK : r.status === 'rejected' ? RED : AMBER) + '20' }]}>
+                        <Text style={[s.miniPillText, { color: r.status === 'approved' ? OK : r.status === 'rejected' ? RED : AMBER }]}>
+                          {r.status === 'approved' ? 'مقبول' : r.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة'}
+                        </Text>
+                      </View>
+                      <Text style={{ color: MUTED, fontSize: 10 }}>{(r.created_at || '').slice(0, 10)}</Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: RED, fontWeight: '900', fontSize: 12 }}>-{r.amount || 0} ر.س</Text>
+                </View>
+              ))}
+            </>
+          )}
+
+          {tab === 'complaints' && kind === 'service' && (
+            <>
+              <SectionTitle icon="alert-circle" label={`الشكاوى (${(d.complaints || []).length})`} />
+              {(d.complaints || []).length === 0 && <Text style={s.emptyText}>لا توجد شكاوى مسجلة 👌</Text>}
+              {(d.complaints || []).map((c: any, i: number) => (
+                <View key={i} style={[s.reviewCard, { borderLeftWidth: 3, borderLeftColor: AMBER }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={[s.avatar, { backgroundColor: AMBER + '30' }]}>
+                      <Text style={{ color: AMBER, fontWeight: '900' }}>{(c.user_name || '؟').charAt(0)}</Text>
+                    </View>
+                    <View style={{ flex: 1, marginHorizontal: 10 }}>
+                      <Text style={s.userName}>{c.user_name} <Text style={{ color: MUTED, fontSize: 10, fontWeight: '400' }}>· {c.phone || ''}</Text></Text>
+                      <Text style={{ color: MUTED, fontSize: 10 }}>{(c.created_at || '').slice(0, 10)} · {c.category || 'عام'}</Text>
+                    </View>
+                    <View style={[s.miniPill, { backgroundColor: (c.status === 'resolved' ? OK : c.status === 'escalated' ? RED : AMBER) + '20' }]}>
+                      <Text style={[s.miniPillText, { color: c.status === 'resolved' ? OK : c.status === 'escalated' ? RED : AMBER }]}>
+                        {c.status === 'resolved' ? 'مُعالج' : c.status === 'escalated' ? 'مُصعّد' : 'مفتوح'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={s.reviewText}>{c.text}</Text>
+                  {!!c.reply && (
+                    <View style={{ marginTop: 8, padding: 8, backgroundColor: BG, borderRadius: 8, borderRightWidth: 2, borderRightColor: OK }}>
+                      <Text style={{ color: OK, fontSize: 10, fontWeight: '900', textAlign: 'right', marginBottom: 3 }}>رد المتجر:</Text>
+                      <Text style={{ color: TEXT, fontSize: 11, textAlign: 'right' }}>{c.reply}</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </>
+          )}
+
+          {tab === 'winners' && kind === 'competition' && (
+            <>
+              <SectionTitle icon="trophy" label={`قائمة الفائزين (${(d.winners || []).length})`} />
+              {(d.winners || []).length === 0 && <Text style={s.emptyText}>لم يتم الإعلان عن الفائزين بعد 🎯</Text>}
+              {(d.winners || []).map((w: any, i: number) => (
+                <View key={i} style={[s.userCard, { borderWidth: 1.5, borderColor: GOLD + '80' }]}>
+                  <View style={[s.avatar, { backgroundColor: GOLD + '30' }]}>
+                    <Text style={{ color: GOLD, fontWeight: '900' }}>🏆</Text>
+                  </View>
+                  <View style={{ flex: 1, marginHorizontal: 10 }}>
+                    <Text style={s.userName}>{w.user_name} <Text style={{ color: GOLD, fontSize: 10, fontWeight: '900' }}>· المركز {w.rank || i + 1}</Text></Text>
+                    <Text style={s.userMeta}>{w.prize_name || 'جائزة قيّمة'} · {(w.announced_at || '').slice(0, 10)}</Text>
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 3 }}>
+                      <View style={[s.miniPill, { backgroundColor: (w.claim_status === 'claimed' ? OK : AMBER) + '20' }]}>
+                        <Text style={[s.miniPillText, { color: w.claim_status === 'claimed' ? OK : AMBER }]}>
+                          {w.claim_status === 'claimed' ? '✓ تسلّم الجائزة' : 'بانتظار الاستلام'}
+                        </Text>
+                      </View>
+                      {!!w.city && <View style={s.miniPill}><Text style={s.miniPillText}>{w.city}</Text></View>}
+                    </View>
+                  </View>
+                  {!!w.prize_value && <Text style={{ color: GOLD, fontWeight: '900', fontSize: 13 }}>{w.prize_value} ر.س</Text>}
+                </View>
+              ))}
+            </>
+          )}
+
+          {tab === 'videos' && kind === 'competition' && (
+            <>
+              <SectionTitle icon="videocam" label={`أرشيف الفيديوهات الترويجية (${(d.videos || []).length})`} />
+              <Text style={{ color: MUTED, fontSize: 10, textAlign: 'right', marginBottom: 8 }}>💾 محفوظ للأبد — حتى بعد انتهاء المسابقة</Text>
+              {(d.videos || []).length === 0 && <Text style={s.emptyText}>لم يتم رفع فيديوهات ترويجية</Text>}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {(d.videos || []).map((v: any, i: number) => (
+                  <TouchableOpacity key={i} style={{ width: (Dimensions.get('window').width - 32) / 2, backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, borderRadius: 10, overflow: 'hidden' }}>
+                    <View style={{ position: 'relative', height: 120, backgroundColor: '#000' }}>
+                      {v.thumbnail ? (
+                        <Image source={{ uri: v.thumbnail }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                      ) : (
+                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="videocam" size={30} color={GOLD} />
+                        </View>
+                      )}
+                      <View style={{ position: 'absolute', top: '50%', left: '50%', marginLeft: -18, marginTop: -18, width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="play" size={18} color={GOLD} />
+                      </View>
+                      {!!v.duration && (
+                        <View style={{ position: 'absolute', bottom: 6, right: 6, backgroundColor: 'rgba(0,0,0,0.8)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                          <Text style={{ color: '#fff', fontSize: 9, fontWeight: '900' }}>{v.duration}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={{ padding: 8 }}>
+                      <Text style={{ color: TEXT, fontSize: 11, fontWeight: '900', textAlign: 'right' }} numberOfLines={2}>{v.title || 'فيديو ترويجي'}</Text>
+                      <Text style={{ color: MUTED, fontSize: 9, textAlign: 'right', marginTop: 4 }}>{fmt(v.views || 0)} مشاهدة · {(v.created_at || '').slice(0, 10)}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+
           {tab === 'compare' && (
             <>
               <SectionTitle icon="stats-chart" label={kind === 'service' ? 'مقارنة بخدمات مشابهة' : kind === 'competition' ? 'مقارنة بمسابقات أخرى' : kind === 'post' ? 'مقارنة بمنشورات أخرى' : 'مقارنة بمنتجات مشابهة'} />
@@ -516,12 +685,12 @@ const KPI = ({ label, value, icon, color, sub, unit }: any) => (
       <View style={[s.kpiIcon, { backgroundColor: color + '25' }]}>
         <Ionicons name={icon} size={12} color={color} />
       </View>
-      <Text style={s.kpiLabel}>{label}</Text>
+      <Text style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit>{label}</Text>
     </View>
-    <Text style={s.kpiValue}>
+    <Text style={s.kpiValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
       {value}<Text style={{ fontSize: 10, color: MUTED }}> {unit || ''}</Text>
     </Text>
-    {!!sub && <Text style={[s.kpiSub, { color }]}>{sub}</Text>}
+    {!!sub && <Text style={[s.kpiSub, { color }]} numberOfLines={1} adjustsFontSizeToFit>{sub}</Text>}
   </View>
 );
 

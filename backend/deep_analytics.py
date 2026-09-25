@@ -132,6 +132,33 @@ def build_router(db, get_current_user, require_merchant):
         questions = [r for r in reviews_all if r.get("type") == "question"]
         avg_rating = round(sum(r.get("rating", 0) for r in reviews_only) / max(len(reviews_only), 1), 2) if reviews_only else float(svc.get("rating", 0) or 0)
 
+        # Returns for this service
+        returns_list = []
+        if "service_returns" in collection_names:
+            returns_list = await db.service_returns.find({"service_id": sid}).sort("created_at", -1).to_list(100)
+        returns_out = [{
+            "user_name": r.get("user_name", "عميل"),
+            "phone": r.get("phone", ""),
+            "reason": r.get("reason", ""),
+            "status": r.get("status", "pending"),
+            "amount": float(r.get("amount", r.get("refund_amount", 0)) or 0),
+            "created_at": r.get("created_at", ""),
+        } for r in returns_list[:60]]
+
+        # Complaints for this service
+        complaints_list = []
+        if "service_complaints" in collection_names:
+            complaints_list = await db.service_complaints.find({"service_id": sid}).sort("created_at", -1).to_list(100)
+        complaints_out = [{
+            "user_name": c.get("user_name", "عميل"),
+            "phone": c.get("phone", ""),
+            "text": c.get("text", ""),
+            "category": c.get("category", "عام"),
+            "status": c.get("status", "open"),
+            "reply": c.get("reply", ""),
+            "created_at": c.get("created_at", ""),
+        } for c in complaints_list[:60]]
+
         # Shares (if any)
         shares = []
         if "share_events" in collection_names:
@@ -206,6 +233,9 @@ def build_router(db, get_current_user, require_merchant):
                 "shares_total": len(shares),
                 "pending": pending,
                 "cancelled": cancelled,
+                "returns_count": len(returns_list),
+                "returns_pct": round(len(returns_list) * 100 / max(total_bookings, 1), 2),
+                "complaints_count": len(complaints_list),
             },
             "monthly_series": [{"month": m, **v} for m, v in sorted(monthly.items())][-12:],
             "traffic_sources": traffic_sources,
@@ -225,6 +255,8 @@ def build_router(db, get_current_user, require_merchant):
                           for r in questions[:20]],
             "comparison": comparison,
             "category_ranking": None,
+            "returns": returns_out,
+            "complaints": complaints_out,
         }
 
     # ─────────────────────────────────────────────────────────────
@@ -332,6 +364,42 @@ def build_router(db, get_current_user, require_merchant):
         winners_count = _safe_len(comp.get("winners", []))
         prize_count = int(comp.get("prize_count", 0) or 0)
 
+        # Winners list — from comp.winners (array) or competition_winners collection
+        winners_raw = comp.get("winners", []) if isinstance(comp.get("winners"), list) else []
+        if not winners_raw and "competition_winners" in collection_names:
+            winners_raw = await db.competition_winners.find({"competition_id": cid}).sort("rank", 1).to_list(50)
+        winners_out = []
+        for i, w in enumerate(winners_raw):
+            if isinstance(w, dict):
+                winners_out.append({
+                    "user_name": w.get("user_name") or w.get("name") or "فائز",
+                    "rank": w.get("rank", i + 1),
+                    "prize_name": w.get("prize_name") or w.get("prize") or comp.get("prize", "جائزة"),
+                    "prize_value": float(w.get("prize_value", 0) or 0),
+                    "claim_status": w.get("claim_status", "pending"),
+                    "city": w.get("city", ""),
+                    "announced_at": w.get("announced_at") or w.get("created_at", ""),
+                })
+            elif isinstance(w, str):
+                winners_out.append({"user_name": w, "rank": i + 1, "prize_name": comp.get("prize", "جائزة"),
+                                   "prize_value": 0, "claim_status": "pending", "city": "", "announced_at": ""})
+
+        # Videos archive — from comp.videos or competition_videos collection
+        videos_raw = comp.get("videos", []) if isinstance(comp.get("videos"), list) else []
+        if not videos_raw and "competition_videos" in collection_names:
+            videos_raw = await db.competition_videos.find({"competition_id": cid}).sort("created_at", -1).to_list(50)
+        videos_out = []
+        for v in videos_raw:
+            if isinstance(v, dict):
+                videos_out.append({
+                    "title": v.get("title") or v.get("caption") or "فيديو ترويجي",
+                    "url": v.get("url", ""),
+                    "thumbnail": v.get("thumbnail") or v.get("thumb", ""),
+                    "duration": v.get("duration", ""),
+                    "views": int(v.get("views", 0) or 0),
+                    "created_at": v.get("created_at", ""),
+                })
+
         return {
             "product": {
                 "id": cid,
@@ -367,6 +435,7 @@ def build_router(db, get_current_user, require_merchant):
                 "shares_total": len(shares),
                 "winners_count": winners_count,
                 "prize_count": prize_count,
+                "videos_count": len(videos_out),
                 "capacity_pct": round(total_participants * 100 / max(int(comp.get("max_participants", 1) or 1), 1), 2),
             },
             "monthly_series": [{"month": m, **v} for m, v in sorted(monthly.items())][-12:],
@@ -387,6 +456,8 @@ def build_router(db, get_current_user, require_merchant):
             "questions": [],
             "comparison": comparison,
             "category_ranking": None,
+            "winners": winners_out,
+            "videos": videos_out,
         }
 
     # ─────────────────────────────────────────────────────────────
