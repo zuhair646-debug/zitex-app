@@ -16,12 +16,12 @@ const BORDER = '#2A2D38';
 const MUTED = '#9CA3AF';
 const { width: SCREEN } = Dimensions.get('window');
 
-type Section = 'products' | 'services' | 'competitions' | 'social';
+type Section = 'overview' | 'products' | 'services' | 'competitions' | 'social';
 
 export default function LivePreview() {
   const router = useRouter();
   const { apiCall } = useAuth();
-  const [section, setSection] = useState<Section>('products');
+  const [section, setSection] = useState<Section>('overview');
   const [analyticsFor, setAnalyticsFor] = useState<any>(null);
   const [serviceAnalyticsFor, setServiceAnalyticsFor] = useState<any>(null);
   const [compAnalyticsFor, setCompAnalyticsFor] = useState<any>(null);
@@ -45,15 +45,16 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.11.2 ✅ تسجيل الدخول مصلح</Text>
+        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.0 ✨ متطابق مع العميل</Text>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
       {/* Section tabs (like customer bottom tabs, but at top for preview) */}
-      <View style={s.sectionRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.sectionRow}>
         {[
+          { id: 'overview', name: 'العام', icon: 'grid' },
           { id: 'products', name: 'المتجر', icon: 'storefront' },
           { id: 'services', name: 'الصيانة', icon: 'construct' },
           { id: 'competitions', name: 'المسابقات', icon: 'trophy' },
@@ -65,8 +66,9 @@ export default function LivePreview() {
             <Text style={[s.sectionText, section === t.id && { color: BG }]}>{t.name}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
+      {section === 'overview' && <OverviewSection apiCall={apiCall} />}
       {section === 'products' && (
         <ProductsSection
           apiCall={apiCall}
@@ -344,8 +346,8 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
               <TouchableOpacity onPress={() => onAnalytics && onAnalytics(item)} style={s.analyticsFloatBtn}>
                 <Ionicons name="stats-chart" size={16} color={BG} />
               </TouchableOpacity>
-              {(item.images?.[0] || item.cover) ? (
-                <Image source={{ uri: mediaUrlSync(item.images?.[0] || item.cover) }} style={s.svcCover} contentFit="cover" />
+              {(item.images?.[0] || item.cover || item.image) ? (
+                <Image source={{ uri: mediaUrlSync(item.images?.[0] || item.cover || item.image) }} style={s.svcCover} contentFit="cover" />
               ) : (
                 <View style={[s.svcCover, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#1A1D26' }]}>
                   <Ionicons name="construct" size={40} color={GOLD} />
@@ -519,6 +521,11 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
               <TouchableOpacity onPress={() => onAnalytics && onAnalytics(item)} style={[s.analyticsFloatBtn, { top: 10, left: 10 }]}>
                 <Ionicons name="stats-chart" size={16} color={BG} />
               </TouchableOpacity>
+              {/* Banner image (matches customer view) */}
+              {!!(item.image || item.banner_image) && (
+                <Image source={{ uri: mediaUrlSync(item.image || item.banner_image) }}
+                  style={{ width: '100%', height: 130, borderRadius: 12, marginBottom: 10 }} contentFit="cover" />
+              )}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <View style={s.trophy}>
                   <Ionicons name={isEnded ? 'checkmark-done-circle' : 'trophy'} size={22} color={GOLD} />
@@ -1156,11 +1163,12 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
                 </TouchableOpacity>
               </View>
               {/* Tabs */}
-              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6 }}>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
                 {[
                   { k: 'comments', label: `تعليقات (${data.kpis.comment_count})` },
                   { k: 'viewers', label: `مشاهدون (${data.viewers.length})` },
                   { k: 'likers', label: `إعجابات (${data.likers.length})` },
+                  { k: 'sharers', label: `مشاركات` },
                   ...(data.poll?.options ? [{ k: 'poll', label: 'استطلاع' }] : []),
                 ].map((t: any) => (
                   <TouchableOpacity key={t.k} onPress={() => setTab(t.k)} style={[s.cmpBtn, tab === t.k && { backgroundColor: GOLD }]}>
@@ -1219,6 +1227,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
                     ))}
                   </View>
                 ))}
+                {tab === 'sharers' && <SharersView postId={post.id} apiCall={apiCall} />}
               </ScrollView>
               {replyTo && (
                 <View style={{ borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 8, marginTop: 8 }}>
@@ -1239,6 +1248,231 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
         </View>
       </View>
     </Modal>
+  );
+}
+
+
+/* ─── Sharers view — WHO shared and WHERE ────────────────────────── */
+function SharersView({ postId, apiCall }: any) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    apiCall(`/api/merchant/social/posts/${postId}/sharers`)
+      .then(setData).catch(() => setData({ total: 0, sharers: [], by_platform: {} }))
+      .finally(() => setLoading(false));
+  }, [postId]);
+  const PLATFORM_META: any = {
+    whatsapp: { icon: 'logo-whatsapp', color: '#25D366', label: 'واتساب' },
+    twitter: { icon: 'logo-twitter', color: '#1DA1F2', label: 'تويتر' },
+    telegram: { icon: 'paper-plane', color: '#0088cc', label: 'تيليجرام' },
+    snapchat: { icon: 'logo-snapchat', color: '#FFFC00', label: 'سناب شات' },
+    facebook: { icon: 'logo-facebook', color: '#4267B2', label: 'فيسبوك' },
+    instagram: { icon: 'logo-instagram', color: '#E1306C', label: 'انستقرام' },
+    copy: { icon: 'copy', color: GOLD, label: 'نسخ الرابط' },
+    unknown: { icon: 'share-social', color: MUTED, label: 'أخرى' },
+  };
+  if (loading) return <ActivityIndicator color={GOLD} style={{ marginTop: 20 }} />;
+  if (!data || data.total === 0) return <Text style={s.empty}>لا يوجد مشاركات بعد لهذا المنشور</Text>;
+  return (
+    <>
+      <View style={s.sheetCard}>
+        <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right', marginBottom: 8 }}>
+          🔗 مشاركات ({data.total})
+        </Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+          {Object.entries(data.by_platform || {}).map(([platform, count]: any) => {
+            const meta = PLATFORM_META[platform] || PLATFORM_META.unknown;
+            return (
+              <View key={platform} style={[s.svcMetaChip, { backgroundColor: meta.color + '20', borderColor: meta.color }]}>
+                <Ionicons name={meta.icon} size={12} color={meta.color} />
+                <Text style={[s.svcMetaText, { color: meta.color }]}>{meta.label} · {count}</Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+      {data.sharers.map((sh: any, i: number) => {
+        const meta = PLATFORM_META[sh.platform] || PLATFORM_META.unknown;
+        return (
+          <View key={i} style={s.listRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+              <Ionicons name={meta.icon} size={14} color={meta.color} />
+              <Text style={s.listRowText}>{sh.user_name} · {sh.user_city || '—'}</Text>
+            </View>
+            <Text style={s.listRowMeta}>{(sh.shared_at || '').slice(0, 10)}</Text>
+          </View>
+        );
+      })}
+    </>
+  );
+}
+
+/* ─── Overview Section — drivers/branches/marketers/employees ─────── */
+function OverviewSection({ apiCall }: any) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'drivers' | 'branches' | 'marketers' | 'employees'>('drivers');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { setData(await apiCall('/api/merchant/live-preview/overview')); }
+    catch (e: any) { Alert.alert('خطأ', e.message); }
+    finally { setLoading(false); }
+  }, [apiCall]);
+  useEffect(() => { load(); const iv = setInterval(load, 25000); return () => clearInterval(iv); }, [load]);
+
+  if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
+  if (!data) return <Text style={s.empty}>لا تتوفر بيانات</Text>;
+
+  const summary = [
+    { icon: 'car', color: '#3B82F6', label: 'السائقون', value: data.drivers.total, sub: `${data.drivers.online} متصل` },
+    { icon: 'business', color: '#10B981', label: 'الفروع', value: data.branches.total, sub: `${data.branches.active} نشط` },
+    { icon: 'megaphone', color: '#F59E0B', label: 'المسوّقون', value: data.marketers.total, sub: `${data.marketers.total_commission} ر.س عمولات` },
+    { icon: 'people', color: '#EC4899', label: 'الموظفون', value: data.employees.total, sub: 'إجمالي' },
+  ];
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 100 }}>
+      {/* Summary KPIs */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+        {summary.map((k, i) => (
+          <View key={i} style={[s.sheetCard, { flex: 1, minWidth: '46%', margin: 0 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ backgroundColor: k.color + '30', width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name={k.icon as any} size={18} color={k.color} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: MUTED, fontSize: 10, textAlign: 'right' }}>{k.label}</Text>
+                <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900', textAlign: 'right' }}>{k.value}</Text>
+              </View>
+            </View>
+            <Text style={{ color: GOLD, fontSize: 10, textAlign: 'right', marginTop: 4 }}>{k.sub}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Tab selector */}
+      <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+        {[
+          { k: 'drivers', label: '🚗 السائقون' },
+          { k: 'branches', label: '🏢 الفروع' },
+          { k: 'marketers', label: '📣 المسوقون' },
+          { k: 'employees', label: '👥 الموظفون' },
+        ].map(t => (
+          <TouchableOpacity key={t.k} onPress={() => setTab(t.k as any)}
+            style={[s.cmpBtn, tab === t.k && { backgroundColor: GOLD }]}>
+            <Text style={[s.cmpText, tab === t.k && { color: BG }]}>{t.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {tab === 'drivers' && (
+        <View>
+          <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>
+            🏆 أفضل السائقين (حسب التوصيلات)
+          </Text>
+          {data.drivers.top.length === 0 ? <Text style={s.empty}>لا يوجد سائقون بعد</Text> :
+            data.drivers.top.map((d: any, i: number) => (
+              <View key={d.id} style={s.sheetCard}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>#{i + 1}</Text>
+                      <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>{d.name}</Text>
+                      {d.online && <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' }} />}
+                    </View>
+                    <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{d.phone}</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '900' }}>{d.total_deliveries}</Text>
+                    <Text style={{ color: MUTED, fontSize: 10 }}>توصيلة</Text>
+                    <Text style={{ color: GOLD, fontSize: 10, marginTop: 2 }}>{d.today_deliveries} اليوم</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+        </View>
+      )}
+
+      {tab === 'branches' && (
+        <View>
+          <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>
+            🏆 أفضل الفروع (حسب المبيعات)
+          </Text>
+          {data.branches.top.length === 0 ? <Text style={s.empty}>لا يوجد فروع بعد</Text> :
+            data.branches.top.map((b: any, i: number) => (
+              <View key={b.id} style={s.sheetCard}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>#{i + 1}</Text>
+                      <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>{b.name}</Text>
+                    </View>
+                    <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{b.city} · {b.employees_count} موظف</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '900' }}>{b.pos_revenue.toLocaleString()} ر.س</Text>
+                    <Text style={{ color: GOLD, fontSize: 10, marginTop: 2 }}>{b.orders_count} طلب</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+        </View>
+      )}
+
+      {tab === 'marketers' && (
+        <View>
+          <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>
+            🏆 أفضل المسوقين (حسب التحويلات)
+          </Text>
+          {data.marketers.top.length === 0 ? <Text style={s.empty}>لا يوجد مسوّقون معتمدون بعد</Text> :
+            data.marketers.top.map((m: any, i: number) => (
+              <View key={m.id} style={s.sheetCard}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>#{i + 1}</Text>
+                      <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>{m.name}</Text>
+                    </View>
+                    <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>رمز: {m.referral_code}</Text>
+                    <Text style={{ color: MUTED, fontSize: 10 }}>{m.clicks} نقرة · {m.conversions} تحويل</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '900' }}>{m.commission_earned.toLocaleString()} ر.س</Text>
+                    <Text style={{ color: GOLD, fontSize: 10, marginTop: 2 }}>عمولات</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+        </View>
+      )}
+
+      {tab === 'employees' && (
+        <View>
+          <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>
+            🏆 أفضل الموظفين (حسب الفواتير)
+          </Text>
+          {data.employees.list.length === 0 ? <Text style={s.empty}>لا يوجد موظفون بعد</Text> :
+            data.employees.list.map((e: any, i: number) => (
+              <View key={e.id} style={s.sheetCard}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>#{i + 1}</Text>
+                      <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>{e.name}</Text>
+                    </View>
+                    <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{e.job_title} · {e.phone}</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '900' }}>{e.invoices_total.toLocaleString()} ر.س</Text>
+                    <Text style={{ color: GOLD, fontSize: 10, marginTop: 2 }}>{e.orders_handled} طلب</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
