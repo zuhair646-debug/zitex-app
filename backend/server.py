@@ -3490,8 +3490,93 @@ async def seed_data():
                 "created_at": datetime.now(timezone.utc).isoformat()
             },
         ]
+        # Add richer image + banner fields
+        for c in comps:
+            c.setdefault("image", "")
+            c.setdefault("banner_image", "")
+            c.setdefault("category", c.get("type", "general"))
+        # Enrich existing 3 with images
+        img_by_title = {
+            "Spend & Win: Eid Special Draw": "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=800",
+            "Summer Tech Giveaway": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800",
+            "Accessories Bundle Draw": "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800",
+        }
+        for c in comps:
+            if c["title"] in img_by_title:
+                c["image"] = img_by_title[c["title"]]
+                c["banner_image"] = img_by_title[c["title"]]
+        # Extra rich competitions with images (7 more, total 10)
+        extra_comps = [
+            {"title": "Ramadan Mega Draw 🌙", "type": "spend_win", "description": "أكبر سحوبات رمضان! اشتري بأي مبلغ خلال الشهر الفضيل واربح فرصة الفوز بجائزتنا الكبرى.",
+             "prize": "سيارة تسلا Model 3 + iPhone 15 Pro", "prize_count": 2, "status": "open", "spend_requirement": 200,
+             "start_date": "2026-02-25", "end_date": "2026-03-25", "draw_date": "2026-03-26",
+             "max_participants": 5000, "joined_count": 3812,
+             "questions": [], "winners": [], "category": "general",
+             "image": "https://images.unsplash.com/photo-1541963463532-d68292c34b19?w=800",
+             "banner_image": "https://images.unsplash.com/photo-1541963463532-d68292c34b19?w=800",
+             "created_at": datetime.now(timezone.utc).isoformat()},
+            {"title": "اليوم الوطني السعودي 🇸🇦", "type": "spend_win", "description": "احتفل بحب الوطن! سحب خاص باليوم الوطني على أفضل الأجهزة السعودية.",
+             "prize": "MacBook Pro M3 + AirPods Pro", "prize_count": 3, "status": "open", "spend_requirement": 150,
+             "start_date": "2026-09-15", "end_date": "2026-09-30", "draw_date": "2026-10-01",
+             "max_participants": 3000, "joined_count": 1876,
+             "questions": [], "winners": [], "category": "national",
+             "image": "https://images.unsplash.com/photo-1591370409347-2fd43b7842ec?w=800",
+             "banner_image": "https://images.unsplash.com/photo-1591370409347-2fd43b7842ec?w=800",
+             "created_at": datetime.now(timezone.utc).isoformat()},
+            {"title": "تحدي فيديو UGC: احسن مراجعة! 🎬", "type": "ugc_video", "description": "شارك فيديو مراجعة لأحدث المنتجات وربما تفوز! كل الفيديوهات يعرضها الجمهور ويصوّت.",
+             "prize": "PlayStation 5 + متحف من الألعاب", "prize_count": 1, "status": "open", "spend_requirement": 0,
+             "start_date": "2026-09-01", "end_date": "2026-10-15", "draw_date": "2026-10-16",
+             "max_participants": 500, "joined_count": 89,
+             "questions": [], "winners": [], "category": "ugc",
+             "image": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800",
+             "banner_image": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800",
+             "created_at": datetime.now(timezone.utc).isoformat()},
+            {"title": "مسابقة الأسئلة التقنية 🧠", "type": "quiz", "description": "اختبر معلوماتك في التقنية وأجب على 10 أسئلة بشكل صحيح لتربح!",
+             "prize": "iPad Pro 12.9 + Apple Pencil", "prize_count": 2, "status": "open", "spend_requirement": 0,
+             "start_date": "2026-09-10", "end_date": "2026-09-30", "draw_date": "2026-10-01",
+             "max_participants": 2000, "joined_count": 1234,
+             "questions": [
+                 {"q": "أي شركة أنتجت أول iPhone؟", "options": ["Samsung", "Apple", "Nokia"], "correct": 1},
+                 {"q": "ما هو نظام تشغيل ماك؟", "options": ["Windows", "macOS", "Linux"], "correct": 1},
+             ],
+             "winners": [], "category": "quiz",
+             "image": "https://images.unsplash.com/photo-1516110833967-0b5716ca1387?w=800",
+             "banner_image": "https://images.unsplash.com/photo-1516110833967-0b5716ca1387?w=800",
+             "created_at": datetime.now(timezone.utc).isoformat()},
+            {"title": "دعوة صديق واربح 🎁", "type": "referral", "description": "ادعُ 5 أصدقاء إلى Zenrex Store واحصل على فرصة مضمونة للفوز!",
+             "prize": "Samsung Galaxy S24 Ultra", "prize_count": 5, "status": "open", "spend_requirement": 0,
+             "start_date": "2026-09-01", "end_date": "2026-12-31", "draw_date": "2027-01-01",
+             "max_participants": 10000, "joined_count": 2456,
+             "questions": [], "winners": [], "category": "referral",
+             "image": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800",
+             "banner_image": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800",
+             "created_at": datetime.now(timezone.utc).isoformat()},
+            {"title": "مسابقة الجمعة البيضاء ⚡", "type": "spend_win", "description": "أعظم عروض الجمعة البيضاء + سحوبات فورية على منتجات مميزة.",
+             "prize": "خصومات تصل إلى 70% + جوائز فورية", "prize_count": 100, "status": "coming_soon", "spend_requirement": 100,
+             "start_date": "2026-11-24", "end_date": "2026-11-30", "draw_date": "2026-12-01",
+             "max_participants": 15000, "joined_count": 0,
+             "questions": [], "winners": [], "category": "seasonal",
+             "image": "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=800",
+             "banner_image": "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=800",
+             "created_at": datetime.now(timezone.utc).isoformat()},
+            {"title": "المتسوق الأول 🥇", "type": "spend_win", "description": "كن أول 100 عميل خلال الأسبوع الأول من الإطلاق واحصل على مكافأة حصرية!",
+             "prize": "قسيمة شرائية 500 ريال + شحن مجاني للسنة", "prize_count": 100, "status": "ended", "spend_requirement": 50,
+             "start_date": "2026-01-01", "end_date": "2026-01-07", "draw_date": "2026-01-08",
+             "max_participants": 100, "joined_count": 100,
+             "questions": [],
+             "winners": [
+                 {"user_name": "أحمد المطيري", "user_phone": "(555) 111-****"},
+                 {"user_name": "نورة السعد", "user_phone": "(555) 222-****"},
+                 {"user_name": "عبدالله القحطاني", "user_phone": "(555) 333-****"},
+             ],
+             "category": "launch",
+             "image": "https://images.unsplash.com/photo-1607082349566-187342175e2f?w=800",
+             "banner_image": "https://images.unsplash.com/photo-1607082349566-187342175e2f?w=800",
+             "created_at": datetime.now(timezone.utc).isoformat()},
+        ]
+        comps.extend(extra_comps)
         await db.competitions.insert_many(comps)
-        logger.info("Seeded competitions")
+        logger.info(f"Seeded {len(comps)} competitions with images")
 
         # Seed participants for Eid draw
         comp_eid = await db.competitions.find_one({"title": "Spend & Win: Eid Special Draw"})
@@ -3540,33 +3625,70 @@ async def seed_data():
     # Seed services
     if await db.services.count_documents({}) == 0:
         services = [
-            {"name": "Screen Repair", "desc": "Professional screen replacement for all phone models", "icon": "phone-portrait", "color": "#8833FF",
+            {"name": "Screen Repair", "name_ar": "إصلاح الشاشة", "desc": "Professional screen replacement for all phone models", "desc_ar": "استبدال احترافي للشاشة لجميع أنواع الجوالات", "icon": "phone-portrait", "color": "#8833FF",
+             "image": "https://images.unsplash.com/photo-1601972602288-3be527b4f18d?w=600",
              "price": 199, "inspection_price": 11, "total_requests": 423, "turnaround": "1-2 Days",
              "delivery_available": True, "home_pickup": True, "warranty_available": True, "warranty_days": 90,
-             "rating": 4.7, "review_count": 134, "published": True},
-            {"name": "Battery Replacement", "desc": "Genuine battery replacement with warranty", "icon": "battery-charging", "color": "#10B981",
+             "rating": 4.7, "review_count": 134, "published": True, "category": "repair"},
+            {"name": "Battery Replacement", "name_ar": "استبدال البطارية", "desc": "Genuine battery replacement with warranty", "desc_ar": "استبدال البطارية بقطعة أصلية مع ضمان", "icon": "battery-charging", "color": "#10B981",
+             "image": "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=600",
              "price": 149, "inspection_price": 11, "total_requests": 312, "turnaround": "1 Day",
              "delivery_available": True, "home_pickup": True, "warranty_available": True, "warranty_days": 180,
-             "rating": 4.8, "review_count": 98, "published": True},
-            {"name": "Water Damage Repair", "desc": "Advanced water damage recovery service", "icon": "water", "color": "#3B82F6",
+             "rating": 4.8, "review_count": 98, "published": True, "category": "repair"},
+            {"name": "Water Damage Repair", "name_ar": "إصلاح أضرار الماء", "desc": "Advanced water damage recovery service", "desc_ar": "خدمة استعادة متقدمة لأضرار الماء", "icon": "water", "color": "#3B82F6",
+             "image": "https://images.unsplash.com/photo-1580901368919-7738efb0f87e?w=600",
              "price": 299, "inspection_price": 25, "total_requests": 187, "turnaround": "2-3 Days",
              "delivery_available": True, "home_pickup": False, "warranty_available": True, "warranty_days": 30,
-             "rating": 4.3, "review_count": 67, "published": True},
-            {"name": "Software Fix", "desc": "OS updates, virus removal, data recovery", "icon": "code-slash", "color": "#F59E0B",
+             "rating": 4.3, "review_count": 67, "published": True, "category": "repair"},
+            {"name": "Software Fix", "name_ar": "إصلاح البرامج", "desc": "OS updates, virus removal, data recovery", "desc_ar": "تحديث النظام، إزالة الفيروسات، استعادة البيانات", "icon": "code-slash", "color": "#F59E0B",
+             "image": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600",
              "price": 99, "inspection_price": 0, "total_requests": 256, "turnaround": "Same Day",
              "delivery_available": False, "home_pickup": False, "warranty_available": False, "warranty_days": 0,
-             "rating": 4.6, "review_count": 89, "published": True},
-            {"name": "Device Inspection", "desc": "Full device health check and diagnostic report", "icon": "search", "color": "#EC4899",
+             "rating": 4.6, "review_count": 89, "published": True, "category": "software"},
+            {"name": "Device Inspection", "name_ar": "فحص الجهاز", "desc": "Full device health check and diagnostic report", "desc_ar": "فحص شامل لصحة الجهاز مع تقرير تشخيصي", "icon": "search", "color": "#EC4899",
+             "image": "https://images.unsplash.com/photo-1585298723682-7115561c51b7?w=600",
              "price": 49, "inspection_price": 0, "total_requests": 145, "turnaround": "Same Day",
              "delivery_available": False, "home_pickup": False, "warranty_available": False, "warranty_days": 0,
-             "rating": 4.9, "review_count": 156, "published": True},
-            {"name": "Charging Port Fix", "desc": "Repair or replace damaged charging ports", "icon": "flash", "color": "#EF4444",
+             "rating": 4.9, "review_count": 156, "published": True, "category": "diagnostic"},
+            {"name": "Charging Port Fix", "name_ar": "إصلاح منفذ الشحن", "desc": "Repair or replace damaged charging ports", "desc_ar": "إصلاح أو استبدال منافذ الشحن التالفة", "icon": "flash", "color": "#EF4444",
+             "image": "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600",
              "price": 129, "inspection_price": 11, "total_requests": 198, "turnaround": "1 Day",
              "delivery_available": True, "home_pickup": True, "warranty_available": True, "warranty_days": 60,
-             "rating": 4.5, "review_count": 78, "published": True},
+             "rating": 4.5, "review_count": 78, "published": True, "category": "repair"},
+            # NEW enriched services
+            {"name": "Camera Lens Replacement", "name_ar": "استبدال عدسة الكاميرا", "desc": "Professional camera lens repair for all smartphones", "desc_ar": "إصلاح احترافي لعدسة الكاميرا لجميع الجوالات", "icon": "camera", "color": "#06B6D4",
+             "image": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600",
+             "price": 249, "inspection_price": 15, "total_requests": 156, "turnaround": "1-2 Days",
+             "delivery_available": True, "home_pickup": True, "warranty_available": True, "warranty_days": 60,
+             "rating": 4.6, "review_count": 92, "published": True, "category": "repair"},
+            {"name": "Data Recovery", "name_ar": "استعادة البيانات", "desc": "Recover lost files, photos and contacts from damaged devices", "desc_ar": "استعادة الملفات والصور وجهات الاتصال من الأجهزة التالفة", "icon": "cloud-download", "color": "#7C3AED",
+             "image": "https://images.unsplash.com/photo-1614332287897-cdc485fa562d?w=600",
+             "price": 179, "inspection_price": 20, "total_requests": 87, "turnaround": "2-4 Days",
+             "delivery_available": False, "home_pickup": False, "warranty_available": False, "warranty_days": 0,
+             "rating": 4.7, "review_count": 43, "published": True, "category": "software"},
+            {"name": "Speaker & Microphone Fix", "name_ar": "إصلاح السماعة والميكرفون", "desc": "Fix speaker and microphone issues on any device", "desc_ar": "إصلاح مشاكل السماعة والميكرفون في أي جهاز", "icon": "volume-high", "color": "#F97316",
+             "image": "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600",
+             "price": 99, "inspection_price": 11, "total_requests": 134, "turnaround": "Same Day",
+             "delivery_available": True, "home_pickup": True, "warranty_available": True, "warranty_days": 60,
+             "rating": 4.5, "review_count": 61, "published": True, "category": "repair"},
+            {"name": "Motherboard Repair", "name_ar": "إصلاح اللوحة الأم", "desc": "Advanced motherboard repair by certified technicians", "desc_ar": "إصلاح متقدم للوحة الأم بواسطة فنيين معتمدين", "icon": "hardware-chip", "color": "#DC2626",
+             "image": "https://images.unsplash.com/photo-1601731317945-68e6a5a4c8d1?w=600",
+             "price": 499, "inspection_price": 30, "total_requests": 45, "turnaround": "3-5 Days",
+             "delivery_available": False, "home_pickup": False, "warranty_available": True, "warranty_days": 90,
+             "rating": 4.4, "review_count": 22, "published": True, "category": "repair"},
+            {"name": "Screen Protector Installation", "name_ar": "تركيب واقي الشاشة", "desc": "Premium glass screen protector installation", "desc_ar": "تركيب واقي شاشة زجاجي فاخر", "icon": "shield-checkmark", "color": "#059669",
+             "image": "https://images.unsplash.com/photo-1616348436168-de43ad0db179?w=600",
+             "price": 49, "inspection_price": 0, "total_requests": 289, "turnaround": "15 Minutes",
+             "delivery_available": True, "home_pickup": False, "warranty_available": True, "warranty_days": 30,
+             "rating": 4.9, "review_count": 187, "published": True, "category": "accessory"},
+            {"name": "Home Service Visit", "name_ar": "زيارة الفنيّ المنزلية", "desc": "Certified technician visits your home for on-site repair", "desc_ar": "فنّي معتمد يزور منزلك لإصلاح فوري", "icon": "home", "color": "#0EA5E9",
+             "image": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600",
+             "price": 199, "inspection_price": 50, "total_requests": 76, "turnaround": "2-4 Hours",
+             "delivery_available": True, "home_pickup": True, "warranty_available": True, "warranty_days": 30,
+             "rating": 4.8, "review_count": 45, "published": True, "category": "home"},
         ]
         await db.services.insert_many(services)
-        logger.info("Seeded services")
+        logger.info(f"Seeded {len(services)} services with images")
 
     # Seed warranties for test user
     if await db.warranties.count_documents({}) == 0:
@@ -4593,6 +4715,164 @@ async def store_reply_to_comment(pid: str, cid: str, request: Request, user=Depe
         {"$push": {"comments.$.replies": reply}},
     )
     return {"ok": True, "reply": reply}
+
+
+# ─── Social share tracking (customer) + merchant view (agent-only) ────────
+@api_router.post("/social/posts/{pid}/share")
+async def track_share(pid: str, request: Request, user=Depends(get_current_user)):
+    """Customer clicked share on a post. Records where they shared to."""
+    body = await request.json() if request.headers.get("content-type", "").startswith("application/json") else {}
+    platform = (body.get("platform") or "unknown").lower()
+    entry = {
+        "user_id": user.get("id"),
+        "user_name": user.get("name") or "مستخدم",
+        "user_phone": user.get("phone"),
+        "user_city": user.get("city") or "غير محدد",
+        "platform": platform,
+        "shared_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if not ObjectId.is_valid(pid): raise HTTPException(400, "Bad id")
+    await db.social_posts.update_one(
+        {"_id": ObjectId(pid)},
+        {"$push": {"sharers": entry}, "$inc": {"shares": 1, f"share_by_platform.{platform}": 1}},
+    )
+    return {"ok": True}
+
+@api_router.get("/merchant/social/posts/{pid}/sharers")
+async def merchant_post_sharers(pid: str, user=Depends(get_current_user)):
+    """Merchant: full list of users who shared this post + where."""
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    if not ObjectId.is_valid(pid): raise HTTPException(400, "Bad id")
+    post = await db.social_posts.find_one({"_id": ObjectId(pid)}, {"sharers": 1, "share_by_platform": 1, "shares": 1})
+    if not post: raise HTTPException(404, "Not found")
+    sharers = post.get("sharers", []) or []
+    return {
+        "total": len(sharers),
+        "by_platform": post.get("share_by_platform", {}),
+        "sharers": sorted(sharers, key=lambda x: x.get("shared_at", ""), reverse=True)[:200],
+    }
+
+@api_router.get("/merchant/social/posts/{pid}/viewers")
+async def merchant_post_viewers(pid: str, user=Depends(get_current_user)):
+    """Merchant: full list of users who viewed post but didn't interact."""
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+    if not ObjectId.is_valid(pid): raise HTTPException(400, "Bad id")
+    post = await db.social_posts.find_one({"_id": ObjectId(pid)})
+    if not post: raise HTTPException(404, "Not found")
+    viewers = post.get("viewers", []) or []
+    likers = post.get("likers", []) or []
+    liker_ids = {l.get("user_id") for l in likers}
+    comment_ids = {c.get("user_id") for c in (post.get("comments") or []) if c.get("user_id")}
+    engaged_ids = liker_ids | comment_ids
+    # Split into engaged vs silent viewers
+    silent = [v for v in viewers if v.get("user_id") not in engaged_ids]
+    engaged = [v for v in viewers if v.get("user_id") in engaged_ids]
+    return {
+        "total_views": len(viewers),
+        "silent_viewers": sorted(silent, key=lambda x: x.get("viewed_at", ""), reverse=True)[:200],
+        "engaged_viewers": sorted(engaged, key=lambda x: x.get("viewed_at", ""), reverse=True)[:200],
+    }
+
+# ─── Live Preview - Overview / General tab (drivers, branches, marketers) ─────
+@api_router.get("/merchant/live-preview/overview")
+async def live_preview_overview(user=Depends(get_current_user)):
+    """General/Overview tab: aggregated stats for drivers, branches, marketers, employees."""
+    if user.get("role") not in ("merchant", "chamber"):
+        raise HTTPException(403, "Merchants only")
+
+    # Drivers
+    drivers_docs = await db.drivers.find({}).to_list(500)
+    drivers = []
+    for d in drivers_docs:
+        drivers.append({
+            "id": str(d.get("_id", "")),
+            "name": d.get("name", "سائق"),
+            "phone": d.get("phone", ""),
+            "online": bool(d.get("online", False)),
+            "total_deliveries": d.get("total_deliveries", 0),
+            "today_deliveries": d.get("today_deliveries", 0),
+            "rating": d.get("rating", 4.5),
+            "wallet_balance": d.get("wallet_balance", 0),
+        })
+    drivers_sorted = sorted(drivers, key=lambda x: x["total_deliveries"], reverse=True)
+
+    # Branches
+    branches_docs = await db.branches.find({}).to_list(100)
+    branches = []
+    for b in branches_docs:
+        bid = str(b.get("_id", ""))
+        # Sales for this branch (from orders)
+        orders_cnt = await db.orders.count_documents({"branch_id": bid})
+        pos_sum = 0
+        async for inv in db.invoices.find({"branch_id": bid}, {"total": 1}):
+            pos_sum += inv.get("total", 0) or 0
+        branches.append({
+            "id": bid,
+            "name": b.get("name", "فرع"),
+            "city": b.get("city", ""),
+            "phone": b.get("phone", ""),
+            "active": bool(b.get("active", True)),
+            "orders_count": orders_cnt,
+            "pos_revenue": round(pos_sum, 2),
+            "employees_count": await db.users.count_documents({"branch_ids": bid, "role": "employee"}),
+        })
+    branches_sorted = sorted(branches, key=lambda x: x["pos_revenue"] + x["orders_count"] * 50, reverse=True)
+
+    # Marketers (affiliates)
+    marketers_docs = await db.affiliates.find({"status": "approved"}).to_list(200) if "affiliates" in await db.list_collection_names() else []
+    marketers = []
+    for m in marketers_docs:
+        marketers.append({
+            "id": str(m.get("_id", "")),
+            "name": m.get("name", "مسوّق"),
+            "referral_code": m.get("referral_code", ""),
+            "clicks": m.get("clicks", 0),
+            "conversions": m.get("conversions", 0),
+            "sales_total": m.get("sales_total", 0),
+            "commission_earned": m.get("commission_earned", 0),
+        })
+    marketers_sorted = sorted(marketers, key=lambda x: x["conversions"], reverse=True)
+
+    # Employees performance summary
+    emps_docs = await db.users.find({"role": "employee"}).to_list(100)
+    employees = []
+    for e in emps_docs:
+        eid = str(e.get("_id", ""))
+        invoice_sum = 0
+        async for inv in db.invoices.find({"cashier_id": eid}, {"total": 1}):
+            invoice_sum += inv.get("total", 0) or 0
+        employees.append({
+            "id": eid,
+            "name": e.get("name", "موظف"),
+            "job_title": e.get("job_title", "موظف"),
+            "phone": e.get("phone", ""),
+            "invoices_total": round(invoice_sum, 2),
+            "orders_handled": await db.orders.count_documents({"handled_by": eid}),
+        })
+
+    return {
+        "drivers": {
+            "total": len(drivers),
+            "online": sum(1 for d in drivers if d["online"]),
+            "top": drivers_sorted[:10],
+        },
+        "branches": {
+            "total": len(branches),
+            "active": sum(1 for b in branches if b["active"]),
+            "top": branches_sorted[:10],
+        },
+        "marketers": {
+            "total": len(marketers),
+            "total_commission": round(sum(m["commission_earned"] for m in marketers), 2),
+            "top": marketers_sorted[:10],
+        },
+        "employees": {
+            "total": len(employees),
+            "list": sorted(employees, key=lambda x: x["invoices_total"], reverse=True)[:20],
+        },
+    }
 
 
 app.include_router(api_router)
