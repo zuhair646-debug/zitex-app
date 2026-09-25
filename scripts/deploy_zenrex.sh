@@ -36,12 +36,12 @@ INSTALL_DIR="/opt/zenrex-store"
 BACKEND_DIR="$INSTALL_DIR/backend"
 GIT_REPO="https://github.com/zuhair646-debug/zitex-app.git"
 GIT_BRANCH="main"
-API_PORT="8001"
+API_PORT="8100"
 MONGO_PORT="27018"          # Dedicated port to avoid conflict with existing mongo
 DOMAIN="api.zenrex.ai"
 SERVICE_NAME="zenrex-store-api"
-NGINX_SITE="/etc/nginx/sites-available/zenrex-store"
-NGINX_LINK="/etc/nginx/sites-enabled/zenrex-store"
+NGINX_SITE="/etc/nginx/sites-available/api.zenrex.ai"
+NGINX_LINK="/etc/nginx/sites-enabled/api.zenrex.ai"
 BACKUP_DIR="/root/zenrex-store-backups/$(date +%Y%m%d_%H%M%S)"
 
 # ─── Pre-flight checks ─────────────────────────────────────────────────
@@ -144,6 +144,8 @@ step "6/12 — Setting up Python venv + installing deps"
 python3.11 -m venv "$INSTALL_DIR/venv"
 "$INSTALL_DIR/venv/bin/pip" install --quiet --upgrade pip
 "$INSTALL_DIR/venv/bin/pip" install --quiet -r "$BACKEND_DIR/requirements.txt"
+# Ensure critical runtime packages that may be missing from requirements.txt
+"$INSTALL_DIR/venv/bin/pip" install --quiet python-dotenv pyjwt python-multipart
 ok "Python deps installed"
 
 # ─── Create backend .env ──────────────────────────────────────────────
@@ -173,7 +175,7 @@ Requires=mongod-zenrex.service
 Type=simple
 WorkingDirectory=$BACKEND_DIR
 Environment="PATH=$INSTALL_DIR/venv/bin"
-ExecStart=$INSTALL_DIR/venv/bin/uvicorn server:app --host 127.0.0.1 --port $API_PORT --workers 2
+ExecStart=$INSTALL_DIR/venv/bin/uvicorn server:app --host 127.0.0.1 --port $API_PORT --workers 1
 Restart=on-failure
 RestartSec=5
 StandardOutput=append:/var/log/zenrex-store-api.log
