@@ -3,7 +3,22 @@
 ## Vision
 Zitex — Comprehensive Tech Store native mobile app (iOS + Android) with e-commerce, social feed, competitions, delivery, chamber portal, and merchant admin panel.
 
-## Current release: v1.13.5 — Live Preview Command Center
+## Current release: v1.13.6 — Full Transparency Fixes
+- **Bug fixes from user's video review:**
+  - Services: warranty badge no longer overlaps image edge (elegant bottom-right green pill)
+  - Services/Products/Competitions: entire card is tappable to open analytics (not just the tiny icon)
+  - Services: "التفاصيل" hint pill on card image
+  - Empty 0/0/0 analytics fixed via automatic demo seed on startup
+- **Full transparency in Social tab:**
+  - Post like/share/comment counts are all tappable — each jumps to the correct insights tab
+  - 4-tab insights sheet: نظرة عامة / المُعجبون / التعليقات / المشاركات
+  - Likers view: full user list with avatars + timestamps
+  - Sharers view: grouped by platform (TikTok, Snapchat, Instagram, WhatsApp, Twitter, Copy Link) with color-coded chips
+  - Comments view: one-tap "رد باسم المتجر" button on unanswered comments with optimistic UI
+- **Backend seed:** `_seed_preview_analytics()` auto-generates realistic views/orders/invoices/bookings/reviews/competition entries/post interactions on startup
+- **Merchant post detail endpoint** now returns `sharers[]` + `shares` KPI
+
+## Previous release: v1.13.5 — Live Preview Command Center
 - **NEW: Order Heatmap** — 7×24 grid in General tab showing peak day + peak hour with color intensity
 - **NEW: Real-time Alerts Bell** — glassmorphic bell in banner with unread badge, sheet with severity colors (info/success/warning), one-tap ack + "قراءة الكل"
 - **NEW: PDF Export** — every Driver/Branch/Marketer/Employee sheet exports print-optimized HTML report with gold branded template
