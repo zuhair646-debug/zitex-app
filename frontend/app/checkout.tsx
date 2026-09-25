@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Linking } from 'react-native';
+import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import PaymentMethodsRibbon from '../src/components/PaymentAndLoyalty';
 import ShippingOptionsPicker from '../src/components/ShippingOptionsPicker';
+import LoyaltyRedeemPicker from '../src/components/LoyaltyRedeemPicker';
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -30,6 +32,49 @@ export default function CheckoutScreen() {
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [shipMode, setShipMode] = useState<'internal' | 'external'>('internal');
   const [externalCarrier, setExternalCarrier] = useState<{ code: string; price: number; eta: string } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [autoDetectedOnce, setAutoDetectedOnce] = useState(false);
+  const [loyaltyDiscount, setLoyaltyDiscount] = useState<{ code: string; amount: number; points: number } | null>(null);
+
+  const autoDetectLocation = useCallback(async () => {
+    setLocating(true);
+    try {
+      // Check existing permission first (handle_permissions_contract)
+      let { status, canAskAgain } = await Location.getForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        if (!canAskAgain) {
+          Alert.alert(
+            'إذن الموقع',
+            'الرجاء تفعيل صلاحية الموقع من إعدادات التطبيق لتحديد شركة الشحن الصحيحة تلقائياً',
+            [
+              { text: 'إلغاء', style: 'cancel' },
+              { text: 'فتح الإعدادات', onPress: () => Linking.openSettings() },
+            ]
+          );
+          return;
+        }
+        const req = await Location.requestForegroundPermissionsAsync();
+        status = req.status;
+        if (status !== 'granted') {
+          Alert.alert('إذن الموقع', 'تم رفض الوصول للموقع — يمكنك تحديده يدوياً');
+          return;
+        }
+      }
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setUserLat(pos.coords.latitude);
+      setUserLng(pos.coords.longitude);
+      setAutoDetectedOnce(true);
+    } catch (e: any) {
+      Alert.alert('تعذّر تحديد الموقع', e?.message || 'حاول مرة أخرى');
+    } finally { setLocating(false); }
+  }, []);
+
+  // Auto-detect location on first mount if not already set
+  useEffect(() => {
+    if (!autoDetectedOnce && !userLat && !userLng) {
+      autoDetectLocation().catch(() => {});
+    }
+  }, [autoDetectedOnce, userLat, userLng, autoDetectLocation]);
 
   useEffect(() => {
     (async () => {
@@ -100,7 +145,8 @@ export default function CheckoutScreen() {
   const subtotal = cart.reduce((a, i) => a + ((i.product?.discount_price || i.product?.price || 0) * i.quantity), 0);
   const deliveryCost = deliveryFee;
   const tax = Math.round(subtotal * 0.15);
-  const total = subtotal + tax + deliveryCost - couponDiscount;
+  const loyaltyOff = loyaltyDiscount?.amount || 0;
+  const total = Math.max(0, subtotal + tax + deliveryCost - couponDiscount - loyaltyOff);
 
   if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
@@ -188,6 +234,19 @@ export default function CheckoutScreen() {
 
         <TextInput style={s.notesInput} placeholder="ملاحظات للطلب (اختياري)" value={notes} onChangeText={setNotes} multiline />
 
+        {/* Location auto-detect chip */}
+        <TouchableOpacity onPress={autoDetectLocation} style={s.locBtn} disabled={locating}>
+          {locating ? <ActivityIndicator color="#F5C518" size="small" /> : (
+            <Ionicons name={userLat ? 'checkmark-circle' : 'locate'} size={16} color={userLat ? '#10B981' : '#F5C518'} />
+          )}
+          <Text style={[s.locText, userLat && { color: '#10B981' }]}>
+            {userLat && userLng
+              ? `تم تحديد موقعك — استخدم موقعاً آخر؟`
+              : 'تحديد موقعي تلقائياً لعرض خيارات الشحن المناسبة'}
+          </Text>
+          <Ionicons name="refresh" size={14} color="#9CA3AF" />
+        </TouchableOpacity>
+
         {/* External shipping picker (KSA carriers) */}
         <ShippingOptionsPicker
           apiCall={apiCall}
@@ -212,12 +271,25 @@ export default function CheckoutScreen() {
           <View style={s.summaryRow}><Text style={s.sLabel}>التوصيل</Text><Text style={s.sVal}>{deliveryCost} ر.س</Text></View>
           <View style={s.summaryRow}><Text style={s.sLabel}>الضريبة (١٥٪)</Text><Text style={s.sVal}>{tax} ر.س</Text></View>
           {couponDiscount > 0 && <View style={s.summaryRow}><Text style={[s.sLabel, { color: '#10B981' }]}>خصم الكوبون</Text><Text style={[s.sVal, { color: '#10B981' }]}>-{couponDiscount} ر.س</Text></View>}
+          {loyaltyOff > 0 && <View style={s.summaryRow}><Text style={[s.sLabel, { color: '#8B5CF6' }]}>خصم نقاط الولاء</Text><Text style={[s.sVal, { color: '#8B5CF6' }]}>-{loyaltyOff} ر.س</Text></View>}
           <View style={[s.summaryRow, s.totalRow]}><Text style={s.totalLabel}>المجموع</Text><Text style={s.totalVal}>{total} ر.س</Text></View>
         </View>
       </ScrollView>
 
       {/* Saudi payment methods ribbon */}
       <PaymentMethodsRibbon apiCall={apiCall} />
+
+      {/* Loyalty redeem picker */}
+      <View style={{ paddingHorizontal: 12, backgroundColor: '#FFF' }}>
+        <LoyaltyRedeemPicker
+          apiCall={apiCall}
+          cartTotal={total + loyaltyOff}
+          onDiscountApplied={(code, amt, pts) => {
+            if (code) setLoyaltyDiscount({ code, amount: amt, points: pts });
+            else setLoyaltyDiscount(null);
+          }}
+        />
+      </View>
 
       <View style={s.bottomBar}>
         <TouchableOpacity style={s.buyBtn} onPress={placeOrder} disabled={ordering}>
@@ -288,6 +360,8 @@ const s = StyleSheet.create({
   couponBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
   couponApplied: { fontSize: 13, color: '#10B981', fontWeight: '600', marginTop: 6 },
   notesInput: { backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, marginTop: 16, borderWidth: 1, borderColor: '#E4E4E7', height: 60, textAlign: 'right' },
+  locBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginTop: 10 },
+  locText: { flex: 1, textAlign: 'right', color: '#0A0A0A', fontSize: 12, fontWeight: '700' },
   summaryCard: { backgroundColor: '#F9F9FB', borderRadius: 16, padding: 16, marginTop: 16 },
   summaryTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 12, textAlign: 'right' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },

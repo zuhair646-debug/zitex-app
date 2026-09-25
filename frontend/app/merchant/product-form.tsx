@@ -38,6 +38,11 @@ export default function ProductForm() {
     shop_warranty_days: '', shop_warranty_terms: '',
     manufacturer_name: '', manufacturer_days: '',
     manufacturer_url: '', manufacturer_phone: '', manufacturer_terms: '',
+    // Return policy
+    allow_return: true,
+    return_days: '15',
+    manufacturing_defect_days: '365',
+    return_conditions: 'المنتج بحالته الأصلية مع كافة الملحقات والعلبة الأصلية سليمة',
   });
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#000000');
@@ -73,6 +78,10 @@ export default function ProductForm() {
             manufacturer_url: p.manufacturer_url || '',
             manufacturer_phone: p.manufacturer_phone || '',
             manufacturer_terms: p.manufacturer_terms || '',
+            allow_return: p.allow_return !== false,
+            return_days: p.return_days != null ? String(p.return_days) : '15',
+            manufacturing_defect_days: p.manufacturing_defect_days != null ? String(p.manufacturing_defect_days) : '365',
+            return_conditions: p.return_conditions || 'المنتج بحالته الأصلية مع كافة الملحقات والعلبة الأصلية سليمة',
           });
         }
       } catch (e: any) { Alert.alert('خطأ', e.message); }
@@ -178,6 +187,8 @@ export default function ProductForm() {
         colors: (data.colors || []).filter((c: any) => c.name && c.hex),
         shop_warranty_days: parseInt(data.shop_warranty_days || '0', 10) || 0,
         manufacturer_days: parseInt(data.manufacturer_days || '0', 10) || 0,
+        return_days: parseInt(data.return_days || '15', 10) || 15,
+        manufacturing_defect_days: parseInt(data.manufacturing_defect_days || '365', 10) || 365,
       };
       if (id) await apiCall(`/api/merchant/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiCall('/api/merchant/products', { method: 'POST', body: JSON.stringify(body) });
@@ -528,6 +539,40 @@ export default function ProductForm() {
             <TextInput style={s.input} value={data.tags} placeholderTextColor={colors.onSurfaceTertiary}
               onChangeText={t => setData({ ...data, tags: t })}
               placeholder="آيفون، هواتف، سامسونج (افصل بفاصلة)" />
+          </View>
+
+          {/* Card: Return Policy */}
+          <View style={s.card}>
+            <View style={s.cardHeader}>
+              <View style={s.iconBadge}><Ionicons name="return-up-back" size={16} color={colors.brand} /></View>
+              <Text style={s.cardTitle}>سياسة الإرجاع والضمان</Text>
+            </View>
+            <View style={s.toggle}>
+              <Text style={s.toggleLabel}>السماح بالإرجاع</Text>
+              <Switch value={data.allow_return}
+                onValueChange={v => setData({ ...data, allow_return: v })}
+                trackColor={{ true: colors.brand, false: colors.surfaceTertiary }} thumbColor="white" />
+            </View>
+            {data.allow_return && (
+              <>
+                <Text style={s.label}>مدة الإرجاع (أيام) — العميل يستطيع الإرجاع خلالها</Text>
+                <TextInput style={s.input} keyboardType="numeric" placeholderTextColor={colors.onSurfaceTertiary}
+                  value={data.return_days}
+                  onChangeText={t => setData({ ...data, return_days: t })}
+                  placeholder="15" />
+              </>
+            )}
+            <Text style={s.label}>مدة قبول عيب المصنع (أيام)</Text>
+            <TextInput style={s.input} keyboardType="numeric" placeholderTextColor={colors.onSurfaceTertiary}
+              value={data.manufacturing_defect_days}
+              onChangeText={t => setData({ ...data, manufacturing_defect_days: t })}
+              placeholder="365" />
+            <Text style={s.label}>شروط الإرجاع (تظهر للعميل)</Text>
+            <TextInput style={[s.input, { minHeight: 70, textAlignVertical: 'top' }]}
+              multiline placeholderTextColor={colors.onSurfaceTertiary}
+              value={data.return_conditions}
+              onChangeText={t => setData({ ...data, return_conditions: t })}
+              placeholder="المنتج بحالته الأصلية مع الملحقات..." />
           </View>
 
           {/* Card: Publish */}
