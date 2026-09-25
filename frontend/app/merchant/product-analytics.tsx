@@ -44,7 +44,23 @@ export default function ProductAnalyticsScreen() {
   }, [pid]);
 
   if (loading) return (<SafeAreaView style={s.safe}><ActivityIndicator color={GOLD} style={{ marginTop: 40 }} /></SafeAreaView>);
-  if (!d) return (<SafeAreaView style={s.safe}><Text style={{ color: MUTED, textAlign: 'center', marginTop: 40 }}>لم يتم العثور على المنتج</Text></SafeAreaView>);
+  if (!d) return (
+    <SafeAreaView style={s.safe}>
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => router.back()} style={s.back}>
+          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+        </TouchableOpacity>
+      </View>
+      <View style={{ padding: 40, alignItems: 'center' }}>
+        <Ionicons name="alert-circle" size={48} color={AMBER} />
+        <Text style={{ color: TEXT, textAlign: 'center', marginTop: 12, fontSize: 14, fontWeight: '900' }}>تعذّر تحميل التحليلات</Text>
+        <Text style={{ color: MUTED, textAlign: 'center', marginTop: 6, fontSize: 12 }}>تأكد من تسجيل الدخول كتاجر، أو تحقق من الاتصال بالإنترنت</Text>
+        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20, backgroundColor: GOLD, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 999 }}>
+          <Text style={{ color: BG, fontWeight: '900' }}>الرجوع</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
 
   const k = d.kpis; const p = d.product;
   const disc = p.discount_price;
