@@ -1,9 +1,24 @@
 # 🚨 CRITICAL PERMANENT RULE — Auto Release After EVERY Change
 # =====================================================================
 # Owner instruction (Arabic): "ارفع تحديث دايم خليها قاعده عندك"
-# Translation: "Always publish an update — keep this as your permanent rule."
+# Owner reinforcement (25/9/2026): "حطها قاعدة دايم ارفع على المتاجر بشكل مباشر"
+# Translation: "Always publish an update AND submit DIRECTLY to the stores
+# (TestFlight + Play Internal Track) — this is a PERMANENT RULE, never skip."
 
-## The Rule (NEVER skip these 6 steps)
+## Non-negotiable Publishing Rule
+After ANY successful feature, bug fix, polish, or content change on this
+repo, the agent MUST:
+1. Bump `expo.version`, `ios.buildNumber`, `android.versionCode`
+2. Commit + push to `main`
+3. Run `eas build --platform all --profile production --no-wait`
+4. Spawn the auto-submit poller (`/app/memory/tools/auto_submit_template.sh`)
+   which auto-submits to:
+   - **TestFlight** (iOS App Store Connect) — user tests immediately
+   - **Play Store Internal Track** (Android) — user tests immediately
+5. Log poller PID in this file so next agent can check status
+6. Never ask "should I publish now?" — always publish
+
+## The 6-Step Auto-Release Sequence (NEVER skip)
 Any agent working on this repo — after ANY successful feature, bug fix,
 polish, or content change — MUST execute the following sequence BEFORE
 calling `finish`:
