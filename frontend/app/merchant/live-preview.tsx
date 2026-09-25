@@ -1327,15 +1327,22 @@ const MEDAL_COLORS: Record<number, { bg: string; border: string; label: string }
   2: { bg: '#CD7F32', border: '#EAB308', label: '🥉' },
 };
 
-function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondaryValue, progressPct, isOnline }: any) {
+function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondaryValue, progressPct, isOnline, avatar, onPress }: any) {
   const medal = MEDAL_COLORS[rank];
   return (
-    <View style={s.luxeRow}>
-      {/* Medal or rank badge */}
-      <View style={[s.luxeMedal, medal ? { backgroundColor: medal.bg + '30', borderColor: medal.border } : { backgroundColor: BORDER, borderColor: BORDER }]}>
-        {medal ? <Text style={{ fontSize: 18 }}>{medal.label}</Text>
-          : <Text style={{ color: MUTED, fontSize: 13, fontWeight: '800' }}>{rank + 1}</Text>}
-      </View>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={s.luxeRow}>
+      {/* Avatar + medal */}
+      {avatar ? (
+        <View style={{ position: 'relative' }}>
+          <Image source={{ uri: avatar }} style={s.luxeAvatar} contentFit="cover" />
+          {medal && <View style={s.luxeAvatarMedal}><Text style={{ fontSize: 12 }}>{medal.label}</Text></View>}
+        </View>
+      ) : (
+        <View style={[s.luxeMedal, medal ? { backgroundColor: medal.bg + '30', borderColor: medal.border } : { backgroundColor: BORDER, borderColor: BORDER }]}>
+          {medal ? <Text style={{ fontSize: 18 }}>{medal.label}</Text>
+            : <Text style={{ color: MUTED, fontSize: 13, fontWeight: '800' }}>{rank + 1}</Text>}
+        </View>
+      )}
       {/* Info */}
       <View style={{ flex: 1, marginHorizontal: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -1343,7 +1350,6 @@ function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondary
           {isOnline && <View style={s.onlineDot} />}
         </View>
         <Text style={s.luxeRowSub} numberOfLines={1}>{subtitle}</Text>
-        {/* Progress bar */}
         <View style={s.progressBg}>
           <LinearGradient
             colors={[GOLD, '#D4A017']}
@@ -1358,7 +1364,103 @@ function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondary
         <Text style={s.luxeMetricLabel}>{primaryLabel}</Text>
         {secondaryValue !== undefined && <Text style={s.luxeMetricSecondary}>{secondaryValue}</Text>}
       </View>
-    </View>
+      <Ionicons name="chevron-back" size={18} color={MUTED} style={{ marginStart: 4 }} />
+    </TouchableOpacity>
+  );
+}
+
+/* ─── Entity Detail Sheet — driver / branch / marketer / employee ─────── */
+function EntityDetailSheet({ entity, kind, onClose }: any) {
+  if (!entity) return null;
+  const rows: { icon: string; label: string; value: string; color?: string }[] = [];
+  const K = (v: any) => v ? Number(v).toLocaleString('ar-SA') : '0';
+
+  if (kind === 'driver') {
+    rows.push({ icon: 'car', label: 'المركبة', value: entity.vehicle || '—' });
+    rows.push({ icon: 'radio-button-on', label: 'الحالة', value: entity.online ? '🟢 متصل الآن' : '⚪ غير متصل', color: entity.online ? '#34D399' : MUTED });
+    rows.push({ icon: 'star', label: 'التقييم', value: `⭐ ${(entity.rating || 0).toFixed(1)}` });
+    rows.push({ icon: 'briefcase', label: 'نظام الدفع', value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ر.س` : entity.salary_type === 'hourly' ? `أجر بالساعة: ${K(entity.hourly_rate)} ر.س` : 'عمولة على التوصيلات' });
+    rows.push({ icon: 'today', label: 'اليوم', value: `${K(entity.today_deliveries)} توصيلة`, color: GOLD });
+    rows.push({ icon: 'calendar', label: 'هذا الأسبوع', value: `${K(entity.week_deliveries)} توصيلة · ${K(entity.week_earnings)} ر.س` });
+    rows.push({ icon: 'calendar-outline', label: 'هذا الشهر', value: `${K(entity.month_deliveries)} توصيلة · ${K(entity.month_earnings)} ر.س` });
+    rows.push({ icon: 'trending-up', label: 'هذه السنة', value: `${K(entity.year_deliveries)} توصيلة · ${K(entity.year_earnings)} ر.س` });
+    rows.push({ icon: 'wallet', label: 'رصيد المحفظة', value: `${K(entity.wallet_balance)} ر.س`, color: '#34D399' });
+    rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
+  }
+  if (kind === 'branch') {
+    rows.push({ icon: 'location', label: 'المدينة', value: entity.city });
+    rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
+    rows.push({ icon: 'time', label: 'ساعات العمل', value: entity.open_hours || '—' });
+    rows.push({ icon: 'checkmark-circle', label: 'الحالة', value: entity.active ? '✅ نشط' : '⚠️ متوقف', color: entity.active ? '#34D399' : '#F87171' });
+    rows.push({ icon: 'people', label: 'عدد الموظفين', value: `${entity.employees_count} موظف` });
+    rows.push({ icon: 'cart', label: 'مبيعات داخل الفرع', value: `${K(entity.in_store_revenue)} ر.س`, color: '#34D399' });
+    rows.push({ icon: 'phone-portrait', label: 'مبيعات من التطبيق', value: `${K(entity.app_revenue)} ر.س`, color: '#60A5FA' });
+    rows.push({ icon: 'calculator', label: 'إجمالي الشهر', value: `${K(entity.pos_revenue + entity.app_revenue)} ر.س`, color: GOLD });
+    rows.push({ icon: 'receipt', label: 'إجمالي الطلبات', value: `${K(entity.orders_count)} طلب` });
+    if (entity.monthly_target > 0) {
+      const pct = ((entity.pos_revenue + entity.app_revenue) / entity.monthly_target * 100).toFixed(1);
+      rows.push({ icon: 'flag', label: 'الهدف الشهري', value: `${K(entity.monthly_target)} ر.س (${pct}%)` });
+    }
+  }
+  if (kind === 'marketer') {
+    rows.push({ icon: 'megaphone', label: 'رمز الإحالة', value: entity.referral_code, color: GOLD });
+    rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
+    rows.push({ icon: 'link', label: 'نقرات إجمالية', value: `${K(entity.clicks)} نقرة` });
+    rows.push({ icon: 'trending-up', label: 'التحويلات', value: `${K(entity.conversions)} عملية (${((entity.conversions/(entity.clicks||1))*100).toFixed(1)}%)`, color: '#34D399' });
+    rows.push({ icon: 'cash', label: 'إجمالي المبيعات', value: `${K(entity.sales_total)} ر.س`, color: GOLD });
+    rows.push({ icon: 'gift', label: 'العمولات المكتسبة', value: `${K(entity.commission_earned)} ر.س`, color: '#34D399' });
+    rows.push({ icon: 'hourglass', label: 'قيد التسوية', value: `${K(entity.commission_pending)} ر.س`, color: '#F59E0B' });
+    rows.push({ icon: 'checkmark-done', label: 'تم دفعها', value: `${K(entity.commission_paid)} ر.س` });
+    rows.push({ icon: 'share-social', label: 'مشاركات على السوشيال', value: `${K(entity.posts_shared)} منشور` });
+    rows.push({ icon: 'globe', label: 'أكثر منصة نشاطاً', value: entity.top_platform || '—' });
+  }
+  if (kind === 'employee') {
+    rows.push({ icon: 'briefcase', label: 'الوظيفة', value: entity.job_title });
+    rows.push({ icon: 'business', label: 'القسم', value: entity.department || '—' });
+    rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
+    rows.push({ icon: 'time', label: 'الدوام', value: `${entity.shift_start} - ${entity.shift_end}` });
+    rows.push({ icon: 'hourglass', label: 'ساعات العمل يومياً', value: `${entity.shift_hours} ساعة` });
+    rows.push({ icon: 'calendar', label: 'تاريخ التوظيف', value: entity.hire_date || '—' });
+    rows.push({ icon: 'wallet', label: 'نظام الأجر',
+      value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ر.س` : `أجر بالساعة: ${K(entity.hourly_rate)} ر.س`,
+      color: GOLD });
+    rows.push({ icon: 'receipt', label: 'إجمالي الفواتير', value: `${K(entity.invoices_total)} ر.س`, color: '#34D399' });
+    rows.push({ icon: 'cart', label: 'الطلبات المُنجزة', value: `${K(entity.orders_handled)} طلب` });
+    rows.push({ icon: 'location', label: 'الفروع', value: `${(entity.branch_ids || []).length} فرع` });
+  }
+
+  return (
+    <Modal visible={!!entity} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={s.sheetOverlay}>
+        <View style={[s.sheet, { maxHeight: '86%' }]}>
+          <View style={s.sheetHead}>
+            <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={GOLD} /></TouchableOpacity>
+            <Text style={s.sheetTitle}>{entity.name}</Text>
+          </View>
+          {/* Hero */}
+          <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+            {entity.avatar || entity.image ? (
+              <Image source={{ uri: entity.avatar || entity.image }} style={{ width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: GOLD }} contentFit="cover" />
+            ) : (
+              <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: GOLD + '30', borderWidth: 3, borderColor: GOLD, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name={kind === 'branch' ? 'business' : kind === 'driver' ? 'car' : kind === 'marketer' ? 'megaphone' : 'person'} size={44} color={GOLD} />
+              </View>
+            )}
+          </View>
+          <ScrollView>
+            {rows.map((r, i) => (
+              <View key={i} style={s.detailRow}>
+                <View style={{ width: 30, alignItems: 'center' }}>
+                  <Ionicons name={r.icon as any} size={16} color={r.color || GOLD} />
+                </View>
+                <Text style={s.detailLabel}>{r.label}</Text>
+                <Text style={[s.detailValue, r.color ? { color: r.color } : null]}>{r.value}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -1367,6 +1469,8 @@ function OverviewSection({ apiCall }: any) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'drivers' | 'branches' | 'marketers' | 'employees'>('drivers');
   const [refreshing, setRefreshing] = useState(false);
+  const [detailEntity, setDetailEntity] = useState<any>(null);
+  const [detailKind, setDetailKind] = useState<any>(null);
 
   const load = useCallback(async (isRefresh?: boolean) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
@@ -1456,12 +1560,14 @@ function OverviewSection({ apiCall }: any) {
               data.drivers.top.map((d: any, i: number) => (
                 <LeaderRow key={d.id} rank={i}
                   name={d.name}
-                  subtitle={`${d.phone}${d.rating ? ` · ⭐ ${d.rating.toFixed(1)}` : ''}`}
+                  avatar={d.avatar}
+                  subtitle={`${d.vehicle || d.phone}${d.rating ? ` · ⭐ ${d.rating.toFixed(1)}` : ''}`}
                   primaryValue={d.total_deliveries}
                   primaryLabel="توصيلة"
                   secondaryValue={`${d.today_deliveries} اليوم`}
                   progressPct={(d.total_deliveries / maxDrivers) * 100}
                   isOnline={d.online}
+                  onPress={() => { setDetailEntity(d); setDetailKind('driver'); }}
                 />
               ))}
           </View>
@@ -1474,12 +1580,14 @@ function OverviewSection({ apiCall }: any) {
               data.branches.top.map((b: any, i: number) => (
                 <LeaderRow key={b.id} rank={i}
                   name={b.name}
-                  subtitle={`${b.city} · ${b.employees_count} موظف`}
-                  primaryValue={`${(b.pos_revenue / 1000).toFixed(1)}K`}
+                  avatar={b.image}
+                  subtitle={`${b.city} · ${b.employees_count} موظف · ${b.open_hours}`}
+                  primaryValue={`${((b.pos_revenue + b.app_revenue) / 1000).toFixed(1)}K`}
                   primaryLabel="ر.س"
                   secondaryValue={`${b.orders_count} طلب`}
-                  progressPct={(b.pos_revenue / maxBranches) * 100}
+                  progressPct={((b.pos_revenue + b.app_revenue) / maxBranches) * 100}
                   isOnline={b.active}
+                  onPress={() => { setDetailEntity(b); setDetailKind('branch'); }}
                 />
               ))}
           </View>
@@ -1487,7 +1595,7 @@ function OverviewSection({ apiCall }: any) {
 
         {tab === 'marketers' && (
           <View>
-            <Text style={s.luxeSectionTitle}>🏆 أفضل المسوقين حسب التحويلات</Text>
+            <Text style={s.luxeSectionTitle}>🏆 أفضل المسوقين حسب العمولات</Text>
             {data.marketers.top.length === 0 ?
               <View style={s.luxeEmpty}>
                 <Ionicons name="megaphone-outline" size={40} color={MUTED} />
@@ -1498,10 +1606,12 @@ function OverviewSection({ apiCall }: any) {
               data.marketers.top.map((m: any, i: number) => (
                 <LeaderRow key={m.id} rank={i}
                   name={m.name}
+                  avatar={m.avatar}
                   subtitle={`رمز: ${m.referral_code} · ${m.clicks} نقرة · ${m.conversions} تحويل`}
-                  primaryValue={`${Math.round(m.commission_earned).toLocaleString()}`}
-                  primaryLabel="ر.س عمولة"
+                  primaryValue={`${(m.commission_earned / 1000).toFixed(1)}K`}
+                  primaryLabel="ر.س"
                   progressPct={(m.commission_earned / maxMarketers) * 100}
+                  onPress={() => { setDetailEntity(m); setDetailKind('marketer'); }}
                 />
               ))}
           </View>
@@ -1514,16 +1624,19 @@ function OverviewSection({ apiCall }: any) {
               data.employees.list.map((e: any, i: number) => (
                 <LeaderRow key={e.id} rank={i}
                   name={e.name}
-                  subtitle={`${e.job_title} · ${e.phone}`}
+                  avatar={e.avatar}
+                  subtitle={`${e.job_title} · ${e.shift_start}-${e.shift_end}`}
                   primaryValue={`${(e.invoices_total / 1000).toFixed(1)}K`}
                   primaryLabel="ر.س"
                   secondaryValue={`${e.orders_handled} طلب`}
                   progressPct={(e.invoices_total / maxEmployees) * 100}
+                  onPress={() => { setDetailEntity(e); setDetailKind('employee'); }}
                 />
               ))}
           </View>
         )}
       </View>
+      <EntityDetailSheet entity={detailEntity} kind={detailKind} onClose={() => setDetailEntity(null)} />
     </ScrollView>
   );
 }
@@ -1703,6 +1816,8 @@ const s = StyleSheet.create({
   luxeSectionTitle: { color: GOLD, fontSize: 13, fontWeight: '900', textAlign: 'right', marginBottom: 12, marginTop: 4 },
   luxeRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12, backgroundColor: '#1A1C23', borderRadius: 14, marginBottom: 8, borderWidth: 1, borderColor: '#262933' },
   luxeMedal: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
+  luxeAvatar: { width: 46, height: 46, borderRadius: 23, borderWidth: 2, borderColor: BORDER },
+  luxeAvatarMedal: { position: 'absolute', bottom: -4, right: -4, backgroundColor: BG, borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: GOLD },
   luxeRowName: { color: '#F5F5F7', fontSize: 14, fontWeight: '800', textAlign: 'right', flex: 1 },
   luxeRowSub: { color: MUTED, fontSize: 10, textAlign: 'right', marginTop: 3 },
   luxeMetric: { color: '#F5F5F7', fontSize: 18, fontWeight: '900', textAlign: 'left' },
@@ -1714,4 +1829,7 @@ const s = StyleSheet.create({
   luxeEmpty: { alignItems: 'center', padding: 30, backgroundColor: '#1A1C23', borderRadius: 14, borderWidth: 1, borderColor: '#262933' },
   luxeEmptyTitle: { color: '#E5E7EB', fontSize: 13, fontWeight: '800', marginTop: 10 },
   luxeEmptySub: { color: MUTED, fontSize: 10, marginTop: 4, textAlign: 'center' },
+  detailRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: BORDER },
+  detailLabel: { color: MUTED, fontSize: 12, flex: 1, textAlign: 'right', marginHorizontal: 8 },
+  detailValue: { color: '#FFF', fontSize: 12, fontWeight: '700', textAlign: 'left' },
 });
