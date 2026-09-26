@@ -135,7 +135,7 @@ export default function MerchantMore() {
             <ListItem icon="log-out" title="تسجيل الخروج" onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zenrex Store Merchant v1.14.1</Text>
+          <Text style={styles.version}>Zenrex Store Merchant v1.14.3</Text>
         </ScrollView>
       </SafeAreaView>
 

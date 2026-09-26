@@ -3,7 +3,7 @@
  * Import from '@/components/ui' or 'src/components/ui'
  */
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ViewStyle, TextStyle, StyleProp } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ViewStyle, TextStyle, StyleProp, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -150,21 +150,26 @@ export function SectionHeader({ title, subtitle, action, actionLabel }: {
 export function SegmentedControl<T extends string>({ options, value, onChange, labels }: {
   options: T[]; value: T; onChange: (v: T) => void; labels: Record<T, string>;
 }) {
+  const scrollable = options.length > 3;
+  const Wrap = scrollable ? ScrollView : View;
+  const wrapProps: any = scrollable
+    ? { horizontal: true, showsHorizontalScrollIndicator: false, contentContainerStyle: styles.segWrap, style: { flexGrow: 0 } }
+    : { style: styles.segWrap };
   return (
-    <View style={styles.segWrap}>
+    <Wrap {...wrapProps}>
       {options.map(opt => {
         const active = value === opt;
         return (
           <TouchableOpacity
             key={opt} activeOpacity={0.85}
             onPress={() => { Haptics.selectionAsync().catch(()=>{}); onChange(opt); }}
-            style={[styles.segItem, active && styles.segItemActive]}
+            style={[scrollable ? styles.segItemScroll : styles.segItem, active && styles.segItemActive]}
           >
-            <Text style={[styles.segText, active && styles.segTextActive]}>{labels[opt]}</Text>
+            <Text style={[styles.segText, active && styles.segTextActive]} numberOfLines={1}>{labels[opt]}</Text>
           </TouchableOpacity>
         );
       })}
-    </View>
+    </Wrap>
   );
 }
 
@@ -342,6 +347,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border,
   },
   segItem: { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderRadius: radius.sm },
+  segItemScroll: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, minWidth: 92, alignItems: 'center', borderRadius: radius.sm, flexShrink: 0 },
   segItemActive: { backgroundColor: colors.brand },
   segText: { ...typography.labelMedium, color: colors.onSurfaceSecondary },
   segTextActive: { color: colors.onBrandPrimary, fontWeight: '800' },

@@ -147,39 +147,70 @@ function CarouselVideo({ item, active, width, height, borderRadius, onOpen, full
   const player = useVideoPlayer(item.url, (p) => {
     p.loop = true;
     p.muted = true;
+    p.volume = 1.0;
   });
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [muted, setMuted] = React.useState(true);
+
   React.useEffect(() => {
-    if (active) {
-      try { player.play(); } catch {}
+    if (fullscreen) {
+      // Fullscreen — unmute + play from start
+      try { player.muted = false; setMuted(false); player.currentTime = 0; player.play(); setIsPlaying(true); } catch {}
+    } else if (active) {
+      try { player.muted = true; setMuted(true); player.play(); setIsPlaying(true); } catch {}
     } else {
-      try { player.pause(); } catch {}
+      try { player.pause(); setIsPlaying(false); } catch {}
     }
-  }, [active, player]);
+    return () => { try { player.pause(); } catch {} };
+  }, [active, player, fullscreen]);
+
+  const handleTap = () => {
+    if (fullscreen) return;
+    // Toggle mute on tap. Long-press or expand icon opens fullscreen.
+    try {
+      if (!isPlaying) { player.play(); setIsPlaying(true); }
+      const newMuted = !muted;
+      player.muted = newMuted;
+      setMuted(newMuted);
+    } catch {}
+  };
 
   return (
-    <TouchableOpacity activeOpacity={0.95} onPress={onOpen} style={{ width, height, borderRadius, overflow: 'hidden', backgroundColor: '#000' }}>
-      <VideoView
-        style={{ width, height }}
-        player={player}
-        contentFit="cover"
-        nativeControls={fullscreen ? true : false}
-      />
-      {!fullscreen && (
-        <>
-          <View style={styles.videoBadge}>
-            <Ionicons name="videocam" size={12} color="#fff" />
-          </View>
-          {!!item.duration && (
-            <View style={styles.durBadge}>
-              <Text style={styles.durText}>{item.duration}</Text>
+    <View style={{ width, height, borderRadius, overflow: 'hidden', backgroundColor: '#000' }}>
+      <TouchableOpacity activeOpacity={0.95} onPress={handleTap} style={{ width, height }}>
+        <VideoView
+          style={{ width, height }}
+          player={player}
+          contentFit="cover"
+          nativeControls={!!fullscreen}
+        />
+        {!fullscreen && (
+          <>
+            <View style={styles.videoBadge}>
+              <Ionicons name="videocam" size={12} color="#fff" />
             </View>
-          )}
-          <View style={styles.playOverlay}>
-            <Ionicons name="play" size={30} color="rgba(255,255,255,0.85)" />
-          </View>
-        </>
-      )}
-    </TouchableOpacity>
+            {!!item.duration && (
+              <View style={styles.durBadge}>
+                <Text style={styles.durText}>{item.duration}</Text>
+              </View>
+            )}
+            {/* Mute / unmute chip */}
+            <TouchableOpacity onPress={handleTap} style={styles.muteChip} hitSlop={{ top: 12, left: 12, right: 12, bottom: 12 }}>
+              <Ionicons name={muted ? 'volume-mute' : 'volume-high'} size={16} color="#fff" />
+            </TouchableOpacity>
+            {/* Expand to fullscreen */}
+            <TouchableOpacity onPress={onOpen} style={styles.expandChip} hitSlop={{ top: 12, left: 12, right: 12, bottom: 12 }}>
+              <Ionicons name="expand" size={16} color="#fff" />
+            </TouchableOpacity>
+            {!isPlaying && (
+              <View pointerEvents="none" style={styles.playOverlay}>
+                <Ionicons name="play-circle" size={64} color="rgba(255,255,255,0.9)" />
+              </View>
+            )}
+          </>
+        )}
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -212,7 +243,18 @@ const styles = StyleSheet.create({
   playOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.15)',
+  },
+  muteChip: {
+    position: 'absolute', bottom: 32, left: 10,
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  expandChip: {
+    position: 'absolute', top: 42, left: 10,
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    alignItems: 'center', justifyContent: 'center',
   },
   previewBg: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' },
   previewClose: {

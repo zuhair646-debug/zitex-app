@@ -52,7 +52,7 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.14.1 ✨</Text>
+        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.14.3 ✨</Text>
         <AlertsBell apiCall={apiCall} />
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
@@ -526,8 +526,10 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
 
   return (
     <>
-      {/* Filter row */}
-      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingTop: 10 }}>
+      {/* Filter row — competitions */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, paddingEnd: 24 }}
+        style={{ height: 52, flexGrow: 0 }}>
         {[
           { k: 'active', label: 'نشطة' },
           { k: 'ended', label: 'منتهية' },
@@ -538,7 +540,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
             <Text style={[s.cmpText, filter === f.k && { color: BG }]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
       <FlatList data={filtered} keyExtractor={(x, i) => x.id || String(i)} contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
         renderItem={({ item }) => {
           const isEnded = item.status === 'ended' || (item.winners || []).length > 0;
@@ -665,8 +667,10 @@ function SocialSection({ apiCall, onOpenPost }: any) {
 
   return (
     <>
-      {/* Filter row */}
-      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingTop: 10 }}>
+      {/* Filter row — social */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, paddingEnd: 24 }}
+        style={{ height: 52, flexGrow: 0 }}>
         {[
           { k: 'all', label: 'الكل' },
           { k: 'needs_reply', label: 'يحتاج رد' },
@@ -677,7 +681,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
             <Text style={[s.cmpText, filter === f.k && { color: BG }]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
       <FlatList data={displayed} keyExtractor={(x, i) => x.id || String(i)} contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
         renderItem={({ item }) => {
           const allComments = Array.isArray(item.comments) ? item.comments : [];
@@ -1817,8 +1821,8 @@ const s = StyleSheet.create({
   livePulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' },
   livePulse2: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#0F5132', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
   liveText: { color: '#A7F3D0', fontSize: 11, fontWeight: '800' },
-  cmpBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: CARD, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: GOLD },
-  cmpText: { color: GOLD, fontSize: 12, fontWeight: '700' },
+  cmpBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: CARD, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: GOLD, flexShrink: 0, height: 36 },
+  cmpText: { color: GOLD, fontSize: 12, fontWeight: '700', flexShrink: 0 },
   pCard: { flex: 1, backgroundColor: CARD, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: BORDER, position: 'relative' },
   pCardSelected: { borderColor: GOLD, borderWidth: 2 },
   pImg: { width: '100%', height: 130 },
