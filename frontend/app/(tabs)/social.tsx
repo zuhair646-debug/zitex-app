@@ -140,7 +140,7 @@ export default function SocialScreen() {
                 <View style={[s.storyCircle, { borderColor: '#E5E7EB' }]}>
                   <View style={s.storyAvatar}><Ionicons name="storefront" size={22} color="#A1A1AA" /></View>
                 </View>
-                <Text style={s.storyLabel} numberOfLines={1}>لا حالات</Text>
+                <Text style={s.storyLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>لا حالات</Text>
               </View>
             )}
             {stories.map(st => (

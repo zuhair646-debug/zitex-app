@@ -35,7 +35,7 @@ export function PrimaryButton({
         {loading ? <ActivityIndicator color={colors.onBrandPrimary} />
           : (<>
               {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 20} color={colors.onBrandPrimary} />}
-              <Text style={[styles.pbtnText, { fontSize: size === 'sm' ? 13 : 15 }]}>{label}</Text>
+              <Text style={[styles.pbtnText, { fontSize: size === 'sm' ? 13 : 15 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{label}</Text>
             </>)}
       </LinearGradient>
     </TouchableOpacity>
@@ -59,7 +59,7 @@ export function SecondaryButton({
       style={[styles.sbtn, { height: h, alignSelf: fullWidth ? 'stretch' : 'flex-start', opacity: disabled ? 0.4 : 1 }, style]}
     >
       {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 20} color={colors.brand} />}
-      <Text style={[styles.sbtnText, { fontSize: size === 'sm' ? 13 : 15 }]}>{label}</Text>
+      <Text style={[styles.sbtnText, { fontSize: size === 'sm' ? 13 : 15 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -102,7 +102,7 @@ export function StatCard({
       <View style={[styles.statIconWrap, { backgroundColor: toneBg }]}>
         <Ionicons name={icon} size={20} color={toneColor} />
       </View>
-      <Text style={styles.statLabel} numberOfLines={1}>{label}</Text>
+      <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{label}</Text>
       <Text style={styles.statValue} numberOfLines={1}>{value}</Text>
       {trend && (
         <View style={styles.trendRow}>
@@ -128,7 +128,7 @@ export function ActionCard({ icon, label, onPress, tone = 'gold' }: {
       <View style={[styles.actionIconWrap, tone === 'gold' && { backgroundColor: colors.brandTertiary }]}>
         <Ionicons name={icon} size={22} color={tone === 'gold' ? colors.brand : colors.onSurface} />
       </View>
-      <Text style={styles.actionLabel} numberOfLines={2}>{label}</Text>
+      <Text style={styles.actionLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -173,7 +173,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, l
             onPress={() => { Haptics.selectionAsync().catch(()=>{}); onChange(opt); }}
             style={[scrollable ? styles.segItemScroll : styles.segItem, active && styles.segItemActive]}
           >
-            <Text style={[styles.segText, active && styles.segTextActive]} numberOfLines={1}>{labels[opt]}</Text>
+            <Text style={[styles.segText, active && styles.segTextActive]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{labels[opt]}</Text>
           </TouchableOpacity>
         );
       })}

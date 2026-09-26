@@ -107,7 +107,7 @@ function useSStyles() {
   scrim: {
     position: 'absolute',
     left: 0, right: 0, bottom: 0,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     zIndex: 5,
   },
   wrap: {
@@ -118,9 +118,9 @@ function useSStyles() {
     overflow: 'visible',
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: Platform.OS === 'android' ? colors.surface : 'transparent',
+    backgroundColor: colors.surface,
     zIndex: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 16, elevation: 12,
   },
   bar: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

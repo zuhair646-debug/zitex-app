@@ -1,6 +1,6 @@
 /**
- * Zenrex Store i18n — Global Multilingual Support (20 languages)
- * Languages: AR, EN, UR, FA, HE (RTL) + ES, FR, DE, IT, PT, RU, TR, ZH, JA, KO, HI, BN, ID, MS, TH
+ * Zenrex Store i18n — Global Multilingual Support (19 languages)
+ * Languages: AR, EN, UR, FA (RTL) + ES, FR, DE, IT, PT, RU, TR, ZH, JA, KO, HI, BN, ID, MS, TH
  * Auto-detects from device locale on first launch.
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { I18nManager, Platform, NativeModules } from 'react-native';
 
 export type Lang =
-  | 'ar' | 'en' | 'ur' | 'fa' | 'he'
+  | 'ar' | 'en' | 'ur' | 'fa'
   | 'es' | 'fr' | 'de' | 'it' | 'pt'
   | 'ru' | 'tr' | 'zh' | 'ja' | 'ko'
   | 'hi' | 'bn' | 'id' | 'ms' | 'th';
@@ -18,7 +18,6 @@ export const LANGUAGES: { code: Lang; name: string; nativeName: string; flag: st
   { code: 'en', name: 'English',    nativeName: 'English',   flag: '🇺🇸' },
   { code: 'ur', name: 'Urdu',       nativeName: 'اردو',      flag: '🇵🇰' },
   { code: 'fa', name: 'Persian',    nativeName: 'فارسی',     flag: '🇮🇷' },
-  { code: 'he', name: 'Hebrew',     nativeName: 'עברית',     flag: '🇮🇱' },
   { code: 'es', name: 'Spanish',    nativeName: 'Español',   flag: '🇪🇸' },
   { code: 'fr', name: 'French',     nativeName: 'Français',  flag: '🇫🇷' },
   { code: 'de', name: 'German',     nativeName: 'Deutsch',   flag: '🇩🇪' },
@@ -36,7 +35,7 @@ export const LANGUAGES: { code: Lang; name: string; nativeName: string; flag: st
   { code: 'th', name: 'Thai',       nativeName: 'ไทย',       flag: '🇹🇭' },
 ];
 
-const RTL_LANGS: Lang[] = ['ar', 'ur', 'fa', 'he'];
+const RTL_LANGS: Lang[] = ['ar', 'ur', 'fa'];
 
 // Detect device locale → language code
 function detectDeviceLang(): Lang {
@@ -167,15 +166,6 @@ const T: Record<Lang, Record<string, string>> = {
     'product.addToCart': 'افزودن به سبد', 'product.buyNow': 'خرید',
     'cart.title': 'سبد', 'cart.checkout': 'پرداخت',
     'settings.language': 'زبان', 'support.title': 'پشتیبانی',
-  },
-  he: {
-    'common.home': 'בית', 'common.search': 'חיפוש', 'common.cart': 'עגלה', 'common.profile': 'פרופיל',
-    'common.settings': 'הגדרות', 'common.save': 'שמור', 'common.cancel': 'בטל', 'common.back': 'חזור',
-    'auth.welcome': 'ברוכים הבאים ל-Zenrex Store', 'auth.signin': 'התחבר', 'auth.signup': 'הירשם',
-    'auth.phone': 'מספר טלפון', 'auth.password': 'סיסמה', 'auth.logout': 'התנתק',
-    'tabs.home': 'בית', 'tabs.services': 'שירותים', 'tabs.social': 'חברתי', 'tabs.competitions': 'תחרויות', 'tabs.settings': 'הגדרות',
-    'product.addToCart': 'הוסף לעגלה', 'product.buyNow': 'קנה',
-    'settings.language': 'שפה', 'support.title': 'תמיכת לקוחות',
   },
   es: {
     'common.home': 'Inicio', 'common.search': 'Buscar', 'common.cart': 'Carrito', 'common.profile': 'Perfil',

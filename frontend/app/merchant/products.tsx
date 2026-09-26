@@ -161,7 +161,7 @@ export default function MerchantProducts() {
                       size={16}
                       color={p.in_stock ? colors.success : colors.error}
                     />
-                    <Text style={[s.stockLabel, { color: p.in_stock ? colors.success : colors.error }]}>
+                    <Text style={[s.stockLabel, { color: p.in_stock ? colors.success : colors.error }]} numberOfLines={1}>
                       {p.in_stock ? 'متوفر' : 'غير متوفر'}
                     </Text>
                     <Switch
@@ -171,7 +171,6 @@ export default function MerchantProducts() {
                       thumbColor={colors.onBrandPrimary}
                     />
                   </View>
-                  <View style={{ flex: 1 }} />
                   <TouchableOpacity
                     onPress={() => router.push({ pathname: '/merchant/product-form', params: { id: p.id } })}
                     style={s.editBtn} activeOpacity={0.7}
@@ -235,8 +234,8 @@ function useSStyles() {
     borderTopWidth: 1, borderTopColor: colors.border,
     backgroundColor: colors.surfaceTertiary,
   },
-  stockRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  stockLabel: { ...typography.labelSmall, fontWeight: '700' },
+  stockRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 1 },
+  stockLabel: { ...typography.labelSmall, fontWeight: '700', flexShrink: 1 },
   editBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center' },
   delBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.errorSoft, alignItems: 'center', justifyContent: 'center' },
 }), [themeKey]);

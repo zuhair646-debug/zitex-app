@@ -94,7 +94,7 @@ export default function MerchantHome() {
             style={styles.hero}
           >
             <View style={styles.heroTop}>
-              <Text style={styles.heroLabel}>إجمالي مبيعات اليوم</Text>
+              <Text style={styles.heroLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>إجمالي مبيعات اليوم</Text>
               <Ionicons name="trending-up" size={20} color={colors.onBrandPrimary} />
             </View>
             {loading ? <SkeletonBox height={40} width="60%" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }} />
