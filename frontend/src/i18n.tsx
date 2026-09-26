@@ -1,14 +1,14 @@
 /**
- * Zenrex Store i18n — Global Multilingual Support (19 languages)
- * Languages: AR, EN, UR, FA (RTL) + ES, FR, DE, IT, PT, RU, TR, ZH, JA, KO, HI, BN, ID, MS, TH
- * Auto-detects from device locale on first launch.
+ * Zenrex Store i18n — Global Multilingual Support (20 languages)
+ * Languages: AR, EN, UR, FA, HE (RTL) + ES, FR, DE, IT, PT, RU, TR, ZH, JA, KO, HI, BN, ID, MS, TH
+ * Note: Hebrew uses a globe icon (🌐) — not associated with any specific country flag.
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { I18nManager, Platform, NativeModules } from 'react-native';
 
 export type Lang =
-  | 'ar' | 'en' | 'ur' | 'fa'
+  | 'ar' | 'en' | 'ur' | 'fa' | 'he'
   | 'es' | 'fr' | 'de' | 'it' | 'pt'
   | 'ru' | 'tr' | 'zh' | 'ja' | 'ko'
   | 'hi' | 'bn' | 'id' | 'ms' | 'th';
@@ -18,6 +18,7 @@ export const LANGUAGES: { code: Lang; name: string; nativeName: string; flag: st
   { code: 'en', name: 'English',    nativeName: 'English',   flag: '🇺🇸' },
   { code: 'ur', name: 'Urdu',       nativeName: 'اردو',      flag: '🇵🇰' },
   { code: 'fa', name: 'Persian',    nativeName: 'فارسی',     flag: '🇮🇷' },
+  { code: 'he', name: 'Hebrew',     nativeName: 'עברית',     flag: '🌐' },
   { code: 'es', name: 'Spanish',    nativeName: 'Español',   flag: '🇪🇸' },
   { code: 'fr', name: 'French',     nativeName: 'Français',  flag: '🇫🇷' },
   { code: 'de', name: 'German',     nativeName: 'Deutsch',   flag: '🇩🇪' },
@@ -35,7 +36,7 @@ export const LANGUAGES: { code: Lang; name: string; nativeName: string; flag: st
   { code: 'th', name: 'Thai',       nativeName: 'ไทย',       flag: '🇹🇭' },
 ];
 
-const RTL_LANGS: Lang[] = ['ar', 'ur', 'fa'];
+const RTL_LANGS: Lang[] = ['ar', 'ur', 'fa', 'he'];
 
 // Detect device locale → language code
 function detectDeviceLang(): Lang {

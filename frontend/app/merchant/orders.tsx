@@ -150,27 +150,37 @@ export default function MerchantOrders() {
                 {/* Actions */}
                 <View style={s.actions}>
                   {o.status === 'pending' && (
-                    <PrimaryButton size="sm" label="قبول وتجهيز" icon="checkmark-circle"
-                      onPress={() => changeStatus(o.id, 'processing')} />
+                    <View style={{ flex: 1 }}>
+                      <PrimaryButton size="sm" label="قبول وتجهيز" icon="checkmark-circle"
+                        onPress={() => changeStatus(o.id, 'processing')} />
+                    </View>
                   )}
                   {o.status === 'processing' && (
-                    <PrimaryButton size="sm" label="وضع جاهز" icon="cube"
-                      onPress={() => changeStatus(o.id, 'ready')} />
+                    <View style={{ flex: 1 }}>
+                      <PrimaryButton size="sm" label="وضع جاهز" icon="cube"
+                        onPress={() => changeStatus(o.id, 'ready')} />
+                    </View>
                   )}
                   {o.status === 'ready' && (
-                    <PrimaryButton size="sm" label="خرج للتوصيل" icon="bicycle"
-                      onPress={() => changeStatus(o.id, 'out_for_delivery')} />
+                    <View style={{ flex: 1 }}>
+                      <PrimaryButton size="sm" label="خرج للتوصيل" icon="bicycle"
+                        onPress={() => changeStatus(o.id, 'out_for_delivery')} />
+                    </View>
                   )}
                   {o.status === 'out_for_delivery' && (
-                    <PrimaryButton size="sm" label="تم التسليم" icon="checkmark-done"
-                      onPress={() => changeStatus(o.id, 'delivered')} />
+                    <View style={{ flex: 1 }}>
+                      <PrimaryButton size="sm" label="تم التسليم" icon="checkmark-done"
+                        onPress={() => changeStatus(o.id, 'delivered')} />
+                    </View>
                   )}
                   {o.status !== 'cancelled' && o.status !== 'delivered' && (
-                    <SecondaryButton size="sm" fullWidth={false} label="إلغاء" icon="close"
-                      onPress={() => Alert.alert('إلغاء الطلب', 'هل أنت متأكد؟', [
-                        { text: 'لا', style: 'cancel' },
-                        { text: 'نعم', style: 'destructive', onPress: () => changeStatus(o.id, 'cancelled') },
-                      ])} />
+                    <View style={{ flex: 1 }}>
+                      <SecondaryButton size="sm" fullWidth label="إلغاء" icon="close"
+                        onPress={() => Alert.alert('إلغاء الطلب', 'هل أنت متأكد؟', [
+                          { text: 'لا', style: 'cancel' },
+                          { text: 'نعم', style: 'destructive', onPress: () => changeStatus(o.id, 'cancelled') },
+                        ])} />
+                    </View>
                   )}
                 </View>
               </View>
@@ -221,7 +231,7 @@ function useSStyles() {
   deliveryText: { ...typography.caption, color: colors.onSurfaceSecondary },
 
   actions: {
-    flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs,
+    flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs, flexWrap: 'wrap',
     paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderSubtle,
   },
 }), [themeKey]);

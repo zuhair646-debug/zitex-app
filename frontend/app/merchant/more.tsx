@@ -9,6 +9,7 @@ import { useAuth } from '../_layout';
 import { useThemeMode } from '../../src/theme/mode';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { useT, LANGUAGES } from '../../src/i18n';
+import { TX } from '../../src/useAutoT';
 
 export default function MerchantMore() {
   const styles = useStylesStyles();
@@ -97,7 +98,7 @@ export default function MerchantMore() {
           <Section label="النمو والولاء" items={growth as any} />
           <Section label="الإدارة" items={admin as any} />
 
-          <SectionHeader title="الحساب" />
+          <SectionHeader title={lang === 'ar' ? 'الحساب' : t('common.settings')} />
           <View style={styles.groupCard}>
             {/* Appearance & Fonts (unified control) */}
             <TouchableOpacity style={styles.prefRow} onPress={() => router.push('/appearance' as any)} activeOpacity={0.7}>
@@ -124,8 +125,8 @@ export default function MerchantMore() {
                   <Ionicons name={isDark ? 'moon' : 'sunny'} size={20} color={isDark ? '#F5B547' : '#6EA8FF'} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.prefTitle}>{isDark ? 'الوضع الليلي' : 'الوضع النهاري'}</Text>
-                  <Text style={styles.prefSub}>اضغط للتبديل بين النهاري والليلي والمخصص</Text>
+                  <TX style={styles.prefTitle}>{isDark ? 'الوضع الليلي' : 'الوضع النهاري'}</TX>
+                  <TX style={styles.prefSub}>اضغط للتبديل بين النهاري والليلي والمخصص</TX>
                 </View>
               </View>
               <View style={[styles.switchTrack, isDark && styles.switchTrackOn]}>
@@ -151,7 +152,7 @@ export default function MerchantMore() {
 
             <View style={styles.divider} />
 
-            <ListItem icon="log-out" title="تسجيل الخروج" onPress={logout} tone="default" />
+            <ListItem icon="log-out" title={lang === 'ar' ? 'تسجيل الخروج' : t('auth.logout')} onPress={logout} tone="default" />
           </View>
 
           <Text style={styles.version}>Zenrex Store Merchant v1.14.3</Text>

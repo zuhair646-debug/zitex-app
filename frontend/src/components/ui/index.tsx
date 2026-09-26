@@ -35,7 +35,7 @@ export function PrimaryButton({
         {loading ? <ActivityIndicator color={colors.onBrandPrimary} />
           : (<>
               {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 20} color={colors.onBrandPrimary} />}
-              <Text style={[styles.pbtnText, { fontSize: size === 'sm' ? 13 : 15 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{label}</Text>
+              <Text style={[styles.pbtnText, { fontSize: size === 'sm' ? 13 : 15 }]} numberOfLines={2}>{label}</Text>
             </>)}
       </LinearGradient>
     </TouchableOpacity>
@@ -59,7 +59,7 @@ export function SecondaryButton({
       style={[styles.sbtn, { height: h, alignSelf: fullWidth ? 'stretch' : 'flex-start', opacity: disabled ? 0.4 : 1 }, style]}
     >
       {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 20} color={colors.brand} />}
-      <Text style={[styles.sbtnText, { fontSize: size === 'sm' ? 13 : 15 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{label}</Text>
+      <Text style={[styles.sbtnText, { fontSize: size === 'sm' ? 13 : 15 }]} numberOfLines={2}>{label}</Text>
     </TouchableOpacity>
   );
 }
