@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, Modal, RefreshControl, Switch, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
 import { PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, Badge, ScreenHeader, StatCard, Chip } from '../../src/components/ui';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 interface Branch {
   id: string; name: string; address: string; city?: string; district?: string;
@@ -20,6 +21,7 @@ const DAYS = [
 ];
 
 export default function MerchantBranches() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -270,7 +272,11 @@ function Field({ label, value, onChange, placeholder, multiline, keyboardType }:
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   summaryRow: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
   card: {
@@ -312,4 +318,5 @@ const s = StyleSheet.create({
   },
   switchLabel: { ...typography.bodyLarge, color: colors.onSurface, fontWeight: '600' },
   switchHint: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
-});
+}), [themeKey]);
+}

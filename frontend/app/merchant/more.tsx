@@ -185,6 +185,7 @@ export default function MerchantMore() {
 }
 
 function useStylesStyles() {
+  const { themeKey } = useTheme();
   return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   hero: {
@@ -222,6 +223,6 @@ function useStylesStyles() {
   langRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 12, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: colors.border },
   langNative: { ...typography.body, color: colors.onSurface, fontWeight: '700' as any },
   langName: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
-}), []);
+}), [themeKey]);
 }
 

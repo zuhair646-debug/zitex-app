@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Switch,
@@ -12,11 +13,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { colors, spacing, radius } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 type Variant = { name: string; value: string };
 type BranchStock = { branch_id: string; branch_name: string; quantity: number };
 
 export default function ProductForm() {
+  const s = useSStyles();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { apiCall } = useAuth();
@@ -607,7 +610,11 @@ export default function ProductForm() {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
@@ -661,4 +668,5 @@ const s = StyleSheet.create({
   warrTypeText: { fontSize: 12, color: colors.onSurface, fontWeight: '700' },
   warrSection: { backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md, marginTop: spacing.sm, borderWidth: 1, borderColor: colors.border },
   warrSectionTitle: { fontSize: 13, fontWeight: '800', color: colors.brand, marginBottom: spacing.sm, textAlign: 'right' },
-});
+}), [themeKey]);
+}

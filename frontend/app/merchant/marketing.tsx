@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo} from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert,
   ActivityIndicator, Modal, RefreshControl, Platform, StatusBar,
@@ -12,6 +12,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { colors, spacing, radius } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 type Tab = 'ads' | 'affiliates';
 type CampaignType = 'ad' | 'affiliate';
@@ -27,6 +28,7 @@ const INTEREST_TAGS = [
 const CITIES = ['الرياض', 'جدة', 'الدمام', 'الخبر', 'مكة', 'المدينة', 'الطائف', 'أبها', 'تبوك', 'حائل'];
 
 export default function MarketingPanel() {
+  const s = useSStyles();
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
   const { apiCall } = useAuth();
@@ -498,7 +500,11 @@ export default function MarketingPanel() {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
   headerIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
@@ -580,4 +586,5 @@ const s = StyleSheet.create({
   pickerIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center' },
   pickerOptTitle: { color: colors.onSurface, fontSize: 15, fontWeight: '800' },
   pickerOptDesc: { color: colors.onSurfaceTertiary, fontSize: 12, marginTop: 2, lineHeight: 16 },
-});
+}), [themeKey]);
+}

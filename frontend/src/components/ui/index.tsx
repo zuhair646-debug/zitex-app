@@ -2,12 +2,13 @@
  * Zitex Merchant — Core Component Library
  * Import from '@/components/ui' or 'src/components/ui'
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ViewStyle, TextStyle, StyleProp, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, radius, typography, shadows, gradients } from '../../theme/tokens';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ─── PrimaryButton (Gold) ──────────────────────────────────────
 export function PrimaryButton({
@@ -17,6 +18,7 @@ export function PrimaryButton({
   disabled?: boolean; loading?: boolean; style?: StyleProp<ViewStyle>;
   size?: 'sm' | 'md' | 'lg'; fullWidth?: boolean;
 }) {
+  const styles = useStyles();
   const h = size === 'sm' ? 40 : size === 'lg' ? 56 : 48;
   const handle = () => {
     if (disabled || loading) return;
@@ -48,6 +50,7 @@ export function SecondaryButton({
   disabled?: boolean; style?: StyleProp<ViewStyle>;
   size?: 'sm' | 'md' | 'lg'; fullWidth?: boolean;
 }) {
+  const styles = useStyles();
   const h = size === 'sm' ? 40 : size === 'lg' ? 56 : 48;
   const handle = () => { if (disabled) return; Haptics.selectionAsync().catch(()=>{}); onPress?.(); };
   return (
@@ -65,6 +68,7 @@ export function SecondaryButton({
 export function GhostButton({ label, onPress, icon, style }: {
   label: string; onPress?: () => void; icon?: keyof typeof Ionicons.glyphMap; style?: StyleProp<ViewStyle>;
 }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity activeOpacity={0.6} onPress={onPress} style={[styles.ghost, style]}>
       {icon && <Ionicons name={icon} size={18} color={colors.onSurfaceSecondary} />}
@@ -81,6 +85,7 @@ export function StatCard({
   trend?: string; trendDir?: 'up' | 'down' | 'flat';
   tone?: 'default' | 'gold' | 'success' | 'warning' | 'error'; onPress?: () => void;
 }) {
+  const styles = useStyles();
   const toneColor = tone === 'gold' ? colors.brand
     : tone === 'success' ? colors.success
     : tone === 'warning' ? colors.warning
@@ -116,6 +121,7 @@ export function StatCard({
 export function ActionCard({ icon, label, onPress, tone = 'gold' }: {
   icon: keyof typeof Ionicons.glyphMap; label: string; onPress?: () => void; tone?: 'gold' | 'default';
 }) {
+  const styles = useStyles();
   const handle = () => { Haptics.selectionAsync().catch(()=>{}); onPress?.(); };
   return (
     <TouchableOpacity activeOpacity={0.75} onPress={handle} style={styles.actionCard}>
@@ -131,6 +137,7 @@ export function ActionCard({ icon, label, onPress, tone = 'gold' }: {
 export function SectionHeader({ title, subtitle, action, actionLabel }: {
   title: string; subtitle?: string; action?: () => void; actionLabel?: string;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.sectionHeader}>
       <View style={{ flex: 1 }}>
@@ -150,6 +157,7 @@ export function SectionHeader({ title, subtitle, action, actionLabel }: {
 export function SegmentedControl<T extends string>({ options, value, onChange, labels }: {
   options: T[]; value: T; onChange: (v: T) => void; labels: Record<T, string>;
 }) {
+  const styles = useStyles();
   const scrollable = options.length > 3;
   const Wrap = scrollable ? ScrollView : View;
   const wrapProps: any = scrollable
@@ -177,6 +185,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, l
 export function Chip({ label, active, onPress, icon }: {
   label: string; active?: boolean; onPress?: () => void; icon?: keyof typeof Ionicons.glyphMap;
 }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity activeOpacity={0.75} onPress={onPress} style={[styles.chip, active && styles.chipActive]}>
       {icon && <Ionicons name={icon} size={14} color={active ? colors.onBrandPrimary : colors.onSurfaceSecondary} />}
@@ -190,6 +199,7 @@ export function EmptyState({ icon = 'sparkles-outline', title, description, acti
   icon?: keyof typeof Ionicons.glyphMap; title: string; description?: string;
   actionLabel?: string; onAction?: () => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.emptyWrap}>
       <LinearGradient
@@ -219,6 +229,7 @@ export function Badge({ label, tone = 'default', style }: {
   label: string; tone?: 'default' | 'gold' | 'success' | 'warning' | 'error' | 'info';
   style?: StyleProp<ViewStyle>;
 }) {
+  const styles = useStyles();
   const bg = tone === 'gold' ? colors.brandTertiary
     : tone === 'success' ? colors.successSoft
     : tone === 'warning' ? colors.warningSoft
@@ -243,6 +254,7 @@ export function ListItem({ icon, title, subtitle, onPress, badge, tone = 'gold' 
   icon: keyof typeof Ionicons.glyphMap; title: string; subtitle?: string;
   onPress?: () => void; badge?: string; tone?: 'gold' | 'default';
 }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={styles.listItem}>
       <View style={[styles.listIconWrap, tone === 'gold' && { backgroundColor: colors.brandTertiary }]}>
@@ -268,6 +280,7 @@ export function ScreenHeader({ title, onBack, rightIcon, onRight, subtitle }: {
   title: string; onBack?: () => void; rightIcon?: keyof typeof Ionicons.glyphMap;
   onRight?: () => void; subtitle?: string;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.screenHeader}>
       {onBack ? (
@@ -300,8 +313,11 @@ export function ScreenHeader({ title, onBack, rightIcon, onRight, subtitle }: {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────
-const styles = StyleSheet.create({
+// ─── Styles (theme-reactive) ───────────────────────────────────────────────────
+function useStyles() {
+  const { themeKey } = useTheme();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => StyleSheet.create({
   pbtn: {
     borderRadius: radius.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: spacing.sm, paddingHorizontal: spacing.lg, ...shadows.cardGold,
@@ -410,4 +426,5 @@ const styles = StyleSheet.create({
   hBtn: { width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceSecondary },
   hTitle: { ...typography.titleMedium, color: colors.onSurface },
   hSubtitle: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
-});
+}), [themeKey]);
+}

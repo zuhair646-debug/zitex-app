@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const STATUSES: Record<string, string> = {
   pending: 'قيد المراجعة',
@@ -22,6 +23,7 @@ const SCOLOR: Record<string, string> = {
 };
 
 export default function MerchantBookings() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [bookings, setBookings] = useState<any[]>([]);
@@ -140,7 +142,11 @@ export default function MerchantBookings() {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
@@ -176,4 +182,5 @@ const s = StyleSheet.create({
   priceLabel: { ...typography.caption, color: colors.onSurfaceSecondary },
   price: { ...typography.titleSmall, color: colors.brand },
   empty: { ...typography.bodyMedium, color: colors.onSurfaceTertiary, textAlign: 'center' },
-});
+}), [themeKey]);
+}

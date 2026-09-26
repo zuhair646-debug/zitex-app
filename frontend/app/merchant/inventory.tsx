@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
 import { Chip, EmptyState, SkeletonBox, PrimaryButton, Badge } from '../../src/components/ui';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 type Item = {
   product_id: string;
@@ -46,6 +47,7 @@ const CHANNEL_TABS = [
 ] as const;
 
 export default function MerchantInventory() {
+  const styles = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [data, setData] = useState<Overview | null>(null);
@@ -384,7 +386,11 @@ function EditModal({ item, onClose, onSaved, apiCall }: { item: Item; onClose: (
   );
 }
 
-const styles = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -490,4 +496,5 @@ const styles = StyleSheet.create({
   segmentBtnActive: { backgroundColor: colors.brand },
   segmentText: { ...typography.labelMedium, color: colors.onSurfaceSecondary },
   segmentTextActive: { color: colors.onBrandPrimary },
-});
+}), [themeKey]);
+}

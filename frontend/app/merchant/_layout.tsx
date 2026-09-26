@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Tabs, useRouter, useSegments } from 'expo-router';
 import { View, Text, StyleSheet, Platform, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -5,9 +6,11 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 /* ─── Custom tab bar with big center "Live Preview" FAB ─────────────────── */
 function MerchantTabBar({ state, descriptors, navigation }: any) {
+  const s = useSStyles();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useT();
@@ -96,11 +99,15 @@ export default function MerchantLayout() {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   scrim: {
     position: 'absolute',
     left: 0, right: 0, bottom: 0,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: colors.background,
     zIndex: 5,
   },
   wrap: {
@@ -111,7 +118,7 @@ const s = StyleSheet.create({
     overflow: 'visible',
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: Platform.OS === 'android' ? 'rgba(15, 17, 24, 0.98)' : 'transparent',
+    backgroundColor: Platform.OS === 'android' ? colors.surface : 'transparent',
     zIndex: 10,
     shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 12,
   },
@@ -128,14 +135,15 @@ const s = StyleSheet.create({
   },
   fabHalo: {
     position: 'absolute', top: -4, width: 76, height: 76, borderRadius: 38,
-    backgroundColor: 'rgba(245,197,24,0.22)',
+    backgroundColor: colors.brandTertiary,
   },
   fab: {
     width: 68, height: 68, borderRadius: 34,
     backgroundColor: colors.brand,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 3, borderColor: '#0B0C10',
+    borderWidth: 3, borderColor: colors.background,
     shadowColor: colors.brand, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.6, shadowRadius: 16, elevation: 14,
   },
   fabLbl: { color: colors.brand, fontSize: 10, fontWeight: '900', marginTop: 6 },
-});
+}), [themeKey]);
+}

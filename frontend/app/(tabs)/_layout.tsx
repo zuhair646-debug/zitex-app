@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { useRouter } from 'expo-router';
@@ -8,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function TabLayout() {
+  const styles = useSStyles();
   const { user, loading } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -60,6 +62,11 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-});
+}), [themeKey]);
+}

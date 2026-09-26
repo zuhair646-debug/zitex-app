@@ -6,12 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, gradients } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 import {
   StatCard, ActionCard, SectionHeader, PrimaryButton, EmptyState, SkeletonBox, Badge,
 } from '../../src/components/ui';
 
 export default function MerchantHome() {
   const styles = useStylesStyles();
+  const { isDark } = useTheme();
   const router = useRouter();
   const { user, apiCall, logout } = useAuth();
   const [stats, setStats] = useState<any>(null);
@@ -63,7 +65,7 @@ export default function MerchantHome() {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <ScrollView
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
@@ -225,6 +227,7 @@ export default function MerchantHome() {
 }
 
 function useStylesStyles() {
+  const { themeKey } = useTheme();
   return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
@@ -293,6 +296,6 @@ function useStylesStyles() {
   orderCustomer: { ...typography.caption, color: colors.onSurfaceSecondary },
   orderAmount: { ...typography.titleSmall, color: colors.brand },
   orderCurrency: { ...typography.caption, color: colors.onSurfaceSecondary },
-}), []);
+}), [themeKey]);
 }
 

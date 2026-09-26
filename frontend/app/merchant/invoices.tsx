@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,8 +6,10 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, EmptyState, SkeletonBox, Badge, StatCard, PrimaryButton } from '../../src/components/ui';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function Invoices() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [invs, setInvs] = useState<any[]>([]);
@@ -86,7 +88,11 @@ export default function Invoices() {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   row: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
   card: { padding: spacing.md, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
@@ -97,4 +103,5 @@ const s = StyleSheet.create({
   date: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 2 },
   waBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm, alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: 4, backgroundColor: 'rgba(37, 211, 102, 0.15)', borderRadius: radius.sm },
   waTxt: { color: '#25D366', fontSize: 11, fontWeight: '700' },
-});
+}), [themeKey]);
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Alert, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,8 +6,10 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, StatCard, EmptyState, SkeletonBox, Badge, PrimaryButton } from '../../src/components/ui';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function MerchantTeam() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [team, setTeam] = useState<any[]>([]);
@@ -110,7 +112,11 @@ export default function MerchantTeam() {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   summaryRow: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
   card: { backgroundColor: colors.surfaceSecondary, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.md, gap: spacing.md },
@@ -125,4 +131,5 @@ const s = StyleSheet.create({
   miniLbl: { fontSize: 10, color: colors.onSurfaceSecondary, fontWeight: '600' },
   miniVal: { ...typography.labelLarge, color: colors.onSurface, marginTop: 2 },
   miniHint: { fontSize: 9, color: colors.onSurfaceTertiary, marginTop: 1 },
-});
+}), [themeKey]);
+}

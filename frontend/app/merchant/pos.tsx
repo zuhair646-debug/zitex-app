@@ -6,10 +6,12 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, Badge, Chip } from '../../src/components/ui';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 type CartItem = { product_id: string; name: string; price: number; quantity: number };
 
 export default function POSTerminal() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
@@ -181,7 +183,11 @@ export default function POSTerminal() {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   searchWrap: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginHorizontal: spacing.lg, marginBottom: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
   searchInput: { flex: 1, color: colors.onSurface, fontSize: 14, padding: 0 },
@@ -207,4 +213,5 @@ const s = StyleSheet.create({
   totalLbl: { color: colors.onSurfaceSecondary, fontSize: 14 },
   totalVal: { color: colors.onSurface, fontSize: 14, fontWeight: '700' },
   input: { backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: 12, color: colors.onSurface, fontSize: 15 },
-});
+}), [themeKey]);
+}

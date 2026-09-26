@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, RefreshControl, FlatList, Platform, StatusBar } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { colors, spacing, radius } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 type Tab = 'posts' | 'comments';
 type PostType = 'post' | 'story' | 'poll' | 'question' | 'event';
@@ -23,6 +24,7 @@ const POST_TYPES: { id: PostType; label: string; icon: any; desc: string }[] = [
 ];
 
 export default function MerchantSocial() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [tab, setTab] = useState<Tab>('posts');
@@ -500,7 +502,11 @@ export default function MerchantSocial() {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F9FAFB' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
   backBtn: { padding: 4 },
@@ -590,4 +596,5 @@ const s = StyleSheet.create({
   addOptBtnGold: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10, borderRadius: radius.md, backgroundColor: colors.brandTertiary, alignSelf: 'flex-start' },
   addOptTextGold: { color: colors.brand, fontWeight: '700', fontSize: 13 },
   hintGold: { fontSize: 12, color: colors.brand, marginTop: spacing.md, textAlign: 'center', fontStyle: 'italic' },
-});
+}), [themeKey]);
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, Modal, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, PrimaryButton, EmptyState, SkeletonBox, Badge, Chip } from '../../src/components/ui';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const PERMS: { key: string; label: string; group: string }[] = [
   { key: 'all', label: 'كل الصلاحيات (Admin)', group: 'شامل' },
@@ -31,6 +32,7 @@ const PERMS: { key: string; label: string; group: string }[] = [
 const GROUPS = ['شامل', 'المخزون والمنتجات', 'المبيعات', 'التسويق', 'العمليات', 'الإدارة'];
 
 export default function MerchantRoles() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [roles, setRoles] = useState<any[]>([]);
@@ -148,7 +150,11 @@ export default function MerchantRoles() {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   info: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, backgroundColor: colors.brandTertiary, borderRadius: radius.md, borderWidth: 1, borderColor: colors.brandTertiaryStrong },
   infoText: { flex: 1, color: colors.onSurface, ...typography.caption, lineHeight: 18 },
@@ -162,4 +168,5 @@ const s = StyleSheet.create({
   input: { backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: 12, color: colors.onSurface, fontSize: 15 },
   section: { ...typography.titleSmall, color: colors.onSurface, marginTop: spacing.md },
   groupLbl: { ...typography.labelSmall, color: colors.brand, marginTop: spacing.sm, marginBottom: 6 },
-});
+}), [themeKey]);
+}

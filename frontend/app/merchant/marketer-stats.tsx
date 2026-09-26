@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,8 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius } from '../../src/theme';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function MarketerStats() {
+  const s = useSStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -131,7 +133,11 @@ function Kpi({ icon, label, value, highlight }: any) {
   );
 }
 
-const s = StyleSheet.create({
+
+
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.border },
   title: { flex: 1, fontSize: 17, fontWeight: '800', color: colors.onBackground, textAlign: 'center' },
@@ -162,4 +168,5 @@ const s = StyleSheet.create({
   convSub: { fontSize: 11, color: colors.onSurfaceSecondary, marginTop: 2 },
   empty: { padding: spacing.lg, alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
   emptyText: { fontSize: 13, color: colors.onSurfaceSecondary },
-});
+}), [themeKey]);
+}
