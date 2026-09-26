@@ -1,5 +1,41 @@
 # Zitex — Product Requirements (Living Doc)
 
+
+## v1.16.0 — Pearl Light + Custom Theme + Fonts (2026-09-26)
+
+### Global Appearance System
+- **Pearl Gray Palette B** adopted as default Light Mode
+  - bg #F4F4F6, surface #FFFFFF, elevated #EBEAEE
+  - Luxe gold #B8924A (pops on pearl backgrounds)
+  - Border #DAD8DE, text #1C1B20 / #6E6B75
+- **Three modes**: Dark ↔ Light ↔ Custom (was 2)
+- **Custom mode** lets users override 7 color roles:
+  bg, surface, elevated surface, primary text, secondary text, brand gold, border
+- **6 curated presets**: Midnight Blue, Royal Gold, Forest Green, Rose Luxe, Sand Sage, Ocean Breeze
+- **4 font families**: System, Rounded Soft, Elegant Serif (Georgia), Modern Mono (SpaceMono)
+- Fonts applied globally via `Text.defaultProps` / `TextInput.defaultProps`
+- Color picker: 24 curated swatches + custom HEX input
+- Live preview card so users see effects instantly
+- Persistent AsyncStorage: mode + custom overrides + font family
+
+### Entry points
+- Customer: Profile → Appearance & Fonts
+- Merchant: More → الحساب → المظهر والخطوط
+- Driver: header icon
+- Chamber: header icon
+- All sections use the SAME `/appearance` route
+
+### Files
+- `frontend/src/theme/tokens.ts` — Pearl palette + Custom overrides
+- `frontend/src/theme/ThemeContext.tsx` — 3-mode context + presets + fonts
+- `frontend/app/appearance.tsx` — unified appearance screen
+- `frontend/app/_layout.tsx` — global font apply via defaultProps
+
+### Version
+- app.json 1.16.0, iOS build 55, Android version 61
+- EAS builds queued: iOS (aa96bb63), Android (879047d8) — auto-submit enabled
+
+
 ## Vision
 Zitex — Comprehensive Tech Store native mobile app (iOS + Android) with e-commerce, social feed, competitions, delivery, chamber portal, and merchant admin panel.
 
