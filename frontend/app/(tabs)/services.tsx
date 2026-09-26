@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo,  useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ const { width } = Dimensions.get('window');
 const CARD_W = width - 40;
 
 export default function ServicesScreen() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [services, setServices] = useState<any[]>([]);
@@ -70,7 +71,8 @@ export default function ServicesScreen() {
   );
 }
 
-const s = StyleSheet.create({
+function useSStyles() {
+  return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFF' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   title: { fontSize: 24, fontWeight: '800', color: '#0A0A0A' },
@@ -95,4 +97,6 @@ const s = StyleSheet.create({
   serviceBottom: { flexDirection: 'row', justifyContent: 'space-between' },
   serviceRequests: { fontSize: 11, color: '#A1A1AA', fontWeight: '500' },
   servicePrice: { fontSize: 12, color: '#F5C518', fontWeight: '700' },
-});
+}), []);
+}
+

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo,  useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions, Modal, RefreshControl, ActivityIndicator, TextInput, Alert, FlatList, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,7 @@ const timeAgo = (iso?: string) => {
 };
 
 export default function SocialScreen() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall, user } = useAuth();
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -400,7 +401,8 @@ export default function SocialScreen() {
   );
 }
 
-const s = StyleSheet.create({
+function useSStyles() {
+  return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFF' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   title: { fontSize: 24, fontWeight: '800', color: '#0A0A0A' },
@@ -479,4 +481,6 @@ const s = StyleSheet.create({
   commentBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingBottom: Platform.OS === 'ios' ? 28 : 12 },
   commentInput: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, textAlign: 'right' },
   sendBtn: { backgroundColor: '#F5C518', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-});
+}), []);
+}
+

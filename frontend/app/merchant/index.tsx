@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo,  useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,7 @@ import {
 } from '../../src/components/ui';
 
 export default function MerchantHome() {
+  const styles = useStylesStyles();
   const router = useRouter();
   const { user, apiCall, logout } = useAuth();
   const [stats, setStats] = useState<any>(null);
@@ -223,7 +224,8 @@ export default function MerchantHome() {
   );
 }
 
-const styles = StyleSheet.create({
+function useStylesStyles() {
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
@@ -291,4 +293,6 @@ const styles = StyleSheet.create({
   orderCustomer: { ...typography.caption, color: colors.onSurfaceSecondary },
   orderAmount: { ...typography.titleSmall, color: colors.brand },
   orderCurrency: { ...typography.caption, color: colors.onSurfaceSecondary },
-});
+}), []);
+}
+

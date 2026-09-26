@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useMemo,  useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions, RefreshControl, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -10,6 +10,7 @@ const { width } = Dimensions.get('window');
 const CARD_W = (width - 60) / 2;
 
 export default function HomeScreen() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall, user } = useAuth();
   const [banners, setBanners] = useState<any[]>([]);
@@ -332,7 +333,8 @@ export default function HomeScreen() {
   );
 }
 
-const s = StyleSheet.create({
+function useSStyles() {
+  return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFFFFF' },
   tglWrap: { flexDirection: 'row', marginHorizontal: 16, marginTop: 4, marginBottom: 12, backgroundColor: '#F1F1F5', borderRadius: 999, padding: 4 },
   tglOn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 999, backgroundColor: 'white' },
@@ -437,4 +439,6 @@ const s = StyleSheet.create({
   progressBar: { height: 8, backgroundColor: '#E4E4E7', borderRadius: 4, marginBottom: 4 },
   progressFill: { height: '100%', backgroundColor: '#F5C518', borderRadius: 4 },
   progressText: { fontSize: 12, color: '#52525B', fontWeight: '600', textAlign: 'right' },
-});
+}), []);
+}
+

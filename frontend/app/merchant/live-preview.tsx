@@ -27,6 +27,7 @@ const { width: SCREEN } = Dimensions.get('window');
 type Section = 'products' | 'services' | 'competitions' | 'social' | 'overview';
 
 export default function LivePreview() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const { t } = useT();
@@ -126,6 +127,7 @@ export default function LivePreview() {
 
 /* ─── Products grid with live viewers & comparison ─────────────────────── */
 function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSelectedIds, setCompareMode, openCompare }: any) {
+  const s = useSStyles();
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
   const [live, setLive] = useState<Record<string, { count: number; sample_names: string[] }>>({});
@@ -324,6 +326,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
 }
 
 function ServicesSection({ apiCall, onAnalytics }: any) {
+  const s = useSStyles();
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -492,6 +495,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
 }
 
 function CompetitionsSection({ apiCall, onAnalytics }: any) {
+  const s = useSStyles();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'active' | 'ended' | 'all'>('active');
@@ -628,6 +632,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
 }
 
 function SocialSection({ apiCall, onOpenPost }: any) {
+  const s = useSStyles();
   const [posts, setPosts] = useState<any[]>([]); const [loading, setLoading] = useState(true);
   const [replying, setReplying] = useState<{ postId: string; commentId: string; commentText: string } | null>(null);
   const [replyText, setReplyText] = useState('');
@@ -798,6 +803,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
 
 /* ─── Wave chart (SVG) for monthly sales ────────────────────────────── */
 function WaveChart({ series, width = SCREEN - 60, height = 160 }: any) {
+  const s = useSStyles();
   if (!series || series.length === 0) {
     return <View style={{ padding: 20, alignItems: 'center' }}><Text style={{ color: MUTED }}>لا بيانات</Text></View>;
   }
@@ -843,6 +849,7 @@ function WaveChart({ series, width = SCREEN - 60, height = 160 }: any) {
 }
 
 function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
+  const s = useSStyles();
   const [data, setData] = useState<any>(null);
   useEffect(() => {
     apiCall(`/api/merchant/products/${product.id}/analytics`)
@@ -994,6 +1001,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
 }
 
 function CompareSheet({ items, onClose }: any) {
+  const s = useSStyles();
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <View style={s.sheetBackdrop}>
@@ -1033,6 +1041,7 @@ function CompareSheet({ items, onClose }: any) {
 }
 
 function Kpi({ icon, label, value, highlight, danger }: any) {
+  const s = useSStyles();
   const c = highlight ? BG : danger ? '#EF4444' : GOLD;
   return (
     <View style={[s.kpi, highlight && { backgroundColor: GOLD }]}>
@@ -1045,6 +1054,7 @@ function Kpi({ icon, label, value, highlight, danger }: any) {
 
 /* ─── Service Analytics Sheet ───────────────────────────────────── */
 function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
+  const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -1155,6 +1165,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
 
 /* ─── Competition Analytics Sheet ───────────────────────────────── */
 function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
+  const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -1270,6 +1281,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
 
 /* ─── Post Detail Sheet — viewers/likers/comments/poll ──────────── */
 function PostDetailSheet({ post, onClose, apiCall }: any) {
+  const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'comments' | 'viewers' | 'likers' | 'poll'>('comments');
@@ -1416,6 +1428,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
 
 /* ─── Sharers view — WHO shared and WHERE ────────────────────────── */
 function SharersView({ postId, apiCall }: any) {
+  const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -1477,6 +1490,7 @@ const MEDAL_COLORS: Record<number, { bg: string; border: string; label: string }
 };
 
 function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondaryValue, progressPct, isOnline, avatar, onPress }: any) {
+  const s = useSStyles();
   const medal = MEDAL_COLORS[rank];
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={s.luxeRow}>
@@ -1520,6 +1534,7 @@ function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondary
 
 /* ─── Entity Detail Sheet — driver / branch / marketer / employee ─────── */
 function EntityDetailSheet({ entity, kind, onClose }: any) {
+  const s = useSStyles();
   if (!entity) return null;
   const rows: { icon: string; label: string; value: string; color?: string }[] = [];
   const K = (v: any) => v ? Number(v).toLocaleString('ar-SA') : '0';
@@ -1614,6 +1629,7 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
 }
 
 function OverviewSection({ apiCall }: any) {
+  const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'drivers' | 'branches' | 'marketers' | 'employees'>('drivers');
@@ -1808,7 +1824,8 @@ function OverviewSection({ apiCall }: any) {
 }
 
 
-const s = StyleSheet.create({
+function useSStyles() {
+  return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   previewPill: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7f1d1d', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, margin: 10 },
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
@@ -2021,4 +2038,6 @@ const s = StyleSheet.create({
   detailRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: BORDER },
   detailLabel: { color: MUTED, fontSize: 12, flex: 1, textAlign: 'right', marginHorizontal: 8 },
   detailValue: { color: '#FFF', fontSize: 12, fontWeight: '700', textAlign: 'left' },
-});
+}), []);
+}
+

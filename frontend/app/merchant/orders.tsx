@@ -18,6 +18,7 @@ const STATUS_TONE: Record<string, any> = {
 };
 
 export default function MerchantOrders() {
+  const s = useSStyles();
   const { apiCall } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,7 +176,9 @@ export default function MerchantOrders() {
   );
 }
 
-const s = StyleSheet.create({
+function useSStyles() {
+  const s = useSStyles();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
@@ -215,4 +218,6 @@ const s = StyleSheet.create({
     flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs,
     paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderSubtle,
   },
-});
+}), []);
+}
+

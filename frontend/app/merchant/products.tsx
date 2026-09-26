@@ -8,6 +8,7 @@ import { colors, spacing, radius, typography, shadows } from '../../src/theme/to
 import { Chip, EmptyState, SkeletonBox, Badge, PrimaryButton } from '../../src/components/ui';
 
 export default function MerchantProducts() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
@@ -187,7 +188,9 @@ export default function MerchantProducts() {
   );
 }
 
-const s = StyleSheet.create({
+function useSStyles() {
+  const s = useSStyles();
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
@@ -230,4 +233,6 @@ const s = StyleSheet.create({
   stockLabel: { ...typography.labelSmall, fontWeight: '700' },
   editBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center' },
   delBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.errorSoft, alignItems: 'center', justifyContent: 'center' },
-});
+}), []);
+}
+

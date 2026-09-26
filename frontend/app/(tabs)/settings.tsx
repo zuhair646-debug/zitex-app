@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo,  useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { useThemeMode } from '../../src/theme/mode';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function SettingsScreen() {
+  const styles = useStylesStyles();
   const { user, logout } = useAuth();
   const router = useRouter();
   const { t, lang, setLang } = useT();
@@ -155,7 +156,8 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function useStylesStyles() {
+  return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFFFFF' },
   pageTitle: { fontSize: 24, fontWeight: '800', color: '#0A0A0A', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   profileCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, padding: 16, backgroundColor: '#F9F9FB', borderRadius: 16, marginBottom: 16 },
@@ -187,4 +189,6 @@ const styles = StyleSheet.create({
   langNative: { fontSize: 16, fontWeight: '700', color: '#0A0A0A' },
   langEng: { fontSize: 12, color: '#71717A', marginTop: 1 },
   noResult: { textAlign: 'center', color: '#A1A1AA', marginTop: 40, fontSize: 14 },
-});
+}), []);
+}
+

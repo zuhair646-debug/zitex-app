@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo,  useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ const COMPETITIONS = [
 ];
 
 export default function CompetitionsScreen() {
+  const s = useSStyles();
   const router = useRouter();
   const { apiCall, user } = useAuth();
   const [comps, setComps] = useState<any[]>([]);
@@ -81,7 +82,8 @@ export default function CompetitionsScreen() {
   );
 }
 
-const s = StyleSheet.create({
+function useSStyles() {
+  return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A0A0A' },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   title: { fontSize: 24, fontWeight: '900', color: '#F5C518' },
@@ -105,4 +107,6 @@ const s = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: 4 },
   progressInfo: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 },
   progressLabel: { fontSize: 12, color: '#9CA3AF', fontWeight: '500' },
-});
+}), []);
+}
+

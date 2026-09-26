@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo,  useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ListItem, SectionHeader, ScreenHeader } from '../../src/components/ui';
@@ -11,6 +11,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { useT, LANGUAGES } from '../../src/i18n';
 
 export default function MerchantMore() {
+  const styles = useStylesStyles();
   const router = useRouter();
   const { user, logout } = useAuth();
   const { mode, toggle: toggleThemeLegacy } = useThemeMode();
@@ -165,7 +166,8 @@ export default function MerchantMore() {
   );
 }
 
-const styles = StyleSheet.create({
+function useStylesStyles() {
+  return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   hero: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
@@ -202,4 +204,6 @@ const styles = StyleSheet.create({
   langRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 12, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: colors.border },
   langNative: { ...typography.body, color: colors.onSurface, fontWeight: '700' as any },
   langName: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
-});
+}), []);
+}
+
