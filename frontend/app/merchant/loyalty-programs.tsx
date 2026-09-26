@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -15,6 +17,7 @@ const OK = '#10B981';
 const AMBER = '#F59E0B';
 
 export default function LoyaltyProgramsScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [programs, setPrograms] = useState<any[]>([]);
@@ -82,8 +85,8 @@ export default function LoyaltyProgramsScreen() {
           <Ionicons name="chevron-forward" size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={s.title}>برامج الولاء السعودية</Text>
-          <Text style={s.sub}>فعّل ما تحتاجه بعد الاعتماد القانوني</Text>
+          <TX style={s.title}>برامج الولاء السعودية</TX>
+          <TX style={s.sub}>فعّل ما تحتاجه بعد الاعتماد القانوني</TX>
         </View>
       </View>
 
@@ -93,9 +96,9 @@ export default function LoyaltyProgramsScreen() {
         <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }}>
           <View style={s.warnBar}>
             <Ionicons name="alert-circle" size={14} color={AMBER} />
-            <Text style={s.warnText}>
+            <TX style={s.warnText}>
               معظم البرامج تتطلب عقد شراكة رسمي مع مزوّد الخدمة قبل التفعيل الفعلي. عرّف بيانات الاعتماد بعد استلامها منهم.
-            </Text>
+            </TX>
           </View>
 
           {programs.map((p) => (
@@ -120,7 +123,7 @@ export default function LoyaltyProgramsScreen() {
                   </View>
                   <Text style={s.cardSub} numberOfLines={2}>{p.description_ar}</Text>
                   {p.status === 'sandbox_pending' && (
-                    <Text style={s.pendingTag}>⚠️ بانتظار بيانات الاعتماد</Text>
+                    <TX style={s.pendingTag}>⚠️ بانتظار بيانات الاعتماد</TX>
                   )}
                 </View>
                 <Switch
@@ -134,12 +137,12 @@ export default function LoyaltyProgramsScreen() {
               <View style={s.rowActions}>
                 <TouchableOpacity onPress={() => openEditor(p)} style={s.cfgBtn}>
                   <Ionicons name="settings-outline" size={13} color={GOLD} />
-                  <Text style={s.cfgBtnText}>الإعدادات وبيانات الاعتماد</Text>
+                  <TX style={s.cfgBtnText}>الإعدادات وبيانات الاعتماد</TX>
                 </TouchableOpacity>
                 {p.kb_url ? (
                   <TouchableOpacity onPress={() => Linking.openURL(p.kb_url)} style={s.cfgBtn}>
                     <Ionicons name="link" size={13} color={GOLD} />
-                    <Text style={s.cfgBtnText}>الموقع</Text>
+                    <TX style={s.cfgBtnText}>الموقع</TX>
                   </TouchableOpacity>
                 ) : null}
               </View>
@@ -167,7 +170,7 @@ export default function LoyaltyProgramsScreen() {
 
                   {editing.legal_docs_required?.length > 0 && (
                     <View style={s.legalBox}>
-                      <Text style={s.legalTitle}>📄 الوثائق القانونية المطلوبة</Text>
+                      <TX style={s.legalTitle}>📄 الوثائق القانونية المطلوبة</TX>
                       {editing.legal_docs_required.map((d: string, i: number) => (
                         <Text key={i} style={s.legalItem}>• {d}</Text>
                       ))}
@@ -176,7 +179,7 @@ export default function LoyaltyProgramsScreen() {
 
                   {editing.credential_fields?.length > 0 && (
                     <>
-                      <Text style={s.sectionTitle}>🔐 بيانات الاعتماد (API)</Text>
+                      <TX style={s.sectionTitle}>🔐 بيانات الاعتماد (API)</TX>
                       {editing.credential_fields.map((f: string) => (
                         <View key={f}>
                           <Text style={s.label}>{f}</Text>
@@ -190,17 +193,17 @@ export default function LoyaltyProgramsScreen() {
                     </>
                   )}
 
-                  <Text style={s.sectionTitle}>💱 معدل التحويل</Text>
-                  <Text style={s.label}>قيمة النقطة الواحدة بالريال</Text>
+                  <TX style={s.sectionTitle}>💱 معدل التحويل</TX>
+                  <TX style={s.label}>قيمة النقطة الواحدة بالريال</TX>
                   <TextInput style={s.input} keyboardType="decimal-pad"
                     value={rate} onChangeText={setRate} placeholder="0.01" placeholderTextColor={MUTED} />
 
-                  <Text style={s.label}>ملاحظة داخلية</Text>
+                  <TX style={s.label}>ملاحظة داخلية</TX>
                   <TextInput style={[s.input, { minHeight: 60 }]} multiline
-                    value={note} onChangeText={setNote} placeholder="اختياري" placeholderTextColor={MUTED} />
+                    value={note} onChangeText={setNote} placeholder={tSync("اختياري", lang)} placeholderTextColor={MUTED} />
 
                   <TouchableOpacity onPress={saveConfig} style={s.saveBtn} disabled={saving}>
-                    {saving ? <ActivityIndicator color={BG} /> : <Text style={s.saveText}>حفظ الإعدادات</Text>}
+                    {saving ? <ActivityIndicator color={BG} /> : <TX style={s.saveText}>حفظ الإعدادات</TX>}
                   </TouchableOpacity>
                 </>
               )}

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import Constants from 'expo-constants';
 import { LP } from './theme';
+import { TX } from '../../useAutoT';
 
 const SEVERITY_COLORS: any = {
   info: LP.INFO,
@@ -83,11 +84,11 @@ export function AlertsBell({ apiCall }: any) {
                 onPress={async () => { try { await apiCall('/api/merchant/live-preview/alerts/test', { method: 'POST' }); await load(); } catch {} }}
                 style={s.testBtn}>
                 <Ionicons name="flash" size={11} color={LP.GOLD} />
-                <Text style={{ color: LP.GOLD, fontSize: 10, fontWeight: '900' }}>اختبار</Text>
+                <TX style={{ color: LP.GOLD, fontSize: 10, fontWeight: '900' }}>اختبار</TX>
               </TouchableOpacity>
               <TouchableOpacity onPress={ackAll} style={s.ackAllBtn}>
                 <Ionicons name="checkmark-done" size={12} color={LP.BG} />
-                <Text style={{ color: LP.BG, fontSize: 10, fontWeight: '900' }}>قراءة الكل</Text>
+                <TX style={{ color: LP.BG, fontSize: 10, fontWeight: '900' }}>قراءة الكل</TX>
               </TouchableOpacity>
             </View>
 
@@ -96,7 +97,7 @@ export function AlertsBell({ apiCall }: any) {
                 {alerts.length === 0 && (
                   <View style={{ alignItems: 'center', padding: 40 }}>
                     <Ionicons name="notifications-off" size={40} color={LP.MUTED} />
-                    <Text style={{ color: LP.MUTED, marginTop: 8 }}>لا توجد تنبيهات</Text>
+                    <TX style={{ color: LP.MUTED, marginTop: 8 }}>لا توجد تنبيهات</TX>
                   </View>
                 )}
                 {alerts.map((a: any) => {
@@ -151,7 +152,7 @@ export function ExportButton({ kind, entityId, apiCall, small }: any) {
   return (
     <TouchableOpacity onPress={onPress} style={[s.exportBtn, small && { paddingHorizontal: 10, paddingVertical: 6 }]} activeOpacity={0.7}>
       <Ionicons name="download" size={small ? 12 : 14} color={LP.BG} />
-      <Text style={[s.exportText, small && { fontSize: 10 }]}>تصدير PDF</Text>
+      <TX style={[s.exportText, small && { fontSize: 10 }]}>تصدير PDF</TX>
     </TouchableOpacity>
   );
 }

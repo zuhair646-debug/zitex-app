@@ -7,8 +7,11 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, EmptyState, SkeletonBox, Badge, StatCard, PrimaryButton } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 export default function Invoices() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -40,25 +43,25 @@ export default function Invoices() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title="الفواتير" onBack={() => router.back()} rightIcon="refresh" onRight={load} subtitle={`${invs.length} فاتورة`} />
+        <ScreenHeader title={tSync("الفواتير", lang)} onBack={() => router.back()} rightIcon="refresh" onRight={load} subtitle={`${invs.length} فاتورة`} />
 
         <View style={s.row}>
-          <StatCard icon="today" label="اليوم" value={`${todayInvs.length}`} tone="gold" />
-          <StatCard icon="cash" label="مبيعات اليوم" value={new Intl.NumberFormat('en').format(todayRevenue)} tone="success" />
+          <StatCard icon="today" label={tSync("اليوم", lang)} value={`${todayInvs.length}`} tone="gold" />
+          <StatCard icon="cash" label={tSync("مبيعات اليوم", lang)} value={new Intl.NumberFormat('en').format(todayRevenue)} tone="success" />
         </View>
         <View style={s.row}>
-          <StatCard icon="receipt" label="الإجمالي" value={invs.length} tone="info" />
-          <StatCard icon="wallet" label="إجمالي المبيعات" value={new Intl.NumberFormat('en').format(totalRevenue)} tone="gold" />
+          <StatCard icon="receipt" label={tSync("الإجمالي", lang)} value={invs.length} tone="info" />
+          <StatCard icon="wallet" label={tSync("إجمالي المبيعات", lang)} value={new Intl.NumberFormat('en').format(totalRevenue)} tone="gold" />
         </View>
 
         <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.md }}>
-          <PrimaryButton label="فتح شاشة البيع POS" icon="cart" onPress={() => router.push('/merchant/pos')} />
+          <PrimaryButton label={tSync("فتح شاشة البيع POS", lang)} icon="cart" onPress={() => router.push('/merchant/pos')} />
         </View>
 
         {loading ? (
           <View style={{ padding: spacing.lg, gap: spacing.md }}><SkeletonBox height={80} /><SkeletonBox height={80} /></View>
         ) : invs.length === 0 ? (
-          <EmptyState icon="receipt-outline" title="لا توجد فواتير" description="أنشئ أول فاتورة من شاشة POS" actionLabel="فتح POS" onAction={() => router.push('/merchant/pos')} />
+          <EmptyState icon="receipt-outline" title={tSync("لا توجد فواتير", lang)} description="أنشئ أول فاتورة من شاشة POS" actionLabel="فتح POS" onAction={() => router.push('/merchant/pos')} />
         ) : (
           <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140, gap: spacing.sm }}>
             {invs.map(i => (
@@ -67,7 +70,7 @@ export default function Invoices() {
                   <Text style={s.no}>{i.invoice_number}</Text>
                   <Badge label={method(i.payment_method)} tone="info" />
                   <View style={{ flex: 1 }} />
-                  <Text style={s.amt}>{i.total?.toFixed(2)} <Text style={s.cur}>ر.س</Text></Text>
+                  <Text style={s.amt}>{i.total?.toFixed(2)} <TX style={s.cur}>ر.س</TX></Text>
                 </View>
                 <Text style={s.meta} numberOfLines={1}>
                   {i.customer_name || 'عميل مباشر'} • {i.items_count} منتج • {i.employee_name}
@@ -76,7 +79,7 @@ export default function Invoices() {
                 {i.customer_phone && (
                   <TouchableOpacity onPress={() => sendWhatsapp(i)} style={s.waBtn}>
                     <Ionicons name="logo-whatsapp" size={14} color="#25D366" />
-                    <Text style={s.waTxt}>إرسال واتساب</Text>
+                    <TX style={s.waTxt}>إرسال واتساب</TX>
                   </TouchableOpacity>
                 )}
               </View>

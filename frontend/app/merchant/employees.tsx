@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 const DEPARTMENTS = [
   { id: 'marketing', label: 'تسويق / سوشال ميديا', icon: 'megaphone', color: '#EC4899', defaultPerms: ['social', 'banners'] },
@@ -16,6 +18,7 @@ const DEPARTMENTS = [
 ];
 
 export default function MerchantEmployees() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [items, setItems] = useState<any[]>([]);
@@ -91,14 +94,14 @@ export default function MerchantEmployees() {
         <TouchableOpacity onPress={openNew} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={{ padding: 14 }}>
-        {items.length === 0 && <Text style={s.empty}>لا يوجد موظفون — اضغط + لإضافة أول موظف</Text>}
+        {items.length === 0 && <TX style={s.empty}>لا يوجد موظفون — اضغط + لإضافة أول موظف</TX>}
         {items.map(e => {
           const dept = DEPARTMENTS.find(d => d.id === e.department) || DEPARTMENTS[6];
           return (
             <View key={e.id} style={s.empCard}>
               <View style={[s.empIcon, { backgroundColor: dept.color + '20' }]}><Ionicons name={dept.icon as any} size={22} color={dept.color} /></View>
               <View style={{ flex: 1 }}>
-                <Text style={s.empName}>{e.name} {!e.active && <Text style={s.inactive}>(معطّل)</Text>}</Text>
+                <Text style={s.empName}>{e.name} {!e.active && <TX style={s.inactive}>(معطّل)</TX>}</Text>
                 <Text style={s.empMeta}>{e.phone} • {dept.label}</Text>
                 <View style={s.permRow}>
                   {(e.permissions || []).slice(0, 4).map((p: string) => <View key={p} style={s.permTag}><Text style={s.permTagText}>{perms.labels[p] || p}</Text></View>)}
@@ -119,24 +122,24 @@ export default function MerchantEmployees() {
           <View style={s.header}>
             <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
             <Text style={s.title}>{editing ? 'تعديل الموظف' : 'موظف جديد'}</Text>
-            <TouchableOpacity onPress={save} disabled={saving}>{saving ? <ActivityIndicator size="small" color="#8833FF" /> : <Text style={{ color: '#8833FF', fontWeight: '800' }}>حفظ</Text>}</TouchableOpacity>
+            <TouchableOpacity onPress={save} disabled={saving}>{saving ? <ActivityIndicator size="small" color="#8833FF" /> : <TX style={{ color: '#8833FF', fontWeight: '800' }}>حفظ</TX>}</TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={{ padding: 14 }}>
-            <Text style={s.lbl}>الاسم *</Text>
-            <TextInput style={s.input} value={form.name} onChangeText={t => setForm(f => ({ ...f, name: t }))} placeholder="محمد أحمد" />
-            <Text style={s.lbl}>رقم الجوال *</Text>
+            <TX style={s.lbl}>الاسم *</TX>
+            <TextInput style={s.input} value={form.name} onChangeText={t => setForm(f => ({ ...f, name: t }))} placeholder={tSync("محمد أحمد", lang)} />
+            <TX style={s.lbl}>رقم الجوال *</TX>
             <TextInput style={s.input} value={form.phone} onChangeText={t => setForm(f => ({ ...f, phone: t }))} placeholder="05xxxxxxxx" keyboardType="phone-pad" editable={!editing} />
             <Text style={s.lbl}>كلمة المرور {editing && '(اتركها فارغة للإبقاء على الحالية)'}</Text>
             <TextInput style={s.input} value={form.password} onChangeText={t => setForm(f => ({ ...f, password: t }))} placeholder="********" secureTextEntry />
-            <Text style={s.lbl}>المسمى الوظيفي</Text>
-            <TextInput style={s.input} value={form.job_title} onChangeText={t => setForm(f => ({ ...f, job_title: t }))} placeholder="مثال: كاشير، مسؤول تسويق" />
-            <Text style={s.lbl}>الراتب الشهري (ر.س)</Text>
+            <TX style={s.lbl}>المسمى الوظيفي</TX>
+            <TextInput style={s.input} value={form.job_title} onChangeText={t => setForm(f => ({ ...f, job_title: t }))} placeholder={tSync("مثال: كاشير، مسؤول تسويق", lang)} />
+            <TX style={s.lbl}>الراتب الشهري (ر.س)</TX>
             <TextInput style={s.input} keyboardType="numeric" value={form.salary_monthly} onChangeText={t => setForm(f => ({ ...f, salary_monthly: t }))} />
 
-            <Text style={s.section}>🏢 الفروع المُعيّن لها</Text>
-            <Text style={s.hint}>اختر فرعاً واحداً أو أكثر — إذا لم تختر شيئاً يُعتبر الموظف مركزيًا (كل الفروع)</Text>
+            <TX style={s.section}>🏢 الفروع المُعيّن لها</TX>
+            <TX style={s.hint}>اختر فرعاً واحداً أو أكثر — إذا لم تختر شيئاً يُعتبر الموظف مركزيًا (كل الفروع)</TX>
             {branchesAll.length === 0 ? (
-              <Text style={[s.hint, { color: '#F59E0B', marginTop: 8 }]}>⚠️ لم تُنشئ فروعاً بعد — اذهب إلى قسم الفروع أولاً</Text>
+              <TX style={[s.hint, { color: '#F59E0B', marginTop: 8 }]}>⚠️ لم تُنشئ فروعاً بعد — اذهب إلى قسم الفروع أولاً</TX>
             ) : (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                 {branchesAll.map(b => {
@@ -151,7 +154,7 @@ export default function MerchantEmployees() {
               </View>
             )}
 
-            <Text style={s.section}>🏢 القسم</Text>
+            <TX style={s.section}>🏢 القسم</TX>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {DEPARTMENTS.map(d => (
                 <TouchableOpacity key={d.id} style={[s.deptCard, form.department === d.id && { borderColor: d.color, backgroundColor: d.color + '15' }]} onPress={() => pickDept(d)}>
@@ -161,8 +164,8 @@ export default function MerchantEmployees() {
               ))}
             </View>
 
-            <Text style={s.section}>🔐 الصلاحيات</Text>
-            <Text style={s.hint}>اختر القسم أعلاه يحدد الصلاحيات تلقائياً، أو خصصها يدوياً</Text>
+            <TX style={s.section}>🔐 الصلاحيات</TX>
+            <TX style={s.hint}>اختر القسم أعلاه يحدد الصلاحيات تلقائياً، أو خصصها يدوياً</TX>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
               {perms.permissions.map(p => (
                 <TouchableOpacity key={p} style={[s.permCard, form.permissions.includes(p) && s.permActive]} onPress={() => togglePerm(p)}>
@@ -174,7 +177,7 @@ export default function MerchantEmployees() {
 
             {editing && (
               <View style={s.activeRow}>
-                <Text style={s.lbl}>حالة الحساب</Text>
+                <TX style={s.lbl}>حالة الحساب</TX>
                 <Switch value={form.active} onValueChange={v => setForm(f => ({ ...f, active: v }))} />
               </View>
             )}

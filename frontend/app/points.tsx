@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { useT } from '../src/i18n';
+import { TX } from '../src/useAutoT';
 
 export default function PointsScreen() {
   const router = useRouter();
@@ -80,7 +81,7 @@ export default function PointsScreen() {
         <View style={s.modalBg}>
           <View style={s.modalCard}>
             <Text style={s.modalTitle}>{t('points.redeem')}</Text>
-            <Text style={s.modalHint}>10 نقاط = 1 ر.س للمحفظة</Text>
+            <TX style={s.modalHint}>10 نقاط = 1 ر.س للمحفظة</TX>
             <TextInput style={s.modalInput} keyboardType="numeric" value={redeemAmt} onChangeText={setRedeemAmt} placeholder={`${data.balance} ${t('points.balance')}`} />
             <Text style={s.modalCalc}>{(parseInt(redeemAmt) || 0) * 0.1} {t('common.currency')}</Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>

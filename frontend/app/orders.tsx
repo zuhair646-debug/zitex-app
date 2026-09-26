@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import { TX } from '../src/useAutoT';
 
 export default function OrdersScreen() {
   const router = useRouter();
@@ -62,7 +63,7 @@ export default function OrdersScreen() {
                     testID={`return-${o.id}`}
                   >
                     <Ionicons name="return-up-back" size={14} color="#F5C518" />
-                    <Text style={s.returnBtnText}>طلب إرجاع أو ضمان</Text>
+                    <TX style={s.returnBtnText}>طلب إرجاع أو ضمان</TX>
                   </TouchableOpacity>
                 )}
               </View>

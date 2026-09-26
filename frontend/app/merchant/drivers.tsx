@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import { TX } from '../../src/useAutoT';
 
 export default function MerchantDrivers() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function MerchantDrivers() {
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView contentContainerStyle={{ padding: 16 }}>
-          {drivers.length === 0 && <Text style={s.empty}>لا يوجد سائقون بعد. اضغط + لإضافة سائق.</Text>}
+          {drivers.length === 0 && <TX style={s.empty}>لا يوجد سائقون بعد. اضغط + لإضافة سائق.</TX>}
           {drivers.map(d => (
             <View key={d.id} style={s.card}>
               <View style={[s.statusDot, { backgroundColor: d.online ? '#10B981' : '#9CA3AF' }]} />
@@ -57,38 +58,38 @@ export default function MerchantDrivers() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <Text style={s.title}>سائق جديد</Text>
+            <TX style={s.title}>سائق جديد</TX>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            <Text style={s.label}>الاسم *</Text><TextInput style={s.input} value={form.name} onChangeText={t => setForm({ ...form, name: t })} />
-            <Text style={s.label}>رقم الجوال *</Text><TextInput style={s.input} value={form.phone} onChangeText={t => setForm({ ...form, phone: t })} keyboardType="phone-pad" />
-            <Text style={s.label}>كلمة مرور الدخول *</Text><TextInput style={s.input} value={form.password} onChangeText={t => setForm({ ...form, password: t })} secureTextEntry />
-            <Text style={s.label}>معلومات المركبة</Text><TextInput style={s.input} value={form.vehicle_info} onChangeText={t => setForm({ ...form, vehicle_info: t })} placeholder="Toyota Hilux 2022" />
-            <Text style={s.label}>نموذج الدفع</Text>
+            <TX style={s.label}>الاسم *</TX><TextInput style={s.input} value={form.name} onChangeText={t => setForm({ ...form, name: t })} />
+            <TX style={s.label}>رقم الجوال *</TX><TextInput style={s.input} value={form.phone} onChangeText={t => setForm({ ...form, phone: t })} keyboardType="phone-pad" />
+            <TX style={s.label}>كلمة مرور الدخول *</TX><TextInput style={s.input} value={form.password} onChangeText={t => setForm({ ...form, password: t })} secureTextEntry />
+            <TX style={s.label}>معلومات المركبة</TX><TextInput style={s.input} value={form.vehicle_info} onChangeText={t => setForm({ ...form, vehicle_info: t })} placeholder="Toyota Hilux 2022" />
+            <TX style={s.label}>نموذج الدفع</TX>
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity style={[s.opt, form.payment_model === 'commission' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'commission' })}><Text style={[s.optText, form.payment_model === 'commission' && s.optTextActive]}>عمولة لكل طلب</Text></TouchableOpacity>
-              <TouchableOpacity style={[s.opt, form.payment_model === 'salary' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'salary' })}><Text style={[s.optText, form.payment_model === 'salary' && s.optTextActive]}>راتب شهري</Text></TouchableOpacity>
+              <TouchableOpacity style={[s.opt, form.payment_model === 'commission' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'commission' })}><TX style={[s.optText, form.payment_model === 'commission' && s.optTextActive]}>عمولة لكل طلب</TX></TouchableOpacity>
+              <TouchableOpacity style={[s.opt, form.payment_model === 'salary' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'salary' })}><TX style={[s.optText, form.payment_model === 'salary' && s.optTextActive]}>راتب شهري</TX></TouchableOpacity>
             </View>
             {form.payment_model === 'commission' && (<>
-              <Text style={s.label}>نوع العمولة</Text>
+              <TX style={s.label}>نوع العمولة</TX>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TouchableOpacity style={[s.opt, form.commission_type === 'fixed' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'fixed' })}><Text style={[s.optText, form.commission_type === 'fixed' && s.optTextActive]}>مبلغ ثابت</Text></TouchableOpacity>
-                <TouchableOpacity style={[s.opt, form.commission_type === 'percentage' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'percentage' })}><Text style={[s.optText, form.commission_type === 'percentage' && s.optTextActive]}>نسبة مئوية</Text></TouchableOpacity>
+                <TouchableOpacity style={[s.opt, form.commission_type === 'fixed' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'fixed' })}><TX style={[s.optText, form.commission_type === 'fixed' && s.optTextActive]}>مبلغ ثابت</TX></TouchableOpacity>
+                <TouchableOpacity style={[s.opt, form.commission_type === 'percentage' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'percentage' })}><TX style={[s.optText, form.commission_type === 'percentage' && s.optTextActive]}>نسبة مئوية</TX></TouchableOpacity>
               </View>
               <Text style={s.label}>حصة التاجر ({form.commission_type === 'percentage' ? '%' : 'ر.س'} لكل طلب)</Text>
               <TextInput style={s.input} keyboardType="numeric" value={form.merchant_commission_value} onChangeText={t => setForm({ ...form, merchant_commission_value: t })} />
-              <Text style={s.hint}>الباقي يذهب لمحفظة السائق</Text>
+              <TX style={s.hint}>الباقي يذهب لمحفظة السائق</TX>
             </>)}
             {form.payment_model === 'salary' && (<>
-              <Text style={s.label}>الراتب الشهري (ر.س)</Text>
+              <TX style={s.label}>الراتب الشهري (ر.س)</TX>
               <TextInput style={s.input} keyboardType="numeric" value={form.salary_monthly} onChangeText={t => setForm({ ...form, salary_monthly: t })} placeholder="3000" />
-              <Text style={s.label}>حد المكافأة (طلبات/يوم)</Text>
+              <TX style={s.label}>حد المكافأة (طلبات/يوم)</TX>
               <TextInput style={s.input} keyboardType="numeric" value={form.bonus_threshold_orders} onChangeText={t => setForm({ ...form, bonus_threshold_orders: t })} />
-              <Text style={s.label}>مكافأة الطلب الإضافي (ر.س)</Text>
+              <TX style={s.label}>مكافأة الطلب الإضافي (ر.س)</TX>
               <TextInput style={s.input} keyboardType="numeric" value={form.bonus_per_extra_order} onChangeText={t => setForm({ ...form, bonus_per_extra_order: t })} />
-              <Text style={s.hint}>فوق الحد، يكسب السائق مكافأة لكل طلب إضافي</Text>
+              <TX style={s.hint}>فوق الحد، يكسب السائق مكافأة لكل طلب إضافي</TX>
             </>)}
-            <TouchableOpacity style={s.saveBtn} onPress={save}><Text style={s.saveText}>إضافة السائق</Text></TouchableOpacity>
+            <TouchableOpacity style={s.saveBtn} onPress={save}><TX style={s.saveText}>إضافة السائق</TX></TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
       </Modal>

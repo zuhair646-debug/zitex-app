@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from './_layout';
+import { TX } from '../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -64,7 +65,7 @@ export default function RMADetailScreen() {
           <Ionicons name="chevron-forward" size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={s.title}>تفاصيل طلب الإرجاع</Text>
+          <TX style={s.title}>تفاصيل طلب الإرجاع</TX>
           <Text style={s.sub}>{r ? `#${r.id.slice(-6)}` : ''}</Text>
         </View>
       </View>
@@ -72,7 +73,7 @@ export default function RMADetailScreen() {
       {loading ? (
         <ActivityIndicator color={GOLD} style={{ marginTop: 40 }} />
       ) : !r ? (
-        <Text style={{ color: MUTED, textAlign: 'center', marginTop: 40 }}>لم يتم العثور على الطلب</Text>
+        <TX style={{ color: MUTED, textAlign: 'center', marginTop: 40 }}>لم يتم العثور على الطلب</TX>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }}>
           {/* Status hero */}
@@ -126,7 +127,7 @@ export default function RMADetailScreen() {
 
           {r.media && r.media.length > 0 && (
             <>
-              <Text style={s.sectionTitle}>الصور المرفقة</Text>
+              <TX style={s.sectionTitle}>الصور المرفقة</TX>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                 {r.media.map((m: string, i: number) => (
                   <Image key={i} source={{ uri: m.startsWith('http') ? m : (process.env.EXPO_PUBLIC_BACKEND_URL || '') + m }} style={s.mediaThumb} />
@@ -137,14 +138,14 @@ export default function RMADetailScreen() {
 
           {r.merchant_note && (
             <View style={s.noteBox}>
-              <Text style={s.noteTitle}>💬 ملاحظة المتجر</Text>
+              <TX style={s.noteTitle}>💬 ملاحظة المتجر</TX>
               <Text style={s.noteText}>{r.merchant_note}</Text>
             </View>
           )}
 
           {r.refund && (
             <View style={[s.card, { borderColor: OK, backgroundColor: OK + '15' }]}>
-              <Text style={{ color: OK, fontSize: 13, fontWeight: '900', textAlign: 'right' }}>✅ تم الاسترداد</Text>
+              <TX style={{ color: OK, fontSize: 13, fontWeight: '900', textAlign: 'right' }}>✅ تم الاسترداد</TX>
               <Text style={{ color: TEXT, fontSize: 12, textAlign: 'right', marginTop: 4 }}>
                 المبلغ: {r.refund.amount?.toFixed(2)} ر.س
               </Text>
@@ -154,7 +155,7 @@ export default function RMADetailScreen() {
             </View>
           )}
 
-          <Text style={s.sectionTitle}>سجل الطلب</Text>
+          <TX style={s.sectionTitle}>سجل الطلب</TX>
           {(r.audit || []).map((a: any, i: number) => (
             <View key={i} style={s.auditRow}>
               <View style={s.auditDot}>

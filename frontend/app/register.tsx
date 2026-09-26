@@ -4,8 +4,11 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 
 export default function RegisterScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { register } = useAuth();
   const [name, setName] = useState('');
@@ -41,25 +44,25 @@ export default function RegisterScreen() {
             <View style={styles.logoCircle}>
               <Ionicons name="person-add-outline" size={36} color="#F5C518" />
             </View>
-            <Text style={styles.title}>إنشاء حساب جديد</Text>
-            <Text style={styles.subtitle}>أدخل بياناتك للتسجيل</Text>
+            <TX style={styles.title}>إنشاء حساب جديد</TX>
+            <TX style={styles.subtitle}>أدخل بياناتك للتسجيل</TX>
           </View>
 
           {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
 
           <View style={styles.inputWrap}>
             <Ionicons name="person-outline" size={20} color="#A1A1AA" style={styles.inputIcon} />
-            <TextInput testID="register-name-input" style={styles.input} placeholder="الاسم الكامل" placeholderTextColor="#A1A1AA" value={name} onChangeText={setName} textAlign="right" />
+            <TextInput testID="register-name-input" style={styles.input} placeholder={tSync("الاسم الكامل", lang)} placeholderTextColor="#A1A1AA" value={name} onChangeText={setName} textAlign="right" />
           </View>
 
           <View style={styles.inputWrap}>
             <Ionicons name="call-outline" size={20} color="#A1A1AA" style={styles.inputIcon} />
-            <TextInput testID="register-phone-input" style={styles.input} placeholder="رقم الهاتف" placeholderTextColor="#A1A1AA" value={phone} onChangeText={setPhone} keyboardType="phone-pad" textAlign="right" />
+            <TextInput testID="register-phone-input" style={styles.input} placeholder={tSync("رقم الهاتف", lang)} placeholderTextColor="#A1A1AA" value={phone} onChangeText={setPhone} keyboardType="phone-pad" textAlign="right" />
           </View>
 
           <View style={styles.inputWrap}>
             <Ionicons name="lock-closed-outline" size={20} color="#A1A1AA" style={styles.inputIcon} />
-            <TextInput testID="register-password-input" style={styles.input} placeholder="كلمة المرور" placeholderTextColor="#A1A1AA" value={password} onChangeText={setPassword} secureTextEntry={!showPass} textAlign="right" />
+            <TextInput testID="register-password-input" style={styles.input} placeholder={tSync("كلمة المرور", lang)} placeholderTextColor="#A1A1AA" value={password} onChangeText={setPassword} secureTextEntry={!showPass} textAlign="right" />
             <TouchableOpacity onPress={() => setShowPass(!showPass)} style={styles.eyeBtn}>
               <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={20} color="#A1A1AA" />
             </TouchableOpacity>
@@ -67,17 +70,17 @@ export default function RegisterScreen() {
 
           <View style={styles.inputWrap}>
             <Ionicons name="lock-closed-outline" size={20} color="#A1A1AA" style={styles.inputIcon} />
-            <TextInput testID="register-confirm-input" style={styles.input} placeholder="تأكيد كلمة المرور" placeholderTextColor="#A1A1AA" value={confirmPass} onChangeText={setConfirmPass} secureTextEntry={!showPass} textAlign="right" />
+            <TextInput testID="register-confirm-input" style={styles.input} placeholder={tSync("تأكيد كلمة المرور", lang)} placeholderTextColor="#A1A1AA" value={confirmPass} onChangeText={setConfirmPass} secureTextEntry={!showPass} textAlign="right" />
           </View>
 
           <TouchableOpacity testID="register-submit-button" style={styles.btn} onPress={handleRegister} disabled={loading}>
-            {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnText}>إنشاء حساب</Text>}
+            {loading ? <ActivityIndicator color="#FFF" /> : <TX style={styles.btnText}>إنشاء حساب</TX>}
           </TouchableOpacity>
 
           <View style={styles.bottomRow}>
-            <Text style={styles.bottomText}>لديك حساب بالفعل؟</Text>
+            <TX style={styles.bottomText}>لديك حساب بالفعل؟</TX>
             <TouchableOpacity testID="go-to-login-btn" onPress={() => router.push('/login')}>
-              <Text style={styles.linkText}>تسجيل الدخول</Text>
+              <TX style={styles.linkText}>تسجيل الدخول</TX>
             </TouchableOpacity>
           </View>
         </ScrollView>

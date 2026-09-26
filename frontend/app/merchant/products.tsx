@@ -7,8 +7,11 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { Chip, EmptyState, SkeletonBox, Badge, PrimaryButton } from '../../src/components/ui';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 export default function MerchantProducts() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -17,6 +20,14 @@ export default function MerchantProducts() {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'in_stock' | 'out' | 'featured' | 'low'>('all');
+  // Pre-compute translations (avoid hook-in-callback violation)
+  const tSearchProduct = tSearchProduct;
+  const tAvailable = tAvailable;
+  const tUnavailable = tUnavailable;
+  const tFeatured = tFeatured;
+  const tFeaturedBadge = tFeaturedBadge;
+  const tRemainingPrefix = tSync("متبقي", lang);
+  const tSAR = tSync("ر.س", lang);
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/merchant/products'); setProducts(Array.isArray(d) ? d : []); }
@@ -72,7 +83,7 @@ export default function MerchantProducts() {
         {/* Header */}
         <View style={s.header}>
           <View style={{ flex: 1 }}>
-            <Text style={s.title}>المنتجات</Text>
+            <TX style={s.title}>المنتجات</TX>
             <Text style={s.subtitle}>{total} منتج • {outCount} نفدت • {lowCount} منخفض</Text>
           </View>
           <TouchableOpacity onPress={() => router.push('/merchant/product-form')} style={s.addBtn} activeOpacity={0.85}>
@@ -84,7 +95,7 @@ export default function MerchantProducts() {
         <View style={s.searchWrap}>
           <Ionicons name="search" size={18} color={colors.onSurfaceTertiary} />
           <TextInput
-            value={query} onChangeText={setQuery} placeholder="ابحث عن منتج..."
+            value={query} onChangeText={setQuery} placeholder={tSearchProduct}
             placeholderTextColor={colors.onSurfaceTertiary} style={s.searchInput}
           />
           {query.length > 0 && (
@@ -97,10 +108,10 @@ export default function MerchantProducts() {
         {/* Filters */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} style={{ flexGrow: 0, maxHeight: 44 }}>
           <Chip label={`الكل (${total})`} active={filter === 'all'} onPress={() => setFilter('all')} />
-          <Chip label="متوفر" icon="checkmark-circle" active={filter === 'in_stock'} onPress={() => setFilter('in_stock')} />
+          <Chip label={tAvailable} icon="checkmark-circle" active={filter === 'in_stock'} onPress={() => setFilter('in_stock')} />
           <Chip label={`منخفض (${lowCount})`} icon="warning" active={filter === 'low'} onPress={() => setFilter('low')} />
           <Chip label={`نفد (${outCount})`} icon="close-circle" active={filter === 'out'} onPress={() => setFilter('out')} />
-          <Chip label="مميز" icon="star" active={filter === 'featured'} onPress={() => setFilter('featured')} />
+          <Chip label={tFeatured} icon="star" active={filter === 'featured'} onPress={() => setFilter('featured')} />
         </ScrollView>
 
         {/* List */}
@@ -141,14 +152,14 @@ export default function MerchantProducts() {
                         <>
                           <Text style={s.pprice}>{p.discount_price}</Text>
                           <Text style={s.pOldPrice}>{p.price}</Text>
-                          <Text style={s.pCurrency}>ر.س</Text>
+                          <TX style={s.pCurrency}>ر.س</TX>
                         </>
                       ) : (
-                        <><Text style={s.pprice}>{p.price}</Text><Text style={s.pCurrency}>ر.س</Text></>
+                        <><Text style={s.pprice}>{p.price}</Text><TX style={s.pCurrency}>ر.س</TX></>
                       )}
                     </View>
                     <View style={{ flexDirection: 'row', gap: spacing.xs, marginTop: 4, flexWrap: 'wrap' }}>
-                      {p.featured && <Badge label="⭐ مميز" tone="gold" />}
+                      {p.featured && <Badge label={tFeaturedBadge} tone="gold" />}
                       {(p.stock_quantity ?? 999) < 5 && p.in_stock && <Badge label={`متبقي ${p.stock_quantity}`} tone="warning" />}
                       {!!p.category && <Badge label={p.category} tone="info" />}
                     </View>

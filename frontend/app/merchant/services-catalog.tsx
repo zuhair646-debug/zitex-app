@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
+import { TX } from '../../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -67,8 +68,8 @@ export default function ServicesCatalogScreen() {
           <Ionicons name="chevron-forward" size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={s.title}>ميزات التطبيق</Text>
-          <Text style={s.sub}>فعّل أو أوقف أي ميزة لعملائك</Text>
+          <TX style={s.title}>ميزات التطبيق</TX>
+          <TX style={s.sub}>فعّل أو أوقف أي ميزة لعملائك</TX>
         </View>
         <View style={s.badge}>
           <Text style={s.badgeText}>{enabledCount}/{totalCount}</Text>
@@ -81,9 +82,9 @@ export default function ServicesCatalogScreen() {
         <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }}>
           <View style={s.infoBar}>
             <Ionicons name="bulb" size={14} color={GOLD} />
-            <Text style={s.infoText}>
+            <TX style={s.infoText}>
               عند إيقاف أي ميزة، تختفي تلقائياً من واجهة العملاء ومن قوائم لوحة تحكمك. البيانات محفوظة ويمكن استعادتها بإعادة التفعيل.
-            </Text>
+            </TX>
           </View>
 
           {grouped.map((cat) => {
@@ -124,10 +125,10 @@ export default function ServicesCatalogScreen() {
           })}
 
           <View style={s.tipBox}>
-            <Text style={s.tipTitle}>💡 نصيحة</Text>
-            <Text style={s.tipText}>
+            <TX style={s.tipTitle}>💡 نصيحة</TX>
+            <TX style={s.tipText}>
               هذه القائمة تخدم عمليتك اليومية، وتُسهّل أيضاً استنساخ التطبيق لتاجر آخر لاحقاً — فقط اضبط الميزات المناسبة.
-            </Text>
+            </TX>
           </View>
         </ScrollView>
       )}

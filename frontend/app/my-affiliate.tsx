@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import { useAuth } from './_layout';
+import { TX } from '../src/useAutoT';
 
 const APP_LINK_BASE = (process.env.EXPO_PUBLIC_BACKEND_URL || 'https://zitex.app').replace(/\/api\/?$/, '');
 
@@ -56,13 +57,13 @@ export default function MyAffiliate() {
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
             <Ionicons name="arrow-back" size={22} color="#F5C518" />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>لوحة المسوّق</Text>
+          <TX style={s.headerTitle}>لوحة المسوّق</TX>
           <View style={s.iconBtn} />
         </View>
         <View style={s.emptyBox}>
           <Ionicons name="megaphone-outline" size={80} color="#4A4A4A" />
-          <Text style={s.emptyTitle}>لا يوجد حساب مسوّق نشط</Text>
-          <Text style={s.emptyDesc}>افتح تبويب "السوشال" وقدّم على أحد برامج التسويق بالعمولة</Text>
+          <TX style={s.emptyTitle}>لا يوجد حساب مسوّق نشط</TX>
+          <TX style={s.emptyDesc}>افتح تبويب "السوشال" وقدّم على أحد برامج التسويق بالعمولة</TX>
         </View>
       </SafeAreaView>
     </View>
@@ -76,7 +77,7 @@ export default function MyAffiliate() {
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
             <Ionicons name="arrow-back" size={22} color="#F5C518" />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>لوحة المسوّق</Text>
+          <TX style={s.headerTitle}>لوحة المسوّق</TX>
           <View style={s.iconBtn} />
         </View>
 
@@ -93,33 +94,33 @@ export default function MyAffiliate() {
 
           {/* Hero commission card */}
           <LinearGradient colors={['#F5C518', '#D4A017']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-            <Text style={s.heroLabel}>عمولتك من كل عملية شراء</Text>
+            <TX style={s.heroLabel}>عمولتك من كل عملية شراء</TX>
             <Text style={s.heroValue}>{cur.commission_percent}%</Text>
             <Text style={s.heroSub}>تاجر: {cur.merchant_name || 'Zenrex Store'}</Text>
           </LinearGradient>
 
           {/* Referral link */}
           <View style={s.card}>
-            <Text style={s.cardTitle}>🔗 رابط الإحالة الخاص بك</Text>
+            <TX style={s.cardTitle}>🔗 رابط الإحالة الخاص بك</TX>
             <View style={s.linkBox}>
               <Text style={s.linkText} numberOfLines={1}>{refLink}</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
               <TouchableOpacity onPress={copy} style={s.actionBtn}>
                 <Ionicons name="copy" size={16} color="#0A0A0A" />
-                <Text style={s.actionText}>نسخ</Text>
+                <TX style={s.actionText}>نسخ</TX>
               </TouchableOpacity>
               <TouchableOpacity onPress={shareLink} style={s.actionBtn}>
                 <Ionicons name="share-social" size={16} color="#0A0A0A" />
-                <Text style={s.actionText}>مشاركة</Text>
+                <TX style={s.actionText}>مشاركة</TX>
               </TouchableOpacity>
               <TouchableOpacity onPress={shareWhatsApp} style={[s.actionBtn, { backgroundColor: '#25D366' }]}>
                 <Ionicons name="logo-whatsapp" size={16} color="white" />
-                <Text style={[s.actionText, { color: 'white' }]}>واتساب</Text>
+                <TX style={[s.actionText, { color: 'white' }]}>واتساب</TX>
               </TouchableOpacity>
             </View>
             <View style={s.codeChip}>
-              <Text style={s.codeChipLabel}>كود الإحالة:</Text>
+              <TX style={s.codeChipLabel}>كود الإحالة:</TX>
               <Text style={s.codeChipCode}>{cur.referral_code}</Text>
             </View>
           </View>
@@ -128,31 +129,31 @@ export default function MyAffiliate() {
           <View style={s.gridRow}>
             <View style={s.gridCell}>
               <Text style={s.gridNum}>{cur.total_clicks || 0}</Text>
-              <Text style={s.gridLbl}>نقرة</Text>
+              <TX style={s.gridLbl}>نقرة</TX>
             </View>
             <View style={s.gridCell}>
               <Text style={s.gridNum}>{cur.unique_visitors || 0}</Text>
-              <Text style={s.gridLbl}>زائر فريد</Text>
+              <TX style={s.gridLbl}>زائر فريد</TX>
             </View>
             <View style={s.gridCell}>
               <Text style={s.gridNum}>{cur.total_conversions || 0}</Text>
-              <Text style={s.gridLbl}>تحويل</Text>
+              <TX style={s.gridLbl}>تحويل</TX>
             </View>
           </View>
 
           <View style={s.gridRow}>
             <View style={[s.gridCell, s.gridCellGold]}>
               <Text style={s.gridNumGold}>{(cur.this_month_earnings || 0).toFixed(0)} ر.س</Text>
-              <Text style={s.gridLbl}>هذا الشهر</Text>
+              <TX style={s.gridLbl}>هذا الشهر</TX>
             </View>
             <View style={[s.gridCell, s.gridCellGold]}>
               <Text style={s.gridNumGold}>{(cur.total_earnings || 0).toFixed(0)} ر.س</Text>
-              <Text style={s.gridLbl}>مجموع الأرباح</Text>
+              <TX style={s.gridLbl}>مجموع الأرباح</TX>
             </View>
           </View>
 
           <View style={s.card}>
-            <Text style={s.cardTitle}>💰 محفظتك</Text>
+            <TX style={s.cardTitle}>💰 محفظتك</TX>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={s.walletValue}>{(cur.wallet_balance || 0).toFixed(2)} ر.س</Text>
               <TouchableOpacity style={s.withdrawBtn}
@@ -160,22 +161,22 @@ export default function MyAffiliate() {
                   if ((cur.wallet_balance || 0) < 50) Alert.alert('الحد الأدنى', 'يتم السحب من 50 ر.س');
                   else Alert.alert('طلب السحب', 'سيتم التواصل معك خلال 3 أيام عمل');
                 }}>
-                <Text style={s.withdrawText}>سحب</Text>
+                <TX style={s.withdrawText}>سحب</TX>
               </TouchableOpacity>
             </View>
           </View>
 
           {!!cur.incentives && (
             <View style={s.incentivesBox}>
-              <Text style={s.incentivesTitle}>🎁 الحوافز</Text>
+              <TX style={s.incentivesTitle}>🎁 الحوافز</TX>
               <Text style={s.incentivesText}>{cur.incentives}</Text>
             </View>
           )}
 
           <View style={s.card}>
-            <Text style={s.cardTitle}>📋 أحدث التحويلات</Text>
+            <TX style={s.cardTitle}>📋 أحدث التحويلات</TX>
             {(!cur.recent_conversions || cur.recent_conversions.length === 0) ? (
-              <Text style={s.emptyHist}>لم يتم أي تحويل عبر رابطك بعد. شارك الرابط للمتابعين.</Text>
+              <TX style={s.emptyHist}>لم يتم أي تحويل عبر رابطك بعد. شارك الرابط للمتابعين.</TX>
             ) : (
               cur.recent_conversions.map((c: any) => (
                 <View key={c.id} style={s.histRow}>

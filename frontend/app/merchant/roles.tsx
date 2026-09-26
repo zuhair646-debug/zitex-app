@@ -7,6 +7,8 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, PrimaryButton, EmptyState, SkeletonBox, Badge, Chip } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 const PERMS: { key: string; label: string; group: string }[] = [
   { key: 'all', label: 'كل الصلاحيات (Admin)', group: 'شامل' },
@@ -32,6 +34,7 @@ const PERMS: { key: string; label: string; group: string }[] = [
 const GROUPS = ['شامل', 'المخزون والمنتجات', 'المبيعات', 'التسويق', 'العمليات', 'الإدارة'];
 
 export default function MerchantRoles() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -76,7 +79,7 @@ export default function MerchantRoles() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title="الأدوار والصلاحيات" onBack={() => router.back()} rightIcon="add" onRight={openNew} subtitle={`${roles.length} دور`} />
+        <ScreenHeader title={tSync("الأدوار والصلاحيات", lang)} onBack={() => router.back()} rightIcon="add" onRight={openNew} subtitle={`${roles.length} دور`} />
 
         {loading ? (
           <View style={{ padding: spacing.lg, gap: spacing.md }}>
@@ -86,7 +89,7 @@ export default function MerchantRoles() {
           <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140, gap: spacing.md }}>
             <View style={s.info}>
               <Ionicons name="information-circle" size={16} color={colors.brand} />
-              <Text style={s.infoText}>الأدوار الجاهزة (5) قابلة للاستخدام مباشرة. أنشئ أدواراً مخصصة حسب احتياجك.</Text>
+              <TX style={s.infoText}>الأدوار الجاهزة (5) قابلة للاستخدام مباشرة. أنشئ أدواراً مخصصة حسب احتياجك.</TX>
             </View>
             {roles.map(r => (
               <TouchableOpacity key={r.id} style={s.card} activeOpacity={0.8} onPress={() => openEdit(r)}>
@@ -95,7 +98,7 @@ export default function MerchantRoles() {
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                       <Text style={s.name}>{r.name}</Text>
-                      {r.is_preset && <Badge label="جاهز" tone="info" />}
+                      {r.is_preset && <Badge label={tSync("جاهز", lang)} tone="info" />}
                     </View>
                     {!!r.description && <Text style={s.desc} numberOfLines={2}>{r.description}</Text>}
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
@@ -122,10 +125,10 @@ export default function MerchantRoles() {
           <SafeAreaView edges={['top']} style={{ flex: 1 }}>
             <ScreenHeader title={editing?.id ? 'تعديل دور' : 'دور مخصص جديد'} onBack={() => setEditing(null)} rightIcon="checkmark" onRight={save} />
             <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40, gap: spacing.md }}>
-              <Text style={s.lbl}>اسم الدور *</Text>
-              <TextInput style={s.input} value={editing?.name || ''} onChangeText={t => setEditing({ ...editing, name: t })} placeholder="مثال: مسؤول تسويق متقدم" placeholderTextColor={colors.onSurfaceTertiary} />
-              <Text style={s.lbl}>الوصف</Text>
-              <TextInput style={s.input} value={editing?.description || ''} onChangeText={t => setEditing({ ...editing, description: t })} placeholder="مسؤول عن السوشال والحملات" placeholderTextColor={colors.onSurfaceTertiary} />
+              <TX style={s.lbl}>اسم الدور *</TX>
+              <TextInput style={s.input} value={editing?.name || ''} onChangeText={t => setEditing({ ...editing, name: t })} placeholder={tSync("مثال: مسؤول تسويق متقدم", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
+              <TX style={s.lbl}>الوصف</TX>
+              <TextInput style={s.input} value={editing?.description || ''} onChangeText={t => setEditing({ ...editing, description: t })} placeholder={tSync("مسؤول عن السوشال والحملات", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
 
               <Text style={s.section}>🔐 الصلاحيات ({editing?.permissions?.length || 0})</Text>
               {GROUPS.map(g => (
@@ -140,7 +143,7 @@ export default function MerchantRoles() {
               ))}
 
               <View style={{ marginTop: spacing.lg }}>
-                <PrimaryButton label="حفظ الدور" onPress={save} icon="checkmark-circle" />
+                <PrimaryButton label={tSync("حفظ الدور", lang)} onPress={save} icon="checkmark-circle" />
               </View>
             </ScrollView>
           </SafeAreaView>

@@ -6,6 +6,8 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import MediaCarousel from '../../src/components/MediaCarousel';
 import TranslateButton from '../../src/components/TranslateButton';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 const { width } = Dimensions.get('window');
 
@@ -20,6 +22,7 @@ const timeAgo = (iso?: string) => {
 };
 
 export default function SocialScreen() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall, user } = useAuth();
@@ -115,7 +118,7 @@ export default function SocialScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <Text style={s.title}>السوشال</Text>
+        <TX style={s.title}>السوشال</TX>
         <View style={{ flexDirection: 'row', gap: 6 }}>
           {user?.role === 'merchant' && (
             <TouchableOpacity style={s.headerBtn} onPress={() => router.push('/merchant/social' as any)}>
@@ -140,7 +143,7 @@ export default function SocialScreen() {
                 <View style={[s.storyCircle, { borderColor: '#E5E7EB' }]}>
                   <View style={s.storyAvatar}><Ionicons name="storefront" size={22} color="#A1A1AA" /></View>
                 </View>
-                <Text style={s.storyLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>لا حالات</Text>
+                <TX style={s.storyLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>لا حالات</TX>
               </View>
             )}
             {stories.map(st => (
@@ -197,7 +200,7 @@ export default function SocialScreen() {
           })}
 
           {/* Posts */}
-          {posts.length === 0 && campaigns.length === 0 && <Text style={s.empty}>لا توجد منشورات بعد</Text>}
+          {posts.length === 0 && campaigns.length === 0 && <TX style={s.empty}>لا توجد منشورات بعد</TX>}
           {posts.map((post: any) => {
             const postId = post.id || post._id;
             const isPoll = post.type === 'poll';
@@ -209,10 +212,10 @@ export default function SocialScreen() {
             return (
               <View key={postId} style={s.postCard}>
                 {isQuestion && (
-                  <View style={s.qBadge}><Ionicons name="help-circle" size={14} color="#F59E0B" /><Text style={s.qBadgeText}>سؤال</Text></View>
+                  <View style={s.qBadge}><Ionicons name="help-circle" size={14} color="#F59E0B" /><TX style={s.qBadgeText}>سؤال</TX></View>
                 )}
                 {isEvent && (
-                  <View style={[s.qBadge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="calendar" size={14} color="#10B981" /><Text style={[s.qBadgeText, { color: '#065F46' }]}>فعالية</Text></View>
+                  <View style={[s.qBadge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="calendar" size={14} color="#10B981" /><TX style={[s.qBadgeText, { color: '#065F46' }]}>فعالية</TX></View>
                 )}
                 <View style={s.postHeader}>
                   <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#F5C518" /></View>
@@ -295,7 +298,7 @@ export default function SocialScreen() {
                 {/* Contact merchant bar — one-tap channels */}
                 {!!(storeInfo && (storeInfo.whatsapp || storeInfo.phone || storeInfo.email || storeInfo.instagram || storeInfo.tiktok || storeInfo.snapchat || storeInfo.twitter || storeInfo.telegram)) && (
                   <View style={s.contactBar}>
-                    <Text style={s.contactLabel}>💬 تواصل مع المتجر:</Text>
+                    <TX style={s.contactLabel}>💬 تواصل مع المتجر:</TX>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                       {!!storeInfo.whatsapp && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#25D366' }]} onPress={() => openContact('whatsapp')}>
@@ -306,7 +309,7 @@ export default function SocialScreen() {
                       {!!storeInfo.phone && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#3B82F6' }]} onPress={() => openContact('phone')}>
                           <Ionicons name="call" size={14} color="white" />
-                          <Text style={s.chipText}>اتصال</Text>
+                          <TX style={s.chipText}>اتصال</TX>
                         </TouchableOpacity>
                       )}
                       {!!storeInfo.email && (
@@ -373,26 +376,26 @@ export default function SocialScreen() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setThreadPostId(null)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <Text style={s.title}>التعليقات</Text>
+            <TX style={s.title}>التعليقات</TX>
             <View style={{ width: 30 }} />
           </View>
           <FlatList
             data={threadComments}
             keyExtractor={c => c.id || c._id || String(Math.random())}
             contentContainerStyle={{ padding: 12, paddingBottom: 100 }}
-            ListEmptyComponent={<Text style={s.empty}>كن أول من يعلق</Text>}
+            ListEmptyComponent={<TX style={s.empty}>كن أول من يعلق</TX>}
             renderItem={({ item: c }) => (
               <View style={[s.cmtCard, c.is_merchant_reply && s.cmtMerchantStyle]}>
                 <View style={s.cmtAvatar}><Text style={s.cmtAvText}>{c.user_name?.charAt(0) || '?'}</Text></View>
                 <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Text style={s.cmtName}>{c.user_name} {c.is_merchant_reply && <Text style={s.merchantTag}>✓ التاجر</Text>}</Text>
+                  <Text style={s.cmtName}>{c.user_name} {c.is_merchant_reply && <TX style={s.merchantTag}>✓ التاجر</TX>}</Text>
                   <Text style={s.cmtText}>{c.text}</Text>
                 </View>
               </View>
             )}
           />
           <View style={s.commentBar}>
-            <TextInput style={[s.commentInput]} value={threadText} onChangeText={setThreadText} placeholder="اكتب تعليقاً..." />
+            <TextInput style={[s.commentInput]} value={threadText} onChangeText={setThreadText} placeholder={tSync("اكتب تعليقاً...", lang)} />
             <TouchableOpacity style={s.sendBtn} onPress={sendComment}><Ionicons name="send" size={18} color="white" /></TouchableOpacity>
           </View>
         </SafeAreaView>

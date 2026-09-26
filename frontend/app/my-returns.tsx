@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from './_layout';
+import { TX } from '../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -52,7 +53,7 @@ export default function MyReturnsScreen() {
           <Ionicons name="chevron-forward" size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={s.title}>طلبات الإرجاع والضمان</Text>
+          <TX style={s.title}>طلبات الإرجاع والضمان</TX>
           <Text style={s.sub}>{rmas.length} طلب</Text>
         </View>
       </View>
@@ -64,10 +65,10 @@ export default function MyReturnsScreen() {
           {rmas.length === 0 && (
             <View style={{ padding: 40, alignItems: 'center' }}>
               <Ionicons name="return-up-back" size={40} color={MUTED} />
-              <Text style={{ color: MUTED, textAlign: 'center', marginTop: 10 }}>لا توجد طلبات إرجاع</Text>
-              <Text style={{ color: MUTED, textAlign: 'center', fontSize: 11, marginTop: 4 }}>يمكنك تقديم طلب إرجاع من صفحة طلبات الشراء</Text>
+              <TX style={{ color: MUTED, textAlign: 'center', marginTop: 10 }}>لا توجد طلبات إرجاع</TX>
+              <TX style={{ color: MUTED, textAlign: 'center', fontSize: 11, marginTop: 4 }}>يمكنك تقديم طلب إرجاع من صفحة طلبات الشراء</TX>
               <TouchableOpacity onPress={() => router.push('/orders')} style={s.emptyBtn}>
-                <Text style={{ color: BG, fontWeight: '900' }}>طلباتي</Text>
+                <TX style={{ color: BG, fontWeight: '900' }}>طلباتي</TX>
               </TouchableOpacity>
             </View>
           )}

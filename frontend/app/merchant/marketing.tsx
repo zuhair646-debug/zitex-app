@@ -13,6 +13,8 @@ import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 type Tab = 'ads' | 'affiliates';
 type CampaignType = 'ad' | 'affiliate';
@@ -28,6 +30,7 @@ const INTEREST_TAGS = [
 const CITIES = ['الرياض', 'جدة', 'الدمام', 'الخبر', 'مكة', 'المدينة', 'الطائف', 'أبها', 'تبوك', 'حائل'];
 
 export default function MarketingPanel() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -172,7 +175,7 @@ export default function MarketingPanel() {
           <TouchableOpacity onPress={() => router.back()} style={s.headerIcon}>
             <Ionicons name="arrow-back" size={22} color={colors.brand} />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>لوحة التسويق</Text>
+          <TX style={s.headerTitle}>لوحة التسويق</TX>
           <TouchableOpacity testID="marketing-add-btn" onPress={() => setPickerOpen(true)} style={s.headerIcon}>
             <Ionicons name="add" size={26} color={colors.brand} />
           </TouchableOpacity>
@@ -200,8 +203,8 @@ export default function MarketingPanel() {
               {adCampaigns.length === 0 && (
                 <View style={s.empty}>
                   <Ionicons name="megaphone-outline" size={54} color={colors.onSurfaceTertiary} />
-                  <Text style={s.emptyTitle}>لا توجد إعلانات</Text>
-                  <Text style={s.emptyDesc}>اضغط + في الأعلى لإنشاء أول إعلان مستهدف مجاناً</Text>
+                  <TX style={s.emptyTitle}>لا توجد إعلانات</TX>
+                  <TX style={s.emptyDesc}>اضغط + في الأعلى لإنشاء أول إعلان مستهدف مجاناً</TX>
                 </View>
               )}
               {adCampaigns.map(ad => (
@@ -233,19 +236,19 @@ export default function MarketingPanel() {
               <View style={s.summaryRow}>
                 <View style={s.summaryCard}>
                   <Text style={s.summaryVal}>{affiliates.length}</Text>
-                  <Text style={s.summaryLbl}>المسوقون</Text>
+                  <TX style={s.summaryLbl}>المسوقون</TX>
                 </View>
                 <View style={s.summaryCard}>
                   <Text style={s.summaryVal}>{affiliates.reduce((s: number, a: any) => s + (a.total_conversions || 0), 0)}</Text>
-                  <Text style={s.summaryLbl}>التحويلات</Text>
+                  <TX style={s.summaryLbl}>التحويلات</TX>
                 </View>
                 <View style={s.summaryCard}>
                   <Text style={s.summaryVal}>{affiliates.reduce((s: number, a: any) => s + (a.total_sales || 0), 0).toFixed(0)}</Text>
-                  <Text style={s.summaryLbl}>مبيعات (ر.س)</Text>
+                  <TX style={s.summaryLbl}>مبيعات (ر.س)</TX>
                 </View>
                 <View style={s.summaryCard}>
                   <Text style={s.summaryVal}>{affiliates.reduce((s: number, a: any) => s + (a.total_earnings || 0), 0).toFixed(0)}</Text>
-                  <Text style={s.summaryLbl}>عمولات (ر.س)</Text>
+                  <TX style={s.summaryLbl}>عمولات (ر.س)</TX>
                 </View>
               </View>
 
@@ -290,11 +293,11 @@ export default function MarketingPanel() {
                         {!!a.note && <Text style={s.appNote}>“{a.note}”</Text>}
                         <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
                           <TouchableOpacity onPress={() => rejectApp(a.id)} style={s.rejectBtn}>
-                            <Text style={s.rejectText}>رفض</Text>
+                            <TX style={s.rejectText}>رفض</TX>
                           </TouchableOpacity>
                           <TouchableOpacity onPress={() => approveApp(a.id, a.applicant_name)} style={s.approveBtn}>
                             <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.approveInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                              <Text style={s.approveText}>موافقة</Text>
+                              <TX style={s.approveText}>موافقة</TX>
                             </LinearGradient>
                           </TouchableOpacity>
                         </View>
@@ -308,7 +311,7 @@ export default function MarketingPanel() {
               {affiliates.length === 0 && pending.length === 0 && affCampaigns.length === 0 && (
                 <View style={s.empty}>
                   <Ionicons name="people-outline" size={54} color={colors.onSurfaceTertiary} />
-                  <Text style={s.emptyTitle}>ابدأ برنامج المسوقين</Text>
+                  <TX style={s.emptyTitle}>ابدأ برنامج المسوقين</TX>
                   <Text style={s.emptyDesc}>اضغط + وأنشئ برنامج تسويق بالعمولة{'\n'}العملاء سيرون العرض في السوشال ويقدمون</Text>
                 </View>
               )}
@@ -338,19 +341,19 @@ export default function MarketingPanel() {
       <Modal visible={pickerOpen} transparent animationType="fade" onRequestClose={() => setPickerOpen(false)}>
         <TouchableOpacity style={s.pickerBackdrop} activeOpacity={1} onPress={() => setPickerOpen(false)}>
           <View style={s.pickerCard}>
-            <Text style={s.pickerTitle}>أنشئ حملة جديدة</Text>
+            <TX style={s.pickerTitle}>أنشئ حملة جديدة</TX>
             <TouchableOpacity testID="picker-ad" style={s.pickerOption} onPress={() => openCreate('ad')}>
               <View style={s.pickerIcon}><Ionicons name="megaphone" size={24} color={colors.brand} /></View>
               <View style={{ flex: 1 }}>
-                <Text style={s.pickerOptTitle}>إعلان مستهدف مجاني</Text>
-                <Text style={s.pickerOptDesc}>يظهر للعملاء المناسبين بحسب المدينة والاهتمام — بلا ميزانية</Text>
+                <TX style={s.pickerOptTitle}>إعلان مستهدف مجاني</TX>
+                <TX style={s.pickerOptDesc}>يظهر للعملاء المناسبين بحسب المدينة والاهتمام — بلا ميزانية</TX>
               </View>
             </TouchableOpacity>
             <TouchableOpacity testID="picker-affiliate" style={s.pickerOption} onPress={() => openCreate('affiliate')}>
               <View style={s.pickerIcon}><Ionicons name="people" size={24} color={colors.brand} /></View>
               <View style={{ flex: 1 }}>
-                <Text style={s.pickerOptTitle}>برنامج مسوّقين بالعمولة</Text>
-                <Text style={s.pickerOptDesc}>حدد النسبة % والمكافآت. العملاء يقدّمون وتوافق أنت</Text>
+                <TX style={s.pickerOptTitle}>برنامج مسوّقين بالعمولة</TX>
+                <TX style={s.pickerOptDesc}>حدد النسبة % والمكافآت. العملاء يقدّمون وتوافق أنت</TX>
               </View>
             </TouchableOpacity>
           </View>
@@ -369,18 +372,18 @@ export default function MarketingPanel() {
               <Text style={s.headerTitle}>{campaignType === 'affiliate' ? 'برنامج مسوّقين' : 'إعلان مستهدف'}</Text>
               <TouchableOpacity testID="form-submit-btn" onPress={submit} disabled={saving || uploading} style={s.headerIcon}>
                 <LinearGradient colors={['#F5C518', '#D4AF37']} style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  {saving ? <ActivityIndicator size="small" color={colors.onBrandPrimary} /> : <Text style={{ color: colors.onBrandPrimary, fontWeight: '800' }}>نشر</Text>}
+                  {saving ? <ActivityIndicator size="small" color={colors.onBrandPrimary} /> : <TX style={{ color: colors.onBrandPrimary, fontWeight: '800' }}>نشر</TX>}
                 </LinearGradient>
               </TouchableOpacity>
             </View>
 
             <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 60 }}>
-              <Text style={s.label}>عنوان الحملة *</Text>
+              <TX style={s.label}>عنوان الحملة *</TX>
               <TextInput testID="form-title-input" style={s.input} value={form.title} onChangeText={t => setForm({ ...form, title: t })}
                 placeholderTextColor={colors.onSurfaceTertiary}
                 placeholder={campaignType === 'affiliate' ? 'انضم لبرنامج مسوّقي زايتكس' : 'خصومات نهاية الأسبوع 30%'} />
 
-              <Text style={s.label}>الوصف</Text>
+              <TX style={s.label}>الوصف</TX>
               <TextInput style={[s.input, { height: 80, textAlignVertical: 'top' }]} multiline value={form.description}
                 onChangeText={t => setForm({ ...form, description: t })}
                 placeholderTextColor={colors.onSurfaceTertiary}
@@ -388,7 +391,7 @@ export default function MarketingPanel() {
 
               {campaignType === 'affiliate' && (
                 <>
-                  <Text style={s.label}>نسبة العمولة (%) *</Text>
+                  <TX style={s.label}>نسبة العمولة (%) *</TX>
                   <View style={{ flexDirection: 'row', gap: 6 }}>
                     {['2', '5', '10', '15', '20'].map(v => (
                       <TouchableOpacity key={v} onPress={() => setForm({ ...form, commission_percent: v })}
@@ -399,17 +402,17 @@ export default function MarketingPanel() {
                   </View>
                   <TextInput style={[s.input, { marginTop: 8 }]} keyboardType="numeric" value={form.commission_percent}
                     onChangeText={t => setForm({ ...form, commission_percent: t })}
-                    placeholderTextColor={colors.onSurfaceTertiary} placeholder="مثال: 7.5" />
+                    placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("مثال: 7.5", lang)} />
 
-                  <Text style={s.label}>🎁 الحوافز والمكافآت (اختياري)</Text>
+                  <TX style={s.label}>🎁 الحوافز والمكافآت (اختياري)</TX>
                   <TextInput testID="form-incentives-input" style={[s.input, { height: 70, textAlignVertical: 'top' }]} multiline value={form.incentives}
                     onChangeText={t => setForm({ ...form, incentives: t })}
                     placeholderTextColor={colors.onSurfaceTertiary}
-                    placeholder="أفضل مسوّق شهرياً يحصل على 500 ر.س إضافية" />
+                    placeholder={tSync("أفضل مسوّق شهرياً يحصل على 500 ر.س إضافية", lang)} />
                 </>
               )}
 
-              <Text style={s.label}>صورة الحملة</Text>
+              <TX style={s.label}>صورة الحملة</TX>
               {form.image ? (
                 <View style={s.imgSlot}>
                   <Image source={{ uri: mediaUrlSync(form.image) }} style={s.imgSlotImg} contentFit="cover" />
@@ -421,26 +424,26 @@ export default function MarketingPanel() {
                 <TouchableOpacity style={s.imgPickBtn} onPress={pickImage} disabled={uploading}>
                   {uploading ? <ActivityIndicator color={colors.brand} /> : <>
                     <Ionicons name="image" size={26} color={colors.brand} />
-                    <Text style={s.imgPickText}>اختر صورة (اختياري)</Text>
+                    <TX style={s.imgPickText}>اختر صورة (اختياري)</TX>
                   </>}
                 </TouchableOpacity>
               )}
 
-              <Text style={s.label}>نص زر الدعوة</Text>
+              <TX style={s.label}>نص زر الدعوة</TX>
               <TextInput style={s.input} value={form.cta_label} onChangeText={t => setForm({ ...form, cta_label: t })}
                 placeholderTextColor={colors.onSurfaceTertiary} placeholder={campaignType === 'affiliate' ? 'قدّم الآن' : 'تسوّق الآن'} />
 
               {campaignType === 'ad' && (
                 <>
-                  <Text style={s.label}>رابط الوجهة (اختياري)</Text>
+                  <TX style={s.label}>رابط الوجهة (اختياري)</TX>
                   <TextInput style={s.input} value={form.cta_link} onChangeText={t => setForm({ ...form, cta_link: t })}
-                    placeholderTextColor={colors.onSurfaceTertiary} placeholder="/product/123 أو https://..." autoCapitalize="none" />
+                    placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("/product/123 أو https://...", lang)} autoCapitalize="none" />
                 </>
               )}
 
-              <Text style={s.section}>🎯 الاستهداف</Text>
+              <TX style={s.section}>🎯 الاستهداف</TX>
 
-              <Text style={s.label}>المدن (اترك فارغة لكل المدن)</Text>
+              <TX style={s.label}>المدن (اترك فارغة لكل المدن)</TX>
               <View style={s.chipRow}>
                 {CITIES.map(c => {
                   const active = form.target_cities.includes(c);
@@ -452,7 +455,7 @@ export default function MarketingPanel() {
                 })}
               </View>
 
-              <Text style={s.label}>الجنس المستهدف</Text>
+              <TX style={s.label}>الجنس المستهدف</TX>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {[
                   { k: 'all', l: '👥 الجميع' },
@@ -468,7 +471,7 @@ export default function MarketingPanel() {
                 })}
               </View>
 
-              <Text style={s.label}>الاهتمامات</Text>
+              <TX style={s.label}>الاهتمامات</TX>
               <View style={s.chipRow}>
                 {INTEREST_TAGS.map(t => {
                   const active = form.target_interest_tags.includes(t.id);
@@ -482,12 +485,12 @@ export default function MarketingPanel() {
 
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.label}>يبدأ (YYYY-MM-DD)</Text>
+                  <TX style={s.label}>يبدأ (YYYY-MM-DD)</TX>
                   <TextInput style={s.input} value={form.starts_at} onChangeText={t => setForm({ ...form, starts_at: t })}
                     placeholderTextColor={colors.onSurfaceTertiary} placeholder="2026-09-01" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.label}>ينتهي (YYYY-MM-DD)</Text>
+                  <TX style={s.label}>ينتهي (YYYY-MM-DD)</TX>
                   <TextInput style={s.input} value={form.ends_at} onChangeText={t => setForm({ ...form, ends_at: t })}
                     placeholderTextColor={colors.onSurfaceTertiary} placeholder="2026-09-30" />
                 </View>

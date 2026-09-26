@@ -6,6 +6,8 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { SegmentedControl, EmptyState, SkeletonBox, Badge, PrimaryButton, SecondaryButton } from '../../src/components/ui';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 type OrderFilter = 'new' | 'processing' | 'ready' | 'delivering' | 'done' | 'all';
 
@@ -19,6 +21,7 @@ const STATUS_TONE: Record<string, any> = {
 };
 
 export default function MerchantOrders() {
+  const { lang } = useT();
   const s = useSStyles();
   const { apiCall } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
@@ -66,7 +69,7 @@ export default function MerchantOrders() {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={s.header}>
           <View style={{ flex: 1 }}>
-            <Text style={s.title}>الطلبات</Text>
+            <TX style={s.title}>الطلبات</TX>
             <Text style={s.subtitle}>{orders.length} طلب • {counts.new} جديد</Text>
           </View>
           <TouchableOpacity style={s.iconBtn} onPress={load} activeOpacity={0.7}>
@@ -94,7 +97,7 @@ export default function MerchantOrders() {
         ) : filtered.length === 0 ? (
           <EmptyState
             icon="receipt-outline"
-            title="لا توجد طلبات"
+            title={tSync("لا توجد طلبات", lang)}
             description="حين يبدأ العملاء بالطلب، ستظهر هنا للمتابعة"
           />
         ) : (
@@ -119,7 +122,7 @@ export default function MerchantOrders() {
                   <Badge label={STATUS_LABEL[o.status] || o.status} tone={STATUS_TONE[o.status] || 'default'} />
                   <View style={{ flex: 1 }} />
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={s.amount}>{money(o.total)} <Text style={s.currency}>ر.س</Text></Text>
+                    <Text style={s.amount}>{money(o.total)} <TX style={s.currency}>ر.س</TX></Text>
                   </View>
                 </View>
 
@@ -151,31 +154,31 @@ export default function MerchantOrders() {
                 <View style={s.actions}>
                   {o.status === 'pending' && (
                     <View style={{ flex: 1 }}>
-                      <PrimaryButton size="sm" label="قبول وتجهيز" icon="checkmark-circle"
+                      <PrimaryButton size="sm" label={tSync("قبول وتجهيز", lang)} icon="checkmark-circle"
                         onPress={() => changeStatus(o.id, 'processing')} />
                     </View>
                   )}
                   {o.status === 'processing' && (
                     <View style={{ flex: 1 }}>
-                      <PrimaryButton size="sm" label="وضع جاهز" icon="cube"
+                      <PrimaryButton size="sm" label={tSync("وضع جاهز", lang)} icon="cube"
                         onPress={() => changeStatus(o.id, 'ready')} />
                     </View>
                   )}
                   {o.status === 'ready' && (
                     <View style={{ flex: 1 }}>
-                      <PrimaryButton size="sm" label="خرج للتوصيل" icon="bicycle"
+                      <PrimaryButton size="sm" label={tSync("خرج للتوصيل", lang)} icon="bicycle"
                         onPress={() => changeStatus(o.id, 'out_for_delivery')} />
                     </View>
                   )}
                   {o.status === 'out_for_delivery' && (
                     <View style={{ flex: 1 }}>
-                      <PrimaryButton size="sm" label="تم التسليم" icon="checkmark-done"
+                      <PrimaryButton size="sm" label={tSync("تم التسليم", lang)} icon="checkmark-done"
                         onPress={() => changeStatus(o.id, 'delivered')} />
                     </View>
                   )}
                   {o.status !== 'cancelled' && o.status !== 'delivered' && (
                     <View style={{ flex: 1 }}>
-                      <SecondaryButton size="sm" fullWidth label="إلغاء" icon="close"
+                      <SecondaryButton size="sm" fullWidth label={tSync("إلغاء", lang)} icon="close"
                         onPress={() => Alert.alert('إلغاء الطلب', 'هل أنت متأكد؟', [
                           { text: 'لا', style: 'cancel' },
                           { text: 'نعم', style: 'destructive', onPress: () => changeStatus(o.id, 'cancelled') },

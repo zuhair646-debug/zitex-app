@@ -8,8 +8,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from './_layout';
 import { uploadMedia, mediaUrlSync } from '../src/utils/upload';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 
 export default function UGCContest() {
+  const { lang } = useT();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { apiCall, user } = useAuth();
@@ -122,12 +125,12 @@ export default function UGCContest() {
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#F5C518" />}>
           {/* Prize / Countdown hero */}
           <LinearGradient colors={['#F5C518', '#D4A017']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-            <Text style={s.heroLabel}>🏆 الجائزة</Text>
+            <TX style={s.heroLabel}>🏆 الجائزة</TX>
             <Text style={s.heroPrize}>{comp?.prize}</Text>
             {timeLeft > 0 ? (
               <Text style={s.heroCountdown}>ينتهي خلال {days > 0 ? `${days} أيام و ` : ''}{hours % 24} ساعة</Text>
             ) : (
-              <Text style={s.heroCountdown}>انتهت المسابقة</Text>
+              <TX style={s.heroCountdown}>انتهت المسابقة</TX>
             )}
           </LinearGradient>
 
@@ -137,22 +140,22 @@ export default function UGCContest() {
             <TouchableOpacity onPress={() => setSubmitOpen(true)} style={s.submitBtn} disabled={timeLeft === 0}>
               <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.submitInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
                 <Ionicons name="videocam" size={18} color="#0A0A0A" />
-                <Text style={s.submitText}>إنشاء فيديو</Text>
+                <TX style={s.submitText}>إنشاء فيديو</TX>
               </LinearGradient>
             </TouchableOpacity>
             <View style={s.leaderCount}>
               <Text style={s.leaderCountNum}>{videos.length}</Text>
-              <Text style={s.leaderCountLbl}>مشارك</Text>
+              <TX style={s.leaderCountLbl}>مشارك</TX>
             </View>
           </View>
 
-          <Text style={s.sectionTitle}>🏆 قائمة المتصدرين</Text>
+          <TX style={s.sectionTitle}>🏆 قائمة المتصدرين</TX>
 
           {videos.length === 0 && (
             <View style={s.emptyBox}>
               <Ionicons name="videocam-outline" size={64} color="#4A4A4A" />
-              <Text style={s.emptyTitle}>كن أول من يشارك!</Text>
-              <Text style={s.emptyDesc}>أنشئ فيديوك الترويجي واحصل على أكبر عدد لايكات للفوز</Text>
+              <TX style={s.emptyTitle}>كن أول من يشارك!</TX>
+              <TX style={s.emptyDesc}>أنشئ فيديوك الترويجي واحصل على أكبر عدد لايكات للفوز</TX>
             </View>
           )}
 
@@ -219,10 +222,10 @@ export default function UGCContest() {
               <TouchableOpacity onPress={() => setSubmitOpen(false)} style={s.iconBtn}>
                 <Ionicons name="close" size={24} color="#F5C518" />
               </TouchableOpacity>
-              <Text style={s.headerTitle}>فيديو المسابقة</Text>
+              <TX style={s.headerTitle}>فيديو المسابقة</TX>
               <TouchableOpacity onPress={submitVideo} disabled={!videoPath || uploading} style={s.iconBtn}>
                 <LinearGradient colors={['#F5C518', '#D4AF37']} style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, opacity: (!videoPath || uploading) ? 0.5 : 1 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <Text style={{ color: '#0A0A0A', fontWeight: '800' }}>نشر</Text>
+                  <TX style={{ color: '#0A0A0A', fontWeight: '800' }}>نشر</TX>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -232,26 +235,26 @@ export default function UGCContest() {
                   {uploading ? <ActivityIndicator color="#F5C518" size="large" /> : (
                     <>
                       <Ionicons name="videocam" size={54} color="#F5C518" />
-                      <Text style={s.videoPickText}>اختر فيديو من المعرض</Text>
-                      <Text style={s.videoPickHint}>حتى 60 ثانية</Text>
+                      <TX style={s.videoPickText}>اختر فيديو من المعرض</TX>
+                      <TX style={s.videoPickHint}>حتى 60 ثانية</TX>
                     </>
                   )}
                 </TouchableOpacity>
               ) : (
                 <View style={s.videoPicked}>
                   <Ionicons name="checkmark-circle" size={44} color="#10B981" />
-                  <Text style={s.videoPickedText}>تم رفع الفيديو بنجاح</Text>
+                  <TX style={s.videoPickedText}>تم رفع الفيديو بنجاح</TX>
                   <TouchableOpacity onPress={() => setVideoPath('')} style={{ marginTop: 8 }}>
-                    <Text style={{ color: '#EF4444', fontWeight: '700' }}>إعادة اختيار</Text>
+                    <TX style={{ color: '#EF4444', fontWeight: '700' }}>إعادة اختيار</TX>
                   </TouchableOpacity>
                 </View>
               )}
-              <Text style={s.label}>وصف الفيديو</Text>
+              <TX style={s.label}>وصف الفيديو</TX>
               <TextInput style={[s.input, { height: 90, textAlignVertical: 'top' }]} multiline value={caption} onChangeText={setCaption}
-                placeholderTextColor="#6B7280" placeholder="اكتب وصفاً جذاباً..." />
-              <Text style={s.label}>الهاشتاقات (افصل بمسافة)</Text>
+                placeholderTextColor="#6B7280" placeholder={tSync("اكتب وصفاً جذاباً...", lang)} />
+              <TX style={s.label}>الهاشتاقات (افصل بمسافة)</TX>
               <TextInput style={s.input} value={hashtags} onChangeText={setHashtags} autoCapitalize="none"
-                placeholderTextColor="#6B7280" placeholder="زايتكس مسابقة أيفون" />
+                placeholderTextColor="#6B7280" placeholder={tSync("زايتكس مسابقة أيفون", lang)} />
               {!!comp?.ugc_hashtag && (
                 <View style={s.forceTag}>
                   <Ionicons name="pricetag" size={14} color="#F5C518" />
@@ -275,7 +278,7 @@ export default function UGCContest() {
               <View style={s.iconBtn} />
             </View>
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
-              {comments.length === 0 && <Text style={s.emptyC}>كن أول من يعلق!</Text>}
+              {comments.length === 0 && <TX style={s.emptyC}>كن أول من يعلق!</TX>}
               {comments.map(c => (
                 <View key={c.id} style={s.commentRow}>
                   <View style={s.avatar}><Text style={s.avatarText}>{(c.user_name || '?').charAt(0)}</Text></View>
@@ -289,7 +292,7 @@ export default function UGCContest() {
             </ScrollView>
             <View style={s.commentBar}>
               <TextInput style={s.commentInput} value={newComment} onChangeText={setNewComment}
-                placeholderTextColor="#6B7280" placeholder="اكتب تعليقاً..." />
+                placeholderTextColor="#6B7280" placeholder={tSync("اكتب تعليقاً...", lang)} />
               <TouchableOpacity onPress={sendComment} style={s.sendBtn}>
                 <Ionicons name="send" size={18} color="#0A0A0A" />
               </TouchableOpacity>

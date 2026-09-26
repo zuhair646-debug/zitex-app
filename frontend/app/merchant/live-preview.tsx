@@ -16,6 +16,7 @@ import { AlertsBell } from '../../src/components/live-preview/AlertsAndExport';
 import CompetitionDetailSheet from '../../src/components/live-preview/CompetitionDetailSheet';
 import LiveToastNotifications from '../../src/components/live-preview/LiveToastNotifications';
 import { useT } from '../../src/i18n';
+import { TX, tSync } from '../../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -27,6 +28,7 @@ const { width: SCREEN } = Dimensions.get('window');
 type Section = 'products' | 'services' | 'competitions' | 'social' | 'overview';
 
 export default function LivePreview() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -55,7 +57,7 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.14.3 ✨</Text>
+        <TX style={s.previewText}>🔴 وضع البث المباشر — v1.14.3 ✨</TX>
         <AlertsBell apiCall={apiCall} />
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
@@ -182,17 +184,17 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
       {!!overview && (
         <View style={s.ovRow}>
           <View style={s.ovCard}>
-            <Text style={s.ovLbl}>مبيعات اليوم</Text>
+            <TX style={s.ovLbl}>مبيعات اليوم</TX>
             <Text style={s.ovVal}>{Math.round((overview.today?.pos_sales || 0) + (overview.today?.app_sales || 0)).toLocaleString()} ر.س</Text>
             <Text style={s.ovSub}>{overview.today?.count || 0} عملية</Text>
           </View>
           <View style={s.ovCard}>
-            <Text style={s.ovLbl}>هذا الأسبوع</Text>
+            <TX style={s.ovLbl}>هذا الأسبوع</TX>
             <Text style={s.ovVal}>{Math.round((overview.week?.pos_sales || 0) + (overview.week?.app_sales || 0)).toLocaleString()} ر.س</Text>
             <Text style={s.ovSub}>{overview.week?.count || 0} عملية</Text>
           </View>
           <View style={s.ovCard}>
-            <Text style={s.ovLbl}>هذا الشهر</Text>
+            <TX style={s.ovLbl}>هذا الشهر</TX>
             <Text style={s.ovVal}>{Math.round((overview.month?.pos_sales || 0) + (overview.month?.app_sales || 0)).toLocaleString()} ر.س</Text>
             <Text style={s.ovSub}>{overview.month?.count || 0} عملية</Text>
           </View>
@@ -202,7 +204,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
       {/* Top-sellers strip */}
       {top.length > 0 && (
         <View style={{ paddingHorizontal: 12, marginBottom: 6 }}>
-          <Text style={s.stripTitle}>🏆 الأكثر مبيعاً</Text>
+          <TX style={s.stripTitle}>🏆 الأكثر مبيعاً</TX>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
             {top.map((t: any, idx: number) => (
               <TouchableOpacity key={t.product_id} onPress={() => onAnalytics({ id: t.product_id, name_ar: t.name, images: t.image ? [t.image] : [] })} style={s.topCard}>
@@ -241,7 +243,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
             {/* Featured strip */}
             {featured.length > 0 && (
               <>
-                <Text style={{ color: GOLD, fontSize: 14, fontWeight: '900', marginTop: 6, textAlign: 'right' }}>⭐ منتجات مميزة</Text>
+                <TX style={{ color: GOLD, fontSize: 14, fontWeight: '900', marginTop: 6, textAlign: 'right' }}>⭐ منتجات مميزة</TX>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {featured.slice(0, 10).map((f: any) => (
                     <TouchableOpacity key={f.id} onPress={() => onAnalytics(f)}
@@ -257,7 +259,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
               </>
             )}
             {items.length > 0 && (
-              <Text style={{ color: GOLD, fontSize: 14, fontWeight: '900', marginTop: 6, textAlign: 'right' }}>🛍 كل المنتجات</Text>
+              <TX style={{ color: GOLD, fontSize: 14, fontWeight: '900', marginTop: 6, textAlign: 'right' }}>🛍 كل المنتجات</TX>
             )}
           </View>
         }
@@ -290,7 +292,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
               {!compareMode && (
                 <View style={s.pDetailHint}>
                   <Ionicons name="stats-chart" size={12} color={GOLD} />
-                  <Text style={s.pDetailHintText}>تحليلات</Text>
+                  <TX style={s.pDetailHintText}>تحليلات</TX>
                 </View>
               )}
               <View style={{ padding: 10 }}>
@@ -312,7 +314,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
             </TouchableOpacity>
           );
         }}
-        ListEmptyComponent={<Text style={s.empty}>لا توجد منتجات</Text>}
+        ListEmptyComponent={<TX style={s.empty}>لا توجد منتجات</TX>}
       />
 
       {compareMode && selectedIds.length >= 2 && (
@@ -395,7 +397,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
               {/* Details hint — bottom-left */}
               <View style={s.svcDetailHint}>
                 <Ionicons name="chevron-back" size={14} color={GOLD} />
-                <Text style={s.svcDetailHintText}>التفاصيل</Text>
+                <TX style={s.svcDetailHintText}>التفاصيل</TX>
               </View>
             </View>
             <View style={{ padding: 12, gap: 4 }}>
@@ -408,7 +410,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                 {!!item.home_pickup && (
                   <View style={s.svcMetaChip}>
                     <Ionicons name="car" size={11} color={GOLD} />
-                    <Text style={s.svcMetaText}>استلام منزلي</Text>
+                    <TX style={s.svcMetaText}>استلام منزلي</TX>
                   </View>
                 )}
                 {(item.review_count || 0) > 0 && (
@@ -428,7 +430,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
               {/* Reviews with reply capability */}
               {(item.reviews || []).length > 0 && (
                 <View style={{ marginTop: 10, borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 8, gap: 6 }}>
-                  <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800', textAlign: 'right' }}>💬 آخر التقييمات</Text>
+                  <TX style={{ color: GOLD, fontSize: 11, fontWeight: '800', textAlign: 'right' }}>💬 آخر التقييمات</TX>
                   {item.reviews.slice(0, 3).map((r: any) => (
                     <View key={r.id} style={s.svcReview}>
                       <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
@@ -443,7 +445,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                           <TouchableOpacity style={s.replyBtn}
                             onPress={() => { setReplyTo({ reviewId: r.id, commentText: r.comment || '', userName: r.user_name || '' }); setReplyText(''); }}>
                             <Ionicons name="arrow-undo" size={10} color={BG} />
-                            <Text style={s.replyBtnText}>رد</Text>
+                            <TX style={s.replyBtnText}>رد</TX>
                           </TouchableOpacity>
                         )}
                       </View>
@@ -461,7 +463,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
             </View>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={<Text style={s.empty}>لا توجد خدمات</Text>}
+        ListEmptyComponent={<TX style={s.empty}>لا توجد خدمات</TX>}
       />
 
       {replyTo && (
@@ -475,15 +477,15 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                   <Text style={s.commentText}>💬 {replyTo.commentText}</Text>
                 </View>
               )}
-              <TextInput style={s.replyInput} placeholder="اكتب ردك..." placeholderTextColor={MUTED}
+              <TextInput style={s.replyInput} placeholder={tSync("اكتب ردك...", lang)} placeholderTextColor={MUTED}
                 multiline value={replyText} onChangeText={setReplyText} />
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 <TouchableOpacity style={s.cancelBtn} onPress={() => setReplyTo(null)}>
-                  <Text style={s.cancelText}>إلغاء</Text>
+                  <TX style={s.cancelText}>إلغاء</TX>
                 </TouchableOpacity>
                 <TouchableOpacity style={s.sendBtn} onPress={sendReply}>
                   <Ionicons name="send" size={16} color={BG} />
-                  <Text style={s.sendText}>إرسال</Text>
+                  <TX style={s.sendText}>إرسال</TX>
                 </TouchableOpacity>
               </View>
             </View>
@@ -562,7 +564,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
                   <LinearGradient colors={['transparent', 'rgba(11,12,16,0.7)']} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 60, borderRadius: 12 }} />
                   <View style={s.svcDetailHint}>
                     <Ionicons name="chevron-back" size={14} color={GOLD} />
-                    <Text style={s.svcDetailHintText}>التفاصيل الكاملة</Text>
+                    <TX style={s.svcDetailHintText}>التفاصيل الكاملة</TX>
                   </View>
                 </View>
               )}
@@ -573,8 +575,8 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={s.compTitle} numberOfLines={1}>{item.title}</Text>
-                    {isLive && <View style={s.liveTag}><View style={s.livePulse} /><Text style={s.liveTagText}>مباشرة</Text></View>}
-                    {isEnded && <View style={[s.liveTag, { backgroundColor: '#3B82F6' }]}><Text style={[s.liveTagText, { color: '#FFF' }]}>انتهت</Text></View>}
+                    {isLive && <View style={s.liveTag}><View style={s.livePulse} /><TX style={s.liveTagText}>مباشرة</TX></View>}
+                    {isEnded && <View style={[s.liveTag, { backgroundColor: '#3B82F6' }]}><TX style={[s.liveTagText, { color: '#FFF' }]}>انتهت</TX></View>}
                   </View>
                   <Text style={s.compPrize}>🎁 {item.prize}{item.prize_count > 1 ? ` (${item.prize_count} جوائز)` : ''}</Text>
                 </View>
@@ -611,7 +613,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
               {/* Winners */}
               {(item.winners || []).length > 0 && (
                 <View style={{ marginTop: 8, borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 8 }}>
-                  <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>🏆 الفائزون</Text>
+                  <TX style={{ color: GOLD, fontSize: 11, fontWeight: '800', textAlign: 'right', marginBottom: 6 }}>🏆 الفائزون</TX>
                   {item.winners.slice(0, 3).map((w: any, i: number) => (
                     <View key={i} style={s.winnerRow}>
                       <View style={s.winnerRank}><Text style={{ color: BG, fontWeight: '900', fontSize: 11 }}>{i + 1}</Text></View>
@@ -705,7 +707,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
               </View>
               <TouchableOpacity onPress={() => onOpenPost && onOpenPost(item)} style={s.detailBtn}>
                 <Ionicons name="analytics" size={14} color={BG} />
-                <Text style={s.detailBtnText}>التفاصيل</Text>
+                <TX style={s.detailBtnText}>التفاصيل</TX>
               </TouchableOpacity>
             </View>
             {!!item.text && <Text style={s.postText}>{item.text}</Text>}
@@ -736,7 +738,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
               <View style={{ flex: 1 }} />
               <View style={s.livePulse2}>
                 <View style={s.livePulse} />
-                <Text style={{ color: '#A7F3D0', fontSize: 10, fontWeight: '700' }}>مباشر</Text>
+                <TX style={{ color: '#A7F3D0', fontSize: 10, fontWeight: '700' }}>مباشر</TX>
               </View>
             </View>
             {/* Comments */}
@@ -756,7 +758,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
                   <TouchableOpacity style={s.replyBtn}
                     onPress={() => { setReplying({ postId: item.id, commentId: c.id, commentText: c.text }); setReplyText(''); }}>
                     <Ionicons name="arrow-undo" size={12} color={BG} />
-                    <Text style={s.replyBtnText}>رد باسم المتجر</Text>
+                    <TX style={s.replyBtnText}>رد باسم المتجر</TX>
                   </TouchableOpacity>
                 )}
               </View>
@@ -771,26 +773,26 @@ function SocialSection({ apiCall, onOpenPost }: any) {
           </View>
           );
         }}
-        ListEmptyComponent={<Text style={s.empty}>لا منشورات</Text>}
+        ListEmptyComponent={<TX style={s.empty}>لا منشورات</TX>}
       />
       {replying && (
         <Modal visible transparent animationType="slide" onRequestClose={() => setReplying(null)}>
           <View style={s.sheetBackdrop}>
             <View style={s.replySheet}>
               <View style={s.sheetHandle} />
-              <Text style={s.sheetTitle}>رد باسم المتجر ✨</Text>
+              <TX style={s.sheetTitle}>رد باسم المتجر ✨</TX>
               <View style={s.commentPreview}>
                 <Text style={s.commentText}>💬 {replying.commentText}</Text>
               </View>
-              <TextInput style={s.replyInput} placeholder="اكتب ردك..." placeholderTextColor={MUTED}
+              <TextInput style={s.replyInput} placeholder={tSync("اكتب ردك...", lang)} placeholderTextColor={MUTED}
                 multiline value={replyText} onChangeText={setReplyText} />
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 <TouchableOpacity style={s.cancelBtn} onPress={() => setReplying(null)}>
-                  <Text style={s.cancelText}>إلغاء</Text>
+                  <TX style={s.cancelText}>إلغاء</TX>
                 </TouchableOpacity>
                 <TouchableOpacity style={s.sendBtn} onPress={sendReply}>
                   <Ionicons name="send" size={16} color={BG} />
-                  <Text style={s.sendText}>إرسال</Text>
+                  <TX style={s.sendText}>إرسال</TX>
                 </TouchableOpacity>
               </View>
             </View>
@@ -805,7 +807,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
 function WaveChart({ series, width = SCREEN - 60, height = 160 }: any) {
   const s = useSStyles();
   if (!series || series.length === 0) {
-    return <View style={{ padding: 20, alignItems: 'center' }}><Text style={{ color: MUTED }}>لا بيانات</Text></View>;
+    return <View style={{ padding: 20, alignItems: 'center' }}><TX style={{ color: MUTED }}>لا بيانات</TX></View>;
   }
   const max = Math.max(1, ...series.map((s: any) => s.sales || 0));
   const stepX = width / Math.max(series.length - 1, 1);
@@ -892,14 +894,14 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
               <Kpi icon="trending-up" label="التحويل" value={`${data.kpis.conversion_rate}%`} highlight />
             </View>
 
-            <Text style={s.sec}>📈 اتجاه المبيعات (12 شهر)</Text>
+            <TX style={s.sec}>📈 اتجاه المبيعات (12 شهر)</TX>
             <LinearGradient colors={['#1A1C24', '#0F1116']} style={s.chartCard}>
               <WaveChart series={data.monthly_series} />
             </LinearGradient>
 
-            <Text style={s.sec}>👥 آخر الزوار</Text>
+            <TX style={s.sec}>👥 آخر الزوار</TX>
             {(data.visitors || []).length === 0 ? (
-              <View style={s.empty2}><Text style={{ color: MUTED }}>لا زوار بعد</Text></View>
+              <View style={s.empty2}><TX style={{ color: MUTED }}>لا زوار بعد</TX></View>
             ) : data.visitors.map((v: any, i: number) => (
               <View key={i} style={s.visitor}>
                 <View style={s.visitorAvatar}><Text style={{ color: BG, fontWeight: '900' }}>{(v.user_name || 'ز')[0]}</Text></View>
@@ -914,7 +916,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
             {(data.abandoned_cart_users || []).length > 0 && (
               <>
                 <Text style={s.sec}>💔 عملاء تركوا السلة ({data.abandoned_cart_users.length})</Text>
-                <Text style={s.hint}>اضغط لإرسال خصم 15% وتذكير</Text>
+                <TX style={s.hint}>اضغط لإرسال خصم 15% وتذكير</TX>
                 {data.abandoned_cart_users.map((a: any) => (
                   <View key={a.user_id} style={s.abandoned}>
                     <Ionicons name="cart" size={18} color="#EF4444" />
@@ -924,7 +926,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                     </View>
                     <TouchableOpacity onPress={() => sendOffer(a.user_id, a.user_name)} style={s.offerBtn}>
                       <Ionicons name="gift" size={14} color={BG} />
-                      <Text style={s.offerText}>خصم 15٪</Text>
+                      <TX style={s.offerText}>خصم 15٪</TX>
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -953,7 +955,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
             {/* Top branches selling this product */}
             {(data.top_branches || []).length > 0 && (
               <>
-                <Text style={s.sec}>🏢 أفضل الفروع مبيعاً لهذا المنتج</Text>
+                <TX style={s.sec}>🏢 أفضل الفروع مبيعاً لهذا المنتج</TX>
                 {data.top_branches.map((tb: any, i: number) => (
                   <View key={tb.id} style={[s.visitor, { paddingVertical: 10 }]}>
                     <View style={[s.visitorAvatar, { backgroundColor: '#34D399', width: 32, height: 32 }]}>
@@ -972,7 +974,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
             {/* Purchase sources */}
             {(data.purchase_sources || []).length > 0 && (
               <>
-                <Text style={s.sec}>🔗 مصادر الوصول للمنتج</Text>
+                <TX style={s.sec}>🔗 مصادر الوصول للمنتج</TX>
                 <View style={{ backgroundColor: '#1A1C24', borderRadius: 12, padding: 10 }}>
                   {data.purchase_sources.map((ps: any) => {
                     const total = data.purchase_sources.reduce((a: number, x: any) => a + x.count, 0) || 1;
@@ -1018,13 +1020,13 @@ function CompareSheet({ items, onClose }: any) {
                 {!!it.image && <Image source={{ uri: mediaUrlSync(it.image) }} style={s.cmpImg} contentFit="cover" />}
                 <Text style={s.cmpName} numberOfLines={2}>{it.name_ar}</Text>
                 <Text style={s.cmpPrice}>{it.price} ر.س</Text>
-                <View style={s.cmpRow}><Text style={s.cmpLbl}>مشاهدات</Text><Text style={s.cmpVal}>{it.views_count}</Text></View>
-                <View style={s.cmpRow}><Text style={s.cmpLbl}>أضيف للسلة</Text><Text style={s.cmpVal}>{it.cart_count}</Text></View>
-                <View style={s.cmpRow}><Text style={s.cmpLbl}>طلبات</Text><Text style={s.cmpVal}>{it.orders_count}</Text></View>
-                <View style={s.cmpRow}><Text style={s.cmpLbl}>مبيعات</Text><Text style={s.cmpVal}>{it.sold_count}</Text></View>
-                <View style={s.cmpRow}><Text style={s.cmpLbl}>التحويل</Text><Text style={[s.cmpVal, { color: GOLD }]}>{it.conversion_rate}%</Text></View>
+                <View style={s.cmpRow}><TX style={s.cmpLbl}>مشاهدات</TX><Text style={s.cmpVal}>{it.views_count}</Text></View>
+                <View style={s.cmpRow}><TX style={s.cmpLbl}>أضيف للسلة</TX><Text style={s.cmpVal}>{it.cart_count}</Text></View>
+                <View style={s.cmpRow}><TX style={s.cmpLbl}>طلبات</TX><Text style={s.cmpVal}>{it.orders_count}</Text></View>
+                <View style={s.cmpRow}><TX style={s.cmpLbl}>مبيعات</TX><Text style={s.cmpVal}>{it.sold_count}</Text></View>
+                <View style={s.cmpRow}><TX style={s.cmpLbl}>التحويل</TX><Text style={[s.cmpVal, { color: GOLD }]}>{it.conversion_rate}%</Text></View>
                 {(it.rating || 0) > 0 && (
-                  <View style={s.cmpRow}><Text style={s.cmpLbl}>التقييم</Text>
+                  <View style={s.cmpRow}><TX style={s.cmpLbl}>التقييم</TX>
                     <View style={{ flexDirection: 'row', gap: 2 }}>
                       <Ionicons name="star" size={12} color={GOLD} />
                       <Text style={s.cmpVal}>{it.rating}</Text>
@@ -1070,26 +1072,26 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
         <View style={[s.replySheet, { maxHeight: '90%' }]}>
           <View style={s.sheetHandle} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text style={s.sheetTitle}>📊 إحصائيات الخدمة</Text>
+            <TX style={s.sheetTitle}>📊 إحصائيات الخدمة</TX>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={22} color="#FFF" /></TouchableOpacity>
           </View>
           <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right', marginBottom: 8 }}>
             {service.title || service.name}
           </Text>
           {loading ? <ActivityIndicator color={GOLD} style={{ marginTop: 30 }} /> : !data ? (
-            <Text style={s.empty}>لا تتوفر بيانات</Text>
+            <TX style={s.empty}>لا تتوفر بيانات</TX>
           ) : (
             <ScrollView>
               <View style={s.sheetCard}>
                 <View style={s.sheetKpiRow}>
-                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.total_bookings}</Text><Text style={s.sheetKpiLbl}>إجمالي الحجوزات</Text></View>
-                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{Math.round(data.kpis.revenue).toLocaleString()}</Text><Text style={s.sheetKpiLbl}>الإيرادات (ر.س)</Text></View>
-                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.avg_rating}★</Text><Text style={s.sheetKpiLbl}>متوسط التقييم</Text></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.total_bookings}</Text><TX style={s.sheetKpiLbl}>إجمالي الحجوزات</TX></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{Math.round(data.kpis.revenue).toLocaleString()}</Text><TX style={s.sheetKpiLbl}>الإيرادات (ر.س)</TX></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.avg_rating}★</Text><TX style={s.sheetKpiLbl}>متوسط التقييم</TX></View>
                 </View>
                 {data.kpis.avg_duration_hours > 0 && (
                   <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#0F1116', padding: 8, borderRadius: 8 }}>
                     <Ionicons name="timer" size={14} color={GOLD} />
-                    <Text style={{ color: '#FFF', fontSize: 12, flex: 1, textAlign: 'right' }}>متوسط وقت الإنجاز</Text>
+                    <TX style={{ color: '#FFF', fontSize: 12, flex: 1, textAlign: 'right' }}>متوسط وقت الإنجاز</TX>
                     <Text style={{ color: GOLD, fontSize: 13, fontWeight: '900' }}>{data.kpis.avg_duration_hours} ساعة</Text>
                   </View>
                 )}
@@ -1097,7 +1099,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
 
               {(data.technicians || []).length > 0 && (
                 <View style={s.sheetCard}>
-                  <Text style={s.sheetSectionTitle}>🔧 الفنيون المسؤولون</Text>
+                  <TX style={s.sheetSectionTitle}>🔧 الفنيون المسؤولون</TX>
                   {data.technicians.map((t: any, i: number) => (
                     <View key={t.id} style={{ flexDirection: 'row', paddingVertical: 8, borderBottomWidth: i < data.technicians.length - 1 ? 1 : 0, borderBottomColor: '#2A2D38', alignItems: 'center', gap: 8 }}>
                       <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: GOLD + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: GOLD + '55' }}>
@@ -1117,7 +1119,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
                 </View>
               )}
               <View style={s.sheetCard}>
-                <Text style={s.sheetSectionTitle}>الحالات</Text>
+                <TX style={s.sheetSectionTitle}>الحالات</TX>
                 {data.status_breakdown.map((row: any) => {
                   const max = Math.max(...data.status_breakdown.map((r: any) => r.count));
                   const pct = max > 0 ? (row.count * 100) / max : 0;
@@ -1131,7 +1133,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
                 })}
               </View>
               <View style={s.sheetCard}>
-                <Text style={s.sheetSectionTitle}>توزيع النجوم</Text>
+                <TX style={s.sheetSectionTitle}>توزيع النجوم</TX>
                 {data.star_distribution.map((row: any) => {
                   const total = data.star_distribution.reduce((a: number, r: any) => a + r.count, 0) || 1;
                   const pct = (row.count * 100) / total;
@@ -1146,7 +1148,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
               </View>
               {data.recent_reviews.length > 0 && (
                 <View style={s.sheetCard}>
-                  <Text style={s.sheetSectionTitle}>💬 آخر التقييمات</Text>
+                  <TX style={s.sheetSectionTitle}>💬 آخر التقييمات</TX>
                   {data.recent_reviews.map((r: any) => (
                     <View key={r.id} style={s.listRow}>
                       <Text style={s.listRowText}>{r.user_name}: {r.comment}</Text>
@@ -1181,21 +1183,21 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
         <View style={[s.replySheet, { maxHeight: '90%' }]}>
           <View style={s.sheetHandle} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text style={s.sheetTitle}>🏆 إحصائيات المسابقة</Text>
+            <TX style={s.sheetTitle}>🏆 إحصائيات المسابقة</TX>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={22} color="#FFF" /></TouchableOpacity>
           </View>
           <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right', marginBottom: 8 }}>
             {competition.title}
           </Text>
           {loading ? <ActivityIndicator color={GOLD} style={{ marginTop: 30 }} /> : !data ? (
-            <Text style={s.empty}>لا تتوفر بيانات</Text>
+            <TX style={s.empty}>لا تتوفر بيانات</TX>
           ) : (
             <ScrollView>
               <View style={s.sheetCard}>
                 <View style={s.sheetKpiRow}>
-                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.total_participants}</Text><Text style={s.sheetKpiLbl}>مشارك</Text></View>
-                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.unique_users}</Text><Text style={s.sheetKpiLbl}>مستخدم فريد</Text></View>
-                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>+{data.kpis.followers_gained}</Text><Text style={s.sheetKpiLbl}>متابع مكتسب</Text></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.total_participants}</Text><TX style={s.sheetKpiLbl}>مشارك</TX></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.unique_users}</Text><TX style={s.sheetKpiLbl}>مستخدم فريد</TX></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>+{data.kpis.followers_gained}</Text><TX style={s.sheetKpiLbl}>متابع مكتسب</TX></View>
                 </View>
                 {typeof data.peak_hour === 'number' && (
                   <View style={{ marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
@@ -1215,7 +1217,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
 
               {(data.winner_details || []).length > 0 && (
                 <View style={s.sheetCard}>
-                  <Text style={s.sheetSectionTitle}>🏆 الفائزون بالتفصيل</Text>
+                  <TX style={s.sheetSectionTitle}>🏆 الفائزون بالتفصيل</TX>
                   {data.winner_details.map((w: any, i: number) => (
                     <View key={i} style={{ flexDirection: 'row', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#2A2D38', alignItems: 'center', gap: 8 }}>
                       <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center' }}>
@@ -1230,7 +1232,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
                 </View>
               )}
               <View style={s.sheetCard}>
-                <Text style={s.sheetSectionTitle}>🔗 مصادر المشاركين</Text>
+                <TX style={s.sheetSectionTitle}>🔗 مصادر المشاركين</TX>
                 {data.sources.map((row: any) => {
                   const max = Math.max(...data.sources.map((r: any) => r.count));
                   const pct = max > 0 ? (row.count * 100) / max : 0;
@@ -1246,7 +1248,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
               </View>
               {data.top_cities.length > 0 && (
                 <View style={s.sheetCard}>
-                  <Text style={s.sheetSectionTitle}>🏙 أعلى المدن</Text>
+                  <TX style={s.sheetSectionTitle}>🏙 أعلى المدن</TX>
                   {data.top_cities.map((row: any) => {
                     const max = Math.max(...data.top_cities.map((r: any) => r.count));
                     const pct = max > 0 ? (row.count * 100) / max : 0;
@@ -1262,7 +1264,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
               )}
               {data.recent_participants.length > 0 && (
                 <View style={s.sheetCard}>
-                  <Text style={s.sheetSectionTitle}>👥 آخر المشاركين</Text>
+                  <TX style={s.sheetSectionTitle}>👥 آخر المشاركين</TX>
                   {data.recent_participants.map((p: any, i: number) => (
                     <View key={i} style={s.listRow}>
                       <Text style={s.listRowText}>{p.user_name} · {p.user_city}</Text>
@@ -1317,23 +1319,23 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
         <View style={[s.replySheet, { maxHeight: '95%' }]}>
           <View style={s.sheetHandle} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={s.sheetTitle}>🔎 تفاصيل المنشور</Text>
+            <TX style={s.sheetTitle}>🔎 تفاصيل المنشور</TX>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={22} color="#FFF" /></TouchableOpacity>
           </View>
           {loading ? <ActivityIndicator color={GOLD} style={{ marginTop: 30 }} /> : !data ? (
-            <Text style={s.empty}>لا تتوفر بيانات</Text>
+            <TX style={s.empty}>لا تتوفر بيانات</TX>
           ) : (
             <>
               <View style={s.sheetCard}>
                 {!!data.post.text && <Text style={{ color: '#FFF', fontSize: 12, textAlign: 'right', marginBottom: 6 }}>{data.post.text}</Text>}
                 <View style={s.sheetKpiRow}>
-                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.views}</Text><Text style={s.sheetKpiLbl}>مشاهدة</Text></View>
-                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.likes}</Text><Text style={s.sheetKpiLbl}>إعجاب</Text></View>
-                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.comment_count}</Text><Text style={s.sheetKpiLbl}>تعليق</Text></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.views}</Text><TX style={s.sheetKpiLbl}>مشاهدة</TX></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.likes}</Text><TX style={s.sheetKpiLbl}>إعجاب</TX></View>
+                  <View style={s.sheetKpi}><Text style={s.sheetKpiVal}>{data.kpis.comment_count}</Text><TX style={s.sheetKpiLbl}>تعليق</TX></View>
                 </View>
                 <TouchableOpacity onPress={likeAsStore} style={[s.sendBtn, { marginTop: 8 }]}>
                   <Ionicons name="heart" size={14} color={BG} />
-                  <Text style={s.sendText}>أضف إعجاب باسم المتجر</Text>
+                  <TX style={s.sendText}>أضف إعجاب باسم المتجر</TX>
                 </TouchableOpacity>
               </View>
               {/* Tabs */}
@@ -1358,7 +1360,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
                       {!c.store_reply && (
                         <TouchableOpacity onPress={() => { setReplyTo({ commentId: c.id, commentText: c.text }); setReplyText(''); }} style={s.replyBtn}>
                           <Ionicons name="arrow-undo" size={11} color={BG} />
-                          <Text style={s.replyBtnText}>رد</Text>
+                          <TX style={s.replyBtnText}>رد</TX>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -1406,13 +1408,13 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
               {replyTo && (
                 <View style={{ borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 8, marginTop: 8 }}>
                   <Text style={{ color: MUTED, fontSize: 11, textAlign: 'right' }}>رد على: {replyTo.commentText}</Text>
-                  <TextInput style={s.replyInput} placeholder="ردك..." placeholderTextColor={MUTED}
+                  <TextInput style={s.replyInput} placeholder={tSync("ردك...", lang)} placeholderTextColor={MUTED}
                     multiline value={replyText} onChangeText={setReplyText} />
                   <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
-                    <TouchableOpacity style={s.cancelBtn} onPress={() => setReplyTo(null)}><Text style={s.cancelText}>إلغاء</Text></TouchableOpacity>
+                    <TouchableOpacity style={s.cancelBtn} onPress={() => setReplyTo(null)}><TX style={s.cancelText}>إلغاء</TX></TouchableOpacity>
                     <TouchableOpacity style={s.sendBtn} onPress={sendThreadedReply}>
                       <Ionicons name="send" size={14} color={BG} />
-                      <Text style={s.sendText}>إرسال</Text>
+                      <TX style={s.sendText}>إرسال</TX>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1447,7 +1449,7 @@ function SharersView({ postId, apiCall }: any) {
     unknown: { icon: 'share-social', color: MUTED, label: 'أخرى' },
   };
   if (loading) return <ActivityIndicator color={GOLD} style={{ marginTop: 20 }} />;
-  if (!data || data.total === 0) return <Text style={s.empty}>لا يوجد مشاركات بعد لهذا المنشور</Text>;
+  if (!data || data.total === 0) return <TX style={s.empty}>لا يوجد مشاركات بعد لهذا المنشور</TX>;
   return (
     <>
       <View style={s.sheetCard}>
@@ -1650,10 +1652,10 @@ function OverviewSection({ apiCall }: any) {
   if (loading) return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 60 }}>
       <ActivityIndicator size="large" color={GOLD} />
-      <Text style={{ color: MUTED, marginTop: 12, fontSize: 12 }}>جاري تحميل داشبورد الأداء...</Text>
+      <TX style={{ color: MUTED, marginTop: 12, fontSize: 12 }}>جاري تحميل داشبورد الأداء...</TX>
     </View>
   );
-  if (!data) return <Text style={s.empty}>لا تتوفر بيانات</Text>;
+  if (!data) return <TX style={s.empty}>لا تتوفر بيانات</TX>;
 
   const summary = [
     { icon: 'car', color: '#60A5FA', label: 'السائقون', value: data.drivers.total, sub: `${data.drivers.online} متصل الآن` },
@@ -1683,8 +1685,8 @@ function OverviewSection({ apiCall }: any) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
           <Ionicons name="analytics" size={26} color={GOLD} />
           <View>
-            <Text style={s.luxeHeroTitle}>مركز القيادة</Text>
-            <Text style={s.luxeHeroSub}>نظرة شاملة على أداء المتجر</Text>
+            <TX style={s.luxeHeroTitle}>مركز القيادة</TX>
+            <TX style={s.luxeHeroSub}>نظرة شاملة على أداء المتجر</TX>
           </View>
         </View>
       </LinearGradient>
@@ -1725,8 +1727,8 @@ function OverviewSection({ apiCall }: any) {
       <View style={{ paddingHorizontal: 12 }}>
         {tab === 'drivers' && (
           <View>
-            <Text style={s.luxeSectionTitle}>🏆 أفضل السائقين حسب التوصيلات</Text>
-            {data.drivers.top.length === 0 ? <Text style={s.empty}>لا يوجد سائقون بعد</Text> :
+            <TX style={s.luxeSectionTitle}>🏆 أفضل السائقين حسب التوصيلات</TX>
+            {data.drivers.top.length === 0 ? <TX style={s.empty}>لا يوجد سائقون بعد</TX> :
               data.drivers.top.map((d: any, i: number) => (
                 <LeaderRow key={d.id} rank={i}
                   name={d.name}
@@ -1745,8 +1747,8 @@ function OverviewSection({ apiCall }: any) {
 
         {tab === 'branches' && (
           <View>
-            <Text style={s.luxeSectionTitle}>🏆 أفضل الفروع حسب المبيعات</Text>
-            {data.branches.top.length === 0 ? <Text style={s.empty}>لا يوجد فروع بعد</Text> :
+            <TX style={s.luxeSectionTitle}>🏆 أفضل الفروع حسب المبيعات</TX>
+            {data.branches.top.length === 0 ? <TX style={s.empty}>لا يوجد فروع بعد</TX> :
               data.branches.top.map((b: any, i: number) => (
                 <LeaderRow key={b.id} rank={i}
                   name={b.name}
@@ -1765,12 +1767,12 @@ function OverviewSection({ apiCall }: any) {
 
         {tab === 'marketers' && (
           <View>
-            <Text style={s.luxeSectionTitle}>🏆 أفضل المسوقين حسب العمولات</Text>
+            <TX style={s.luxeSectionTitle}>🏆 أفضل المسوقين حسب العمولات</TX>
             {data.marketers.top.length === 0 ?
               <View style={s.luxeEmpty}>
                 <Ionicons name="megaphone-outline" size={40} color={MUTED} />
-                <Text style={s.luxeEmptyTitle}>لا يوجد مسوّقون معتمدون بعد</Text>
-                <Text style={s.luxeEmptySub}>افتح باب التسويق بالعمولة من إعدادات المتجر</Text>
+                <TX style={s.luxeEmptyTitle}>لا يوجد مسوّقون معتمدون بعد</TX>
+                <TX style={s.luxeEmptySub}>افتح باب التسويق بالعمولة من إعدادات المتجر</TX>
               </View>
               :
               data.marketers.top.map((m: any, i: number) => (
@@ -1789,8 +1791,8 @@ function OverviewSection({ apiCall }: any) {
 
         {tab === 'employees' && (
           <View>
-            <Text style={s.luxeSectionTitle}>🏆 أفضل الموظفين حسب الفواتير</Text>
-            {data.employees.list.length === 0 ? <Text style={s.empty}>لا يوجد موظفون بعد</Text> :
+            <TX style={s.luxeSectionTitle}>🏆 أفضل الموظفين حسب الفواتير</TX>
+            {data.employees.list.length === 0 ? <TX style={s.empty}>لا يوجد موظفون بعد</TX> :
               data.employees.list.map((e: any, i: number) => (
                 <LeaderRow key={e.id} rank={i}
                   name={e.name}

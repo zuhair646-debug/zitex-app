@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import ZitexMap from '../../src/components/MapView';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 type Zone = {
   name: string;
@@ -25,6 +27,7 @@ const TAB_LABELS: Record<typeof TABS[number], string> = {
 };
 
 export default function DeliverySettings() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [data, setData] = useState<any>(null);
@@ -106,9 +109,9 @@ export default function DeliverySettings() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>إعدادات التوصيل</Text>
+        <TX style={s.title}>إعدادات التوصيل</TX>
         <TouchableOpacity onPress={save} disabled={saving} style={s.saveTopBtn}>
-          {saving ? <ActivityIndicator color="white" size="small" /> : <Text style={s.saveTopText}>حفظ</Text>}
+          {saving ? <ActivityIndicator color="white" size="small" /> : <TX style={s.saveTopText}>حفظ</TX>}
         </TouchableOpacity>
       </View>
 
@@ -122,49 +125,49 @@ export default function DeliverySettings() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 80 }}>
         {tab === 'standard' && <>
-          <Text style={s.section}>📦 التوصيل العادي (حسب المسافة)</Text>
+          <TX style={s.section}>📦 التوصيل العادي (حسب المسافة)</TX>
           <View style={s.box}>
-            <Text style={s.label}>الرسوم الأساسية (ر.س) داخل النطاق الأساسي</Text>
+            <TX style={s.label}>الرسوم الأساسية (ر.س) داخل النطاق الأساسي</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.base_fee} onChangeText={t => setData({ ...data, base_fee: t })} />
-            <Text style={s.label}>النطاق الأساسي (كم)</Text>
+            <TX style={s.label}>النطاق الأساسي (كم)</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.base_distance_km} onChangeText={t => setData({ ...data, base_distance_km: t })} />
-            <Text style={s.label}>السعر لكل كم إضافي (ر.س/كم)</Text>
+            <TX style={s.label}>السعر لكل كم إضافي (ر.س/كم)</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.per_km_rate} onChangeText={t => setData({ ...data, per_km_rate: t })} />
-            <Text style={s.label}>أقصى مسافة توصيل (كم)</Text>
+            <TX style={s.label}>أقصى مسافة توصيل (كم)</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.max_distance_km} onChangeText={t => setData({ ...data, max_distance_km: t })} />
-            <Text style={s.hint}>مثال: 10 ر.س لأول 10 كم + 1.2 ر.س لكل كم إضافي</Text>
+            <TX style={s.hint}>مثال: 10 ر.س لأول 10 كم + 1.2 ر.س لكل كم إضافي</TX>
           </View>
         </>}
 
         {tab === 'sameday' && <>
           <View style={s.toggleBox}>
-            <Text style={s.section}>⚡ التوصيل في نفس اليوم</Text>
+            <TX style={s.section}>⚡ التوصيل في نفس اليوم</TX>
             <Switch value={data.same_day_enabled} onValueChange={v => setData({ ...data, same_day_enabled: v })} />
           </View>
           <View style={s.box}>
-            <Text style={s.label}>السعر الثابت لنفس اليوم (ر.س)</Text>
+            <TX style={s.label}>السعر الثابت لنفس اليوم (ر.س)</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.same_day_flat_price} onChangeText={t => setData({ ...data, same_day_flat_price: t })} editable={data.same_day_enabled} />
-            <Text style={s.hint}>يُطبق إذا لم تتطابق أي منطقة محددة</Text>
+            <TX style={s.hint}>يُطبق إذا لم تتطابق أي منطقة محددة</TX>
           </View>
         </>}
 
         {tab === 'scheduled' && <>
           <View style={s.toggleBox}>
-            <Text style={s.section}>⏰ التوصيل المجدول</Text>
+            <TX style={s.section}>⏰ التوصيل المجدول</TX>
             <Switch value={data.scheduled_enabled} onValueChange={v => setData({ ...data, scheduled_enabled: v })} />
           </View>
           <View style={s.box}>
-            <Text style={s.label}>السعر الثابت للتوصيل المجدول (ر.س)</Text>
+            <TX style={s.label}>السعر الثابت للتوصيل المجدول (ر.س)</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.scheduled_flat_price} onChangeText={t => setData({ ...data, scheduled_flat_price: t })} editable={data.scheduled_enabled} />
-            <Text style={s.hint}>أرخص من نفس اليوم لأن العميل يختار موعداً مرناً</Text>
+            <TX style={s.hint}>أرخص من نفس اليوم لأن العميل يختار موعداً مرناً</TX>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
             <Text style={s.section}>الفترات المتاحة ({data.scheduled_slots.length})</Text>
-            <TouchableOpacity onPress={addSlot} style={s.addSmall}><Text style={s.addSmallText}>+ فترة</Text></TouchableOpacity>
+            <TouchableOpacity onPress={addSlot} style={s.addSmall}><TX style={s.addSmallText}>+ فترة</TX></TouchableOpacity>
           </View>
           {data.scheduled_slots.map((sl: Slot, i: number) => (
             <View key={i} style={s.slotCard}>
-              <TextInput style={[s.input, { flex: 2 }]} placeholder="اسم الفترة" value={sl.label} onChangeText={t => updSlot(i, 'label', t)} />
+              <TextInput style={[s.input, { flex: 2 }]} placeholder={tSync("اسم الفترة", lang)} value={sl.label} onChangeText={t => updSlot(i, 'label', t)} />
               <TextInput style={[s.input, { width: 70 }]} placeholder="09:00" value={sl.start} onChangeText={t => updSlot(i, 'start', t)} />
               <Text style={{ fontSize: 12 }}>-</Text>
               <TextInput style={[s.input, { width: 70 }]} placeholder="12:00" value={sl.end} onChangeText={t => updSlot(i, 'end', t)} />
@@ -176,9 +179,9 @@ export default function DeliverySettings() {
         {tab === 'zones' && <>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={s.section}>🗺️ مناطق بأسعار ثابتة ({data.zones.length})</Text>
-            <TouchableOpacity onPress={openNewZone} style={s.addZoneBtn}><Text style={s.addZoneText}>+ منطقة</Text></TouchableOpacity>
+            <TouchableOpacity onPress={openNewZone} style={s.addZoneBtn}><TX style={s.addZoneText}>+ منطقة</TX></TouchableOpacity>
           </View>
-          <Text style={s.hint}>ارسم مضلعات على الخريطة (مثل أحياء) واحدد سعراً ثابتاً</Text>
+          <TX style={s.hint}>ارسم مضلعات على الخريطة (مثل أحياء) واحدد سعراً ثابتاً</TX>
           {data.zones.length > 0 && (
             <View style={{ marginVertical: 12 }}>
               <ZitexMap mode="tracking" height={220} showZones={data.zones.map((z: Zone) => ({ ...z, color: z.delivery_type === 'same_day' ? '#F59E0B' : z.delivery_type === 'scheduled' ? '#3B82F6' : '#8833FF' }))} />
@@ -208,19 +211,19 @@ export default function DeliverySettings() {
             <View style={s.header}>
               <TouchableOpacity onPress={() => setZoneModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
               <Text style={s.title}>{editingZone.idx === -1 ? 'منطقة جديدة' : 'تعديل المنطقة'}</Text>
-              <TouchableOpacity onPress={saveZone}><Text style={{ color: '#8833FF', fontWeight: '800', fontSize: 15 }}>تم</Text></TouchableOpacity>
+              <TouchableOpacity onPress={saveZone}><TX style={{ color: '#8833FF', fontWeight: '800', fontSize: 15 }}>تم</TX></TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={{ padding: 12 }}>
-              <Text style={s.label}>اسم المنطقة *</Text>
-              <TextInput style={s.input} value={editingZone.zone.name} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, name: t } })} placeholder="مثل: حي العليا" />
+              <TX style={s.label}>اسم المنطقة *</TX>
+              <TextInput style={s.input} value={editingZone.zone.name} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, name: t } })} placeholder={tSync("مثل: حي العليا", lang)} />
 
-              <Text style={s.label}>سعر التوصيل الثابت (ر.س) *</Text>
+              <TX style={s.label}>سعر التوصيل الثابت (ر.س) *</TX>
               <TextInput style={s.input} keyboardType="numeric" value={String(editingZone.zone.fixed_price || '')} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, fixed_price: parseFloat(t) || 0 } })} />
 
-              <Text style={s.label}>زمن الوصول التقديري (دقيقة)</Text>
+              <TX style={s.label}>زمن الوصول التقديري (دقيقة)</TX>
               <TextInput style={s.input} keyboardType="numeric" value={String(editingZone.zone.eta_minutes || 60)} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, eta_minutes: parseInt(t) || 60 } })} />
 
-              <Text style={s.label}>نوع التوصيل المطبق على هذه المنطقة</Text>
+              <TX style={s.label}>نوع التوصيل المطبق على هذه المنطقة</TX>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {(['any', 'same_day', 'scheduled', 'standard'] as const).map(t => (
                   <TouchableOpacity key={t} style={[s.opt, editingZone.zone.delivery_type === t && s.optActive]} onPress={() => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, delivery_type: t } })}>
@@ -229,8 +232,8 @@ export default function DeliverySettings() {
                 ))}
               </View>
 
-              <Text style={[s.section, { marginTop: 14 }]}>ارسم المنطقة على الخريطة</Text>
-              <Text style={s.hint}>اضغط على الخريطة لإضافة نقاط (3 نقاط أو أكثر لإغلاق المضلع)</Text>
+              <TX style={[s.section, { marginTop: 14 }]}>ارسم المنطقة على الخريطة</TX>
+              <TX style={s.hint}>اضغط على الخريطة لإضافة نقاط (3 نقاط أو أكثر لإغلاق المضلع)</TX>
               <View style={{ marginTop: 8 }}>
                 <ZitexMap
                   mode="polygon"
@@ -242,11 +245,11 @@ export default function DeliverySettings() {
               </View>
               <Text style={s.hint}>عدد النقاط الحالية: {editingZone.zone.polygon?.length || 0}</Text>
 
-              <Text style={[s.section, { marginTop: 14 }]}>أو استخدم دائرة (إذا لم ترسم مضلعاً)</Text>
+              <TX style={[s.section, { marginTop: 14 }]}>أو استخدم دائرة (إذا لم ترسم مضلعاً)</TX>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput style={[s.input, { flex: 1 }]} placeholder="خط العرض" keyboardType="numeric" value={String(editingZone.zone.center_lat || '')} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, center_lat: parseFloat(t) || undefined } })} />
-                <TextInput style={[s.input, { flex: 1 }]} placeholder="خط الطول" keyboardType="numeric" value={String(editingZone.zone.center_lng || '')} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, center_lng: parseFloat(t) || undefined } })} />
-                <TextInput style={[s.input, { flex: 1 }]} placeholder="نصف قطر كم" keyboardType="numeric" value={String(editingZone.zone.radius_km || '')} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, radius_km: parseFloat(t) || undefined } })} />
+                <TextInput style={[s.input, { flex: 1 }]} placeholder={tSync("خط العرض", lang)} keyboardType="numeric" value={String(editingZone.zone.center_lat || '')} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, center_lat: parseFloat(t) || undefined } })} />
+                <TextInput style={[s.input, { flex: 1 }]} placeholder={tSync("خط الطول", lang)} keyboardType="numeric" value={String(editingZone.zone.center_lng || '')} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, center_lng: parseFloat(t) || undefined } })} />
+                <TextInput style={[s.input, { flex: 1 }]} placeholder={tSync("نصف قطر كم", lang)} keyboardType="numeric" value={String(editingZone.zone.radius_km || '')} onChangeText={t => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, radius_km: parseFloat(t) || undefined } })} />
               </View>
             </ScrollView>
           </SafeAreaView>

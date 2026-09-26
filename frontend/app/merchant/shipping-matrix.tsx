@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
+import { TX } from '../../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -137,8 +138,8 @@ export default function ShippingMatrixScreen() {
           <Ionicons name="chevron-forward" size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={s.title}>مصفوفة الشحن الذكية</Text>
-          <Text style={s.sub}>حدد شركات الشحن لكل مدينة وفرع</Text>
+          <TX style={s.title}>مصفوفة الشحن الذكية</TX>
+          <TX style={s.sub}>حدد شركات الشحن لكل مدينة وفرع</TX>
         </View>
         <TouchableOpacity onPress={() => setEditing(newRule())} style={s.addBtn}>
           <Ionicons name="add" size={20} color={BG} />
@@ -151,14 +152,14 @@ export default function ShippingMatrixScreen() {
         <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }}>
           <View style={s.infoBar}>
             <Ionicons name="information-circle" size={14} color={GOLD} />
-            <Text style={s.infoText}>
+            <TX style={s.infoText}>
               كل قاعدة تربط شركة شحن بمدينة/فرع. القواعد الأكثر تخصيصاً تفوز عند تعارض الأولوية.
-            </Text>
+            </TX>
           </View>
 
           {rules.length === 0 && (
             <View style={s.empty}>
-              <Text style={{ color: MUTED, textAlign: 'center' }}>لا توجد قواعد. اضغط + لإضافة قاعدة جديدة</Text>
+              <TX style={{ color: MUTED, textAlign: 'center' }}>لا توجد قواعد. اضغط + لإضافة قاعدة جديدة</TX>
             </View>
           )}
 
@@ -175,7 +176,7 @@ export default function ShippingMatrixScreen() {
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text style={s.cardTitle}>{carrier.name}</Text>
-                      {!r.enabled && <View style={s.pillOff}><Text style={s.pillOffText}>موقوفة</Text></View>}
+                      {!r.enabled && <View style={s.pillOff}><TX style={s.pillOffText}>موقوفة</TX></View>}
                     </View>
                     <Text style={s.cardSub}>{cityName} · {branchName}</Text>
                     <Text style={s.cardMeta}>
@@ -209,7 +210,7 @@ export default function ShippingMatrixScreen() {
 
               {editing && (
                 <>
-                  <Text style={s.label}>شركة الشحن</Text>
+                  <TX style={s.label}>شركة الشحن</TX>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                     {Object.keys(CARRIERS).map((code) => {
                       const c = CARRIERS[code];
@@ -225,12 +226,12 @@ export default function ShippingMatrixScreen() {
                     })}
                   </ScrollView>
 
-                  <Text style={s.label}>المدينة (فارغ = كل المدن)</Text>
+                  <TX style={s.label}>المدينة (فارغ = كل المدن)</TX>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                     <TouchableOpacity
                       onPress={() => setEditing({ ...editing, city_code: '' })}
                       style={[s.chip, editing.city_code === '' && { borderColor: GOLD, backgroundColor: GOLD + '20' }]}>
-                      <Text style={[s.chipText, editing.city_code === '' && { color: GOLD }]}>كل المدن</Text>
+                      <TX style={[s.chipText, editing.city_code === '' && { color: GOLD }]}>كل المدن</TX>
                     </TouchableOpacity>
                     {cities.map((c) => (
                       <TouchableOpacity key={c.code}
@@ -241,12 +242,12 @@ export default function ShippingMatrixScreen() {
                     ))}
                   </ScrollView>
 
-                  <Text style={s.label}>الفرع (فارغ = كل الفروع)</Text>
+                  <TX style={s.label}>الفرع (فارغ = كل الفروع)</TX>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                     <TouchableOpacity
                       onPress={() => setEditing({ ...editing, branch_id: '' })}
                       style={[s.chip, editing.branch_id === '' && { borderColor: GOLD, backgroundColor: GOLD + '20' }]}>
-                      <Text style={[s.chipText, editing.branch_id === '' && { color: GOLD }]}>كل الفروع</Text>
+                      <TX style={[s.chipText, editing.branch_id === '' && { color: GOLD }]}>كل الفروع</TX>
                     </TouchableOpacity>
                     {branches.map((b: any) => {
                       const bid = b.id || b._id;
@@ -262,13 +263,13 @@ export default function ShippingMatrixScreen() {
 
                   <View style={s.row}>
                     <View style={{ flex: 1 }}>
-                      <Text style={s.label}>السعر الأساسي (ر.س)</Text>
+                      <TX style={s.label}>السعر الأساسي (ر.س)</TX>
                       <TextInput style={s.input} keyboardType="decimal-pad"
                         value={String(editing.base_price)}
                         onChangeText={(v) => setEditing({ ...editing, base_price: Number(v) || 0 })} />
                     </View>
                     <View style={{ flex: 1, marginStart: 8 }}>
-                      <Text style={s.label}>سعر الكيلو الزائد</Text>
+                      <TX style={s.label}>سعر الكيلو الزائد</TX>
                       <TextInput style={s.input} keyboardType="decimal-pad"
                         value={String(editing.per_kg_price)}
                         onChangeText={(v) => setEditing({ ...editing, per_kg_price: Number(v) || 0 })} />
@@ -277,19 +278,19 @@ export default function ShippingMatrixScreen() {
 
                   <View style={s.row}>
                     <View style={{ flex: 1 }}>
-                      <Text style={s.label}>أقل مدة (أيام)</Text>
+                      <TX style={s.label}>أقل مدة (أيام)</TX>
                       <TextInput style={s.input} keyboardType="numeric"
                         value={String(editing.min_days)}
                         onChangeText={(v) => setEditing({ ...editing, min_days: Number(v) || 1 })} />
                     </View>
                     <View style={{ flex: 1, marginStart: 8 }}>
-                      <Text style={s.label}>أقصى مدة</Text>
+                      <TX style={s.label}>أقصى مدة</TX>
                       <TextInput style={s.input} keyboardType="numeric"
                         value={String(editing.max_days)}
                         onChangeText={(v) => setEditing({ ...editing, max_days: Number(v) || 3 })} />
                     </View>
                     <View style={{ flex: 1, marginStart: 8 }}>
-                      <Text style={s.label}>الأولوية</Text>
+                      <TX style={s.label}>الأولوية</TX>
                       <TextInput style={s.input} keyboardType="numeric"
                         value={String(editing.priority)}
                         onChangeText={(v) => setEditing({ ...editing, priority: Number(v) || 5 })} />
@@ -298,13 +299,13 @@ export default function ShippingMatrixScreen() {
 
                   <View style={s.row}>
                     <View style={{ flex: 1 }}>
-                      <Text style={s.label}>أقصى وزن (كجم)</Text>
+                      <TX style={s.label}>أقصى وزن (كجم)</TX>
                       <TextInput style={s.input} keyboardType="decimal-pad"
                         value={String(editing.max_weight_kg)}
                         onChangeText={(v) => setEditing({ ...editing, max_weight_kg: Number(v) || 30 })} />
                     </View>
                     <View style={{ flex: 1, marginStart: 8 }}>
-                      <Text style={s.label}>يدعم COD</Text>
+                      <TX style={s.label}>يدعم COD</TX>
                       <View style={s.switchWrap}>
                         <Switch value={editing.cod_supported}
                           onValueChange={(v) => setEditing({ ...editing, cod_supported: v })}
@@ -312,7 +313,7 @@ export default function ShippingMatrixScreen() {
                       </View>
                     </View>
                     <View style={{ flex: 1, marginStart: 8 }}>
-                      <Text style={s.label}>مفعّلة</Text>
+                      <TX style={s.label}>مفعّلة</TX>
                       <View style={s.switchWrap}>
                         <Switch value={editing.enabled}
                           onValueChange={(v) => setEditing({ ...editing, enabled: v })}
@@ -321,7 +322,7 @@ export default function ShippingMatrixScreen() {
                     </View>
                   </View>
 
-                  <Text style={s.label}>ملاحظات (اختياري)</Text>
+                  <TX style={s.label}>ملاحظات (اختياري)</TX>
                   <TextInput style={[s.input, { minHeight: 60 }]} multiline
                     value={editing.notes}
                     onChangeText={(v) => setEditing({ ...editing, notes: v })} />

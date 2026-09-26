@@ -8,6 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 const TYPES = [
   { id: 'general', name: 'سحب عام', icon: 'people', desc: 'أي مستخدم مسجّل يمكنه الانضمام' },
@@ -18,6 +20,7 @@ const TYPES = [
 ];
 
 export default function CompetitionForm() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -106,19 +109,19 @@ export default function CompetitionForm() {
           ))}
         </View>
 
-        <Text style={s.label}>عنوان المسابقة *</Text>
-        <TextInput style={s.input} value={data.title} onChangeText={t => setData({ ...data, title: t })} placeholder="سحب العيد الكبير" />
-        <Text style={s.label}>الوصف</Text>
-        <TextInput style={[s.input, { height: 80 }]} multiline value={data.description} onChangeText={t => setData({ ...data, description: t })} placeholder="تفاصيل المسابقة..." />
-        <Text style={s.label}>الجائزة *</Text>
+        <TX style={s.label}>عنوان المسابقة *</TX>
+        <TextInput style={s.input} value={data.title} onChangeText={t => setData({ ...data, title: t })} placeholder={tSync("سحب العيد الكبير", lang)} />
+        <TX style={s.label}>الوصف</TX>
+        <TextInput style={[s.input, { height: 80 }]} multiline value={data.description} onChangeText={t => setData({ ...data, description: t })} placeholder={tSync("تفاصيل المسابقة...", lang)} />
+        <TX style={s.label}>الجائزة *</TX>
         <TextInput style={s.input} value={data.prize} onChangeText={t => setData({ ...data, prize: t })} placeholder="iPhone 16 Pro" />
-        <Text style={s.label}>عدد الفائزين</Text>
+        <TX style={s.label}>عدد الفائزين</TX>
         <TextInput style={s.input} keyboardType="numeric" value={data.prize_count} onChangeText={t => setData({ ...data, prize_count: t })} />
 
         {/* Cover + Prize images (upload) */}
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
           <View style={{ flex: 1 }}>
-            <Text style={s.label}>صورة الغلاف</Text>
+            <TX style={s.label}>صورة الغلاف</TX>
             {data.cover_image ? (
               <View style={s.imgSlotBox}>
                 <Image source={{ uri: mediaUrlSync(data.cover_image) }} style={s.imgSlotImg} contentFit="cover" />
@@ -130,13 +133,13 @@ export default function CompetitionForm() {
               <TouchableOpacity style={s.imgPickBox} onPress={() => pickPhoto('cover')} disabled={!!uploading}>
                 {uploading === 'cover' ? <ActivityIndicator color="#F5C518" /> : <>
                   <Ionicons name="image" size={22} color="#F5C518" />
-                  <Text style={s.imgPickTxt}>غلاف</Text>
+                  <TX style={s.imgPickTxt}>غلاف</TX>
                 </>}
               </TouchableOpacity>
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.label}>صورة الجائزة</Text>
+            <TX style={s.label}>صورة الجائزة</TX>
             {data.prize_image ? (
               <View style={s.imgSlotBox}>
                 <Image source={{ uri: mediaUrlSync(data.prize_image) }} style={s.imgSlotImg} contentFit="cover" />
@@ -148,7 +151,7 @@ export default function CompetitionForm() {
               <TouchableOpacity style={s.imgPickBox} onPress={() => pickPhoto('prize')} disabled={!!uploading}>
                 {uploading === 'prize' ? <ActivityIndicator color="#F5C518" /> : <>
                   <Ionicons name="trophy" size={22} color="#F5C518" />
-                  <Text style={s.imgPickTxt}>جائزة</Text>
+                  <TX style={s.imgPickTxt}>جائزة</TX>
                 </>}
               </TouchableOpacity>
             )}
@@ -157,9 +160,9 @@ export default function CompetitionForm() {
 
         {data.competition_type === 'qa' && (
           <>
-            <Text style={s.label}>السؤال *</Text>
-            <TextInput style={s.input} value={data.question} onChangeText={t => setData({ ...data, question: t })} placeholder="ما عاصمة المملكة العربية السعودية؟" />
-            <Text style={s.label}>الخيارات (اضغط ⭐ للإجابة الصحيحة)</Text>
+            <TX style={s.label}>السؤال *</TX>
+            <TextInput style={s.input} value={data.question} onChangeText={t => setData({ ...data, question: t })} placeholder={tSync("ما عاصمة المملكة العربية السعودية؟", lang)} />
+            <TX style={s.label}>الخيارات (اضغط ⭐ للإجابة الصحيحة)</TX>
             {[0, 1, 2, 3].map(i => (
               <View key={i} style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6 }}>
                 <TouchableOpacity onPress={() => { if (data.options[i]?.trim()) setData({ ...data, correct_answer: data.options[i] }); }} style={s.starBtn} testID={`comp-star-${i}`}>
@@ -168,57 +171,57 @@ export default function CompetitionForm() {
                 <TextInput style={[s.input, { flex: 1, marginTop: 0 }]} value={data.options[i]} onChangeText={t => setOpt(i, t)} placeholder={`الخيار ${i + 1}`} testID={`comp-option-${i}`} />
               </View>
             ))}
-            <Text style={s.hint}>💡 اكتب الخيارات ثم اضغط ⭐ بجانب الإجابة الصحيحة</Text>
+            <TX style={s.hint}>💡 اكتب الخيارات ثم اضغط ⭐ بجانب الإجابة الصحيحة</TX>
           </>
         )}
         {data.competition_type === 'purchase' && (
           <>
-            <Text style={s.label}>الحد الأدنى للشراء (ر.س)</Text>
+            <TX style={s.label}>الحد الأدنى للشراء (ر.س)</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.spend_requirement} onChangeText={t => setData({ ...data, spend_requirement: t })} />
-            <Text style={s.label}>وضع المبلغ</Text>
+            <TX style={s.label}>وضع المبلغ</TX>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <TouchableOpacity onPress={() => setData({ ...data, purchase_mode: 'single' })} style={[s.modePill, data.purchase_mode === 'single' && s.modePillActive]}>
-                <Text style={[s.modePillText, data.purchase_mode === 'single' && s.modePillTextActive]}>🧾 فاتورة واحدة</Text>
+                <TX style={[s.modePillText, data.purchase_mode === 'single' && s.modePillTextActive]}>🧾 فاتورة واحدة</TX>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setData({ ...data, purchase_mode: 'accumulated' })} style={[s.modePill, data.purchase_mode === 'accumulated' && s.modePillActive]}>
-                <Text style={[s.modePillText, data.purchase_mode === 'accumulated' && s.modePillTextActive]}>➕ تراكمي</Text>
+                <TX style={[s.modePillText, data.purchase_mode === 'accumulated' && s.modePillTextActive]}>➕ تراكمي</TX>
               </TouchableOpacity>
             </View>
-            <Text style={s.hint}>0 = أي عملية شراء تؤهل</Text>
+            <TX style={s.hint}>0 = أي عملية شراء تؤهل</TX>
           </>
         )}
         {data.competition_type === 'ugc_video' && (
           <>
-            <Text style={s.label}>هاشتاق المسابقة (اختياري)</Text>
-            <TextInput style={s.input} value={data.ugc_hashtag} onChangeText={t => setData({ ...data, ugc_hashtag: t })} placeholder="زايتكس_challenge" autoCapitalize="none" />
-            <Text style={s.label}>الحد الأقصى للفيديوهات لكل مستخدم</Text>
+            <TX style={s.label}>هاشتاق المسابقة (اختياري)</TX>
+            <TextInput style={s.input} value={data.ugc_hashtag} onChangeText={t => setData({ ...data, ugc_hashtag: t })} placeholder={tSync("زايتكس_challenge", lang)} autoCapitalize="none" />
+            <TX style={s.label}>الحد الأقصى للفيديوهات لكل مستخدم</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.max_submissions_per_user} onChangeText={t => setData({ ...data, max_submissions_per_user: t })} />
-            <Text style={s.hint}>💡 الأكثر لايكات يفوز — الترتيب يتحدث تلقائياً. عند انتهاء الوقت، يُختار الفائزون تلقائياً.</Text>
+            <TX style={s.hint}>💡 الأكثر لايكات يفوز — الترتيب يتحدث تلقائياً. عند انتهاء الوقت، يُختار الفائزون تلقائياً.</TX>
           </>
         )}
 
-        <Text style={s.label}>تاريخ السحب</Text>
+        <TX style={s.label}>تاريخ السحب</TX>
         <TextInput style={s.input} value={data.draw_date} onChangeText={t => setData({ ...data, draw_date: t })} placeholder="2026-09-01" />
-        <Text style={s.label}>تاريخ الانتهاء</Text>
+        <TX style={s.label}>تاريخ الانتهاء</TX>
         <TextInput style={s.input} value={data.end_date} onChangeText={t => setData({ ...data, end_date: t })} placeholder="2026-08-30" />
 
         <View style={s.divider} />
-        <Text style={s.sectionTitle}>إشراف الغرفة التجارية</Text>
+        <TX style={s.sectionTitle}>إشراف الغرفة التجارية</TX>
         <View style={s.toggle}>
           <View style={{ flex: 1 }}>
-            <Text style={s.toggleLbl}>مسابقة تحت إشراف الغرفة</Text>
-            <Text style={s.toggleHint}>للسحوبات المرخصة التي تحتاج تصريح</Text>
+            <TX style={s.toggleLbl}>مسابقة تحت إشراف الغرفة</TX>
+            <TX style={s.toggleHint}>للسحوبات المرخصة التي تحتاج تصريح</TX>
           </View>
           <Switch value={data.chamber_supervised} onValueChange={v => setData({ ...data, chamber_supervised: v })} trackColor={{ true: '#F5C518' }} />
         </View>
         {data.chamber_supervised && (
           <>
-            <Text style={s.label}>رقم التصريح *</Text>
+            <TX style={s.label}>رقم التصريح *</TX>
             <TextInput style={s.input} value={data.permit_number} onChangeText={t => setData({ ...data, permit_number: t })} placeholder="CR-2026-1234" />
-            <Text style={s.hint}>سيُعرض للعملاء كإثبات للشرعية</Text>
+            <TX style={s.hint}>سيُعرض للعملاء كإثبات للشرعية</TX>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-              <Text style={s.label}>موظف الغرفة المُكلَّف *</Text>
-              <TouchableOpacity onPress={() => setShowEmpModal(true)} style={s.smallBtn}><Text style={s.smallBtnText}>+ جديد</Text></TouchableOpacity>
+              <TX style={s.label}>موظف الغرفة المُكلَّف *</TX>
+              <TouchableOpacity onPress={() => setShowEmpModal(true)} style={s.smallBtn}><TX style={s.smallBtnText}>+ جديد</TX></TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
               {employees.length === 0 && <Text style={{ color: '#9CA3AF', padding: 8 }}>No chamber employees. Tap + New to create one.</Text>}
@@ -234,10 +237,10 @@ export default function CompetitionForm() {
 
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
           <TouchableOpacity testID="comp-preview-btn" style={[s.submitBtn, { flex: 1, backgroundColor: '#151515', borderWidth: 1, borderColor: '#F5C518' }]} onPress={() => setShowPreview(true)}>
-            <Text style={[s.submitText, { color: '#F5C518' }]}>👁️ معاينة</Text>
+            <TX style={[s.submitText, { color: '#F5C518' }]}>👁️ معاينة</TX>
           </TouchableOpacity>
           <TouchableOpacity testID="comp-submit-btn" style={[s.submitBtn, { flex: 2 }]} onPress={submit} disabled={loading}>
-            {loading ? <ActivityIndicator color="white" /> : <Text style={s.submitText}>نشر المسابقة</Text>}
+            {loading ? <ActivityIndicator color="white" /> : <TX style={s.submitText}>نشر المسابقة</TX>}
           </TouchableOpacity>
         </View>
 
@@ -246,7 +249,7 @@ export default function CompetitionForm() {
           <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
             <View style={s.previewHeader}>
               <TouchableOpacity onPress={() => setShowPreview(false)}><Ionicons name="close" size={24} color="#F5C518" /></TouchableOpacity>
-              <Text style={s.previewTitle}>معاينة (كما يراها العميل)</Text>
+              <TX style={s.previewTitle}>معاينة (كما يراها العميل)</TX>
               <View style={{ width: 24 }} />
             </View>
             <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -258,7 +261,7 @@ export default function CompetitionForm() {
                 <LinearGradient colors={['#F5C518', '#D4A017']} style={s.prevPrize} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
                   {!!data.prize_image && <Image source={{ uri: mediaUrlSync(data.prize_image) }} style={s.prevPrizeImg} contentFit="cover" />}
                   <View style={{ flex: 1 }}>
-                    <Text style={s.prevPrizeLbl}>🏆 الجائزة</Text>
+                    <TX style={s.prevPrizeLbl}>🏆 الجائزة</TX>
                     <Text style={s.prevPrizeName}>{data.prize || '—'}</Text>
                     <Text style={s.prevPrizeSub}>عدد الفائزين: {data.prize_count || 1}</Text>
                   </View>

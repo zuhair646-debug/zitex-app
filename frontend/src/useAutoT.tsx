@@ -115,3 +115,17 @@ export function TX({ children, ...rest }: { children: string } & TextProps) {
   const translated = useAutoT(String(children ?? ''));
   return <Text {...rest}>{translated}</Text>;
 }
+
+/**
+ * Non-hook synchronous string translator, safe to call inside callbacks/map/renderItem.
+ * Returns cached translation if available, otherwise the source (Arabic).
+ * Also warms the cache in background.
+ */
+export function tSync(source: string, lang: Lang): string {
+  if (!source || lang === 'ar') return source;
+  const cached = memoryCache[lang]?.[source];
+  if (cached) return cached;
+  // Warm the cache without blocking
+  translate(source, lang).catch(() => {});
+  return source;
+}

@@ -7,6 +7,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { LP, K, KM, PLATFORM_COLORS, PLATFORM_LABEL, PLATFORM_ICON } from './theme';
 import { KpiCard, Sparkline, BarChart, HBar, RatingBreakdown, EntityPill, Section } from './atoms';
 import { ExportButton } from './AlertsAndExport';
+import { TX, tSync } from '../../useAutoT';
+import { useT } from '../../i18n';
 
 /* ═════════════════════════ SHEET SHELL ═════════════════════════ */
 function SheetShell({ visible, onClose, title, subtitle, avatar, icon, accent = LP.GOLD, statusPill, exportKind, exportId, apiCall, children }: any) {
@@ -254,7 +256,7 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
         {b.is_main && (
           <View style={[st.ratingChip, { backgroundColor: LP.GOLD + '20', borderColor: LP.GOLD }]}>
             <Ionicons name="ribbon" size={12} color={LP.GOLD} />
-            <Text style={{ color: LP.GOLD, fontSize: 11, fontWeight: '800' }}>الفرع الرئيسي</Text>
+            <TX style={{ color: LP.GOLD, fontSize: 11, fontWeight: '800' }}>الفرع الرئيسي</TX>
           </View>
         )}
         <View style={st.ratingChip}>
@@ -300,7 +302,7 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
             <View style={[st.infoBox, { marginTop: 12 }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                 <Ionicons name="flag" size={14} color={LP.GOLD} />
-                <Text style={{ color: LP.GOLD, fontSize: 12, fontWeight: '900', marginStart: 6, flex: 1, textAlign: 'right' }}>الهدف الشهري</Text>
+                <TX style={{ color: LP.GOLD, fontSize: 12, fontWeight: '900', marginStart: 6, flex: 1, textAlign: 'right' }}>الهدف الشهري</TX>
                 <Text style={{ color: b.revenue.target_pct >= 100 ? LP.SUCCESS : LP.WARN, fontSize: 14, fontWeight: '900' }}>{b.revenue.target_pct}%</Text>
               </View>
               <View style={{ height: 10, backgroundColor: LP.BORDER_SOFT, borderRadius: 5, overflow: 'hidden' }}>
@@ -334,7 +336,7 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
         <>
           <Section icon="people" title={`طاقم الفرع (${b.staff.length})`} />
           {b.staff.length === 0 ? (
-            <Text style={{ color: LP.MUTED, textAlign: 'center', padding: 30 }}>لا يوجد موظفون مرتبطون بهذا الفرع</Text>
+            <TX style={{ color: LP.MUTED, textAlign: 'center', padding: 30 }}>لا يوجد موظفون مرتبطون بهذا الفرع</TX>
           ) : (
             b.staff.map((s: any) => (
               <EntityPill key={s.id} image={s.avatar} name={s.name} subtitle={`${s.job_title} · ${s.shift}`} icon="person"
@@ -634,15 +636,15 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
       {tab === 'notes' && (
         <>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
-            <Text style={{ color: LP.GOLD, fontSize: 13, fontWeight: '900', flex: 1, textAlign: 'right' }}>ملاحظات المشرف</Text>
+            <TX style={{ color: LP.GOLD, fontSize: 13, fontWeight: '900', flex: 1, textAlign: 'right' }}>ملاحظات المشرف</TX>
             <TouchableOpacity onPress={() => setAddingNote(true)} style={st.fabAdd}>
               <Ionicons name="add" size={16} color={LP.BG} />
-              <Text style={{ color: LP.BG, fontSize: 11, fontWeight: '900' }}>إضافة تقييم</Text>
+              <TX style={{ color: LP.BG, fontSize: 11, fontWeight: '900' }}>إضافة تقييم</TX>
             </TouchableOpacity>
           </View>
 
           {e.supervisor_notes?.length === 0 && (
-            <Text style={{ color: LP.MUTED, textAlign: 'center', padding: 40 }}>لا توجد ملاحظات بعد</Text>
+            <TX style={{ color: LP.MUTED, textAlign: 'center', padding: 40 }}>لا توجد ملاحظات بعد</TX>
           )}
           {e.supervisor_notes.map((n: any, i: number) => {
             const color = n.type === 'positive' ? LP.SUCCESS : n.type === 'warning' ? LP.DANGER : n.type === 'improvement' ? LP.WARN : LP.INFO;
@@ -675,10 +677,10 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
           <View style={[st.sheet, { maxHeight: '80%' }]}>
             <View style={st.handle} />
             <View style={{ padding: 18 }}>
-              <Text style={{ color: LP.GOLD, fontSize: 16, fontWeight: '900', textAlign: 'right' }}>إضافة تقييم للمشرف</Text>
-              <Text style={{ color: LP.MUTED, fontSize: 11, textAlign: 'right', marginTop: 2 }}>يظهر هذا التقييم في ملف الموظف</Text>
+              <TX style={{ color: LP.GOLD, fontSize: 16, fontWeight: '900', textAlign: 'right' }}>إضافة تقييم للمشرف</TX>
+              <TX style={{ color: LP.MUTED, fontSize: 11, textAlign: 'right', marginTop: 2 }}>يظهر هذا التقييم في ملف الموظف</TX>
 
-              <Text style={st.formLbl}>النوع</Text>
+              <TX style={st.formLbl}>النوع</TX>
               <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
                 {[
                   { k: 'positive',    l: '👍 إيجابي',      c: LP.SUCCESS },
@@ -692,7 +694,7 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
                 ))}
               </View>
 
-              <Text style={st.formLbl}>التقييم</Text>
+              <TX style={st.formLbl}>التقييم</TX>
               <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'center' }}>
                 {[1,2,3,4,5].map(s => (
                   <TouchableOpacity key={s} onPress={() => setNoteRating(s)}>
@@ -701,10 +703,10 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
                 ))}
               </View>
 
-              <Text style={st.formLbl}>الملاحظة</Text>
+              <TX style={st.formLbl}>الملاحظة</TX>
               <TextInput
                 value={noteText} onChangeText={setNoteText}
-                multiline placeholder="اكتب ملاحظتك للموظف..." placeholderTextColor={LP.MUTED}
+                multiline placeholder={tSync("اكتب ملاحظتك للموظف...", lang)} placeholderTextColor={LP.MUTED}
                 style={{
                   backgroundColor: LP.CARD, borderWidth: 1, borderColor: LP.BORDER,
                   color: LP.TEXT, borderRadius: 12, padding: 12, textAlign: 'right', minHeight: 100
@@ -713,11 +715,11 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
 
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
                 <TouchableOpacity style={st.btnGhost} onPress={() => setAddingNote(false)}>
-                  <Text style={{ color: LP.MUTED, fontWeight: '800' }}>إلغاء</Text>
+                  <TX style={{ color: LP.MUTED, fontWeight: '800' }}>إلغاء</TX>
                 </TouchableOpacity>
                 <TouchableOpacity style={st.btnPrimary} onPress={submitNote} disabled={saving}>
                   {saving ? <ActivityIndicator color={LP.BG} /> :
-                    <><Ionicons name="save" size={16} color={LP.BG} /><Text style={{ color: LP.BG, fontWeight: '900' }}>حفظ</Text></>
+                    <><Ionicons name="save" size={16} color={LP.BG} /><TX style={{ color: LP.BG, fontWeight: '900' }}>حفظ</TX></>
                   }
                 </TouchableOpacity>
               </View>

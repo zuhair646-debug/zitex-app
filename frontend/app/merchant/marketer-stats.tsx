@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius } from '../../src/theme';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX } from '../../src/useAutoT';
 
 export default function MarketerStats() {
   const s = useSStyles();
@@ -27,7 +28,7 @@ export default function MarketerStats() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.brand} /></TouchableOpacity>
-        <Text style={s.title}>إحصائيات المسوّق</Text><View style={{ width: 22 }} />
+        <TX style={s.title}>إحصائيات المسوّق</TX><View style={{ width: 22 }} />
       </View>
       <ActivityIndicator size="large" color={colors.brand} style={{ marginTop: 40 }} />
     </SafeAreaView>
@@ -53,7 +54,7 @@ export default function MarketerStats() {
       <ScrollView contentContainerStyle={{ padding: spacing.md, paddingBottom: 60 }}>
         {/* Hero — code + commission */}
         <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-          <Text style={s.heroLbl}>رمز الإحالة</Text>
+          <TX style={s.heroLbl}>رمز الإحالة</TX>
           <Text style={s.heroCode}>{a.referral_code || '—'}</Text>
           <Text style={s.heroCommission}>عمولة {a.commission_percent || 0}%</Text>
           <View style={s.heroStatus}>
@@ -73,19 +74,19 @@ export default function MarketerStats() {
         {/* Rates */}
         <View style={s.metaRow}>
           <View style={s.metaCard}>
-            <Text style={s.metaLbl}>معدل التحويل</Text>
+            <TX style={s.metaLbl}>معدل التحويل</TX>
             <Text style={s.metaVal}>{data.conversion_rate}%</Text>
           </View>
           <View style={s.metaCard}>
-            <Text style={s.metaLbl}>متوسط الطلب</Text>
+            <TX style={s.metaLbl}>متوسط الطلب</TX>
             <Text style={s.metaVal}>{data.avg_order_value} ر.س</Text>
           </View>
         </View>
 
         {/* 30-day mini chart */}
-        <Text style={s.sec}>📈 المبيعات خلال 30 يوم</Text>
+        <TX style={s.sec}>📈 المبيعات خلال 30 يوم</TX>
         {daily.length === 0 ? (
-          <View style={s.empty}><Text style={s.emptyText}>لا توجد مبيعات بعد</Text></View>
+          <View style={s.empty}><TX style={s.emptyText}>لا توجد مبيعات بعد</TX></View>
         ) : (
           <View style={s.chart}>
             {daily.map((d: any) => {
@@ -102,7 +103,7 @@ export default function MarketerStats() {
         {/* Timeline */}
         <Text style={s.sec}>📋 آخر التحويلات ({convs.length})</Text>
         {convs.length === 0 ? (
-          <View style={s.empty}><Text style={s.emptyText}>لا يوجد نشاط بعد</Text></View>
+          <View style={s.empty}><TX style={s.emptyText}>لا يوجد نشاط بعد</TX></View>
         ) : (
           convs.map((c: any) => (
             <View key={c.id} style={s.conv}>

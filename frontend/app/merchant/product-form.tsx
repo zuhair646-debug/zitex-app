@@ -14,11 +14,14 @@ import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 type Variant = { name: string; value: string };
 type BranchStock = { branch_id: string; branch_name: string; quantity: number };
 
 export default function ProductForm() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -219,20 +222,20 @@ export default function ProductForm() {
           <View style={s.card}>
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="pricetag" size={16} color={colors.brand} /></View>
-              <Text style={s.cardTitle}>المعلومات الأساسية</Text>
+              <TX style={s.cardTitle}>المعلومات الأساسية</TX>
             </View>
-            <Text style={s.label}>الاسم بالعربية *</Text>
+            <TX style={s.label}>الاسم بالعربية *</TX>
             <TextInput style={s.input} value={data.name_ar} placeholderTextColor={colors.onSurfaceTertiary}
-              onChangeText={t => setData({ ...data, name_ar: t })} placeholder="مثال: آيفون 15 برو ماكس" />
-            <Text style={s.label}>الاسم بالإنجليزية</Text>
+              onChangeText={t => setData({ ...data, name_ar: t })} placeholder={tSync("مثال: آيفون 15 برو ماكس", lang)} />
+            <TX style={s.label}>الاسم بالإنجليزية</TX>
             <TextInput style={s.input} value={data.name_en} placeholderTextColor={colors.onSurfaceTertiary}
               onChangeText={t => setData({ ...data, name_en: t })} placeholder="iPhone 15 Pro Max" />
-            <Text style={s.label}>الوصف بالعربية</Text>
+            <TX style={s.label}>الوصف بالعربية</TX>
             <TextInput style={[s.input, { height: 96 }]} multiline value={data.description_ar}
               placeholderTextColor={colors.onSurfaceTertiary}
               onChangeText={t => setData({ ...data, description_ar: t })}
-              placeholder="اكتب وصفاً شاملاً للمنتج، مميزاته، والفوائد..." />
-            <Text style={s.label}>الوصف بالإنجليزية (اختياري)</Text>
+              placeholder={tSync("اكتب وصفاً شاملاً للمنتج، مميزاته، والفوائد...", lang)} />
+            <TX style={s.label}>الوصف بالإنجليزية (اختياري)</TX>
             <TextInput style={[s.input, { height: 72 }]} multiline value={data.description_en}
               placeholderTextColor={colors.onSurfaceTertiary}
               onChangeText={t => setData({ ...data, description_en: t })} placeholder="English description..." />
@@ -242,7 +245,7 @@ export default function ProductForm() {
           <View style={s.card}>
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="images" size={16} color={colors.brand} /></View>
-              <Text style={s.cardTitle}>الوسائط</Text>
+              <TX style={s.cardTitle}>الوسائط</TX>
               <Text style={s.cardHelper}>{data.images.length}/8 صور</Text>
             </View>
 
@@ -258,23 +261,23 @@ export default function ProductForm() {
               {data.images.length < 8 && (
                 <TouchableOpacity style={s.mediaAdd} onPress={pickImages} disabled={uploading}>
                   <Ionicons name="add" size={26} color={colors.brand} />
-                  <Text style={s.mediaAddText}>معرض</Text>
+                  <TX style={s.mediaAddText}>معرض</TX>
                 </TouchableOpacity>
               )}
               {data.images.length < 8 && (
                 <TouchableOpacity style={s.mediaAdd} onPress={takePhoto} disabled={uploading}>
                   <Ionicons name="camera" size={22} color={colors.brand} />
-                  <Text style={s.mediaAddText}>كاميرا</Text>
+                  <TX style={s.mediaAddText}>كاميرا</TX>
                 </TouchableOpacity>
               )}
             </View>
 
             <View style={{ height: spacing.md }} />
-            <Text style={s.label}>فيديو المنتج (اختياري، حتى 30 ثانية)</Text>
+            <TX style={s.label}>فيديو المنتج (اختياري، حتى 30 ثانية)</TX>
             {data.video ? (
               <View style={s.videoRow}>
                 <Ionicons name="videocam" size={20} color={colors.brand} />
-                <Text style={s.videoText} numberOfLines={1}>تم رفع الفيديو ✓</Text>
+                <TX style={s.videoText} numberOfLines={1}>تم رفع الفيديو ✓</TX>
                 <TouchableOpacity onPress={() => setData({ ...data, video: '' })}>
                   <Ionicons name="close-circle" size={22} color={colors.error} />
                 </TouchableOpacity>
@@ -282,13 +285,13 @@ export default function ProductForm() {
             ) : (
               <TouchableOpacity style={s.videoBtn} onPress={pickVideo} disabled={uploading}>
                 <Ionicons name="videocam-outline" size={20} color={colors.brand} />
-                <Text style={s.videoBtnText}>اختر فيديو من المعرض</Text>
+                <TX style={s.videoBtnText}>اختر فيديو من المعرض</TX>
               </TouchableOpacity>
             )}
             {uploading && (
               <View style={s.uploadingRow}>
                 <ActivityIndicator color={colors.brand} />
-                <Text style={s.uploadingText}>جارٍ الرفع...</Text>
+                <TX style={s.uploadingText}>جارٍ الرفع...</TX>
               </View>
             )}
           </View>
@@ -297,23 +300,23 @@ export default function ProductForm() {
           <View style={s.card}>
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="cash" size={16} color={colors.brand} /></View>
-              <Text style={s.cardTitle}>التسعير</Text>
+              <TX style={s.cardTitle}>التسعير</TX>
             </View>
             <View style={{ flexDirection: 'row', gap: spacing.md }}>
               <View style={{ flex: 1 }}>
-                <Text style={s.label}>السعر (ر.س) *</Text>
+                <TX style={s.label}>السعر (ر.س) *</TX>
                 <TextInput style={s.input} keyboardType="numeric" value={data.price}
                   placeholderTextColor={colors.onSurfaceTertiary}
                   onChangeText={t => setData({ ...data, price: t })} placeholder="999" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.label}>سعر التخفيض</Text>
+                <TX style={s.label}>سعر التخفيض</TX>
                 <TextInput style={s.input} keyboardType="numeric" value={data.discount_price}
                   placeholderTextColor={colors.onSurfaceTertiary}
                   onChangeText={t => setData({ ...data, discount_price: t })} placeholder="799" />
               </View>
             </View>
-            <Text style={s.label}>SKU / رمز المنتج</Text>
+            <TX style={s.label}>SKU / رمز المنتج</TX>
             <TextInput style={s.input} value={data.sku} placeholderTextColor={colors.onSurfaceTertiary}
               onChangeText={t => setData({ ...data, sku: t })} placeholder="TECH-IP15PM-256" autoCapitalize="characters" />
           </View>
@@ -322,9 +325,9 @@ export default function ProductForm() {
           <View style={s.card}>
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="grid" size={16} color={colors.brand} /></View>
-              <Text style={s.cardTitle}>التصنيف والعلامة</Text>
+              <TX style={s.cardTitle}>التصنيف والعلامة</TX>
             </View>
-            <Text style={s.label}>الفئة</Text>
+            <TX style={s.label}>الفئة</TX>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.sm }}>
               {cats.map(c => {
                 const active = data.category_id === c.id;
@@ -335,7 +338,7 @@ export default function ProductForm() {
                 );
               })}
             </ScrollView>
-            <Text style={s.label}>الماركة</Text>
+            <TX style={s.label}>الماركة</TX>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.sm }}>
               {brands.map(b => {
                 const active = data.brand_id === b.id;
@@ -346,7 +349,7 @@ export default function ProductForm() {
                 );
               })}
             </ScrollView>
-            <Text style={s.label}>الحالة</Text>
+            <TX style={s.label}>الحالة</TX>
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               {[
                 { k: 'new', l: '🆕 جديد' },
@@ -367,16 +370,16 @@ export default function ProductForm() {
           <View style={s.card}>
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="options" size={16} color={colors.brand} /></View>
-              <Text style={s.cardTitle}>المتغيرات (لون / حجم / تخزين)</Text>
+              <TX style={s.cardTitle}>المتغيرات (لون / حجم / تخزين)</TX>
             </View>
             {data.variants.map((v: Variant, i: number) => (
               <View key={i} style={s.variantRow}>
                 <TextInput style={[s.input, { flex: 1 }]} value={v.name}
                   placeholderTextColor={colors.onSurfaceTertiary}
-                  onChangeText={t => updateVariant(i, 'name', t)} placeholder="النوع (مثال: لون)" />
+                  onChangeText={t => updateVariant(i, 'name', t)} placeholder={tSync("النوع (مثال: لون)", lang)} />
                 <TextInput style={[s.input, { flex: 1 }]} value={v.value}
                   placeholderTextColor={colors.onSurfaceTertiary}
-                  onChangeText={t => updateVariant(i, 'value', t)} placeholder="القيمة (أسود، أزرق...)" />
+                  onChangeText={t => updateVariant(i, 'value', t)} placeholder={tSync("القيمة (أسود، أزرق...)", lang)} />
                 <TouchableOpacity onPress={() => removeVariant(i)} style={s.variantRemove}>
                   <Ionicons name="trash-outline" size={18} color={colors.error} />
                 </TouchableOpacity>
@@ -384,7 +387,7 @@ export default function ProductForm() {
             ))}
             <TouchableOpacity style={s.addRow} onPress={addVariant}>
               <Ionicons name="add-circle" size={18} color={colors.brand} />
-              <Text style={s.addRowText}>إضافة متغير</Text>
+              <TX style={s.addRowText}>إضافة متغير</TX>
             </TouchableOpacity>
           </View>
 
@@ -392,11 +395,11 @@ export default function ProductForm() {
           <View style={s.card}>
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="color-palette" size={16} color={colors.brand} /></View>
-              <Text style={s.cardTitle}>الألوان المتوفرة</Text>
+              <TX style={s.cardTitle}>الألوان المتوفرة</TX>
             </View>
-            <Text style={{ fontSize: 11, color: colors.onSurfaceSecondary, marginBottom: 8 }}>
+            <TX style={{ fontSize: 11, color: colors.onSurfaceSecondary, marginBottom: 8 }}>
               اضغط على الدائرة لتغيير اللون، ثم اكتب اسمه واضغط ➕
-            </Text>
+            </TX>
             {data.colors.length > 0 && (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
                 {data.colors.map((c: any, i: number) => (
@@ -415,7 +418,7 @@ export default function ProductForm() {
               </View>
             )}
             {/* Presets */}
-            <Text style={{ fontSize: 11, color: colors.onSurfaceSecondary, marginBottom: 6 }}>ألوان جاهزة (اضغط لإضافة):</Text>
+            <TX style={{ fontSize: 11, color: colors.onSurfaceSecondary, marginBottom: 6 }}>ألوان جاهزة (اضغط لإضافة):</TX>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
               {[
                 { name: 'أسود', hex: '#1A1A1A' }, { name: 'أبيض', hex: '#F9F9F9' },
@@ -441,7 +444,7 @@ export default function ProductForm() {
                 <View style={[s.colorDot, { backgroundColor: newColorHex, borderWidth: 2, borderColor: colors.brand }]} />
               </TouchableOpacity>
               <TextInput style={[s.input, { flex: 1 }]} value={newColorName} placeholderTextColor={colors.onSurfaceTertiary}
-                onChangeText={setNewColorName} placeholder="اسم اللون (مثال: أزرق سماوي)" />
+                onChangeText={setNewColorName} placeholder={tSync("اسم اللون (مثال: أزرق سماوي)", lang)} />
               <TouchableOpacity onPress={() => {
                 if (!newColorName.trim()) { Alert.alert('اسم اللون مطلوب'); return; }
                 setData((d: any) => ({ ...d, colors: [...d.colors, { name: newColorName.trim(), hex: newColorHex }] }));
@@ -456,7 +459,7 @@ export default function ProductForm() {
           <View style={s.card}>
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="shield-checkmark" size={16} color={colors.brand} /></View>
-              <Text style={s.cardTitle}>الضمان</Text>
+              <TX style={s.cardTitle}>الضمان</TX>
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
               {[
@@ -475,34 +478,34 @@ export default function ProductForm() {
 
             {(data.warranty_type === 'shop' || data.warranty_type === 'both') && (
               <View style={s.warrSection}>
-                <Text style={s.warrSectionTitle}>🏪 ضمان المحل</Text>
+                <TX style={s.warrSectionTitle}>🏪 ضمان المحل</TX>
                 <TextInput style={s.input} keyboardType="numeric" value={data.shop_warranty_days}
                   onChangeText={t => setData({ ...data, shop_warranty_days: t })}
-                  placeholder="عدد الأيام (مثال: 90)" placeholderTextColor={colors.onSurfaceTertiary} />
+                  placeholder={tSync("عدد الأيام (مثال: 90)", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
                 <TextInput style={[s.input, { height: 60, marginTop: 8 }]} multiline value={data.shop_warranty_terms}
                   onChangeText={t => setData({ ...data, shop_warranty_terms: t })}
-                  placeholder="شروط ضمان المحل (اختياري)" placeholderTextColor={colors.onSurfaceTertiary} />
+                  placeholder={tSync("شروط ضمان المحل (اختياري)", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
               </View>
             )}
 
             {(data.warranty_type === 'manufacturer' || data.warranty_type === 'both') && (
               <View style={s.warrSection}>
-                <Text style={s.warrSectionTitle}>🏢 ضمان الشركة</Text>
+                <TX style={s.warrSectionTitle}>🏢 ضمان الشركة</TX>
                 <TextInput style={s.input} value={data.manufacturer_name}
                   onChangeText={t => setData({ ...data, manufacturer_name: t })}
-                  placeholder="اسم الشركة (Apple، Samsung...)" placeholderTextColor={colors.onSurfaceTertiary} />
+                  placeholder={tSync("اسم الشركة (Apple، Samsung...)", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
                 <TextInput style={[s.input, { marginTop: 8 }]} keyboardType="numeric" value={data.manufacturer_days}
                   onChangeText={t => setData({ ...data, manufacturer_days: t })}
-                  placeholder="عدد الأيام (365)" placeholderTextColor={colors.onSurfaceTertiary} />
+                  placeholder={tSync("عدد الأيام (365)", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
                 <TextInput style={[s.input, { marginTop: 8 }]} autoCapitalize="none" value={data.manufacturer_url}
                   onChangeText={t => setData({ ...data, manufacturer_url: t })}
-                  placeholder="رابط الدعم الرسمي (https://...)" placeholderTextColor={colors.onSurfaceTertiary} />
+                  placeholder={tSync("رابط الدعم الرسمي (https://...)", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
                 <TextInput style={[s.input, { marginTop: 8 }]} keyboardType="phone-pad" value={data.manufacturer_phone}
                   onChangeText={t => setData({ ...data, manufacturer_phone: t })}
-                  placeholder="هاتف التواصل مع الشركة" placeholderTextColor={colors.onSurfaceTertiary} />
+                  placeholder={tSync("هاتف التواصل مع الشركة", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
                 <TextInput style={[s.input, { height: 60, marginTop: 8 }]} multiline value={data.manufacturer_terms}
                   onChangeText={t => setData({ ...data, manufacturer_terms: t })}
-                  placeholder="شروط ضمان الشركة (اختياري)" placeholderTextColor={colors.onSurfaceTertiary} />
+                  placeholder={tSync("شروط ضمان الشركة (اختياري)", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
               </View>
             )}
           </View>
@@ -512,7 +515,7 @@ export default function ProductForm() {
             <View style={s.card}>
               <View style={s.cardHeader}>
                 <View style={s.iconBadge}><Ionicons name="business" size={16} color={colors.brand} /></View>
-                <Text style={s.cardTitle}>المخزون في الفروع</Text>
+                <TX style={s.cardTitle}>المخزون في الفروع</TX>
               </View>
               {branches.map(b => (
                 <View key={b.id} style={s.branchRow}>
@@ -537,56 +540,56 @@ export default function ProductForm() {
           <View style={s.card}>
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="pricetags" size={16} color={colors.brand} /></View>
-              <Text style={s.cardTitle}>الكلمات المفتاحية</Text>
+              <TX style={s.cardTitle}>الكلمات المفتاحية</TX>
             </View>
             <TextInput style={s.input} value={data.tags} placeholderTextColor={colors.onSurfaceTertiary}
               onChangeText={t => setData({ ...data, tags: t })}
-              placeholder="آيفون، هواتف، سامسونج (افصل بفاصلة)" />
+              placeholder={tSync("آيفون، هواتف، سامسونج (افصل بفاصلة)", lang)} />
           </View>
 
           {/* Card: Return Policy */}
           <View style={s.card}>
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="return-up-back" size={16} color={colors.brand} /></View>
-              <Text style={s.cardTitle}>سياسة الإرجاع والضمان</Text>
+              <TX style={s.cardTitle}>سياسة الإرجاع والضمان</TX>
             </View>
             <View style={s.toggle}>
-              <Text style={s.toggleLabel}>السماح بالإرجاع</Text>
+              <TX style={s.toggleLabel}>السماح بالإرجاع</TX>
               <Switch value={data.allow_return}
                 onValueChange={v => setData({ ...data, allow_return: v })}
                 trackColor={{ true: colors.brand, false: colors.surfaceTertiary }} thumbColor="white" />
             </View>
             {data.allow_return && (
               <>
-                <Text style={s.label}>مدة الإرجاع (أيام) — العميل يستطيع الإرجاع خلالها</Text>
+                <TX style={s.label}>مدة الإرجاع (أيام) — العميل يستطيع الإرجاع خلالها</TX>
                 <TextInput style={s.input} keyboardType="numeric" placeholderTextColor={colors.onSurfaceTertiary}
                   value={data.return_days}
                   onChangeText={t => setData({ ...data, return_days: t })}
                   placeholder="15" />
               </>
             )}
-            <Text style={s.label}>مدة قبول عيب المصنع (أيام)</Text>
+            <TX style={s.label}>مدة قبول عيب المصنع (أيام)</TX>
             <TextInput style={s.input} keyboardType="numeric" placeholderTextColor={colors.onSurfaceTertiary}
               value={data.manufacturing_defect_days}
               onChangeText={t => setData({ ...data, manufacturing_defect_days: t })}
               placeholder="365" />
-            <Text style={s.label}>شروط الإرجاع (تظهر للعميل)</Text>
+            <TX style={s.label}>شروط الإرجاع (تظهر للعميل)</TX>
             <TextInput style={[s.input, { minHeight: 70, textAlignVertical: 'top' }]}
               multiline placeholderTextColor={colors.onSurfaceTertiary}
               value={data.return_conditions}
               onChangeText={t => setData({ ...data, return_conditions: t })}
-              placeholder="المنتج بحالته الأصلية مع الملحقات..." />
+              placeholder={tSync("المنتج بحالته الأصلية مع الملحقات...", lang)} />
           </View>
 
           {/* Card: Publish */}
           <View style={s.card}>
-            <View style={s.toggle}><Text style={s.toggleLabel}>متوفر في المخزون</Text>
+            <View style={s.toggle}><TX style={s.toggleLabel}>متوفر في المخزون</TX>
               <Switch value={data.in_stock} onValueChange={v => setData({ ...data, in_stock: v })}
                 trackColor={{ true: colors.brand, false: colors.surfaceTertiary }} thumbColor="white" /></View>
-            <View style={s.toggle}><Text style={s.toggleLabel}>⭐ منتج مميز</Text>
+            <View style={s.toggle}><TX style={s.toggleLabel}>⭐ منتج مميز</TX>
               <Switch value={data.featured} onValueChange={v => setData({ ...data, featured: v })}
                 trackColor={{ true: colors.brand, false: colors.surfaceTertiary }} thumbColor="white" /></View>
-            <View style={s.toggle}><Text style={s.toggleLabel}>منشور للعملاء</Text>
+            <View style={s.toggle}><TX style={s.toggleLabel}>منشور للعملاء</TX>
               <Switch value={data.published} onValueChange={v => setData({ ...data, published: v })}
                 trackColor={{ true: colors.brand, false: colors.surfaceTertiary }} thumbColor="white" /></View>
           </View>

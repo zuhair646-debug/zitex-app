@@ -8,6 +8,8 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0A0A0A';
@@ -38,6 +40,7 @@ const DEFAULT_FORM = {
 };
 
 export default function MerchantServices() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [services, setServices] = useState<any[]>([]);
@@ -147,8 +150,8 @@ export default function MerchantServices() {
           {services.length === 0 && (
             <View style={s.empty}>
               <Ionicons name="construct" size={48} color={GOLD} />
-              <Text style={s.emptyText}>لا توجد خدمات بعد</Text>
-              <TouchableOpacity onPress={openCreate} style={s.emptyBtn}><Text style={s.emptyBtnText}>إضافة أول خدمة</Text></TouchableOpacity>
+              <TX style={s.emptyText}>لا توجد خدمات بعد</TX>
+              <TouchableOpacity onPress={openCreate} style={s.emptyBtn}><TX style={s.emptyBtnText}>إضافة أول خدمة</TX></TouchableOpacity>
             </View>
           )}
           {services.map(sv => (
@@ -161,13 +164,13 @@ export default function MerchantServices() {
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={s.name}>{sv.name}</Text>
-                  {!sv.published && <View style={s.hiddenBadge}><Text style={s.hiddenBadgeText}>مخفية</Text></View>}
+                  {!sv.published && <View style={s.hiddenBadge}><TX style={s.hiddenBadgeText}>مخفية</TX></View>}
                 </View>
                 <Text style={s.desc} numberOfLines={2}>{sv.desc}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
                   <Text style={s.price}>{sv.price} ر.س</Text>
                   {sv.warranty_available ? <Text style={s.warranty}>🛡 {sv.warranty_days}ي</Text> : null}
-                  {sv.home_pickup ? <Text style={s.pickup}>🚗 استلام منزلي</Text> : null}
+                  {sv.home_pickup ? <TX style={s.pickup}>🚗 استلام منزلي</TX> : null}
                 </View>
               </View>
               <View style={{ gap: 8 }}>
@@ -187,7 +190,7 @@ export default function MerchantServices() {
             <View style={{ width: 24 }} />
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            <Text style={s.label}>الصور</Text>
+            <TX style={s.label}>الصور</TX>
             <View style={s.imgRow}>
               {form.images?.map((img: string, i: number) => (
                 <View key={i} style={s.imgTile}>
@@ -199,13 +202,13 @@ export default function MerchantServices() {
                 <TouchableOpacity style={s.imgAdd} onPress={pickImages} disabled={uploading}>
                   {uploading ? <ActivityIndicator color={GOLD} /> : <>
                     <Ionicons name="camera" size={20} color={GOLD} />
-                    <Text style={s.imgAddText}>إضافة صور</Text>
+                    <TX style={s.imgAddText}>إضافة صور</TX>
                   </>}
                 </TouchableOpacity>
               )}
             </View>
 
-            <Text style={s.label}>الفئة</Text>
+            <TX style={s.label}>الفئة</TX>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
               {CATEGORIES.map(c => (
                 <TouchableOpacity key={c.id} onPress={() => setForm({ ...form, category: c.id, icon: c.icon })}
@@ -216,57 +219,57 @@ export default function MerchantServices() {
               ))}
             </ScrollView>
 
-            <Text style={s.label}>اسم الخدمة *</Text>
-            <TextInput style={s.input} value={form.name} onChangeText={t => setForm({ ...form, name: t })} placeholder="تبديل شاشة iPhone" placeholderTextColor={MUTED} />
+            <TX style={s.label}>اسم الخدمة *</TX>
+            <TextInput style={s.input} value={form.name} onChangeText={t => setForm({ ...form, name: t })} placeholder={tSync("تبديل شاشة iPhone", lang)} placeholderTextColor={MUTED} />
 
-            <Text style={s.label}>وصف مختصر</Text>
-            <TextInput style={s.input} value={form.desc} onChangeText={t => setForm({ ...form, desc: t })} placeholder="جملة تعريفية قصيرة" placeholderTextColor={MUTED} />
+            <TX style={s.label}>وصف مختصر</TX>
+            <TextInput style={s.input} value={form.desc} onChangeText={t => setForm({ ...form, desc: t })} placeholder={tSync("جملة تعريفية قصيرة", lang)} placeholderTextColor={MUTED} />
 
-            <Text style={s.label}>الوصف الكامل</Text>
+            <TX style={s.label}>الوصف الكامل</TX>
             <TextInput style={[s.input, { height: 100 }]} multiline value={form.long_description}
               onChangeText={t => setForm({ ...form, long_description: t })}
-              placeholder="اشرح تفاصيل الخدمة، جودة القطع، ضمانات إضافية، ..." placeholderTextColor={MUTED} />
+              placeholder={tSync("اشرح تفاصيل الخدمة، جودة القطع، ضمانات إضافية، ...", lang)} placeholderTextColor={MUTED} />
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}>
-                <Text style={s.label}>السعر (ر.س) *</Text>
+                <TX style={s.label}>السعر (ر.س) *</TX>
                 <TextInput style={s.input} keyboardType="numeric" value={form.price} onChangeText={t => setForm({ ...form, price: t })} placeholder="299" placeholderTextColor={MUTED} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.label}>رسم الفحص (ر.س)</Text>
+                <TX style={s.label}>رسم الفحص (ر.س)</TX>
                 <TextInput style={s.input} keyboardType="numeric" value={form.inspection_price} onChangeText={t => setForm({ ...form, inspection_price: t })} placeholder="0" placeholderTextColor={MUTED} />
               </View>
             </View>
 
-            <Text style={s.label}>مدة الإنجاز</Text>
-            <TextInput style={s.input} value={form.turnaround} onChangeText={t => setForm({ ...form, turnaround: t })} placeholder="مثال: 1-2 أيام، نفس اليوم، 24 ساعة" placeholderTextColor={MUTED} />
+            <TX style={s.label}>مدة الإنجاز</TX>
+            <TextInput style={s.input} value={form.turnaround} onChangeText={t => setForm({ ...form, turnaround: t })} placeholder={tSync("مثال: 1-2 أيام، نفس اليوم، 24 ساعة", lang)} placeholderTextColor={MUTED} />
 
             <View style={s.divider} />
-            <Text style={s.section}>🛡 الضمان</Text>
+            <TX style={s.section}>🛡 الضمان</TX>
             <View style={s.toggle}>
               <View style={{ flex: 1 }}>
-                <Text style={s.toggleLbl}>ضمان متاح</Text>
+                <TX style={s.toggleLbl}>ضمان متاح</TX>
                 <Text style={s.toggleHint}>يظهر شارة {"«مضمون»"} للعميل</Text>
               </View>
               <Switch value={form.warranty_available} onValueChange={v => setForm({ ...form, warranty_available: v })} trackColor={{ true: GOLD, false: '#3A3A3C' }} thumbColor={form.warranty_available ? BG : '#FFF'} />
             </View>
             {form.warranty_available && (
               <>
-                <Text style={s.label}>مدة الضمان (بالأيام)</Text>
+                <TX style={s.label}>مدة الضمان (بالأيام)</TX>
                 <TextInput style={s.input} keyboardType="numeric" value={form.warranty_days} onChangeText={t => setForm({ ...form, warranty_days: t })} placeholderTextColor={MUTED} />
-                <Text style={s.label}>شروط الضمان</Text>
+                <TX style={s.label}>شروط الضمان</TX>
                 <TextInput style={[s.input, { height: 70 }]} multiline value={form.warranty_terms}
                   onChangeText={t => setForm({ ...form, warranty_terms: t })}
-                  placeholder="مثال: يشمل عيوب الصناعة فقط، لا يشمل السقوط أو الماء..." placeholderTextColor={MUTED} />
+                  placeholder={tSync("مثال: يشمل عيوب الصناعة فقط، لا يشمل السقوط أو الماء...", lang)} placeholderTextColor={MUTED} />
               </>
             )}
 
             <View style={s.divider} />
-            <Text style={s.section}>🚗 خيارات التوصيل</Text>
+            <TX style={s.section}>🚗 خيارات التوصيل</TX>
             <View style={s.toggle}>
               <View style={{ flex: 1 }}>
-                <Text style={s.toggleLbl}>استلام + إرجاع من المنزل</Text>
-                <Text style={s.toggleHint}>يحسب رسم ديناميكي حسب المسافة (ذهاب وعودة)</Text>
+                <TX style={s.toggleLbl}>استلام + إرجاع من المنزل</TX>
+                <TX style={s.toggleHint}>يحسب رسم ديناميكي حسب المسافة (ذهاب وعودة)</TX>
               </View>
               <Switch value={form.home_pickup} onValueChange={v => setForm({ ...form, home_pickup: v })} trackColor={{ true: GOLD, false: '#3A3A3C' }} thumbColor={form.home_pickup ? BG : '#FFF'} />
             </View>
@@ -275,19 +278,19 @@ export default function MerchantServices() {
               <>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.label}>رسم أساسي (ر.س)</Text>
+                    <TX style={s.label}>رسم أساسي (ر.س)</TX>
                     <TextInput style={s.input} keyboardType="numeric" value={form.pickup_base_fee}
                       onChangeText={t => setForm({ ...form, pickup_base_fee: t })} placeholderTextColor={MUTED} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.label}>لكل كم (ر.س)</Text>
+                    <TX style={s.label}>لكل كم (ر.س)</TX>
                     <TextInput style={s.input} keyboardType="numeric" value={form.pickup_price_per_km}
                       onChangeText={t => setForm({ ...form, pickup_price_per_km: t })} placeholderTextColor={MUTED} />
                   </View>
                 </View>
-                <Text style={s.hint}>الرسم النهائي = أساسي + المسافة × 2 (ذهاب وإياب) × سعر الكم</Text>
+                <TX style={s.hint}>الرسم النهائي = أساسي + المسافة × 2 (ذهاب وإياب) × سعر الكم</TX>
 
-                <Text style={s.label}>موقع المحل *</Text>
+                <TX style={s.label}>موقع المحل *</TX>
                 <TouchableOpacity onPress={captureShopLocation} style={s.locBtn}>
                   <Ionicons name="location" size={18} color={BG} />
                   <Text style={s.locBtnText}>
@@ -298,15 +301,15 @@ export default function MerchantServices() {
             )}
 
             <View style={s.toggle}>
-              <Text style={s.toggleLbl}>توصيل بعد الإصلاح</Text>
+              <TX style={s.toggleLbl}>توصيل بعد الإصلاح</TX>
               <Switch value={form.delivery_available} onValueChange={v => setForm({ ...form, delivery_available: v })} trackColor={{ true: GOLD, false: '#3A3A3C' }} thumbColor={form.delivery_available ? BG : '#FFF'} />
             </View>
 
             <View style={s.divider} />
             <View style={s.toggle}>
               <View style={{ flex: 1 }}>
-                <Text style={s.toggleLbl}>عرض للعملاء</Text>
-                <Text style={s.toggleHint}>إذا مغلق، لن تظهر في التطبيق</Text>
+                <TX style={s.toggleLbl}>عرض للعملاء</TX>
+                <TX style={s.toggleHint}>إذا مغلق، لن تظهر في التطبيق</TX>
               </View>
               <Switch value={form.published} onValueChange={v => setForm({ ...form, published: v })} trackColor={{ true: GOLD, false: '#3A3A3C' }} thumbColor={form.published ? BG : '#FFF'} />
             </View>

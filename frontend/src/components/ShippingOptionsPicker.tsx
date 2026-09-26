@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { TX } from '../useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -90,7 +91,7 @@ export default function ShippingOptionsPicker({
     <View style={s.wrap}>
       <View style={s.header}>
         <Ionicons name="airplane" size={13} color={GOLD} />
-        <Text style={s.title}>خيارات الشحن الخارجي</Text>
+        <TX style={s.title}>خيارات الشحن الخارجي</TX>
         {destination?.city_name_ar && (
           <View style={s.cityPill}>
             <Ionicons name="location" size={10} color={GOLD} />

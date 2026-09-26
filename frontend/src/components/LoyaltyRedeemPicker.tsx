@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Modal, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { TX, tSync } from '../useAutoT';
+import { useT } from '../i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -76,7 +78,7 @@ export default function LoyaltyRedeemPicker({
     <View style={s.wrap}>
       <View style={s.header}>
         <Ionicons name="ribbon" size={13} color={GOLD} />
-        <Text style={s.title}>استبدل نقاط الولاء بخصم</Text>
+        <TX style={s.title}>استبدل نقاط الولاء بخصم</TX>
         {applied && (
           <TouchableOpacity onPress={removeApplied} style={s.appliedTag}>
             <Text style={s.appliedText}>خصم {applied.discount} ر.س ✕</Text>
@@ -95,7 +97,7 @@ export default function LoyaltyRedeemPicker({
               <Text style={s.name} numberOfLines={1}>{p.name_ar}</Text>
               <Text style={s.rate}>1 نقطة = {(p.conversion_rate || 0.01).toFixed(2)} ر.س</Text>
               {p.status === 'sandbox_pending' && (
-                <View style={s.pendPill}><Text style={s.pendText}>وضع تجريبي</Text></View>
+                <View style={s.pendPill}><TX style={s.pendText}>وضع تجريبي</TX></View>
               )}
             </TouchableOpacity>
           );
@@ -120,14 +122,14 @@ export default function LoyaltyRedeemPicker({
                   </TouchableOpacity>
                 </View>
 
-                <Text style={s.label}>عدد النقاط المراد استبدالها</Text>
+                <TX style={s.label}>عدد النقاط المراد استبدالها</TX>
                 <TextInput style={s.input} keyboardType="numeric"
                   value={points} onChangeText={setPoints}
-                  placeholder="مثال: 500" placeholderTextColor={MUTED} />
+                  placeholder={tSync("مثال: 500", lang)} placeholderTextColor={MUTED} />
 
                 {points && !isNaN(Number(points)) && Number(points) > 0 && (
                   <View style={s.previewBox}>
-                    <Text style={s.previewLabel}>معاينة الخصم</Text>
+                    <TX style={s.previewLabel}>معاينة الخصم</TX>
                     <Text style={[s.previewValue, { color: selected.brand_color }]}>
                       {(Number(points) * (selected.conversion_rate || 0.01)).toFixed(2)} ر.س
                     </Text>
@@ -136,7 +138,7 @@ export default function LoyaltyRedeemPicker({
 
                 <TouchableOpacity onPress={redeem} style={[s.redeemBtn, { backgroundColor: selected.brand_color || GOLD }]} disabled={redeeming}>
                   {redeeming ? <ActivityIndicator color="#FFF" /> : (
-                    <Text style={s.redeemText}>تطبيق الاستبدال</Text>
+                    <TX style={s.redeemText}>تطبيق الاستبدال</TX>
                   )}
                 </TouchableOpacity>
 

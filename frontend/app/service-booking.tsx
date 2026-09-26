@@ -5,10 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { useAuth } from './_layout';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 
 const PURPLE = '#F5C518';
 
 export default function ServiceBooking() {
+  const { lang } = useT();
   const { service_id } = useLocalSearchParams<{ service_id: string }>();
   const router = useRouter();
   const { apiCall, user } = useAuth();
@@ -94,35 +97,35 @@ export default function ServiceBooking() {
           </View>
         </View>
 
-        <Text style={s.label}>الجهاز *</Text>
-        <TextInput style={s.input} value={deviceModel} onChangeText={setDeviceModel} placeholder="iPhone 15 Pro، سامسونج S24 ..." />
+        <TX style={s.label}>الجهاز *</TX>
+        <TextInput style={s.input} value={deviceModel} onChangeText={setDeviceModel} placeholder={tSync("iPhone 15 Pro، سامسونج S24 ...", lang)} />
 
-        <Text style={s.label}>وصف المشكلة *</Text>
-        <TextInput style={[s.input, { height: 90 }]} multiline value={issue} onChangeText={setIssue} placeholder="اشرح المشكلة بالتفصيل..." />
+        <TX style={s.label}>وصف المشكلة *</TX>
+        <TextInput style={[s.input, { height: 90 }]} multiline value={issue} onChangeText={setIssue} placeholder={tSync("اشرح المشكلة بالتفصيل...", lang)} />
 
-        <Text style={s.label}>رقم الهاتف للتواصل *</Text>
+        <TX style={s.label}>رقم الهاتف للتواصل *</TX>
         <TextInput style={s.input} keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
 
-        <Text style={s.label}>طريقة الاستلام</Text>
+        <TX style={s.label}>طريقة الاستلام</TX>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <TouchableOpacity style={[s.optCard, deliveryType === 'store' && s.optCardActive]} onPress={() => setDeliveryType('store')}>
             <Ionicons name="storefront" size={22} color={deliveryType === 'store' ? PURPLE : '#6B7280'} />
-            <Text style={[s.optTitle, deliveryType === 'store' && s.optTitleActive]}>تسليم بالمحل</Text>
-            <Text style={s.optHint}>0 ر.س</Text>
+            <TX style={[s.optTitle, deliveryType === 'store' && s.optTitleActive]}>تسليم بالمحل</TX>
+            <TX style={s.optHint}>0 ر.س</TX>
           </TouchableOpacity>
           {svc.home_pickup && (
             <TouchableOpacity style={[s.optCard, deliveryType === 'home_pickup' && s.optCardActive]} onPress={() => setDeliveryType('home_pickup')}>
               <Ionicons name="home" size={22} color={deliveryType === 'home_pickup' ? PURPLE : '#6B7280'} />
-              <Text style={[s.optTitle, deliveryType === 'home_pickup' && s.optTitleActive]}>استلام + إرجاع</Text>
-              <Text style={s.optHint}>حسب المسافة</Text>
+              <TX style={[s.optTitle, deliveryType === 'home_pickup' && s.optTitleActive]}>استلام + إرجاع</TX>
+              <TX style={s.optHint}>حسب المسافة</TX>
             </TouchableOpacity>
           )}
         </View>
 
         {deliveryType === 'home_pickup' && (
           <>
-            <Text style={s.label}>عنوان الاستلام *</Text>
-            <TextInput style={s.input} value={address} onChangeText={setAddress} placeholder="الحي، الشارع، رقم المبنى..." />
+            <TX style={s.label}>عنوان الاستلام *</TX>
+            <TextInput style={s.input} value={address} onChangeText={setAddress} placeholder={tSync("الحي، الشارع، رقم المبنى...", lang)} />
 
             <TouchableOpacity onPress={useMyLocation} style={s.locBtn} disabled={fetchingQuote}>
               {fetchingQuote ? <ActivityIndicator color="white" /> : <>
@@ -143,17 +146,17 @@ export default function ServiceBooking() {
 
         <View style={s.summaryCard}>
           <View style={s.summaryRow}>
-            <Text style={s.summaryLbl}>سعر الخدمة</Text>
+            <TX style={s.summaryLbl}>سعر الخدمة</TX>
             <Text style={s.summaryVal}>{svc.price} ر.س</Text>
           </View>
           {deliveryType === 'home_pickup' && quote && (
             <View style={s.summaryRow}>
-              <Text style={s.summaryLbl}>رسم الاستلام</Text>
+              <TX style={s.summaryLbl}>رسم الاستلام</TX>
               <Text style={s.summaryVal}>{quote.pickup_fee} ر.س</Text>
             </View>
           )}
           <View style={[s.summaryRow, { borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingTop: 8 }]}>
-            <Text style={s.totalLbl}>الإجمالي</Text>
+            <TX style={s.totalLbl}>الإجمالي</TX>
             <Text style={s.totalVal}>{total} ر.س</Text>
           </View>
         </View>

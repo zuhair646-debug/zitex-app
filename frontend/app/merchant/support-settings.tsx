@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import { TX } from '../../src/useAutoT';
 
 const FIELDS: { key: string; label: string; placeholder: string; icon: any; color: string; sub?: string }[] = [
   { key: 'whatsapp', label: 'WhatsApp (مع كود الدولة)', placeholder: '966500000000', icon: 'logo-whatsapp', color: '#25D366', sub: 'بدون + أو 00' },
@@ -47,14 +48,14 @@ export default function SupportSettings() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>📞 الدعم الفني</Text>
-        <TouchableOpacity onPress={save} disabled={saving} style={s.saveBtn}>{saving ? <ActivityIndicator size="small" color="white" /> : <Text style={s.saveText}>حفظ</Text>}</TouchableOpacity>
+        <TX style={s.title}>📞 الدعم الفني</TX>
+        <TouchableOpacity onPress={save} disabled={saving} style={s.saveBtn}>{saving ? <ActivityIndicator size="small" color="white" /> : <TX style={s.saveText}>حفظ</TX>}</TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={{ padding: 14 }}>
         <View style={s.toggleRow}>
           <View style={{ flex: 1 }}>
-            <Text style={s.toggleLabel}>إظهار تنبيه "تواصل أولاً عبر السوشال"</Text>
-            <Text style={s.toggleHint}>يظهر للعملاء في صفحة الدعم</Text>
+            <TX style={s.toggleLabel}>إظهار تنبيه "تواصل أولاً عبر السوشال"</TX>
+            <TX style={s.toggleHint}>يظهر للعملاء في صفحة الدعم</TX>
           </View>
           <Switch value={!!data.contact_via_social_first} onValueChange={v => setData({ ...data, contact_via_social_first: v })} />
         </View>

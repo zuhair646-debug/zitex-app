@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { TX } from '../useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -42,9 +43,9 @@ export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
       <BlurView intensity={40} tint="dark" style={s.ribbon}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
           <Ionicons name="shield-checkmark" size={12} color={GOLD} />
-          <Text style={s.ribbonTitle}>طرق الدفع المدعومة</Text>
+          <TX style={s.ribbonTitle}>طرق الدفع المدعومة</TX>
           <View style={{ flex: 1 }} />
-          <Text style={s.ribbonHint}>اضغط للتفاصيل</Text>
+          <TX style={s.ribbonHint}>اضغط للتفاصيل</TX>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
           {payments.map((p: any) => (
@@ -59,7 +60,7 @@ export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
               )}
               {p.is_bnpl && (
                 <View style={s.bnplBadge}>
-                  <Text style={s.bnplText}>قسّط</Text>
+                  <TX style={s.bnplText}>قسّط</TX>
                 </View>
               )}
             </TouchableOpacity>
@@ -91,7 +92,7 @@ export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
 
                 <View style={{ marginTop: 14, gap: 8 }}>
                   {selected.sama_licensed && (
-                    <View style={s.infoChip}><Ionicons name="shield-checkmark" size={14} color="#059669" /><Text style={s.infoText}>مرخّص من مؤسسة النقد العربي السعودي (SAMA)</Text></View>
+                    <View style={s.infoChip}><Ionicons name="shield-checkmark" size={14} color="#059669" /><TX style={s.infoText}>مرخّص من مؤسسة النقد العربي السعودي (SAMA)</TX></View>
                   )}
                   {selected.is_bnpl && (
                     <View style={s.infoChip}>
@@ -100,16 +101,16 @@ export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
                     </View>
                   )}
                   {selected.cod && (
-                    <View style={s.infoChip}><Ionicons name="cash" size={14} color="#059669" /><Text style={s.infoText}>ادفع نقداً عند استلام الطلب</Text></View>
+                    <View style={s.infoChip}><Ionicons name="cash" size={14} color="#059669" /><TX style={s.infoText}>ادفع نقداً عند استلام الطلب</TX></View>
                   )}
                   {!!selected.note && (
                     <View style={s.infoChip}><Ionicons name="information-circle" size={14} color={GOLD} /><Text style={s.infoText}>{selected.note}</Text></View>
                   )}
                 </View>
 
-                <Text style={s.legalFooter}>
+                <TX style={s.legalFooter}>
                   🔐 معاملاتك محمية بتشفير من طرف إلى طرف · هذه الطريقة يوفرها التاجر عبر بوابة دفع معتمدة
-                </Text>
+                </TX>
               </View>
             )}
           </View>
@@ -150,8 +151,8 @@ export function LoyaltyWidget({ apiCall, onOpenHistory }: any) {
           <Ionicons name={meta.icon} size={22} color={meta.color} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: MUTED, fontSize: 11, textAlign: 'right' }}>رصيد نقاط الولاء</Text>
-          <Text style={{ color: TEXT, fontSize: 22, fontWeight: '900', textAlign: 'right' }}>{Number(data.balance).toLocaleString('ar-SA')} <Text style={{ color: meta.color, fontSize: 12 }}>نقطة</Text></Text>
+          <TX style={{ color: MUTED, fontSize: 11, textAlign: 'right' }}>رصيد نقاط الولاء</TX>
+          <Text style={{ color: TEXT, fontSize: 22, fontWeight: '900', textAlign: 'right' }}>{Number(data.balance).toLocaleString('ar-SA')} <TX style={{ color: meta.color, fontSize: 12 }}>نقطة</TX></Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
             <View style={[s.miniPill, { backgroundColor: meta.color + '25', borderColor: meta.color }]}>
               <Text style={[s.miniPillText, { color: meta.color }]}>{meta.label}</Text>

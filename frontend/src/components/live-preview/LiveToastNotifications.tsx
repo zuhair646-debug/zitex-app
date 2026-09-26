@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform } from 're
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LP } from './theme';
+import { TX } from '../../useAutoT';
 
 const SEVERITY_COLORS: any = {
   info: LP.INFO,
@@ -83,7 +84,7 @@ export default function LiveToastNotifications({ apiCall, insetTop = 0 }: any) {
               <View style={[st.pulseDot, { backgroundColor: color }]} />
               <Text style={[st.title, { color }]} numberOfLines={1}>{active.title}</Text>
               <View style={{ flex: 1 }} />
-              <Text style={st.newBadge}>جديد</Text>
+              <TX style={st.newBadge}>جديد</TX>
             </View>
             <Text style={st.message} numberOfLines={2}>{active.message}</Text>
           </View>

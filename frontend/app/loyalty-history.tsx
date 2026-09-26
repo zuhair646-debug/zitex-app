@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { LoyaltyWidget } from '../src/components/PaymentAndLoyalty';
+import { TX } from '../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -46,7 +47,7 @@ export default function LoyaltyHistoryScreen() {
         <TouchableOpacity onPress={() => router.back()} style={s.back}>
           <Ionicons name="chevron-forward" size={22} color={TEXT} />
         </TouchableOpacity>
-        <Text style={s.title}>نقاط الولاء</Text>
+        <TX style={s.title}>نقاط الولاء</TX>
         <View style={{ width: 34 }} />
       </View>
       <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
@@ -55,25 +56,25 @@ export default function LoyaltyHistoryScreen() {
         <View style={s.perkGrid}>
           <View style={s.perkCard}>
             <Ionicons name="rocket" size={20} color={GOLD} />
-            <Text style={s.perkTitle}>اكسب نقاط</Text>
-            <Text style={s.perkDesc}>على كل ريال تنفقه</Text>
+            <TX style={s.perkTitle}>اكسب نقاط</TX>
+            <TX style={s.perkDesc}>على كل ريال تنفقه</TX>
           </View>
           <View style={s.perkCard}>
             <Ionicons name="gift" size={20} color={GOLD} />
-            <Text style={s.perkTitle}>استبدل</Text>
-            <Text style={s.perkDesc}>نقاطك بخصومات</Text>
+            <TX style={s.perkTitle}>استبدل</TX>
+            <TX style={s.perkDesc}>نقاطك بخصومات</TX>
           </View>
           <View style={s.perkCard}>
             <Ionicons name="medal" size={20} color={GOLD} />
-            <Text style={s.perkTitle}>ارتقِ</Text>
-            <Text style={s.perkDesc}>لمستويات أعلى بمزايا</Text>
+            <TX style={s.perkTitle}>ارتقِ</TX>
+            <TX style={s.perkDesc}>لمستويات أعلى بمزايا</TX>
           </View>
         </View>
 
-        <Text style={s.sectionTitle}>سجل النقاط</Text>
+        <TX style={s.sectionTitle}>سجل النقاط</TX>
         {loading && <ActivityIndicator color={GOLD} style={{ marginTop: 20 }} />}
         {!loading && txs.length === 0 && (
-          <Text style={{ color: MUTED, textAlign: 'center', padding: 30 }}>لا توجد معاملات بعد</Text>
+          <TX style={{ color: MUTED, textAlign: 'center', padding: 30 }}>لا توجد معاملات بعد</TX>
         )}
         {!loading && txs.map((t: any, i: number) => (
           <View key={t.id || i} style={s.txRow}>

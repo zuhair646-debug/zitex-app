@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
+import { TX } from '../../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -124,10 +125,10 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
       </View>
       <View style={{ padding: 40, alignItems: 'center' }}>
         <Ionicons name="alert-circle" size={48} color={AMBER} />
-        <Text style={{ color: TEXT, textAlign: 'center', marginTop: 12, fontSize: 14, fontWeight: '900' }}>تعذّر تحميل التحليلات</Text>
-        <Text style={{ color: MUTED, textAlign: 'center', marginTop: 6, fontSize: 12 }}>تأكد من تسجيل الدخول كتاجر، أو تحقق من الاتصال بالإنترنت</Text>
+        <TX style={{ color: TEXT, textAlign: 'center', marginTop: 12, fontSize: 14, fontWeight: '900' }}>تعذّر تحميل التحليلات</TX>
+        <TX style={{ color: MUTED, textAlign: 'center', marginTop: 6, fontSize: 12 }}>تأكد من تسجيل الدخول كتاجر، أو تحقق من الاتصال بالإنترنت</TX>
         <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20, backgroundColor: GOLD, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 999 }}>
-          <Text style={{ color: BG, fontWeight: '900' }}>الرجوع</Text>
+          <TX style={{ color: BG, fontWeight: '900' }}>الرجوع</TX>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -197,12 +198,12 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               {kind === 'post' ? (
                 <>
                   <Text style={s.priceMain}>{(k.engagement_score || 0).toLocaleString()}</Text>
-                  <Text style={{ color: MUTED, fontSize: 11, marginBottom: 3 }}>نقطة تفاعل</Text>
+                  <TX style={{ color: MUTED, fontSize: 11, marginBottom: 3 }}>نقطة تفاعل</TX>
                 </>
               ) : kind === 'competition' ? (
                 <>
                   <Text style={s.priceMain}>{p.price > 0 ? `${p.price} ر.س` : 'مجاناً'}</Text>
-                  <Text style={{ color: MUTED, fontSize: 10, marginBottom: 3 }}>حد الإنفاق</Text>
+                  <TX style={{ color: MUTED, fontSize: 10, marginBottom: 3 }}>حد الإنفاق</TX>
                 </>
               ) : (
                 <>
@@ -321,7 +322,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               <SectionTitle icon="trending-up" label="اتجاه المبيعات — آخر 12 شهر" />
               <View style={s.card}>
                 {d.monthly_series.length === 0 ? (
-                  <Text style={{ color: MUTED, textAlign: 'center', padding: 20 }}>لا توجد بيانات مبيعات بعد</Text>
+                  <TX style={{ color: MUTED, textAlign: 'center', padding: 20 }}>لا توجد بيانات مبيعات بعد</TX>
                 ) : (
                   <>
                     {d.monthly_series.map((m: any, i: number) => {
@@ -373,7 +374,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               ))}
 
               <SectionTitle icon="alert-circle" label={`سلات مهجورة (${d.cart_abandonments.length})`} />
-              {d.cart_abandonments.length === 0 && <Text style={s.emptyText}>لا توجد سلات مهجورة 🎉</Text>}
+              {d.cart_abandonments.length === 0 && <TX style={s.emptyText}>لا توجد سلات مهجورة 🎉</TX>}
               {d.cart_abandonments.map((a: any, i: number) => (
                 <View key={i} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: RED }]}>
                   <View style={[s.avatar, { backgroundColor: RED + '30' }]}>
@@ -382,7 +383,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <Text style={s.userName}>{a.user_name}</Text>
                     <Text style={s.userMeta}>أضاف للسلة: {(a.added_at || '').slice(0, 16).replace('T', ' ')}</Text>
-                    {a.reached_checkout && <Text style={{ color: AMBER, fontSize: 10, marginTop: 2 }}>⚠️ وصل الدفع ولم يكمل</Text>}
+                    {a.reached_checkout && <TX style={{ color: AMBER, fontSize: 10, marginTop: 2 }}>⚠️ وصل الدفع ولم يكمل</TX>}
                   </View>
                 </View>
               ))}
@@ -392,7 +393,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
           {tab === 'buyers' && (
             <>
               <SectionTitle icon="bag-check" label={`المشترون (${d.buyers.length})`} />
-              {d.buyers.length === 0 && <Text style={s.emptyText}>لا مشتريات بعد</Text>}
+              {d.buyers.length === 0 && <TX style={s.emptyText}>لا مشتريات بعد</TX>}
               {d.buyers.map((b: any, i: number) => (
                 <View key={i} style={s.userCard}>
                   <View style={[s.avatar, { backgroundColor: OK + '30' }]}>
@@ -431,7 +432,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               </View>
 
               <SectionTitle icon="paper-plane" label={`آخر ${d.recent_shares.length} مشاركة`} />
-              {d.recent_shares.length === 0 && <Text style={s.emptyText}>لم يتم مشاركة المنتج بعد</Text>}
+              {d.recent_shares.length === 0 && <TX style={s.emptyText}>لم يتم مشاركة المنتج بعد</TX>}
               {d.recent_shares.map((r: any, i: number) => (
                 <View key={i} style={s.userCard}>
                   <View style={[s.avatar, { backgroundColor: (PLATFORM_COLORS[r.platform] || GOLD) + '30' }]}>
@@ -497,7 +498,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                     <View key={i} style={[s.reviewCard, { borderLeftWidth: 3, borderLeftColor: PURPLE }]}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <View style={[s.avatar, { backgroundColor: PURPLE + '30' }]}>
-                          <Text style={{ color: PURPLE, fontWeight: '900' }}>؟</Text>
+                          <TX style={{ color: PURPLE, fontWeight: '900' }}>؟</TX>
                         </View>
                         <View style={{ flex: 1, marginHorizontal: 10 }}>
                           <Text style={s.userName}>{q.user_name}</Text>
@@ -515,7 +516,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
           {tab === 'returns' && kind === 'service' && (
             <>
               <SectionTitle icon="return-up-back" label={`طلبات الإرجاع (${(d.returns || []).length})`} />
-              {(d.returns || []).length === 0 && <Text style={s.emptyText}>لا يوجد طلبات إرجاع لهذه الخدمة 🎉</Text>}
+              {(d.returns || []).length === 0 && <TX style={s.emptyText}>لا يوجد طلبات إرجاع لهذه الخدمة 🎉</TX>}
               {(d.returns || []).map((r: any, i: number) => (
                 <View key={i} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: RED, alignItems: 'flex-start' }]}>
                   <View style={[s.avatar, { backgroundColor: RED + '30' }]}>
@@ -542,7 +543,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
           {tab === 'complaints' && kind === 'service' && (
             <>
               <SectionTitle icon="alert-circle" label={`الشكاوى (${(d.complaints || []).length})`} />
-              {(d.complaints || []).length === 0 && <Text style={s.emptyText}>لا توجد شكاوى مسجلة 👌</Text>}
+              {(d.complaints || []).length === 0 && <TX style={s.emptyText}>لا توجد شكاوى مسجلة 👌</TX>}
               {(d.complaints || []).map((c: any, i: number) => (
                 <View key={i} style={[s.reviewCard, { borderLeftWidth: 3, borderLeftColor: AMBER }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -562,7 +563,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                   <Text style={s.reviewText}>{c.text}</Text>
                   {!!c.reply && (
                     <View style={{ marginTop: 8, padding: 8, backgroundColor: BG, borderRadius: 8, borderRightWidth: 2, borderRightColor: OK }}>
-                      <Text style={{ color: OK, fontSize: 10, fontWeight: '900', textAlign: 'right', marginBottom: 3 }}>رد المتجر:</Text>
+                      <TX style={{ color: OK, fontSize: 10, fontWeight: '900', textAlign: 'right', marginBottom: 3 }}>رد المتجر:</TX>
                       <Text style={{ color: TEXT, fontSize: 11, textAlign: 'right' }}>{c.reply}</Text>
                     </View>
                   )}
@@ -574,7 +575,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
           {tab === 'winners' && kind === 'competition' && (
             <>
               <SectionTitle icon="trophy" label={`قائمة الفائزين (${(d.winners || []).length})`} />
-              {(d.winners || []).length === 0 && <Text style={s.emptyText}>لم يتم الإعلان عن الفائزين بعد 🎯</Text>}
+              {(d.winners || []).length === 0 && <TX style={s.emptyText}>لم يتم الإعلان عن الفائزين بعد 🎯</TX>}
               {(d.winners || []).map((w: any, i: number) => (
                 <View key={i} style={[s.userCard, { borderWidth: 1.5, borderColor: GOLD + '80' }]}>
                   <View style={[s.avatar, { backgroundColor: GOLD + '30' }]}>
@@ -601,8 +602,8 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
           {tab === 'videos' && kind === 'competition' && (
             <>
               <SectionTitle icon="videocam" label={`أرشيف الفيديوهات الترويجية (${(d.videos || []).length})`} />
-              <Text style={{ color: MUTED, fontSize: 10, textAlign: 'right', marginBottom: 8 }}>💾 محفوظ للأبد — حتى بعد انتهاء المسابقة</Text>
-              {(d.videos || []).length === 0 && <Text style={s.emptyText}>لم يتم رفع فيديوهات ترويجية</Text>}
+              <TX style={{ color: MUTED, fontSize: 10, textAlign: 'right', marginBottom: 8 }}>💾 محفوظ للأبد — حتى بعد انتهاء المسابقة</TX>
+              {(d.videos || []).length === 0 && <TX style={s.emptyText}>لم يتم رفع فيديوهات ترويجية</TX>}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {(d.videos || []).map((v: any, i: number) => (
                   <TouchableOpacity key={i} style={{ width: (Dimensions.get('window').width - 32) / 2, backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, borderRadius: 10, overflow: 'hidden' }}>
@@ -639,7 +640,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               <View style={s.card}>
                 <View style={s.compareHeaderRow}>
                   <Text style={[s.compareHeader, { flex: 2 }]}>{kind === 'service' ? 'الخدمة' : kind === 'competition' ? 'المسابقة' : kind === 'post' ? 'المنشور' : 'المنتج'}</Text>
-                  <Text style={s.compareHeader}>مشاهدات</Text>
+                  <TX style={s.compareHeader}>مشاهدات</TX>
                   <Text style={s.compareHeader}>{kind === 'service' ? 'حجوزات' : kind === 'competition' ? 'مشاركون' : kind === 'post' ? 'إعجاب' : 'سلة'}</Text>
                   <Text style={s.compareHeader}>{kind === 'service' ? 'مكتمل' : kind === 'competition' ? 'دخل' : kind === 'post' ? 'مشاركات' : 'بيعات'}</Text>
                 </View>

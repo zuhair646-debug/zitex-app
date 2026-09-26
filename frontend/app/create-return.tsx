@@ -5,6 +5,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from './_layout';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -24,6 +26,7 @@ const RESOLUTIONS = [
 ];
 
 export default function CreateRMAScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall, token } = useAuth();
   const params = useLocalSearchParams<{ order_id?: string; product_id?: string }>();
@@ -138,7 +141,7 @@ export default function CreateRMAScreen() {
           <Ionicons name="chevron-forward" size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={s.title}>طلب إرجاع / ضمان</Text>
+          <TX style={s.title}>طلب إرجاع / ضمان</TX>
           <Text style={s.sub}>{step === 'pick' ? 'اختر المنتج' : 'أكمل تفاصيل الطلب'}</Text>
         </View>
       </View>
@@ -147,7 +150,7 @@ export default function CreateRMAScreen() {
         <ActivityIndicator color={GOLD} style={{ marginTop: 40 }} />
       ) : step === 'pick' ? (
         <ScrollView contentContainerStyle={{ padding: 12 }}>
-          <Text style={s.hint}>اختر المنتج الذي تريد إرجاعه أو طلب ضمان له</Text>
+          <TX style={s.hint}>اختر المنتج الذي تريد إرجاعه أو طلب ضمان له</TX>
           {items.map((it: any) => (
             <TouchableOpacity key={it.product_id}
               disabled={!it.allow_return && !it.warranty_days}
@@ -177,12 +180,12 @@ export default function CreateRMAScreen() {
                     )}
                     {it.has_active_rma && (
                       <View style={[s.badge, { backgroundColor: AMBER + '20', borderColor: AMBER }]}>
-                        <Text style={[s.badgeText, { color: AMBER }]}>يوجد طلب سابق</Text>
+                        <TX style={[s.badgeText, { color: AMBER }]}>يوجد طلب سابق</TX>
                       </View>
                     )}
                     {!it.allow_return && !it.warranty_days && (
                       <View style={[s.badge, { backgroundColor: RED + '20', borderColor: RED }]}>
-                        <Text style={[s.badgeText, { color: RED }]}>غير قابل للإرجاع</Text>
+                        <TX style={[s.badgeText, { color: RED }]}>غير قابل للإرجاع</TX>
                       </View>
                     )}
                   </View>
@@ -194,7 +197,7 @@ export default function CreateRMAScreen() {
             </TouchableOpacity>
           ))}
           {items.length === 0 && (
-            <Text style={{ color: MUTED, textAlign: 'center', padding: 40 }}>لا توجد منتجات قابلة للإرجاع</Text>
+            <TX style={{ color: MUTED, textAlign: 'center', padding: 40 }}>لا توجد منتجات قابلة للإرجاع</TX>
           )}
         </ScrollView>
       ) : (
@@ -217,7 +220,7 @@ export default function CreateRMAScreen() {
             </View>
           )}
 
-          <Text style={s.label}>سبب الإرجاع</Text>
+          <TX style={s.label}>سبب الإرجاع</TX>
           {reasons.map((r: any) => (
             <TouchableOpacity key={r.code}
               onPress={() => setReasonCode(r.code)}
@@ -227,13 +230,13 @@ export default function CreateRMAScreen() {
               </View>
               <View style={{ flex: 1, marginHorizontal: 8 }}>
                 <Text style={s.reasonLabel}>{r.label_ar}</Text>
-                {r.requires_media && <Text style={s.reasonHint}>يتطلب رفع صور/فيديو</Text>}
+                {r.requires_media && <TX style={s.reasonHint}>يتطلب رفع صور/فيديو</TX>}
               </View>
               {reasonCode === r.code && <Ionicons name="checkmark-circle" size={18} color={GOLD} />}
             </TouchableOpacity>
           ))}
 
-          <Text style={s.label}>الحل المطلوب</Text>
+          <TX style={s.label}>الحل المطلوب</TX>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
             {RESOLUTIONS.map((r) => (
               <TouchableOpacity key={r.code}
@@ -245,15 +248,15 @@ export default function CreateRMAScreen() {
             ))}
           </View>
 
-          <Text style={s.label}>تفاصيل المشكلة</Text>
+          <TX style={s.label}>تفاصيل المشكلة</TX>
           <TextInput style={[s.input, { minHeight: 90 }]} multiline
             value={reasonText} onChangeText={setReasonText}
-            placeholder="اشرح المشكلة بالتفصيل..." placeholderTextColor={MUTED} />
+            placeholder={tSync("اشرح المشكلة بالتفصيل...", lang)} placeholderTextColor={MUTED} />
 
-          <Text style={s.label}>IMEI / الرقم التسلسلي (اختياري للأجهزة)</Text>
+          <TX style={s.label}>IMEI / الرقم التسلسلي (اختياري للأجهزة)</TX>
           <TextInput style={s.input}
             value={imei} onChangeText={setImei}
-            placeholder="مثال: 351234567890123" placeholderTextColor={MUTED} />
+            placeholder={tSync("مثال: 351234567890123", lang)} placeholderTextColor={MUTED} />
 
           <Text style={s.label}>
             صور/فيديو للمنتج {currentReason?.requires_media ? '(مطلوب)' : '(اختياري)'}
@@ -271,14 +274,14 @@ export default function CreateRMAScreen() {
               {uploading ? <ActivityIndicator color={GOLD} /> : (
                 <>
                   <Ionicons name="add" size={22} color={GOLD} />
-                  <Text style={{ color: GOLD, fontSize: 10 }}>إضافة</Text>
+                  <TX style={{ color: GOLD, fontSize: 10 }}>إضافة</TX>
                 </>
               )}
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity onPress={submit} style={s.submitBtn} disabled={saving}>
-            {saving ? <ActivityIndicator color={BG} /> : <Text style={s.submitText}>إرسال الطلب للمتجر</Text>}
+            {saving ? <ActivityIndicator color={BG} /> : <TX style={s.submitText}>إرسال الطلب للمتجر</TX>}
           </TouchableOpacity>
         </ScrollView>
       )}

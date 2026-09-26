@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { useT } from '../src/i18n';
+import { TX } from '../src/useAutoT';
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function NotificationsScreen() {
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>🔔 {t('notif.title')} {unread > 0 && <Text style={{ color: '#EF4444' }}>({unread})</Text>}</Text>
-        {unread > 0 ? <TouchableOpacity onPress={markAll}><Text style={s.markAll}>✓ تم</Text></TouchableOpacity> : <View style={{ width: 22 }} />}
+        {unread > 0 ? <TouchableOpacity onPress={markAll}><TX style={s.markAll}>✓ تم</TX></TouchableOpacity> : <View style={{ width: 22 }} />}
       </View>
       {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> : (
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 14 }}>

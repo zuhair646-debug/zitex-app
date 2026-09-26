@@ -10,6 +10,8 @@ import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 type Tab = 'posts' | 'comments';
 type PostType = 'post' | 'story' | 'poll' | 'question' | 'event';
@@ -24,6 +26,7 @@ const POST_TYPES: { id: PostType; label: string; icon: any; desc: string }[] = [
 ];
 
 export default function MerchantSocial() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -213,7 +216,7 @@ export default function MerchantSocial() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>إدارة السوشال ميديا</Text>
+        <TX style={s.title}>إدارة السوشال ميديا</TX>
         <TouchableOpacity onPress={() => { resetComposer(); setComposerOpen(true); }} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
 
@@ -229,7 +232,7 @@ export default function MerchantSocial() {
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> : (
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 14, paddingBottom: 60 }}>
           {tab === 'posts' && <>
-            {posts.length === 0 && <Text style={s.empty}>لا يوجد محتوى — اضغط + لإنشاء أول منشور</Text>}
+            {posts.length === 0 && <TX style={s.empty}>لا يوجد محتوى — اضغط + لإنشاء أول منشور</TX>}
             {posts.map(p => {
               const ti = typeIcon(p.type);
               const isStory = p.type === 'story';
@@ -286,13 +289,13 @@ export default function MerchantSocial() {
           </>}
 
           {tab === 'comments' && <>
-            {comments.length === 0 && <Text style={s.empty}>لا توجد تعليقات حتى الآن</Text>}
+            {comments.length === 0 && <TX style={s.empty}>لا توجد تعليقات حتى الآن</TX>}
             {comments.map(c => (
               <TouchableOpacity key={c.id} style={s.commentCard} onPress={() => openThread(c.post_id)}>
                 <View style={s.cmtAvatar}><Text style={s.cmtAvText}>{c.user_name?.charAt(0) || '?'}</Text></View>
                 <View style={{ flex: 1, marginLeft: 10 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={s.cmtName}>{c.user_name} {c.is_merchant_reply && <Text style={s.youTag}> (أنت)</Text>}</Text>
+                    <Text style={s.cmtName}>{c.user_name} {c.is_merchant_reply && <TX style={s.youTag}> (أنت)</TX>}</Text>
                     {!c.is_merchant_reply && <TouchableOpacity onPress={(e) => { e.stopPropagation(); delComment(c.id); }}><Ionicons name="trash-outline" size={16} color="#EF4444" /></TouchableOpacity>}
                   </View>
                   <Text style={s.cmtText} numberOfLines={3}>{c.text}</Text>
@@ -313,16 +316,16 @@ export default function MerchantSocial() {
               <TouchableOpacity onPress={() => setComposerOpen(false)} style={s.headerIcon}>
                 <Ionicons name="close" size={24} color={colors.brand} />
               </TouchableOpacity>
-              <Text style={s.composerTitle}>محتوى جديد</Text>
+              <TX style={s.composerTitle}>محتوى جديد</TX>
               <TouchableOpacity onPress={publish} disabled={publishing || uploading} style={s.publishTopBtn}>
                 <LinearGradient colors={['#F5C518', '#D4AF37']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.publishTopInner}>
-                  {publishing ? <ActivityIndicator size="small" color={colors.onBrandPrimary} /> : <Text style={s.publishTopText}>نشر</Text>}
+                  {publishing ? <ActivityIndicator size="small" color={colors.onBrandPrimary} /> : <TX style={s.publishTopText}>نشر</TX>}
                 </LinearGradient>
               </TouchableOpacity>
             </View>
 
             <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-              <Text style={s.goldLabel}>نوع المحتوى</Text>
+              <TX style={s.goldLabel}>نوع المحتوى</TX>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: 4 }}>
                 {POST_TYPES.map(t => {
                   const active = postType === t.id;
@@ -368,7 +371,7 @@ export default function MerchantSocial() {
                         ) : (
                           <View style={s.videoPlaceholder}>
                             <Ionicons name="videocam" size={26} color={colors.brand} />
-                            <Text style={s.videoBadge}>فيديو</Text>
+                            <TX style={s.videoBadge}>فيديو</TX>
                           </View>
                         )}
                         <TouchableOpacity style={s.mediaRemoveGold} onPress={() => removeMedia(i)}>
@@ -380,15 +383,15 @@ export default function MerchantSocial() {
                       <>
                         <TouchableOpacity style={s.mediaAddGold} onPress={pickImage} disabled={uploading}>
                           <Ionicons name="images" size={22} color={colors.brand} />
-                          <Text style={s.mediaAddGoldText}>معرض</Text>
+                          <TX style={s.mediaAddGoldText}>معرض</TX>
                         </TouchableOpacity>
                         <TouchableOpacity style={s.mediaAddGold} onPress={takePhoto} disabled={uploading}>
                           <Ionicons name="camera" size={22} color={colors.brand} />
-                          <Text style={s.mediaAddGoldText}>كاميرا</Text>
+                          <TX style={s.mediaAddGoldText}>كاميرا</TX>
                         </TouchableOpacity>
                         <TouchableOpacity style={s.mediaAddGold} onPress={pickVideo} disabled={uploading}>
                           <Ionicons name="videocam" size={22} color={colors.brand} />
-                          <Text style={s.mediaAddGoldText}>فيديو</Text>
+                          <TX style={s.mediaAddGoldText}>فيديو</TX>
                         </TouchableOpacity>
                       </>
                     )}
@@ -396,7 +399,7 @@ export default function MerchantSocial() {
                   {uploading && (
                     <View style={s.uploadingRowGold}>
                       <ActivityIndicator color={colors.brand} />
-                      <Text style={s.uploadingTextGold}>جارٍ رفع الوسائط...</Text>
+                      <TX style={s.uploadingTextGold}>جارٍ رفع الوسائط...</TX>
                     </View>
                   )}
                 </>
@@ -405,7 +408,7 @@ export default function MerchantSocial() {
               {/* Poll options */}
               {postType === 'poll' && (
                 <>
-                  <Text style={s.goldLabel}>خيارات الاستطلاع *</Text>
+                  <TX style={s.goldLabel}>خيارات الاستطلاع *</TX>
                   {pollOptions.map((opt, i) => (
                     <View key={i} style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm, alignItems: 'center' }}>
                       <TextInput style={[s.goldInput, { flex: 1 }]} value={opt} onChangeText={v => updatePollOption(i, v)}
@@ -416,7 +419,7 @@ export default function MerchantSocial() {
                   {pollOptions.length < 6 && (
                     <TouchableOpacity onPress={addPollOption} style={s.addOptBtnGold}>
                       <Ionicons name="add-circle" size={16} color={colors.brand} />
-                      <Text style={s.addOptTextGold}>إضافة خيار</Text>
+                      <TX style={s.addOptTextGold}>إضافة خيار</TX>
                     </TouchableOpacity>
                   )}
                 </>
@@ -425,32 +428,32 @@ export default function MerchantSocial() {
               {/* Event extras */}
               {postType === 'event' && (
                 <>
-                  <Text style={s.goldLabel}>التاريخ والوقت *</Text>
+                  <TX style={s.goldLabel}>التاريخ والوقت *</TX>
                   <TextInput style={s.goldInput} value={eventDate} onChangeText={setEventDate}
                     placeholderTextColor={colors.onSurfaceTertiary} placeholder="2026-08-20 19:00" />
-                  <Text style={s.goldLabel}>المكان</Text>
+                  <TX style={s.goldLabel}>المكان</TX>
                   <TextInput style={s.goldInput} value={eventLocation} onChangeText={setEventLocation}
-                    placeholderTextColor={colors.onSurfaceTertiary} placeholder="فرع الرياض - شارع الملك فهد" />
+                    placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("فرع الرياض - شارع الملك فهد", lang)} />
                 </>
               )}
 
               {/* Optional: Location tag + Schedule */}
               {(postType === 'post' || postType === 'story') && (
                 <>
-                  <Text style={s.goldLabel}>📍 موقع (اختياري)</Text>
+                  <TX style={s.goldLabel}>📍 موقع (اختياري)</TX>
                   <TextInput style={s.goldInput} value={locationTag} onChangeText={setLocationTag}
-                    placeholderTextColor={colors.onSurfaceTertiary} placeholder="الرياض - العليا" />
+                    placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("الرياض - العليا", lang)} />
                   {postType === 'post' && (
                     <>
-                      <Text style={s.goldLabel}>⏰ جدولة النشر (اختياري)</Text>
+                      <TX style={s.goldLabel}>⏰ جدولة النشر (اختياري)</TX>
                       <TextInput style={s.goldInput} value={scheduledAt} onChangeText={setScheduledAt}
-                        placeholderTextColor={colors.onSurfaceTertiary} placeholder="2026-08-31 20:00 (اتركه فارغاً للنشر الفوري)" />
+                        placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("2026-08-31 20:00 (اتركه فارغاً للنشر الفوري)", lang)} />
                     </>
                   )}
                 </>
               )}
 
-              {postType === 'story' && <Text style={s.hintGold}>💡 الحالة ستختفي تلقائياً بعد 24 ساعة</Text>}
+              {postType === 'story' && <TX style={s.hintGold}>💡 الحالة ستختفي تلقائياً بعد 24 ساعة</TX>}
             </ScrollView>
           </SafeAreaView>
         </View>
@@ -461,24 +464,24 @@ export default function MerchantSocial() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setThreadModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <Text style={s.title}>التعليقات</Text>
+            <TX style={s.title}>التعليقات</TX>
             <View style={{ width: 36 }} />
           </View>
           <FlatList
             data={postComments}
             keyExtractor={c => c.id || c._id || String(Math.random())}
             contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
-            ListEmptyComponent={<Text style={s.empty}>لا توجد تعليقات بعد</Text>}
+            ListEmptyComponent={<TX style={s.empty}>لا توجد تعليقات بعد</TX>}
             renderItem={({ item: c }) => (
               <View style={[s.cmtThread, c.is_merchant_reply && s.cmtMerchant, !!c.reply_to && { marginLeft: 24 }]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={s.cmtName}>{c.user_name} {c.is_merchant_reply && <Text style={s.youTag}>✓ التاجر</Text>}</Text>
+                  <Text style={s.cmtName}>{c.user_name} {c.is_merchant_reply && <TX style={s.youTag}>✓ التاجر</TX>}</Text>
                   {!c.is_merchant_reply && <TouchableOpacity onPress={() => delComment(c.id)}><Ionicons name="trash-outline" size={15} color="#EF4444" /></TouchableOpacity>}
                 </View>
                 <Text style={s.cmtText}>{c.text}</Text>
                 {!c.is_merchant_reply && (
                   <TouchableOpacity onPress={() => setReplyParent(c)} style={{ marginTop: 4 }}>
-                    <Text style={{ color: '#8833FF', fontSize: 11, fontWeight: '700' }}>الرد ↩</Text>
+                    <TX style={{ color: '#8833FF', fontSize: 11, fontWeight: '700' }}>الرد ↩</TX>
                   </TouchableOpacity>
                 )}
               </View>
@@ -492,7 +495,7 @@ export default function MerchantSocial() {
               </View>
             )}
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TextInput style={[s.input, { flex: 1 }]} value={replyText} onChangeText={setReplyText} placeholder="اكتب رداً..." />
+              <TextInput style={[s.input, { flex: 1 }]} value={replyText} onChangeText={setReplyText} placeholder={tSync("اكتب رداً...", lang)} />
               <TouchableOpacity style={s.sendBtn} onPress={sendReply}><Ionicons name="send" size={18} color="white" /></TouchableOpacity>
             </View>
           </View>

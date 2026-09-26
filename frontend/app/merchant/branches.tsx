@@ -7,6 +7,8 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
 import { PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, Badge, ScreenHeader, StatCard, Chip } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 interface Branch {
   id: string; name: string; address: string; city?: string; district?: string;
@@ -21,6 +23,7 @@ const DAYS = [
 ];
 
 export default function MerchantBranches() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -92,16 +95,16 @@ export default function MerchantBranches() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title="الفروع" onBack={() => router.back()} rightIcon="add" onRight={openNew} subtitle={`${branches.length} فرع`} />
+        <ScreenHeader title={tSync("الفروع", lang)} onBack={() => router.back()} rightIcon="add" onRight={openNew} subtitle={`${branches.length} فرع`} />
 
         {/* Summary stats */}
         <View style={s.summaryRow}>
-          <StatCard icon="business" label="الفروع" value={branches.length} tone="gold" />
-          <StatCard icon="cash" label="مبيعات الشهر" value={new Intl.NumberFormat('en').format(totalRevenue)} tone="success" />
+          <StatCard icon="business" label={tSync("الفروع", lang)} value={branches.length} tone="gold" />
+          <StatCard icon="cash" label={tSync("مبيعات الشهر", lang)} value={new Intl.NumberFormat('en').format(totalRevenue)} tone="success" />
         </View>
         <View style={s.summaryRow}>
-          <StatCard icon="receipt" label="طلبات معلقة" value={totalPending} tone={totalPending > 0 ? 'warning' : 'default'} />
-          <StatCard icon="people-circle" label="موظفون" value={totalEmp} tone="info" />
+          <StatCard icon="receipt" label={tSync("طلبات معلقة", lang)} value={totalPending} tone={totalPending > 0 ? 'warning' : 'default'} />
+          <StatCard icon="people-circle" label={tSync("موظفون", lang)} value={totalEmp} tone="info" />
         </View>
 
         {loading ? (
@@ -111,7 +114,7 @@ export default function MerchantBranches() {
         ) : branches.length === 0 ? (
           <EmptyState
             icon="business-outline"
-            title="لا توجد فروع بعد"
+            title={tSync("لا توجد فروع بعد", lang)}
             description="أضف أول فرع لبدء إدارة عملياتك متعددة المواقع"
             actionLabel="إضافة فرع" onAction={openNew}
           />
@@ -132,9 +135,9 @@ export default function MerchantBranches() {
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                         <Text style={s.cardName}>{b.name}</Text>
-                        {b.is_main && <Badge label="الرئيسي" tone="gold" />}
+                        {b.is_main && <Badge label={tSync("الرئيسي", lang)} tone="gold" />}
                         {!!b.branch_code && <Badge label={b.branch_code} tone="info" />}
-                        {!b.published && <Badge label="مغلق" tone="error" />}
+                        {!b.published && <Badge label={tSync("مغلق", lang)} tone="error" />}
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                         <Ionicons name="location" size={11} color={colors.onSurfaceSecondary} />
@@ -155,28 +158,28 @@ export default function MerchantBranches() {
 
                   <View style={s.statsRow}>
                     <View style={s.miniStat}>
-                      <Text style={s.miniLabel}>الموظفون</Text>
+                      <TX style={s.miniLabel}>الموظفون</TX>
                       <Text style={s.miniValue}>{st.employees ?? '—'}</Text>
                     </View>
                     <View style={s.divider} />
                     <View style={s.miniStat}>
-                      <Text style={s.miniLabel}>الطلبات</Text>
+                      <TX style={s.miniLabel}>الطلبات</TX>
                       <Text style={s.miniValue}>{st.total_orders ?? '—'}</Text>
                     </View>
                     <View style={s.divider} />
                     <View style={s.miniStat}>
-                      <Text style={s.miniLabel}>معلق</Text>
+                      <TX style={s.miniLabel}>معلق</TX>
                       <Text style={[s.miniValue, { color: st.pending_orders > 0 ? colors.warning : colors.onSurface }]}>{st.pending_orders ?? '—'}</Text>
                     </View>
                     <View style={s.divider} />
                     <View style={s.miniStat}>
-                      <Text style={s.miniLabel}>مبيعات الشهر</Text>
+                      <TX style={s.miniLabel}>مبيعات الشهر</TX>
                       <Text style={[s.miniValue, { color: colors.brand }]}>{st.revenue_month != null ? new Intl.NumberFormat('en').format(st.revenue_month) : '—'}</Text>
                     </View>
                   </View>
 
                   <View style={s.actions}>
-                    <SecondaryButton size="sm" label="تعديل" icon="create" onPress={() => openEdit(b)} />
+                    <SecondaryButton size="sm" label={tSync("تعديل", lang)} icon="create" onPress={() => openEdit(b)} />
                     <TouchableOpacity onPress={() => remove(b)} style={s.trashBtn}>
                       <Ionicons name="trash" size={18} color={colors.error} />
                     </TouchableOpacity>
@@ -198,12 +201,12 @@ export default function MerchantBranches() {
               rightIcon="checkmark" onRight={save}
             />
             <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40, gap: spacing.md }}>
-              <Field label="اسم الفرع *" value={editing?.name || ''} onChange={v => setEditing({ ...editing, name: v })} placeholder="مثال: فرع الرياض - العليا" />
-              <Field label="الرمز الداخلي" value={editing?.branch_code || ''} onChange={v => setEditing({ ...editing, branch_code: v })} placeholder="تلقائي: BR-001" />
-              <Field label="العنوان *" value={editing?.address || ''} onChange={v => setEditing({ ...editing, address: v })} placeholder="شارع، حي، مبنى" multiline />
+              <Field label="اسم الفرع *" value={editing?.name || ''} onChange={v => setEditing({ ...editing, name: v })} placeholder={tSync("مثال: فرع الرياض - العليا", lang)} />
+              <Field label="الرمز الداخلي" value={editing?.branch_code || ''} onChange={v => setEditing({ ...editing, branch_code: v })} placeholder={tSync("تلقائي: BR-001", lang)} />
+              <Field label="العنوان *" value={editing?.address || ''} onChange={v => setEditing({ ...editing, address: v })} placeholder={tSync("شارع، حي، مبنى", lang)} multiline />
               <View style={{ flexDirection: 'row', gap: spacing.md }}>
-                <View style={{ flex: 1 }}><Field label="المدينة" value={editing?.city || ''} onChange={v => setEditing({ ...editing, city: v })} placeholder="الرياض" /></View>
-                <View style={{ flex: 1 }}><Field label="الحي" value={editing?.district || ''} onChange={v => setEditing({ ...editing, district: v })} placeholder="العليا" /></View>
+                <View style={{ flex: 1 }}><Field label="المدينة" value={editing?.city || ''} onChange={v => setEditing({ ...editing, city: v })} placeholder={tSync("الرياض", lang)} /></View>
+                <View style={{ flex: 1 }}><Field label="الحي" value={editing?.district || ''} onChange={v => setEditing({ ...editing, district: v })} placeholder={tSync("العليا", lang)} /></View>
               </View>
               <Field label="رقم الهاتف" value={editing?.phone || ''} onChange={v => setEditing({ ...editing, phone: v })} placeholder="+966 5X XXX XXXX" keyboardType="phone-pad" />
               <Field label="البريد الإلكتروني" value={editing?.email || ''} onChange={v => setEditing({ ...editing, email: v })} placeholder="branch@zitex.sa" keyboardType="email-address" />
@@ -215,7 +218,7 @@ export default function MerchantBranches() {
               </View>
 
               <View>
-                <Text style={s.fieldLabel}>أيام العمل</Text>
+                <TX style={s.fieldLabel}>أيام العمل</TX>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
                   {DAYS.map(d => {
                     const active = (editing?.working_days || []).includes(d.key);
@@ -231,8 +234,8 @@ export default function MerchantBranches() {
 
               <View style={s.switchRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.switchLabel}>الفرع الرئيسي</Text>
-                  <Text style={s.switchHint}>مقر الشركة الأساسي</Text>
+                  <TX style={s.switchLabel}>الفرع الرئيسي</TX>
+                  <TX style={s.switchHint}>مقر الشركة الأساسي</TX>
                 </View>
                 <Switch value={!!editing?.is_main} onValueChange={v => setEditing({ ...editing, is_main: v })}
                   trackColor={{ false: colors.surfaceTertiary, true: colors.brand }} thumbColor={colors.onBrandPrimary} />
@@ -240,8 +243,8 @@ export default function MerchantBranches() {
 
               <View style={s.switchRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.switchLabel}>مفعّل / مرئي للعملاء</Text>
-                  <Text style={s.switchHint}>عند إيقافه لا يظهر للعملاء</Text>
+                  <TX style={s.switchLabel}>مفعّل / مرئي للعملاء</TX>
+                  <TX style={s.switchHint}>عند إيقافه لا يظهر للعملاء</TX>
                 </View>
                 <Switch value={editing?.published !== false} onValueChange={v => setEditing({ ...editing, published: v })}
                   trackColor={{ false: colors.surfaceTertiary, true: colors.brand }} thumbColor={colors.onBrandPrimary} />

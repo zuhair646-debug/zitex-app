@@ -6,8 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { useAuth } from './_layout';
 import ZitexMap from '../src/components/MapView';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 
 export default function SetupLocation() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [lat, setLat] = useState<number>(24.7136);
@@ -55,14 +58,14 @@ export default function SetupLocation() {
     <SafeAreaView style={s.safe} edges={['top']}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.headerTitle}>تحديد موقعك</Text>
+        <TX style={s.headerTitle}>تحديد موقعك</TX>
         <View style={{ width: 22 }} />
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         <View style={s.hero}>
           <Ionicons name="location" size={36} color="white" />
-          <Text style={s.heroTitle}>أين تريد التوصيل؟</Text>
-          <Text style={s.heroSub}>اضغط على الخريطة لتحديد موقعك بدقة</Text>
+          <TX style={s.heroTitle}>أين تريد التوصيل؟</TX>
+          <TX style={s.heroSub}>اضغط على الخريطة لتحديد موقعك بدقة</TX>
         </View>
 
         <View style={{ padding: 12 }}>
@@ -71,7 +74,7 @@ export default function SetupLocation() {
 
         <View style={{ paddingHorizontal: 16 }}>
           <TouchableOpacity style={s.gpsBtn} onPress={getMyLocation} disabled={loading}>
-            {loading ? <ActivityIndicator color="white" /> : <><Ionicons name="navigate" size={18} color="white" /><Text style={s.gpsBtnText}>استخدم موقعي الحالي (GPS)</Text></>}
+            {loading ? <ActivityIndicator color="white" /> : <><Ionicons name="navigate" size={18} color="white" /><TX style={s.gpsBtnText}>استخدم موقعي الحالي (GPS)</TX></>}
           </TouchableOpacity>
 
           {hasLocation && (
@@ -81,12 +84,12 @@ export default function SetupLocation() {
             </View>
           )}
 
-          <Text style={s.label}>العنوان التفصيلي</Text>
+          <TX style={s.label}>العنوان التفصيلي</TX>
           <TextInput
             style={s.input}
             value={address}
             onChangeText={setAddress}
-            placeholder="مثل: شارع الملك فهد، حي العليا، الرياض"
+            placeholder={tSync("مثل: شارع الملك فهد، حي العليا، الرياض", lang)}
             multiline
             numberOfLines={2}
           />
@@ -102,7 +105,7 @@ export default function SetupLocation() {
           )}
 
           <TouchableOpacity style={[s.saveBtn, !hasLocation && { opacity: 0.5 }]} onPress={save} disabled={!hasLocation}>
-            <Text style={s.saveText}>حفظ الموقع</Text>
+            <TX style={s.saveText}>حفظ الموقع</TX>
           </TouchableOpacity>
         </View>
       </ScrollView>

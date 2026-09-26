@@ -5,8 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from './_layout';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 
 export default function AffiliateApply() {
+  const { lang } = useT();
   const router = useRouter();
   const { merchant_id, merchant_name, campaign_id, commission } = useLocalSearchParams<{
     merchant_id?: string; merchant_name?: string; campaign_id?: string; commission?: string;
@@ -69,7 +72,7 @@ export default function AffiliateApply() {
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
             <Ionicons name="arrow-back" size={22} color="#F5C518" />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>انضم كمسوّق</Text>
+          <TX style={s.headerTitle}>انضم كمسوّق</TX>
           <View style={s.iconBtn} />
         </View>
 
@@ -90,7 +93,7 @@ export default function AffiliateApply() {
                 </View>
               ))}
               <TouchableOpacity onPress={() => router.push('/my-affiliate')} style={s.dashLink}>
-                <Text style={s.dashLinkText}>افتح لوحة المسوّق ←</Text>
+                <TX style={s.dashLinkText}>افتح لوحة المسوّق ←</TX>
               </TouchableOpacity>
             </View>
           )}
@@ -98,7 +101,7 @@ export default function AffiliateApply() {
           <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
             <Ionicons name="megaphone" size={40} color="#0A0A0A" />
             <Text style={s.heroTitle}>{commission ? `اربح ${commission}% عمولة` : 'كن مسوّق Zenrex Store'}</Text>
-            <Text style={s.heroSubtitle}>من كل عملية شراء تتم عبر رابطك الفريد</Text>
+            <TX style={s.heroSubtitle}>من كل عملية شراء تتم عبر رابطك الفريد</TX>
           </LinearGradient>
 
           {!!merchant_name && (
@@ -111,63 +114,63 @@ export default function AffiliateApply() {
           {(missing('full_name') || missing('phone') || missing('city')) && (
             <View style={s.warnBox}>
               <Ionicons name="alert-circle" size={18} color="#F59E0B" />
-              <Text style={s.warnText}>يرجى إكمال المعلومات الناقصة أدناه</Text>
+              <TX style={s.warnText}>يرجى إكمال المعلومات الناقصة أدناه</TX>
             </View>
           )}
 
           <View style={s.autofillBadge}>
             <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-            <Text style={s.autofillText}>المعلومات مأخوذة من حسابك تلقائياً</Text>
+            <TX style={s.autofillText}>المعلومات مأخوذة من حسابك تلقائياً</TX>
           </View>
 
           <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 12, marginBottom: 4 }}>
-            <Text style={s.label}>الاسم الكامل *</Text>
-            {missing('full_name') && <Text style={s.missTag}>مطلوب</Text>}
+            <TX style={s.label}>الاسم الكامل *</TX>
+            {missing('full_name') && <TX style={s.missTag}>مطلوب</TX>}
           </View>
           <TextInput style={fieldStyle('full_name')} value={form.full_name}
             placeholderTextColor="#6B7280"
-            onChangeText={t => setForm({ ...form, full_name: t })} placeholder="اسمك الرباعي" />
+            onChangeText={t => setForm({ ...form, full_name: t })} placeholder={tSync("اسمك الرباعي", lang)} />
 
           <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 12, marginBottom: 4 }}>
-            <Text style={s.label}>رقم الجوال *</Text>
-            {missing('phone') && <Text style={s.missTag}>مطلوب</Text>}
+            <TX style={s.label}>رقم الجوال *</TX>
+            {missing('phone') && <TX style={s.missTag}>مطلوب</TX>}
           </View>
           <TextInput style={fieldStyle('phone')} value={form.phone} editable={false}
-            placeholderTextColor="#6B7280" placeholder="من حسابك" />
+            placeholderTextColor="#6B7280" placeholder={tSync("من حسابك", lang)} />
 
           <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 12, marginBottom: 4 }}>
-            <Text style={s.label}>المدينة</Text>
-            {missing('city') && <Text style={s.missTag}>ناقص</Text>}
+            <TX style={s.label}>المدينة</TX>
+            {missing('city') && <TX style={s.missTag}>ناقص</TX>}
           </View>
           <TextInput style={fieldStyle('city')} value={form.city}
             onChangeText={t => setForm({ ...form, city: t })}
-            placeholderTextColor="#6B7280" placeholder="الرياض" />
+            placeholderTextColor="#6B7280" placeholder={tSync("الرياض", lang)} />
 
-          <Text style={[s.label, { marginTop: 12 }]}>حساب السوشال (اختياري)</Text>
+          <TX style={[s.label, { marginTop: 12 }]}>حساب السوشال (اختياري)</TX>
           <TextInput testID="apply-social-input" style={s.input} value={form.social_handle}
             onChangeText={t => setForm({ ...form, social_handle: t })}
-            placeholderTextColor="#6B7280" placeholder="@username على انستقرام أو تويتر" autoCapitalize="none" />
+            placeholderTextColor="#6B7280" placeholder={tSync("@username على انستقرام أو تويتر", lang)} autoCapitalize="none" />
 
-          <Text style={[s.label, { marginTop: 12 }]}>حجم الجمهور (متابع)</Text>
+          <TX style={[s.label, { marginTop: 12 }]}>حجم الجمهور (متابع)</TX>
           <TextInput testID="apply-audience-input" style={s.input} value={form.audience_size} keyboardType="numeric"
             onChangeText={t => setForm({ ...form, audience_size: t })}
             placeholderTextColor="#6B7280" placeholder="5000" />
 
-          <Text style={[s.label, { marginTop: 12 }]}>لماذا تريد الانضمام؟ (اختياري)</Text>
+          <TX style={[s.label, { marginTop: 12 }]}>لماذا تريد الانضمام؟ (اختياري)</TX>
           <TextInput style={[s.input, { height: 90, textAlignVertical: 'top' }]} multiline
             value={form.note} onChangeText={t => setForm({ ...form, note: t })}
-            placeholderTextColor="#6B7280" placeholder="أشارك أخبار التقنية مع متابعيني..." />
+            placeholderTextColor="#6B7280" placeholder={tSync("أشارك أخبار التقنية مع متابعيني...", lang)} />
 
           <TouchableOpacity testID="apply-submit-btn" onPress={submit} disabled={saving} style={s.submitBtn}>
             <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.submitInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
               {saving ? <ActivityIndicator color="#0A0A0A" /> : <>
                 <Ionicons name="send" size={18} color="#0A0A0A" />
-                <Text style={s.submitText}>إرسال الطلب</Text>
+                <TX style={s.submitText}>إرسال الطلب</TX>
               </>}
             </LinearGradient>
           </TouchableOpacity>
 
-          <Text style={s.notice}>💡 بعد الموافقة، ستحصل على رابط إحالة فريد وتبدأ بكسب عمولات فورية.</Text>
+          <TX style={s.notice}>💡 بعد الموافقة، ستحصل على رابط إحالة فريد وتبدأ بكسب عمولات فورية.</TX>
         </ScrollView>
       </SafeAreaView>
     </View>

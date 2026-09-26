@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX } from '../../src/useAutoT';
 
 const STATUSES: Record<string, string> = {
   pending: 'قيد المراجعة',
@@ -129,7 +130,7 @@ export default function MerchantBookings() {
                 )}
                 {!!b.total_fee && (
                   <View style={s.priceRow}>
-                    <Text style={s.priceLabel}>المجموع</Text>
+                    <TX style={s.priceLabel}>المجموع</TX>
                     <Text style={s.price}>{b.total_fee} ر.س</Text>
                   </View>
                 )}

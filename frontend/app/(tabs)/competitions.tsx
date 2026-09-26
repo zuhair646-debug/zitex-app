@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
+import { TX } from '../../src/useAutoT';
 
 const COMPETITIONS = [
   { id: '1', title: 'Spend & Win: Eid Special Draw', desc: 'Spend $100 or more between April 15-May 10 and enter our Eid prize draw to win amazing gifts!', prize: 'Win 1 of 5 iPhone 15s', status: 'Still open', joined: 237, total: 1000, timeLeft: '1D 5H left', progress: 0.8, color: '#F5C518' },
@@ -28,24 +29,24 @@ export default function CompetitionsScreen() {
     <SafeAreaView style={s.safe}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Text style={s.title}>المسابقات</Text>
+          <TX style={s.title}>المسابقات</TX>
         </View>
 
         <View style={s.statsRow}>
           <View style={s.statCard}>
             <View style={s.statIcon}><Ionicons name="trophy" size={22} color="#F5C518" /></View>
             <Text style={s.statNum}>{comps.filter((c: any) => c.status === 'open').length}</Text>
-            <Text style={s.statLabel}>نشطة</Text>
+            <TX style={s.statLabel}>نشطة</TX>
           </View>
           <View style={s.statCard}>
             <View style={s.statIcon}><Ionicons name="checkmark-circle" size={22} color="#10B981" /></View>
             <Text style={s.statNum}>0</Text>
-            <Text style={s.statLabel}>مشاركة</Text>
+            <TX style={s.statLabel}>مشاركة</TX>
           </View>
           <View style={s.statCard}>
             <View style={s.statIcon}><Ionicons name="star" size={22} color="#F5C518" /></View>
             <Text style={s.statNum}>{user?.points || 0}</Text>
-            <Text style={s.statLabel}>نقاطك</Text>
+            <TX style={s.statLabel}>نقاطك</TX>
           </View>
         </View>
 

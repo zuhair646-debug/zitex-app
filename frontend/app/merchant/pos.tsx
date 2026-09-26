@@ -7,10 +7,13 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, Badge, Chip } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 type CartItem = { product_id: string; name: string; price: number; quantity: number };
 
 export default function POSTerminal() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -84,7 +87,7 @@ export default function POSTerminal() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title="نقاط البيع POS" onBack={() => router.back()} rightIcon="receipt" onRight={() => router.push('/merchant/invoices')} subtitle={`${cart.length} في السلة`} />
+        <ScreenHeader title={tSync("نقاط البيع POS", lang)} onBack={() => router.back()} rightIcon="receipt" onRight={() => router.push('/merchant/invoices')} subtitle={`${cart.length} في السلة`} />
 
         {branches.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.sm, paddingBottom: spacing.sm }}>
@@ -96,7 +99,7 @@ export default function POSTerminal() {
 
         <View style={s.searchWrap}>
           <Ionicons name="search" size={18} color={colors.onSurfaceTertiary} />
-          <TextInput value={q} onChangeText={setQ} placeholder="ابحث عن منتج..." placeholderTextColor={colors.onSurfaceTertiary} style={s.searchInput} />
+          <TextInput value={q} onChangeText={setQ} placeholder={tSync("ابحث عن منتج...", lang)} placeholderTextColor={colors.onSurfaceTertiary} style={s.searchInput} />
         </View>
 
         {loading ? (
@@ -106,7 +109,7 @@ export default function POSTerminal() {
             data={filtered}
             keyExtractor={(p: any) => p.id}
             contentContainerStyle={{ padding: spacing.lg, paddingBottom: cart.length > 0 ? 200 : 140, gap: spacing.sm }}
-            ListEmptyComponent={<EmptyState icon="cube-outline" title="لا يوجد منتجات" description="أضف منتجات من قسم المنتجات أولاً" />}
+            ListEmptyComponent={<EmptyState icon="cube-outline" title={tSync("لا يوجد منتجات", lang)} description="أضف منتجات من قسم المنتجات أولاً" />}
             renderItem={({ item: p }: any) => {
               const cartItem = cart.find(x => x.product_id === p.id);
               const price = p.discount_price || p.price;
@@ -136,9 +139,9 @@ export default function POSTerminal() {
           <View style={s.cartBar}>
             <View style={{ flex: 1 }}>
               <Text style={s.cartLbl}>{cart.reduce((a, x) => a + x.quantity, 0)} قطعة</Text>
-              <Text style={s.cartTotal}>{total.toFixed(2)} <Text style={s.cartCur}>ر.س</Text></Text>
+              <Text style={s.cartTotal}>{total.toFixed(2)} <TX style={s.cartCur}>ر.س</TX></Text>
             </View>
-            <PrimaryButton label="إنهاء البيع" icon="checkmark-circle" onPress={() => setCheckoutOpen(true)} fullWidth={false} />
+            <PrimaryButton label={tSync("إنهاء البيع", lang)} icon="checkmark-circle" onPress={() => setCheckoutOpen(true)} fullWidth={false} />
           </View>
         )}
       </SafeAreaView>
@@ -146,9 +149,9 @@ export default function POSTerminal() {
       <Modal visible={checkoutOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setCheckoutOpen(false)}>
         <View style={s.root}>
           <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-            <ScreenHeader title="إتمام البيع" onBack={() => setCheckoutOpen(false)} />
+            <ScreenHeader title={tSync("إتمام البيع", lang)} onBack={() => setCheckoutOpen(false)} />
             <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}>
-              <Text style={s.sec}>🧾 الفاتورة</Text>
+              <TX style={s.sec}>🧾 الفاتورة</TX>
               {cart.map(x => (
                 <View key={x.product_id} style={s.line}>
                   <Text style={s.lineName} numberOfLines={1}>{x.name}</Text>
@@ -157,15 +160,15 @@ export default function POSTerminal() {
                 </View>
               ))}
               <View style={s.divider} />
-              <View style={s.totalRow}><Text style={s.totalLbl}>المجموع الفرعي</Text><Text style={s.totalVal}>{subtotal.toFixed(2)} ر.س</Text></View>
-              <View style={s.totalRow}><Text style={s.totalLbl}>ضريبة 15%</Text><Text style={s.totalVal}>{vat.toFixed(2)} ر.س</Text></View>
-              <View style={s.totalRow}><Text style={[s.totalLbl, { fontWeight: '900', fontSize: 16 }]}>الإجمالي</Text><Text style={[s.totalVal, { color: colors.brand, fontSize: 18 }]}>{total.toFixed(2)} ر.س</Text></View>
+              <View style={s.totalRow}><TX style={s.totalLbl}>المجموع الفرعي</TX><Text style={s.totalVal}>{subtotal.toFixed(2)} ر.س</Text></View>
+              <View style={s.totalRow}><TX style={s.totalLbl}>ضريبة 15%</TX><Text style={s.totalVal}>{vat.toFixed(2)} ر.س</Text></View>
+              <View style={s.totalRow}><TX style={[s.totalLbl, { fontWeight: '900', fontSize: 16 }]}>الإجمالي</TX><Text style={[s.totalVal, { color: colors.brand, fontSize: 18 }]}>{total.toFixed(2)} ر.س</Text></View>
 
-              <Text style={s.sec}>👤 بيانات العميل (اختياري)</Text>
-              <TextInput style={s.input} placeholder="اسم العميل" placeholderTextColor={colors.onSurfaceTertiary} value={customerName} onChangeText={setCustomerName} />
-              <TextInput style={s.input} placeholder="رقم الجوال" placeholderTextColor={colors.onSurfaceTertiary} value={customerPhone} onChangeText={setCustomerPhone} keyboardType="phone-pad" />
+              <TX style={s.sec}>👤 بيانات العميل (اختياري)</TX>
+              <TextInput style={s.input} placeholder={tSync("اسم العميل", lang)} placeholderTextColor={colors.onSurfaceTertiary} value={customerName} onChangeText={setCustomerName} />
+              <TextInput style={s.input} placeholder={tSync("رقم الجوال", lang)} placeholderTextColor={colors.onSurfaceTertiary} value={customerPhone} onChangeText={setCustomerPhone} keyboardType="phone-pad" />
 
-              <Text style={s.sec}>💳 طريقة الدفع</Text>
+              <TX style={s.sec}>💳 طريقة الدفع</TX>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
                 {['cash','card','stc_pay','bank_transfer'].map(m => (
                   <Chip key={m} label={m==='cash'?'💵 كاش':m==='card'?'💳 بطاقة':m==='stc_pay'?'📱 STC Pay':'🏦 تحويل بنكي'} active={paymentMethod===m} onPress={() => setPaymentMethod(m)} />

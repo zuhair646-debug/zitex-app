@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polyline, Defs, LinearGradient as SvgGrad, Stop, Polygon, Circle, Rect } from 'react-native-svg';
 import { LP } from './theme';
+import { TX } from '../../useAutoT';
 
 const { width: SCREEN } = Dimensions.get('window');
 
@@ -25,7 +26,7 @@ export function KpiCard({ icon, label, value, sub, color = LP.GOLD, flex = 1 }: 
 export function Sparkline({ data, color = LP.GOLD, height = 60, fill = true }: any) {
   const w = SCREEN - 60;
   if (!data || data.length === 0) {
-    return <View style={{ height, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: LP.MUTED, fontSize: 11 }}>لا بيانات</Text></View>;
+    return <View style={{ height, alignItems: 'center', justifyContent: 'center' }}><TX style={{ color: LP.MUTED, fontSize: 11 }}>لا بيانات</TX></View>;
   }
   const max = Math.max(1, ...data);
   const min = Math.min(0, ...data);
@@ -54,7 +55,7 @@ export function Sparkline({ data, color = LP.GOLD, height = 60, fill = true }: a
 /* ─────── BAR MINI CHART ─────── */
 export function BarChart({ data, color = LP.GOLD, height = 80, labels }: any) {
   const w = SCREEN - 60;
-  if (!data || data.length === 0) return <View style={{ height, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: LP.MUTED }}>لا بيانات</Text></View>;
+  if (!data || data.length === 0) return <View style={{ height, alignItems: 'center', justifyContent: 'center' }}><TX style={{ color: LP.MUTED }}>لا بيانات</TX></View>;
   const max = Math.max(1, ...data);
   const gap = 4;
   const barW = (w - gap * (data.length - 1)) / data.length;

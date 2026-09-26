@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import { TX } from '../../src/useAutoT';
 
 const { width } = Dimensions.get('window');
 
@@ -50,7 +51,7 @@ export default function ProductDetailScreen() {
   };
 
   if (loading) return <View style={styles.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
-  if (!product) return <View style={styles.loadWrap}><Text>المنتج غير موجود</Text></View>;
+  if (!product) return <View style={styles.loadWrap}><TX>المنتج غير موجود</TX></View>;
 
   const price = product.discount_price || product.price;
   const specs = product.specs || {};
@@ -71,7 +72,7 @@ export default function ProductDetailScreen() {
         <View style={styles.imageWrap}>
           <Image source={{ uri: product.images?.[0] }} style={styles.productImage} />
           {product.condition !== 'new' && (
-            <View style={styles.condBadge}><Text style={styles.condText}>مستعمل</Text></View>
+            <View style={styles.condBadge}><TX style={styles.condText}>مستعمل</TX></View>
           )}
         </View>
 
@@ -102,7 +103,7 @@ export default function ProductDetailScreen() {
           {product.colors?.length > 0 && (
             <View style={styles.optionSection}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={styles.optionTitle}>اللون</Text>
+                <TX style={styles.optionTitle}>اللون</TX>
                 <Text style={styles.colorSelectedName}>{product.colors[selectedColor]?.name || ''}</Text>
               </View>
               <View style={styles.colorCircleRow}>
@@ -162,7 +163,7 @@ export default function ProductDetailScreen() {
 
           {/* Availability + Warranty + Shipping + Payment */}
           <View style={styles.availSection}>
-            <Text style={styles.optionTitle}>المعلومات والضمان</Text>
+            <TX style={styles.optionTitle}>المعلومات والضمان</TX>
 
             <View style={styles.availItem}>
               <Ionicons name={product.in_stock ? 'checkmark-circle' : 'close-circle'} size={20} color={product.in_stock ? '#10B981' : '#EF4444'} />
@@ -183,10 +184,10 @@ export default function ProductDetailScreen() {
                         <Ionicons name="storefront" size={16} color="#166534" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.warrTitle}>ضمان المحل</Text>
+                        <TX style={styles.warrTitle}>ضمان المحل</TX>
                         <Text style={styles.warrSub}>{product.shop_warranty_days} يوم</Text>
                       </View>
-                      <View style={styles.warrChip}><Text style={styles.warrChipText}>مضمون</Text></View>
+                      <View style={styles.warrChip}><TX style={styles.warrChipText}>مضمون</TX></View>
                     </View>
                     {!!product.shop_warranty_terms && <Text style={styles.warrTerms}>{product.shop_warranty_terms}</Text>}
                   </View>
@@ -207,13 +208,13 @@ export default function ProductDetailScreen() {
                       {!!product.manufacturer_url && (
                         <TouchableOpacity style={styles.warrBtn} onPress={() => require('react-native').Linking.openURL(product.manufacturer_url)}>
                           <Ionicons name="globe-outline" size={14} color="#1E40AF" />
-                          <Text style={styles.warrBtnText}>الموقع الرسمي</Text>
+                          <TX style={styles.warrBtnText}>الموقع الرسمي</TX>
                         </TouchableOpacity>
                       )}
                       {!!product.manufacturer_phone && (
                         <TouchableOpacity style={styles.warrBtn} onPress={() => require('react-native').Linking.openURL(`tel:${product.manufacturer_phone}`)}>
                           <Ionicons name="call-outline" size={14} color="#1E40AF" />
-                          <Text style={styles.warrBtnText}>اتصال</Text>
+                          <TX style={styles.warrBtnText}>اتصال</TX>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -228,34 +229,34 @@ export default function ProductDetailScreen() {
             ) : (
               <View style={styles.availItem}>
                 <Ionicons name="information-circle" size={20} color="#9CA3AF" />
-                <Text style={styles.availText}>بدون ضمان</Text>
+                <TX style={styles.availText}>بدون ضمان</TX>
               </View>
             )}
 
             <View style={styles.divider} />
 
-            <Text style={styles.subTitle}>طرق التوصيل المتاحة</Text>
+            <TX style={styles.subTitle}>طرق التوصيل المتاحة</TX>
             <View style={styles.shipItem}>
               <Ionicons name="flash" size={18} color="#F59E0B" />
-              <Text style={styles.shipText}>توصيل نفس اليوم (90 دقيقة)</Text>
+              <TX style={styles.shipText}>توصيل نفس اليوم (90 دقيقة)</TX>
             </View>
             <View style={styles.shipItem}>
               <Ionicons name="calendar" size={18} color="#3B82F6" />
-              <Text style={styles.shipText}>توصيل مجدول (اختر الوقت المناسب)</Text>
+              <TX style={styles.shipText}>توصيل مجدول (اختر الوقت المناسب)</TX>
             </View>
             <View style={styles.shipItem}>
               <Ionicons name="cube" size={18} color="#F5C518" />
-              <Text style={styles.shipText}>توصيل عادي (2-3 أيام)</Text>
+              <TX style={styles.shipText}>توصيل عادي (2-3 أيام)</TX>
             </View>
 
             <View style={styles.divider} />
 
-            <Text style={styles.subTitle}>وسائل الدفع المتاحة</Text>
+            <TX style={styles.subTitle}>وسائل الدفع المتاحة</TX>
             <View style={styles.payRow}>
-              <View style={styles.payBadge}><Ionicons name="cash" size={16} color="#10B981" /><Text style={styles.payText}>الدفع عند الاستلام</Text></View>
-              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="card" size={16} color="#6B7280" /><Text style={styles.payTextSoon}>بطاقة</Text></View>
+              <View style={styles.payBadge}><Ionicons name="cash" size={16} color="#10B981" /><TX style={styles.payText}>الدفع عند الاستلام</TX></View>
+              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="card" size={16} color="#6B7280" /><TX style={styles.payTextSoon}>بطاقة</TX></View>
               <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="logo-apple" size={16} color="#6B7280" /><Text style={styles.payTextSoon}>Apple Pay</Text></View>
-              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="time" size={16} color="#6B7280" /><Text style={styles.payTextSoon}>تمارا</Text></View>
+              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="time" size={16} color="#6B7280" /><TX style={styles.payTextSoon}>تمارا</TX></View>
             </View>
           </View>
         </View>
@@ -276,7 +277,7 @@ export default function ProductDetailScreen() {
       {isPreview && (
         <View style={{ position: 'absolute', top: 60, right: 12, backgroundColor: '#F5C518', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF4444' }} />
-          <Text style={{ color: '#0A0A0A', fontWeight: '900', fontSize: 12 }}>🔴 معاينة التاجر</Text>
+          <TX style={{ color: '#0A0A0A', fontWeight: '900', fontSize: 12 }}>🔴 معاينة التاجر</TX>
         </View>
       )}
       {isPreview && (
@@ -285,7 +286,7 @@ export default function ProductDetailScreen() {
           onPress={() => router.push(`/merchant/live-preview?analytics=${id}` as any)}
           style={{ position: 'absolute', bottom: 90, left: 20, backgroundColor: '#0B0C10', borderWidth: 2, borderColor: '#F5C518', paddingHorizontal: 14, paddingVertical: 12, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 12 }}>
           <Ionicons name="analytics" size={18} color="#F5C518" />
-          <Text style={{ color: '#F5C518', fontWeight: '900', fontSize: 13 }}>📊 إحصائيات المنتج</Text>
+          <TX style={{ color: '#F5C518', fontWeight: '900', fontSize: 13 }}>📊 إحصائيات المنتج</TX>
         </TouchableOpacity>
       )}
     </SafeAreaView>

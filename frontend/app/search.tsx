@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import { TX } from '../src/useAutoT';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 56) / 2;
@@ -96,8 +97,8 @@ export default function SearchScreen() {
             <TouchableOpacity testID={`search-product-${p.id}`} key={p.id} style={styles.productCard}
               onPress={() => router.push(`/product/${p.id}`)}>
               <Image source={{ uri: p.images?.[0] }} style={styles.productImg} />
-              {!!p.discount_price && <View style={styles.discBadge}><Text style={styles.discText}>خصم</Text></View>}
-              {p.condition !== 'new' && <View style={styles.usedBadge}><Text style={styles.usedText}>مستعمل</Text></View>}
+              {!!p.discount_price && <View style={styles.discBadge}><TX style={styles.discText}>خصم</TX></View>}
+              {p.condition !== 'new' && <View style={styles.usedBadge}><TX style={styles.usedText}>مستعمل</TX></View>}
               <Text style={styles.productName} numberOfLines={2}>{p.name_en}</Text>
               <View style={styles.ratingRow}>
                 <Ionicons name="star" size={12} color="#FACC15" />

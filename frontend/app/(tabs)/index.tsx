@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import { TX } from '../../src/useAutoT';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 60) / 2;
@@ -162,10 +163,10 @@ export default function HomeScreen() {
           <View style={s.tglWrap}>
             <View style={s.tglOn}>
               <Ionicons name="storefront" size={14} color="#F5C518" />
-              <Text style={s.tglOnText}>🛍 المتجر</Text>
+              <TX style={s.tglOnText}>🛍 المتجر</TX>
             </View>
             <TouchableOpacity onPress={() => router.push('/my-affiliate')} style={s.tglOff}>
-              <Text style={s.tglOffText}>🏆 المسوّق</Text>
+              <TX style={s.tglOffText}>🏆 المسوّق</TX>
               {affiliateCount > 0 && <View style={s.tglBadge}><Text style={s.tglBadgeText}>{affiliateCount}</Text></View>}
             </TouchableOpacity>
           </View>
@@ -211,13 +212,13 @@ export default function HomeScreen() {
         <View style={s.quickRow}>
           <TouchableOpacity style={[s.quickCard, { backgroundColor: '#FCE7F3' }]} onPress={() => router.push('/group-buys' as any)}>
             <Ionicons name="people" size={26} color="#EC4899" />
-            <Text style={s.quickTitle}>التسوق الجماعي</Text>
-            <Text style={s.quickSub}>وفّر أكثر بالمجموعة 👥</Text>
+            <TX style={s.quickTitle}>التسوق الجماعي</TX>
+            <TX style={s.quickSub}>وفّر أكثر بالمجموعة 👥</TX>
           </TouchableOpacity>
           <TouchableOpacity style={[s.quickCard, { backgroundColor: '#FEF3C7' }]} onPress={() => router.push('/points' as any)}>
             <Ionicons name="medal" size={26} color="#F59E0B" />
-            <Text style={s.quickTitle}>نقاط الولاء</Text>
-            <Text style={s.quickSub}>اكسب وامنح خصومات 🎖️</Text>
+            <TX style={s.quickTitle}>نقاط الولاء</TX>
+            <TX style={s.quickSub}>اكسب وامنح خصومات 🎖️</TX>
           </TouchableOpacity>
         </View>
 
@@ -320,7 +321,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={s.progressText}>{joined}/{max} مشارك</Text>
-                  <Text style={[s.progressText, { color: '#F5C518', fontWeight: '700' }]}>اضغط للتفاصيل ←</Text>
+                  <TX style={[s.progressText, { color: '#F5C518', fontWeight: '700' }]}>اضغط للتفاصيل ←</TX>
                 </View>
               </View>
             </TouchableOpacity>

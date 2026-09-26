@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { mediaUrlSync } from '../src/utils/upload';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 
 const PURPLE = '#F5C518';
 
@@ -19,6 +21,7 @@ const STEPS = [
 ];
 
 export default function MyServices() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [bookings, setBookings] = useState<any[]>([]);
@@ -46,7 +49,7 @@ export default function MyServices() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>خدماتي</Text>
+        <TX style={s.title}>خدماتي</TX>
         <View style={{ width: 22 }} />
       </View>
 
@@ -54,9 +57,9 @@ export default function MyServices() {
         {bookings.length === 0 && (
           <View style={s.empty}>
             <Ionicons name="construct-outline" size={54} color="#D4D4D8" />
-            <Text style={s.emptyText}>لا يوجد لديك خدمات</Text>
+            <TX style={s.emptyText}>لا يوجد لديك خدمات</TX>
             <TouchableOpacity onPress={() => router.push('/(tabs)/services')} style={s.emptyBtn}>
-              <Text style={s.emptyBtnText}>تصفح الخدمات</Text>
+              <TX style={s.emptyBtnText}>تصفح الخدمات</TX>
             </TouchableOpacity>
           </View>
         )}
@@ -82,7 +85,7 @@ export default function MyServices() {
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
                 <Text style={s.total}>الإجمالي: {b.total_amount || b.service_price || 0} ر.س</Text>
-                <Text style={s.hint}>اضغط للتفاصيل ›</Text>
+                <TX style={s.hint}>اضغط للتفاصيل ›</TX>
               </View>
             </TouchableOpacity>
           );
@@ -106,7 +109,7 @@ function BookingDetail({ booking, onClose, apiCall }: any) {
         </View>
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           <View style={s.infoBox}>
-            <Text style={s.infoTitle}>معلومات الحجز</Text>
+            <TX style={s.infoTitle}>معلومات الحجز</TX>
             <Row label="الجهاز" value={booking.device_model} />
             <Row label="المشكلة" value={booking.issue_desc} />
             <Row label="الحالة" value={STEPS.find(x => x.key === booking.status)?.label || booking.status} />
@@ -114,11 +117,11 @@ function BookingDetail({ booking, onClose, apiCall }: any) {
             <Row label="الإجمالي" value={`${booking.total_amount || 0} ر.س`} bold />
           </View>
 
-          <Text style={s.sec}>🎥 تحديثات الفني</Text>
+          <TX style={s.sec}>🎥 تحديثات الفني</TX>
           {(booking.updates || []).length === 0 ? (
             <View style={s.emptyBox}>
               <Ionicons name="videocam-outline" size={40} color="#D4D4D8" />
-              <Text style={s.emptySub}>الفني لم يشارك تحديثات بعد</Text>
+              <TX style={s.emptySub}>الفني لم يشارك تحديثات بعد</TX>
             </View>
           ) : (
             (booking.updates || []).map((u: any) => (
@@ -167,7 +170,7 @@ function UpdateItem({ update, bookingId, apiCall }: any) {
       {!!update.caption && <Text style={s.updateCap}>{update.caption}</Text>}
       {!submitted ? (
         <View style={s.rateBox}>
-          <Text style={s.rateTitle}>قيّم الفيديو</Text>
+          <TX style={s.rateTitle}>قيّم الفيديو</TX>
           <View style={{ flexDirection: 'row', gap: 4, marginVertical: 6 }}>
             {[1,2,3,4,5].map(i => (
               <TouchableOpacity key={i} onPress={() => setStars(i)}>
@@ -175,13 +178,13 @@ function UpdateItem({ update, bookingId, apiCall }: any) {
               </TouchableOpacity>
             ))}
           </View>
-          <TextInput style={s.rateInput} placeholder="تعليق (اختياري)" value={comment} onChangeText={setComment} />
+          <TextInput style={s.rateInput} placeholder={tSync("تعليق (اختياري)", lang)} value={comment} onChangeText={setComment} />
           <TouchableOpacity style={s.rateBtn} onPress={submit} disabled={saving}>
-            {saving ? <ActivityIndicator color="white" /> : <Text style={s.rateBtnText}>إرسال</Text>}
+            {saving ? <ActivityIndicator color="white" /> : <TX style={s.rateBtnText}>إرسال</TX>}
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={s.thanks}><Ionicons name="checkmark-circle" size={18} color="#10B981" /><Text style={s.thanksText}>شكراً على تقييمك</Text></View>
+        <View style={s.thanks}><Ionicons name="checkmark-circle" size={18} color="#10B981" /><TX style={s.thanksText}>شكراً على تقييمك</TX></View>
       )}
     </View>
   );
@@ -204,7 +207,7 @@ function FinalRating({ bookingId, apiCall, existing }: any) {
   };
   return (
     <View style={s.finalCard}>
-      <Text style={s.sec}>⭐ تقييمك النهائي للخدمة</Text>
+      <TX style={s.sec}>⭐ تقييمك النهائي للخدمة</TX>
       <View style={{ flexDirection: 'row', gap: 6, marginVertical: 8 }}>
         {[1,2,3,4,5].map(i => (
           <TouchableOpacity key={i} onPress={() => !saved && setStars(i)}>
@@ -212,13 +215,13 @@ function FinalRating({ bookingId, apiCall, existing }: any) {
           </TouchableOpacity>
         ))}
       </View>
-      <TextInput style={s.rateInput} placeholder="شارك تجربتك..." value={comment} onChangeText={setComment} editable={!saved} multiline />
+      <TextInput style={s.rateInput} placeholder={tSync("شارك تجربتك...", lang)} value={comment} onChangeText={setComment} editable={!saved} multiline />
       {!saved && (
         <TouchableOpacity style={s.rateBtn} onPress={submit} disabled={saving}>
-          {saving ? <ActivityIndicator color="white" /> : <Text style={s.rateBtnText}>إرسال التقييم</Text>}
+          {saving ? <ActivityIndicator color="white" /> : <TX style={s.rateBtnText}>إرسال التقييم</TX>}
         </TouchableOpacity>
       )}
-      {saved && <View style={s.thanks}><Ionicons name="checkmark-circle" size={18} color="#10B981" /><Text style={s.thanksText}>تم استلام تقييمك</Text></View>}
+      {saved && <View style={s.thanks}><Ionicons name="checkmark-circle" size={18} color="#10B981" /><TX style={s.thanksText}>تم استلام تقييمك</TX></View>}
     </View>
   );
 }

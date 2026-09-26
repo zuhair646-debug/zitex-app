@@ -8,6 +8,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0A0A0A';
@@ -25,6 +27,7 @@ const STATUS_FLOW = [
 ];
 
 export default function MerchantServiceBookings() {
+  const { lang } = useT();
   const { service_id } = useLocalSearchParams<{ service_id?: string }>();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -68,7 +71,7 @@ export default function MerchantServiceBookings() {
         {bookings.length === 0 && (
           <View style={s.empty}>
             <Ionicons name="calendar-outline" size={54} color={GOLD} />
-            <Text style={s.emptyText}>لا توجد حجوزات بعد</Text>
+            <TX style={s.emptyText}>لا توجد حجوزات بعد</TX>
           </View>
         )}
         {bookings.map(b => (
@@ -128,7 +131,7 @@ function BookingDetailModal({ booking, onClose, onStatus, apiCall, onRefresh }: 
             <Row label="الإجمالي" value={`${booking.total_amount || 0} ر.س`} bold />
           </View>
 
-          <Text style={s.sec}>الحالة الحالية</Text>
+          <TX style={s.sec}>الحالة الحالية</TX>
           <View style={s.statusRow}>
             {STATUS_FLOW.map(st => (
               <TouchableOpacity key={st.id} onPress={() => onStatus(booking.id, st.id)}
@@ -139,14 +142,14 @@ function BookingDetailModal({ booking, onClose, onStatus, apiCall, onRefresh }: 
           </View>
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
-            <Text style={s.sec}>🎥 تحديثات للعميل</Text>
+            <TX style={s.sec}>🎥 تحديثات للعميل</TX>
             <TouchableOpacity onPress={() => setComposerOpen(true)} style={s.addBtn}>
               <Ionicons name="add" size={18} color={BG} />
-              <Text style={s.addBtnText}>فيديو</Text>
+              <TX style={s.addBtnText}>فيديو</TX>
             </TouchableOpacity>
           </View>
           {(booking.updates || []).length === 0 ? (
-            <View style={s.emptyBox}><Text style={s.emptySub}>لم ترسل تحديثات بعد</Text></View>
+            <View style={s.emptyBox}><TX style={s.emptySub}>لم ترسل تحديثات بعد</TX></View>
           ) : (booking.updates || []).map((u: any) => (
             <UpdateCard key={u.id} update={u} apiCall={apiCall} onChange={onRefresh} />
           ))}
@@ -198,12 +201,12 @@ function UpdateCard({ update, apiCall, onChange }: any) {
       ) : null}
       {!!update.caption && <Text style={s.updateCap}>{update.caption}</Text>}
       <View style={s.toggleMini}>
-        <Text style={s.toggleMiniLbl}>عرض كتجربة عملاء</Text>
+        <TX style={s.toggleMiniLbl}>عرض كتجربة عملاء</TX>
         <Switch value={isPub} onValueChange={(v) => { setIsPub(v); toggle('is_public_experience', v); }}
           trackColor={{ true: GOLD, false: '#3A3A3C' }} thumbColor={isPub ? BG : '#FFF'} />
       </View>
       <View style={s.toggleMini}>
-        <Text style={s.toggleMiniLbl}>نشر في السوشيال</Text>
+        <TX style={s.toggleMiniLbl}>نشر في السوشيال</TX>
         <Switch value={isSocial} onValueChange={(v) => { setIsSocial(v); toggle('crosspost_to_social', v); }}
           trackColor={{ true: GOLD, false: '#3A3A3C' }} thumbColor={isSocial ? BG : '#FFF'} />
       </View>
@@ -273,41 +276,41 @@ function VideoComposer({ bookingId, apiCall, onDone, onCancel }: any) {
       <SafeAreaView style={s.safe}>
         <View style={s.header}>
           <TouchableOpacity onPress={onCancel}><Ionicons name="close" size={24} color={GOLD} /></TouchableOpacity>
-          <Text style={s.title}>تحديث جديد</Text>
+          <TX style={s.title}>تحديث جديد</TX>
           <View style={{ width: 22 }} />
         </View>
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TouchableOpacity onPress={pickVideo} style={s.mediaBtn} disabled={uploading}>
               <Ionicons name="videocam" size={22} color={GOLD} />
-              <Text style={s.mediaBtnText}>فيديو (≤60ث)</Text>
+              <TX style={s.mediaBtnText}>فيديو (≤60ث)</TX>
             </TouchableOpacity>
             <TouchableOpacity onPress={pickImage} style={s.mediaBtn} disabled={uploading}>
               <Ionicons name="camera" size={22} color={GOLD} />
-              <Text style={s.mediaBtnText}>صورة</Text>
+              <TX style={s.mediaBtnText}>صورة</TX>
             </TouchableOpacity>
           </View>
           {uploading && <ActivityIndicator color={GOLD} style={{ marginTop: 12 }} />}
-          {videoUrl ? <Text style={s.pathText}>✅ فيديو مرفوع</Text> : null}
-          {imageUrl ? <Text style={s.pathText}>✅ صورة مرفوعة</Text> : null}
+          {videoUrl ? <TX style={s.pathText}>✅ فيديو مرفوع</TX> : null}
+          {imageUrl ? <TX style={s.pathText}>✅ صورة مرفوعة</TX> : null}
 
-          <Text style={s.label}>التعليق</Text>
+          <TX style={s.label}>التعليق</TX>
           <TextInput style={[s.input, { height: 100 }]} multiline value={caption} onChangeText={setCaption}
-            placeholder="اشرح للعميل ما اكتشفت أو ما تعمل عليه الآن..." placeholderTextColor={MUTED} />
+            placeholder={tSync("اشرح للعميل ما اكتشفت أو ما تعمل عليه الآن...", lang)} placeholderTextColor={MUTED} />
 
           <View style={s.toggleMini}>
-            <Text style={s.toggleMiniLbl}>عرض كتجربة عملاء (عام)</Text>
+            <TX style={s.toggleMiniLbl}>عرض كتجربة عملاء (عام)</TX>
             <Switch value={isPub} onValueChange={setIsPub}
               trackColor={{ true: GOLD, false: '#3A3A3C' }} thumbColor={isPub ? BG : '#FFF'} />
           </View>
           <View style={s.toggleMini}>
-            <Text style={s.toggleMiniLbl}>نشر أيضاً في السوشيال ميديا</Text>
+            <TX style={s.toggleMiniLbl}>نشر أيضاً في السوشيال ميديا</TX>
             <Switch value={isSocial} onValueChange={setIsSocial}
               trackColor={{ true: GOLD, false: '#3A3A3C' }} thumbColor={isSocial ? BG : '#FFF'} />
           </View>
 
           <TouchableOpacity style={s.saveBtn} onPress={submit} disabled={saving || uploading}>
-            {saving ? <ActivityIndicator color={BG} /> : <Text style={s.saveText}>إرسال للعميل</Text>}
+            {saving ? <ActivityIndicator color={BG} /> : <TX style={s.saveText}>إرسال للعميل</TX>}
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>

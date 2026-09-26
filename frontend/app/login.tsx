@@ -4,8 +4,11 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 
 export default function LoginScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { login, apiCall } = useAuth();
   const [phone, setPhone] = useState('');
@@ -48,33 +51,33 @@ export default function LoginScreen() {
             <View style={styles.logoCircle}>
               <Image source={require('../assets/images/icon.png')} style={styles.logoImg} />
             </View>
-            <Text style={styles.title}>أهلاً بك في Zenrex Store</Text>
-            <Text style={styles.subtitle}>سجّل دخولك للمتابعة</Text>
+            <TX style={styles.title}>أهلاً بك في Zenrex Store</TX>
+            <TX style={styles.subtitle}>سجّل دخولك للمتابعة</TX>
           </View>
 
           {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
 
           <View style={styles.inputWrap}>
-            <TextInput testID="login-phone-input" style={styles.input} placeholder="رقم الجوال" placeholderTextColor="#A1A1AA" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+            <TextInput testID="login-phone-input" style={styles.input} placeholder={tSync("رقم الجوال", lang)} placeholderTextColor="#A1A1AA" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
           </View>
 
           <View style={styles.inputWrap}>
-            <TextInput testID="login-password-input" style={styles.input} placeholder="كلمة المرور" placeholderTextColor="#A1A1AA" value={password} onChangeText={setPassword} secureTextEntry={!showPass} />
+            <TextInput testID="login-password-input" style={styles.input} placeholder={tSync("كلمة المرور", lang)} placeholderTextColor="#A1A1AA" value={password} onChangeText={setPassword} secureTextEntry={!showPass} />
             <TouchableOpacity testID="toggle-password-btn" onPress={() => setShowPass(!showPass)} style={styles.eyeBtn}>
               <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={20} color="#A1A1AA" />
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.forgotLink}><Text style={styles.forgotText}>نسيت كلمة المرور؟</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.forgotLink}><TX style={styles.forgotText}>نسيت كلمة المرور؟</TX></TouchableOpacity>
 
           <TouchableOpacity testID="login-submit-button" style={styles.btn} onPress={handleLogin} disabled={loading}>
-            {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnText}>تسجيل الدخول</Text>}
+            {loading ? <ActivityIndicator color="#FFF" /> : <TX style={styles.btnText}>تسجيل الدخول</TX>}
           </TouchableOpacity>
 
           <View style={styles.bottomRow}>
-            <Text style={styles.bottomText}>ليس لديك حساب؟</Text>
+            <TX style={styles.bottomText}>ليس لديك حساب؟</TX>
             <TouchableOpacity testID="go-to-register-btn" onPress={() => router.push('/register')}>
-              <Text style={styles.linkText}>إنشاء حساب</Text>
+              <TX style={styles.linkText}>إنشاء حساب</TX>
             </TouchableOpacity>
           </View>
         </ScrollView>

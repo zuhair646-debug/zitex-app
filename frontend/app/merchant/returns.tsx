@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -28,6 +30,7 @@ const STATE_META: Record<string, { label: string; color: string; icon: string }>
 };
 
 export default function MerchantReturnsScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [rmas, setRmas] = useState<any[]>([]);
@@ -114,8 +117,8 @@ export default function MerchantReturnsScreen() {
           <Ionicons name="chevron-forward" size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={s.title}>الإرجاع والضمان</Text>
-          <Text style={s.sub}>إدارة طلبات الإرجاع والاستبدال والضمان</Text>
+          <TX style={s.title}>الإرجاع والضمان</TX>
+          <TX style={s.sub}>إدارة طلبات الإرجاع والاستبدال والضمان</TX>
         </View>
       </View>
 
@@ -138,7 +141,7 @@ export default function MerchantReturnsScreen() {
         <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }}>
           {rmas.length === 0 && (
             <View style={{ padding: 40 }}>
-              <Text style={{ color: MUTED, textAlign: 'center' }}>لا توجد طلبات في هذه الحالة</Text>
+              <TX style={{ color: MUTED, textAlign: 'center' }}>لا توجد طلبات في هذه الحالة</TX>
             </View>
           )}
           {rmas.map((r) => {
@@ -201,7 +204,7 @@ export default function MerchantReturnsScreen() {
                     {selected.imei_or_serial && <DetailRow icon="barcode" label="IMEI/الرقم التسلسلي" value={selected.imei_or_serial} />}
                     {selected.media?.length > 0 && (
                       <View style={{ marginTop: 10 }}>
-                        <Text style={s.label}>الصور/الفيديو المرفقة</Text>
+                        <TX style={s.label}>الصور/الفيديو المرفقة</TX>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                           {selected.media.map((m: string, i: number) => (
                             <Image key={i} source={{ uri: m.startsWith('http') ? m : (process.env.EXPO_PUBLIC_BACKEND_URL || '') + m }} style={s.media} />
@@ -214,47 +217,47 @@ export default function MerchantReturnsScreen() {
                   {/* Actions based on state */}
                   {selected.state === 'pending' && (
                     <View style={{ marginTop: 14, gap: 8 }}>
-                      <Text style={s.sectionTitle}>القرار</Text>
+                      <TX style={s.sectionTitle}>القرار</TX>
                       <TouchableOpacity onPress={() => setDecision('approve')} style={[s.actBtn, { backgroundColor: OK }]}>
                         <Ionicons name="checkmark-circle" size={18} color="#FFF" />
-                        <Text style={s.actText}>موافقة وطلب استلام عكسي</Text>
+                        <TX style={s.actText}>موافقة وطلب استلام عكسي</TX>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setDecision('request_info')} style={[s.actBtn, { backgroundColor: AMBER }]}>
                         <Ionicons name="help-buoy" size={18} color="#FFF" />
-                        <Text style={s.actText}>طلب معلومات إضافية</Text>
+                        <TX style={s.actText}>طلب معلومات إضافية</TX>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setDecision('reject')} style={[s.actBtn, { backgroundColor: RED }]}>
                         <Ionicons name="close-circle" size={18} color="#FFF" />
-                        <Text style={s.actText}>رفض الطلب</Text>
+                        <TX style={s.actText}>رفض الطلب</TX>
                       </TouchableOpacity>
                     </View>
                   )}
 
                   {(selected.state === 'approved' || selected.state === 'picked_up' || selected.state === 'inspecting') && (
                     <View style={{ marginTop: 14, gap: 8 }}>
-                      <Text style={s.sectionTitle}>بعد الفحص</Text>
+                      <TX style={s.sectionTitle}>بعد الفحص</TX>
                       <TouchableOpacity onPress={() => setInspectMode('refund')} style={[s.actBtn, { backgroundColor: OK }]}>
                         <Ionicons name="cash" size={18} color="#FFF" />
-                        <Text style={s.actText}>استرداد المبلغ</Text>
+                        <TX style={s.actText}>استرداد المبلغ</TX>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setInspectMode('exchange')} style={[s.actBtn, { backgroundColor: BLUE }]}>
                         <Ionicons name="swap-horizontal" size={18} color="#FFF" />
-                        <Text style={s.actText}>استبدال بمنتج جديد</Text>
+                        <TX style={s.actText}>استبدال بمنتج جديد</TX>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setInspectMode('repair')} style={[s.actBtn, { backgroundColor: '#8B5CF6' }]}>
                         <Ionicons name="construct" size={18} color="#FFF" />
-                        <Text style={s.actText}>إصلاح ضمن الضمان</Text>
+                        <TX style={s.actText}>إصلاح ضمن الضمان</TX>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setInspectMode('return_to_customer')} style={[s.actBtn, { backgroundColor: MUTED }]}>
                         <Ionicons name="arrow-undo" size={18} color="#FFF" />
-                        <Text style={s.actText}>إعادة للعميل (رفض بعد الفحص)</Text>
+                        <TX style={s.actText}>إعادة للعميل (رفض بعد الفحص)</TX>
                       </TouchableOpacity>
                     </View>
                   )}
 
                   {selected.audit && selected.audit.length > 0 && (
                     <>
-                      <Text style={s.sectionTitle}>السجل</Text>
+                      <TX style={s.sectionTitle}>السجل</TX>
                       {selected.audit.map((a: any, i: number) => (
                         <View key={i} style={s.auditRow}>
                           <Text style={{ color: MUTED, fontSize: 10 }}>{(a.at || '').slice(0, 16).replace('T', ' ')}</Text>
@@ -281,20 +284,20 @@ export default function MerchantReturnsScreen() {
             </Text>
             {decision === 'approve' && (
               <>
-                <Text style={s.label}>مبلغ الاسترداد المعتمد (اتركه فارغاً للمبلغ الأصلي)</Text>
+                <TX style={s.label}>مبلغ الاسترداد المعتمد (اتركه فارغاً للمبلغ الأصلي)</TX>
                 <TextInput style={s.input} keyboardType="decimal-pad"
                   value={refundAmount} onChangeText={setRefundAmount} placeholder={String(selected ? selected.unit_price * selected.qty : 0)} placeholderTextColor={MUTED} />
               </>
             )}
-            <Text style={s.label}>ملاحظة للعميل</Text>
+            <TX style={s.label}>ملاحظة للعميل</TX>
             <TextInput style={[s.input, { minHeight: 60 }]} multiline
-              value={decisionNote} onChangeText={setDecisionNote} placeholder="اختياري" placeholderTextColor={MUTED} />
+              value={decisionNote} onChangeText={setDecisionNote} placeholder={tSync("اختياري", lang)} placeholderTextColor={MUTED} />
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
               <TouchableOpacity onPress={() => setDecision(null)} style={[s.confirmBtn, { backgroundColor: CARD, borderWidth: 1, borderColor: BORDER }]}>
-                <Text style={{ color: TEXT, fontWeight: '900' }}>إلغاء</Text>
+                <TX style={{ color: TEXT, fontWeight: '900' }}>إلغاء</TX>
               </TouchableOpacity>
               <TouchableOpacity onPress={submitDecision} style={[s.confirmBtn, { backgroundColor: GOLD }]} disabled={saving}>
-                {saving ? <ActivityIndicator color={BG} /> : <Text style={{ color: BG, fontWeight: '900' }}>تأكيد</Text>}
+                {saving ? <ActivityIndicator color={BG} /> : <TX style={{ color: BG, fontWeight: '900' }}>تأكيد</TX>}
               </TouchableOpacity>
             </View>
           </View>
@@ -305,23 +308,23 @@ export default function MerchantReturnsScreen() {
       <Modal visible={!!inspectMode} transparent animationType="fade" onRequestClose={() => setInspectMode(null)}>
         <View style={s.overlay}>
           <View style={s.confirmBox}>
-            <Text style={{ color: GOLD, fontSize: 14, fontWeight: '900', textAlign: 'right' }}>نتيجة الفحص</Text>
+            <TX style={{ color: GOLD, fontSize: 14, fontWeight: '900', textAlign: 'right' }}>نتيجة الفحص</TX>
             {inspectMode === 'refund' && (
               <>
-                <Text style={s.label}>مبلغ الاسترداد النهائي</Text>
+                <TX style={s.label}>مبلغ الاسترداد النهائي</TX>
                 <TextInput style={s.input} keyboardType="decimal-pad"
                   value={refundAmount} onChangeText={setRefundAmount} placeholder={String(selected ? selected.unit_price * selected.qty : 0)} placeholderTextColor={MUTED} />
               </>
             )}
-            <Text style={s.label}>ملاحظات الفني</Text>
+            <TX style={s.label}>ملاحظات الفني</TX>
             <TextInput style={[s.input, { minHeight: 60 }]} multiline
               value={inspectNote} onChangeText={setInspectNote} />
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
               <TouchableOpacity onPress={() => setInspectMode(null)} style={[s.confirmBtn, { backgroundColor: CARD, borderWidth: 1, borderColor: BORDER }]}>
-                <Text style={{ color: TEXT, fontWeight: '900' }}>إلغاء</Text>
+                <TX style={{ color: TEXT, fontWeight: '900' }}>إلغاء</TX>
               </TouchableOpacity>
               <TouchableOpacity onPress={submitInspection} style={[s.confirmBtn, { backgroundColor: GOLD }]} disabled={saving}>
-                {saving ? <ActivityIndicator color={BG} /> : <Text style={{ color: BG, fontWeight: '900' }}>تأكيد</Text>}
+                {saving ? <ActivityIndicator color={BG} /> : <TX style={{ color: BG, fontWeight: '900' }}>تأكيد</TX>}
               </TouchableOpacity>
             </View>
           </View>

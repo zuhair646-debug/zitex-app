@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import ZitexMap from '../../src/components/MapView';
+import { TX } from '../../src/useAutoT';
 
 const STATUS_ORDER = ['pending', 'processing', 'ready_for_pickup', 'assigned', 'picked_up', 'delivered'];
 const STATUS_AR: Record<string, string> = {
@@ -27,7 +28,7 @@ export default function TrackOrder() {
   useEffect(() => { load(); const iv = setInterval(load, 8000); return () => clearInterval(iv); }, [load]);
 
   if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#F5C518" /></View>;
-  if (!order) return <View style={s.center}><Text>لم يتم العثور على الطلب</Text></View>;
+  if (!order) return <View style={s.center}><TX>لم يتم العثور على الطلب</TX></View>;
 
   const stepIdx = STATUS_ORDER.indexOf(order.status);
   const showMap = ['assigned', 'picked_up'].includes(order.status) && (order.driver_lat || order.dest_lat);
@@ -40,7 +41,7 @@ export default function TrackOrder() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>تتبع الطلب</Text>
+        <TX style={s.title}>تتبع الطلب</TX>
         <TouchableOpacity onPress={load}><Ionicons name="refresh" size={20} color="#F5C518" /></TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -53,7 +54,7 @@ export default function TrackOrder() {
 
         {showMap && (
           <View style={{ marginTop: 14 }}>
-            <Text style={s.section}>📍 الموقع المباشر</Text>
+            <TX style={s.section}>📍 الموقع المباشر</TX>
             <ZitexMap
               mode="tracking"
               driverLat={order.driver_lat}
@@ -66,11 +67,11 @@ export default function TrackOrder() {
               initialLng={order.driver_lng || order.dest_lng || 46.6753}
               height={300}
             />
-            <Text style={s.mapHint}>🟠 السائق · 🟣 الفرع · 🟢 موقعك</Text>
+            <TX style={s.mapHint}>🟠 السائق · 🟣 الفرع · 🟢 موقعك</TX>
           </View>
         )}
 
-        <Text style={s.section}>تقدم الطلب</Text>
+        <TX style={s.section}>تقدم الطلب</TX>
         <View style={s.steps}>
           {STATUS_ORDER.map((st, i) => (
             <View key={st} style={s.step}>
@@ -84,7 +85,7 @@ export default function TrackOrder() {
 
         {order.driver_name ? (
           <View style={s.driverBox}>
-            <Text style={s.section}>السائق</Text>
+            <TX style={s.section}>السائق</TX>
             <View style={s.driverRow}>
               <View style={s.avatar}><Text style={s.avatarText}>{order.driver_name?.charAt(0)}</Text></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
@@ -100,15 +101,15 @@ export default function TrackOrder() {
             {order.driver_lat && order.driver_lng && (
               <TouchableOpacity onPress={openExternalMap} style={s.mapBtn}>
                 <Ionicons name="map" size={16} color="white" />
-                <Text style={s.mapBtnText}>فتح في خرائط Google</Text>
+                <TX style={s.mapBtnText}>فتح في خرائط Google</TX>
               </TouchableOpacity>
             )}
           </View>
         ) : order.status === 'pending' || order.status === 'processing' ? (
-          <Text style={s.empty}>قيد تجهيز الطلب — سيتم تعيين سائق قريباً</Text>
+          <TX style={s.empty}>قيد تجهيز الطلب — سيتم تعيين سائق قريباً</TX>
         ) : null}
 
-        <Text style={s.section}>عنوان التوصيل</Text>
+        <TX style={s.section}>عنوان التوصيل</TX>
         <View style={s.box}><Text style={s.text}>{order.address}</Text></View>
       </ScrollView>
     </SafeAreaView>

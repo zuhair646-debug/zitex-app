@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../_layout';
 import { mediaUrlSync } from '../../src/utils/upload';
+import { TX } from '../../src/useAutoT';
 
 const PURPLE = '#F5C518';
 const { width } = Dimensions.get('window');
@@ -39,7 +40,7 @@ export default function ServiceDetail() {
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <View style={s.load}><ActivityIndicator size="large" color={PURPLE} /></View>;
-  if (!svc) return <View style={s.load}><Text>غير موجودة</Text></View>;
+  if (!svc) return <View style={s.load}><TX>غير موجودة</TX></View>;
 
   const images: string[] = svc.images?.length ? svc.images : [];
 
@@ -113,7 +114,7 @@ export default function ServiceDetail() {
           <View style={{ padding: 20 }}>
             {!!svc.long_description && (
               <View style={s.aboutCard}>
-                <Text style={s.aboutTitle}>عن الخدمة</Text>
+                <TX style={s.aboutTitle}>عن الخدمة</TX>
                 <Text style={s.aboutBody}>{svc.long_description}</Text>
               </View>
             )}
@@ -128,7 +129,7 @@ export default function ServiceDetail() {
               <View style={s.warrantyCard}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="shield-checkmark" size={18} color="#10B981" />
-                  <Text style={s.warrantyTitle}>شروط الضمان</Text>
+                  <TX style={s.warrantyTitle}>شروط الضمان</TX>
                 </View>
                 <Text style={s.warrantyBody}>{svc.warranty_terms}</Text>
               </View>
@@ -141,8 +142,8 @@ export default function ServiceDetail() {
             {experiences.length === 0 ? (
               <View style={s.emptyBox}>
                 <Ionicons name="videocam-outline" size={48} color="#D4D4D8" />
-                <Text style={s.emptyText}>لا توجد تجارب عملاء بعد</Text>
-                <Text style={s.emptySubText}>كن أول من يجرب هذي الخدمة</Text>
+                <TX style={s.emptyText}>لا توجد تجارب عملاء بعد</TX>
+                <TX style={s.emptySubText}>كن أول من يجرب هذي الخدمة</TX>
               </View>
             ) : experiences.map(e => <ExperienceCard key={e.id} exp={e} />)}
           </View>
@@ -153,7 +154,7 @@ export default function ServiceDetail() {
             {reviews.length === 0 ? (
               <View style={s.emptyBox}>
                 <Ionicons name="star-outline" size={48} color="#D4D4D8" />
-                <Text style={s.emptyText}>لا توجد تقييمات بعد</Text>
+                <TX style={s.emptyText}>لا توجد تقييمات بعد</TX>
               </View>
             ) : reviews.map(r => (
               <View key={r.id} style={s.reviewCard}>
@@ -174,12 +175,12 @@ export default function ServiceDetail() {
 
       <View style={s.bottomBar}>
         <View style={{ flex: 1 }}>
-          <Text style={s.bottomLabel}>السعر</Text>
+          <TX style={s.bottomLabel}>السعر</TX>
           <Text style={s.bottomPrice}>{svc.price} ر.س</Text>
         </View>
         <TouchableOpacity testID="book-svc-btn" style={s.bookBtn}
           onPress={() => router.push(`/service-booking?service_id=${svc.id}`)}>
-          <Text style={s.bookText}>احجز الخدمة</Text>
+          <TX style={s.bookText}>احجز الخدمة</TX>
           <Ionicons name="arrow-back" size={18} color="white" />
         </TouchableOpacity>
       </View>

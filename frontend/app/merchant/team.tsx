@@ -7,8 +7,11 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, StatCard, EmptyState, SkeletonBox, Badge, PrimaryButton } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 export default function MerchantTeam() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -51,11 +54,11 @@ export default function MerchantTeam() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title="الفريق" onBack={() => router.back()} rightIcon="refresh" onRight={load} subtitle={`${online} متصل الآن • ${team.length} موظف`} />
+        <ScreenHeader title={tSync("الفريق", lang)} onBack={() => router.back()} rightIcon="refresh" onRight={load} subtitle={`${online} متصل الآن • ${team.length} موظف`} />
 
         <View style={s.summaryRow}>
-          <StatCard icon="radio-button-on" label="متصل الآن" value={online} tone={online > 0 ? 'success' : 'default'} />
-          <StatCard icon="time" label="ساعات اليوم" value={`${totalHoursToday}`} tone="gold" />
+          <StatCard icon="radio-button-on" label={tSync("متصل الآن", lang)} value={online} tone={online > 0 ? 'success' : 'default'} />
+          <StatCard icon="time" label={tSync("ساعات اليوم", lang)} value={`${totalHoursToday}`} tone="gold" />
         </View>
 
         {loading ? (
@@ -63,7 +66,7 @@ export default function MerchantTeam() {
             <SkeletonBox height={110} /><SkeletonBox height={110} /><SkeletonBox height={110} />
           </View>
         ) : team.length === 0 ? (
-          <EmptyState icon="people-outline" title="لا يوجد موظفون" description="أضف موظفين لبدء مراقبة الفريق"
+          <EmptyState icon="people-outline" title={tSync("لا يوجد موظفون", lang)} description="أضف موظفين لبدء مراقبة الفريق"
             actionLabel="إضافة موظف" onAction={() => router.push('/merchant/employees')} />
         ) : (
           <ScrollView
@@ -80,7 +83,7 @@ export default function MerchantTeam() {
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                       <Text style={s.name}>{e.name}</Text>
-                      {e.online ? <Badge label="🟢 متصل" tone="success" /> : <Badge label="غير متصل" tone="default" />}
+                      {e.online ? <Badge label={tSync("🟢 متصل", lang)} tone="success" /> : <Badge label={tSync("غير متصل", lang)} tone="default" />}
                     </View>
                     <Text style={s.meta}>{e.job_title || e.department || 'موظف'} • {e.phone}</Text>
                   </View>
@@ -89,16 +92,16 @@ export default function MerchantTeam() {
                 <View style={s.statsRow}>
                   {e.online && (
                     <View style={s.miniStat}>
-                      <Text style={s.miniLbl}>الجلسة الحالية</Text>
+                      <TX style={s.miniLbl}>الجلسة الحالية</TX>
                       <Text style={[s.miniVal, { color: colors.success }]}>{fmtMin(e.current_session_minutes)}</Text>
                     </View>
                   )}
                   <View style={s.miniStat}>
-                    <Text style={s.miniLbl}>مجموع اليوم</Text>
+                    <TX style={s.miniLbl}>مجموع اليوم</TX>
                     <Text style={s.miniVal}>{fmtMin(e.total_today_minutes)}</Text>
                   </View>
                   <View style={s.miniStat}>
-                    <Text style={s.miniLbl}>آخر نشاط</Text>
+                    <TX style={s.miniLbl}>آخر نشاط</TX>
                     <Text style={s.miniVal} numberOfLines={1}>{e.last_action || '—'}</Text>
                     <Text style={s.miniHint}>{timeSince(e.last_action_at)}</Text>
                   </View>

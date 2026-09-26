@@ -10,6 +10,8 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
 import { Chip, EmptyState, SkeletonBox, PrimaryButton, Badge } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { TX, tSync } from '../../src/useAutoT';
+import { useT } from '../../src/i18n';
 
 type Item = {
   product_id: string;
@@ -47,6 +49,7 @@ const CHANNEL_TABS = [
 ] as const;
 
 export default function MerchantInventory() {
+  const { lang } = useT();
   const styles = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -105,7 +108,7 @@ export default function MerchantInventory() {
           <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
             <Ionicons name="chevron-forward" size={22} color={colors.onSurface} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>إدارة المخزون</Text>
+          <TX style={styles.headerTitle}>إدارة المخزون</TX>
           <TouchableOpacity onPress={onRefresh} style={styles.iconBtn}>
             <Ionicons name="refresh" size={20} color={colors.brand} />
           </TouchableOpacity>
@@ -118,14 +121,14 @@ export default function MerchantInventory() {
         >
           {/* Totals */}
           <View style={styles.statsRow}>
-            <StatCard label="الوحدات" value={data?.totals.total_units ?? 0} icon="cube" tone="brand" />
-            <StatCard label="بالمتجر" value={data?.totals.store_units ?? 0} icon="storefront" tone="info" />
-            <StatCard label="بالتطبيق" value={data?.totals.app_units ?? 0} icon="phone-portrait" tone="success" />
+            <StatCard label={tSync("الوحدات", lang)} value={data?.totals.total_units ?? 0} icon="cube" tone="brand" />
+            <StatCard label={tSync("بالمتجر", lang)} value={data?.totals.store_units ?? 0} icon="storefront" tone="info" />
+            <StatCard label={tSync("بالتطبيق", lang)} value={data?.totals.app_units ?? 0} icon="phone-portrait" tone="success" />
           </View>
           <View style={styles.statsRow}>
-            <StatCard label="تنبيهات" value={data?.totals.low_stock ?? 0} icon="warning" tone="warning" />
-            <StatCard label="نفدت" value={data?.totals.out_of_stock ?? 0} icon="alert-circle" tone="error" />
-            <StatCard label="عناصر" value={data?.items.length ?? 0} icon="list" tone="brand" />
+            <StatCard label={tSync("تنبيهات", lang)} value={data?.totals.low_stock ?? 0} icon="warning" tone="warning" />
+            <StatCard label={tSync("نفدت", lang)} value={data?.totals.out_of_stock ?? 0} icon="alert-circle" tone="error" />
+            <StatCard label={tSync("عناصر", lang)} value={data?.items.length ?? 0} icon="list" tone="brand" />
           </View>
 
           {/* Search */}
@@ -134,7 +137,7 @@ export default function MerchantInventory() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="ابحث بالمنتج أو الفرع…"
+              placeholder={tSync("ابحث بالمنتج أو الفرع…", lang)}
               placeholderTextColor={colors.onSurfaceTertiary}
               style={styles.searchInput}
             />
@@ -165,7 +168,7 @@ export default function MerchantInventory() {
               {[1, 2, 3].map(i => <SkeletonBox key={i} height={90} />)}
             </View>
           ) : filtered.length === 0 ? (
-            <EmptyState icon="cube-outline" title="لا عناصر" description={tab === 'alerts' ? 'كل منتجاتك في وضع صحي 🎉' : 'أضف مخزوناً من صفحة الفروع'} />
+            <EmptyState icon="cube-outline" title={tSync("لا عناصر", lang)} description={tab === 'alerts' ? 'كل منتجاتك في وضع صحي 🎉' : 'أضف مخزوناً من صفحة الفروع'} />
           ) : (
             <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
               {filtered.map(item => (
@@ -196,8 +199,8 @@ export default function MerchantInventory() {
                             {item.inventory_type === 'store' ? 'متجر فقط' : item.inventory_type === 'app' ? 'تطبيق فقط' : 'متجر + تطبيق'}
                           </Text>
                         </View>
-                        {item.is_out && <Badge label="نفدت" tone="error" />}
-                        {!item.is_out && item.is_low && <Badge label="منخفض" tone="warning" />}
+                        {item.is_out && <Badge label={tSync("نفدت", lang)} tone="error" />}
+                        {!item.is_out && item.is_low && <Badge label={tSync("منخفض", lang)} tone="warning" />}
                       </View>
                     </View>
                     <TouchableOpacity onPress={() => setEditing(item)} style={styles.editBtn}>
@@ -334,41 +337,41 @@ function EditModal({ item, onClose, onSaved, apiCall }: { item: Item; onClose: (
       <View style={styles.modalRoot}>
         <View style={styles.modalCard}>
           <View style={styles.modalHead}>
-            <Text style={styles.modalTitle}>تعديل المخزون</Text>
+            <TX style={styles.modalTitle}>تعديل المخزون</TX>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={22} color={colors.onSurfaceSecondary} /></TouchableOpacity>
           </View>
           <Text style={styles.modalProduct}>{item.product_name}</Text>
           <Text style={styles.modalBranch}>{item.branch_name}</Text>
 
           {/* Mode toggle */}
-          <Text style={styles.fieldLabel}>نمط المخزون</Text>
+          <TX style={styles.fieldLabel}>نمط المخزون</TX>
           <View style={styles.segment}>
             <TouchableOpacity onPress={() => setMode('combined')} style={[styles.segmentBtn, mode === 'combined' && styles.segmentBtnActive]}>
-              <Text style={[styles.segmentText, mode === 'combined' && styles.segmentTextActive]}>موحّد</Text>
+              <TX style={[styles.segmentText, mode === 'combined' && styles.segmentTextActive]}>موحّد</TX>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setMode('separate')} style={[styles.segmentBtn, mode === 'separate' && styles.segmentBtnActive]}>
-              <Text style={[styles.segmentText, mode === 'separate' && styles.segmentTextActive]}>مفصول</Text>
+              <TX style={[styles.segmentText, mode === 'separate' && styles.segmentTextActive]}>مفصول</TX>
             </TouchableOpacity>
           </View>
 
           {mode === 'combined' ? (
             <>
-              <Text style={styles.fieldLabel}>الكمية</Text>
+              <TX style={styles.fieldLabel}>الكمية</TX>
               <TextInput value={combined} onChangeText={setCombined} keyboardType="number-pad" style={styles.input} placeholderTextColor={colors.onSurfaceTertiary} />
             </>
           ) : (
             <>
-              <Text style={styles.fieldLabel}>مخزون المتجر (POS)</Text>
+              <TX style={styles.fieldLabel}>مخزون المتجر (POS)</TX>
               <TextInput value={store} onChangeText={setStore} keyboardType="number-pad" style={styles.input} placeholderTextColor={colors.onSurfaceTertiary} />
-              <Text style={styles.fieldLabel}>مخزون التطبيق</Text>
+              <TX style={styles.fieldLabel}>مخزون التطبيق</TX>
               <TextInput value={apps} onChangeText={setApps} keyboardType="number-pad" style={styles.input} placeholderTextColor={colors.onSurfaceTertiary} />
             </>
           )}
 
-          <Text style={styles.fieldLabel}>حد التنبيه</Text>
+          <TX style={styles.fieldLabel}>حد التنبيه</TX>
           <TextInput value={minAlert} onChangeText={setMinAlert} keyboardType="number-pad" style={styles.input} placeholderTextColor={colors.onSurfaceTertiary} />
 
-          <Text style={styles.fieldLabel}>قناة البيع</Text>
+          <TX style={styles.fieldLabel}>قناة البيع</TX>
           <View style={styles.segment}>
             {(['store', 'app', 'both'] as const).map(t => (
               <TouchableOpacity key={t} onPress={() => setType(t)} style={[styles.segmentBtn, type === t && styles.segmentBtnActive]}>

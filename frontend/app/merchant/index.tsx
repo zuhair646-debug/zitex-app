@@ -7,11 +7,14 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, gradients } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { useT } from '../../src/i18n';
+import { TX, tSync } from '../../src/useAutoT';
 import {
   StatCard, ActionCard, SectionHeader, PrimaryButton, EmptyState, SkeletonBox, Badge,
 } from '../../src/components/ui';
 
 export default function MerchantHome() {
+  const { lang } = useT();
   const styles = useStylesStyles();
   const { isDark } = useTheme();
   const router = useRouter();
@@ -75,9 +78,9 @@ export default function MerchantHome() {
           {/* Header */}
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.greeting}>مرحباً 👋</Text>
+              <TX style={styles.greeting}>مرحباً 👋</TX>
               <Text style={styles.merchantName}>{user?.name || 'التاجر'}</Text>
-              <Text style={styles.merchantRole}>لوحة تحكم Zenrex Store</Text>
+              <TX style={styles.merchantRole}>لوحة تحكم Zenrex Store</TX>
             </View>
             <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications')} activeOpacity={0.7}>
               <Ionicons name="notifications-outline" size={22} color={colors.onSurface} />
@@ -94,11 +97,11 @@ export default function MerchantHome() {
             style={styles.hero}
           >
             <View style={styles.heroTop}>
-              <Text style={styles.heroLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>إجمالي مبيعات اليوم</Text>
+              <TX style={styles.heroLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>إجمالي مبيعات اليوم</TX>
               <Ionicons name="trending-up" size={20} color={colors.onBrandPrimary} />
             </View>
             {loading ? <SkeletonBox height={40} width="60%" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }} />
-              : <Text style={styles.heroValue}>{money(stats?.today_revenue || 0)} <Text style={styles.heroCurrency}>ر.س</Text></Text>}
+              : <Text style={styles.heroValue}>{money(stats?.today_revenue || 0)} <TX style={styles.heroCurrency}>ر.س</TX></Text>}
             <View style={styles.heroFooter}>
               <View style={styles.heroPill}>
                 <Ionicons name="wallet" size={12} color={colors.onBrandPrimary} />
@@ -125,15 +128,15 @@ export default function MerchantHome() {
 
           {/* Stats Grid */}
           <View style={styles.statsGrid}>
-            <StatCard icon="receipt" label="طلبات نشطة" value={stats?.pending_orders ?? '—'} tone="gold"
+            <StatCard icon="receipt" label={tSync("طلبات نشطة", lang)} value={stats?.pending_orders ?? '—'} tone="gold"
               onPress={() => router.push('/merchant/orders')} />
-            <StatCard icon="cube" label="منتجات" value={stats?.total_products ?? '—'} tone="default"
+            <StatCard icon="cube" label={tSync("منتجات", lang)} value={stats?.total_products ?? '—'} tone="default"
               onPress={() => router.push('/merchant/products')} />
           </View>
           <View style={styles.statsGrid}>
-            <StatCard icon="people" label="عملاء" value={stats?.total_customers ?? '—'} tone="success"
+            <StatCard icon="people" label={tSync("عملاء", lang)} value={stats?.total_customers ?? '—'} tone="success"
               onPress={() => router.push('/merchant/customers')} />
-            <StatCard icon="trophy" label="مسابقات" value={stats?.pending_competitions_approval ?? 0} tone={stats?.pending_competitions_approval > 0 ? 'warning' : 'default'}
+            <StatCard icon="trophy" label={tSync("مسابقات", lang)} value={stats?.pending_competitions_approval ?? 0} tone={stats?.pending_competitions_approval > 0 ? 'warning' : 'default'}
               onPress={() => router.push('/merchant/competitions')} />
           </View>
 
@@ -148,7 +151,7 @@ export default function MerchantHome() {
                 <Ionicons name="warning" size={22} color={colors.warning} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.invAlertTitle}>تنبيه مخزون</Text>
+                <TX style={styles.invAlertTitle}>تنبيه مخزون</TX>
                 <Text style={styles.invAlertSubtitle}>
                   {inventoryAlerts.totals?.out_of_stock ?? 0} نفدت • {inventoryAlerts.totals?.low_stock ?? 0} منخفضة
                 </Text>
@@ -158,23 +161,23 @@ export default function MerchantHome() {
           )}
 
           {/* Quick Actions */}
-          <SectionHeader title="إجراءات سريعة" />
+          <SectionHeader title={tSync("إجراءات سريعة", lang)} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickRow} style={{ flexGrow: 0 }}>
-            <ActionCard icon="add-circle" label="إضافة منتج" onPress={() => router.push('/merchant/product-form')} />
-            <ActionCard icon="cart" label="نقطة البيع POS" onPress={() => router.push('/merchant/pos')} />
-            <ActionCard icon="cube" label="المخزون" onPress={() => router.push('/merchant/inventory')} />
-            <ActionCard icon="receipt" label="الفواتير" onPress={() => router.push('/merchant/invoices')} />
-            <ActionCard icon="megaphone" label="التسويق" onPress={() => router.push('/merchant/marketing')} />
-            <ActionCard icon="chatbubbles" label="منشور جديد" onPress={() => router.push('/merchant/social')} />
-            <ActionCard icon="trophy" label="إنشاء مسابقة" onPress={() => router.push('/merchant/competition-form')} />
-            <ActionCard icon="image" label="إضافة بانر" onPress={() => router.push('/merchant/banners')} />
-            <ActionCard icon="people-circle" label="إضافة موظف" onPress={() => router.push('/merchant/employees')} />
-            <ActionCard icon="settings" label="إعدادات الدعم" onPress={() => router.push('/merchant/support-settings')} />
+            <ActionCard icon="add-circle" label={tSync("إضافة منتج", lang)} onPress={() => router.push('/merchant/product-form')} />
+            <ActionCard icon="cart" label={tSync("نقطة البيع POS", lang)} onPress={() => router.push('/merchant/pos')} />
+            <ActionCard icon="cube" label={tSync("المخزون", lang)} onPress={() => router.push('/merchant/inventory')} />
+            <ActionCard icon="receipt" label={tSync("الفواتير", lang)} onPress={() => router.push('/merchant/invoices')} />
+            <ActionCard icon="megaphone" label={tSync("التسويق", lang)} onPress={() => router.push('/merchant/marketing')} />
+            <ActionCard icon="chatbubbles" label={tSync("منشور جديد", lang)} onPress={() => router.push('/merchant/social')} />
+            <ActionCard icon="trophy" label={tSync("إنشاء مسابقة", lang)} onPress={() => router.push('/merchant/competition-form')} />
+            <ActionCard icon="image" label={tSync("إضافة بانر", lang)} onPress={() => router.push('/merchant/banners')} />
+            <ActionCard icon="people-circle" label={tSync("إضافة موظف", lang)} onPress={() => router.push('/merchant/employees')} />
+            <ActionCard icon="settings" label={tSync("إعدادات الدعم", lang)} onPress={() => router.push('/merchant/support-settings')} />
           </ScrollView>
 
           {/* Recent Orders */}
           <SectionHeader
-            title="أحدث الطلبات"
+            title={tSync("أحدث الطلبات", lang)}
             subtitle={recentOrders.length > 0 ? `${recentOrders.length} طلبات تحتاج انتباهك` : undefined}
             action={() => router.push('/merchant/orders')}
             actionLabel="عرض الكل"
@@ -187,7 +190,7 @@ export default function MerchantHome() {
           ) : recentOrders.length === 0 ? (
             <EmptyState
               icon="receipt-outline"
-              title="لا توجد طلبات بعد"
+              title={tSync("لا توجد طلبات بعد", lang)}
               description="ستظهر هنا كل الطلبات الجديدة من عملائك"
               actionLabel="عرض المنتجات"
               onAction={() => router.push('/merchant/products')}
@@ -214,7 +217,7 @@ export default function MerchantHome() {
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.orderAmount}>{money(o.total)}</Text>
-                    <Text style={styles.orderCurrency}>ر.س</Text>
+                    <TX style={styles.orderCurrency}>ر.س</TX>
                   </View>
                 </TouchableOpacity>
               ))}

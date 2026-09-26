@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { LP, K, KM } from './theme';
 import { KpiCard, Sparkline, HBar, Section } from './atoms';
 import { ExportButton } from './AlertsAndExport';
+import { TX } from '../../useAutoT';
 
 const DAY_LABELS = ['اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت', 'أحد'];
 const SOURCE_LABEL: Record<string, string> = {
@@ -143,12 +144,12 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                   <View style={st.peakChip}>
                     <Ionicons name="flame" size={12} color={LP.GOLD} />
-                    <Text style={st.peakLabel}>ذروة الساعة</Text>
+                    <TX style={st.peakLabel}>ذروة الساعة</TX>
                     <Text style={st.peakValue}>{peakHourLabel}</Text>
                   </View>
                   <View style={st.peakChip}>
                     <Ionicons name="calendar" size={12} color={LP.GOLD} />
-                    <Text style={st.peakLabel}>ذروة اليوم</Text>
+                    <TX style={st.peakLabel}>ذروة اليوم</TX>
                     <Text style={st.peakValue}>{DAY_LABELS[data.peak_day_of_week] || '—'}</Text>
                   </View>
                 </View>
@@ -202,8 +203,8 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 {(data.all_participants || []).length === 0 && (
                   <View style={{ alignItems: 'center', padding: 40 }}>
                     <Ionicons name="people-outline" size={40} color={LP.MUTED} />
-                    <Text style={{ color: LP.MUTED, marginTop: 8 }}>لا مشاركون بعد</Text>
-                    <Text style={{ color: LP.MUTED, fontSize: 11, marginTop: 4 }}>روّج للمسابقة على السوشيال ميديا</Text>
+                    <TX style={{ color: LP.MUTED, marginTop: 8 }}>لا مشاركون بعد</TX>
+                    <TX style={{ color: LP.MUTED, fontSize: 11, marginTop: 4 }}>روّج للمسابقة على السوشيال ميديا</TX>
                   </View>
                 )}
                 {(data.all_participants || []).slice().reverse().map((p: any, i: number) => (
@@ -233,8 +234,8 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 {(data.winner_details || []).length === 0 ? (
                   <View style={{ alignItems: 'center', padding: 40 }}>
                     <Ionicons name="trophy-outline" size={40} color={LP.MUTED} />
-                    <Text style={{ color: LP.MUTED, marginTop: 8 }}>لم يتم اختيار الفائزين بعد</Text>
-                    {!isEnded && <Text style={{ color: LP.GOLD, fontSize: 11, marginTop: 6 }}>المسابقة ما تزال مباشرة</Text>}
+                    <TX style={{ color: LP.MUTED, marginTop: 8 }}>لم يتم اختيار الفائزين بعد</TX>
+                    {!isEnded && <TX style={{ color: LP.GOLD, fontSize: 11, marginTop: 6 }}>المسابقة ما تزال مباشرة</TX>}
                   </View>
                 ) : (
                   <>
@@ -275,7 +276,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   {comp.description ? (
                     <Text style={st.descText}>{comp.description}</Text>
                   ) : (
-                    <Text style={[st.descText, { color: LP.MUTED }]}>لا يوجد وصف مضاف</Text>
+                    <TX style={[st.descText, { color: LP.MUTED }]}>لا يوجد وصف مضاف</TX>
                   )}
                 </View>
 

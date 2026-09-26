@@ -6,6 +6,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { LP, K, KM } from './theme';
 import MediaCarousel from '../MediaCarousel';
 import TranslateButton from '../TranslateButton';
+import { TX, tSync } from '../../useAutoT';
+import { useT } from '../../i18n';
 
 const { width } = Dimensions.get('window');
 const timeAgo = (iso?: string) => {
@@ -27,6 +29,7 @@ const timeAgo = (iso?: string) => {
  *   - Filter chips (all / needs reply / top)
  */
 export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
+  const { lang } = useT();
   const [posts, setPosts] = useState<any[]>([]);
   const [stories, setStories] = useState<any[]>([]);
   const [storeInfo, setStoreInfo] = useState<any>(null);
@@ -130,7 +133,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
       {/* Preview banner */}
       <BlurView intensity={30} tint="dark" style={s.merchantBanner}>
         <Ionicons name="eye" size={14} color={LP.GOLD} />
-        <Text style={s.merchantBannerText}>عرض التاجر — تطابق تام مع تجربة العميل ✨</Text>
+        <TX style={s.merchantBannerText}>عرض التاجر — تطابق تام مع تجربة العميل ✨</TX>
       </BlurView>
 
       {/* Filter chips */}
@@ -160,7 +163,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
               <View style={[s.storyCircle, { borderColor: LP.BORDER }]}>
                 <View style={s.storyAvatar}><Ionicons name="storefront" size={22} color={LP.MUTED} /></View>
               </View>
-              <Text style={s.storyLabel} numberOfLines={1}>لا حالات</Text>
+              <TX style={s.storyLabel} numberOfLines={1}>لا حالات</TX>
             </View>
           )}
           {stories.map(st => (
@@ -174,7 +177,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
         </ScrollView>
 
         {/* Posts */}
-        {displayed.length === 0 && <Text style={s.empty}>لا توجد منشورات</Text>}
+        {displayed.length === 0 && <TX style={s.empty}>لا توجد منشورات</TX>}
         {displayed.map((post: any) => {
           const postId = post.id || post._id;
           const isPoll = post.type === 'poll';
@@ -191,7 +194,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
               <TouchableOpacity style={s.insightsFab} onPress={() => onOpenPost ? onOpenPost(post) : openInsights(post, 'stats')}>
                 <BlurView intensity={40} tint="dark" style={s.insightsPill}>
                   <Ionicons name="analytics" size={14} color={LP.GOLD} />
-                  <Text style={{ color: LP.GOLD, fontSize: 11, fontWeight: '900' }}>إحصائيات</Text>
+                  <TX style={{ color: LP.GOLD, fontSize: 11, fontWeight: '900' }}>إحصائيات</TX>
                 </BlurView>
               </TouchableOpacity>
 
@@ -204,10 +207,10 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
               )}
 
               {isQuestion && (
-                <View style={s.qBadge}><Ionicons name="help-circle" size={14} color="#F59E0B" /><Text style={s.qBadgeText}>سؤال</Text></View>
+                <View style={s.qBadge}><Ionicons name="help-circle" size={14} color="#F59E0B" /><TX style={s.qBadgeText}>سؤال</TX></View>
               )}
               {isEvent && (
-                <View style={[s.qBadge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="calendar" size={14} color="#10B981" /><Text style={[s.qBadgeText, { color: '#065F46' }]}>فعالية</Text></View>
+                <View style={[s.qBadge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="calendar" size={14} color="#10B981" /><TX style={[s.qBadgeText, { color: '#065F46' }]}>فعالية</TX></View>
               )}
               <View style={s.postHeader}>
                 <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#F5C518" /></View>
@@ -287,7 +290,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
                 <View style={{ flex: 1 }} />
                 <TouchableOpacity style={s.detailsInlineBtn} onPress={() => onOpenPost ? onOpenPost(post) : openInsights(post, 'stats')}>
                   <Ionicons name="analytics" size={14} color={LP.BG} />
-                  <Text style={{ color: LP.BG, fontSize: 11, fontWeight: '900' }}>التفاصيل</Text>
+                  <TX style={{ color: LP.BG, fontSize: 11, fontWeight: '900' }}>التفاصيل</TX>
                 </TouchableOpacity>
               </View>
             </View>
@@ -316,7 +319,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
               <TouchableOpacity onPress={() => { setInsightsPost(null); setInsightsDetail(null); }}><Ionicons name="close" size={22} color={LP.TEXT} /></TouchableOpacity>
-              <Text style={s.sheetTitle}>إحصائيات المنشور — شفافية كاملة</Text>
+              <TX style={s.sheetTitle}>إحصائيات المنشور — شفافية كاملة</TX>
               <View style={{ width: 22 }} />
             </View>
 
@@ -393,19 +396,19 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
               <Text style={s.sheetTitle}>رد على {replying?.userName || 'التعليق'} باسم المتجر ✨</Text>
               {replying && (
                 <View style={s.commentPreview}>
-                  <Text style={{ color: LP.MUTED, fontSize: 11, textAlign: 'right' }}>تعليق العميل:</Text>
+                  <TX style={{ color: LP.MUTED, fontSize: 11, textAlign: 'right' }}>تعليق العميل:</TX>
                   <Text style={{ color: LP.TEXT, fontSize: 12, marginTop: 4, textAlign: 'right' }}>💬 {replying.commentText}</Text>
                 </View>
               )}
-              <TextInput style={s.replyInput} placeholder="اكتب ردك..." placeholderTextColor={LP.MUTED}
+              <TextInput style={s.replyInput} placeholder={tSync("اكتب ردك...", lang)} placeholderTextColor={LP.MUTED}
                 multiline value={replyText} onChangeText={setReplyText} />
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 <TouchableOpacity style={s.btnGhost} onPress={() => setReplying(null)}>
-                  <Text style={{ color: LP.MUTED, fontWeight: '800' }}>إلغاء</Text>
+                  <TX style={{ color: LP.MUTED, fontWeight: '800' }}>إلغاء</TX>
                 </TouchableOpacity>
                 <TouchableOpacity style={s.btnPrimary} onPress={sendReply}>
                   <Ionicons name="send" size={16} color={LP.BG} />
-                  <Text style={{ color: LP.BG, fontWeight: '900' }}>إرسال</Text>
+                  <TX style={{ color: LP.BG, fontWeight: '900' }}>إرسال</TX>
                 </TouchableOpacity>
               </View>
             </View>
@@ -441,7 +444,7 @@ function LikersView({ likers, totalLikes }: any) {
     return (
       <View style={{ alignItems: 'center', padding: 40 }}>
         <Ionicons name="heart-outline" size={40} color={LP.MUTED} />
-        <Text style={{ color: LP.MUTED, marginTop: 8 }}>لم يعجب أحد بعد</Text>
+        <TX style={{ color: LP.MUTED, marginTop: 8 }}>لم يعجب أحد بعد</TX>
       </View>
     );
   }
@@ -482,7 +485,7 @@ function SharersView({ sharers, totalShares }: any) {
     return (
       <View style={{ alignItems: 'center', padding: 40 }}>
         <Ionicons name="share-social-outline" size={40} color={LP.MUTED} />
-        <Text style={{ color: LP.MUTED, marginTop: 8 }}>لم يشارك أحد المنشور بعد</Text>
+        <TX style={{ color: LP.MUTED, marginTop: 8 }}>لم يشارك أحد المنشور بعد</TX>
       </View>
     );
   }
@@ -550,7 +553,7 @@ function CommentsView({ comments, onReply }: any) {
     return (
       <View style={{ alignItems: 'center', padding: 40 }}>
         <Ionicons name="chatbubbles-outline" size={40} color={LP.MUTED} />
-        <Text style={{ color: LP.MUTED, marginTop: 8 }}>لا توجد تعليقات بعد</Text>
+        <TX style={{ color: LP.MUTED, marginTop: 8 }}>لا توجد تعليقات بعد</TX>
       </View>
     );
   }
@@ -581,7 +584,7 @@ function CommentsView({ comments, onReply }: any) {
             {!c.store_reply && (
               <TouchableOpacity style={s.replyBtnMerc} onPress={() => onReply(c)}>
                 <Ionicons name="arrow-undo" size={11} color={LP.BG} />
-                <Text style={{ color: LP.BG, fontSize: 10, fontWeight: '900' }}>رد باسم المتجر</Text>
+                <TX style={{ color: LP.BG, fontSize: 10, fontWeight: '900' }}>رد باسم المتجر</TX>
               </TouchableOpacity>
             )}
           </View>

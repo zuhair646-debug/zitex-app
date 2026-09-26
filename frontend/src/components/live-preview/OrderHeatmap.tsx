@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LP, KM } from './theme';
+import { TX } from '../../useAutoT';
 
 const DAY_LABELS = ['اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت', 'أحد'];
 const HOUR_LABELS = ['12ص', '3', '6', '9', '12ظ', '3', '6', '9'];
@@ -33,18 +34,18 @@ export default function OrderHeatmap({ apiCall }: any) {
     <View style={s.card}>
       <View style={s.header}>
         <Ionicons name="flame" size={16} color={LP.GOLD} />
-        <Text style={s.title}>أفضل الأوقات للطلبات</Text>
+        <TX style={s.title}>أفضل الأوقات للطلبات</TX>
       </View>
 
       <View style={s.peakBox}>
         <View style={s.peakChip}>
           <Ionicons name="calendar" size={12} color={LP.GOLD} />
-          <Text style={s.peakLabel}>ذروة اليوم:</Text>
+          <TX style={s.peakLabel}>ذروة اليوم:</TX>
           <Text style={s.peakValue}>{peakDayLabel}</Text>
         </View>
         <View style={s.peakChip}>
           <Ionicons name="time" size={12} color={LP.GOLD} />
-          <Text style={s.peakLabel}>ذروة الساعة:</Text>
+          <TX style={s.peakLabel}>ذروة الساعة:</TX>
           <Text style={s.peakValue}>{peakHourLabel}</Text>
         </View>
       </View>
@@ -86,11 +87,11 @@ export default function OrderHeatmap({ apiCall }: any) {
 
       {/* Legend */}
       <View style={s.legend}>
-        <Text style={s.legendLabel}>أقل</Text>
+        <TX style={s.legendLabel}>أقل</TX>
         {[0.15, 0.35, 0.55, 0.75, 0.95].map(o => (
           <View key={o} style={[s.legendCell, { backgroundColor: `rgba(245, 197, 24, ${o})` }]} />
         ))}
-        <Text style={s.legendLabel}>أعلى</Text>
+        <TX style={s.legendLabel}>أعلى</TX>
         <View style={{ flex: 1 }} />
         <Text style={s.legendLabel}>الذروة: {KM(data.max_value)} طلب</Text>
       </View>

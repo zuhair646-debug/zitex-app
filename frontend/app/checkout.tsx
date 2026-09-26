@@ -8,8 +8,11 @@ import { useAuth } from './_layout';
 import PaymentMethodsRibbon from '../src/components/PaymentAndLoyalty';
 import ShippingOptionsPicker from '../src/components/ShippingOptionsPicker';
 import LoyaltyRedeemPicker from '../src/components/LoyaltyRedeemPicker';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 
 export default function CheckoutScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -167,18 +170,18 @@ export default function CheckoutScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>إتمام الطلب</Text>
+        <TX style={s.title}>إتمام الطلب</TX>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
-        <Text style={s.sectionTitle}>عنوان التوصيل</Text>
+        <TX style={s.sectionTitle}>عنوان التوصيل</TX>
         {!userLat && (
           <TouchableOpacity style={s.warnBox} onPress={() => router.push('/setup-location' as any)}>
             <Ionicons name="warning" size={18} color="#F59E0B" />
-            <Text style={s.warnText}>لم يتم تحديد موقعك على الخريطة — اضغط لتحديده</Text>
+            <TX style={s.warnText}>لم يتم تحديد موقعك على الخريطة — اضغط لتحديده</TX>
           </TouchableOpacity>
         )}
         {addresses.length === 0 ? (
-          <TouchableOpacity style={s.addAddrBtn} onPress={() => router.push('/addresses')}><Ionicons name="add" size={20} color="#F5C518" /><Text style={s.addAddrText}>إضافة عنوان</Text></TouchableOpacity>
+          <TouchableOpacity style={s.addAddrBtn} onPress={() => router.push('/addresses')}><Ionicons name="add" size={20} color="#F5C518" /><TX style={s.addAddrText}>إضافة عنوان</TX></TouchableOpacity>
         ) : addresses.map((a, i) => (
           <TouchableOpacity key={a.id} style={[s.addrCard, selectedAddr === i && s.addrActive]} onPress={() => setSelectedAddr(i)}>
             <Ionicons name={selectedAddr === i ? 'radio-button-on' : 'radio-button-off'} size={20} color={selectedAddr === i ? '#F5C518' : '#A1A1AA'} />
@@ -196,7 +199,7 @@ export default function CheckoutScreen() {
           </View>
         )}
 
-        <Text style={s.sectionTitle}>نوع التوصيل</Text>
+        <TX style={s.sectionTitle}>نوع التوصيل</TX>
         <View style={{ gap: 8 }}>
           {deliveryOpts.map(opt => (
             <TouchableOpacity key={opt.id} style={[s.shipCard, deliveryType === opt.id && s.shipActive]} onPress={() => setDeliveryType(opt.id)}>
@@ -215,7 +218,7 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
         )}
 
-        <Text style={s.sectionTitle}>طريقة الدفع</Text>
+        <TX style={s.sectionTitle}>طريقة الدفع</TX>
         {payMethods.map(pm => (
           <TouchableOpacity key={pm.id} style={[s.payCard, paymentMethod === pm.id && s.payActive]} onPress={() => setPaymentMethod(pm.id)}>
             <Ionicons name={paymentMethod === pm.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={paymentMethod === pm.id ? '#F5C518' : '#A1A1AA'} />
@@ -225,14 +228,14 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
         ))}
 
-        <Text style={s.sectionTitle}>كود الخصم</Text>
+        <TX style={s.sectionTitle}>كود الخصم</TX>
         <View style={s.couponRow}>
-          <TextInput style={s.couponInput} placeholder="أدخل كود الخصم" value={couponCode} onChangeText={setCouponCode} autoCapitalize="characters" />
-          <TouchableOpacity style={s.couponBtn} onPress={applyCoupon}><Text style={s.couponBtnText}>تطبيق</Text></TouchableOpacity>
+          <TextInput style={s.couponInput} placeholder={tSync("أدخل كود الخصم", lang)} value={couponCode} onChangeText={setCouponCode} autoCapitalize="characters" />
+          <TouchableOpacity style={s.couponBtn} onPress={applyCoupon}><TX style={s.couponBtnText}>تطبيق</TX></TouchableOpacity>
         </View>
         {couponApplied ? <Text style={s.couponApplied}>{couponApplied} طُبِّق! -{couponDiscount} ر.س</Text> : null}
 
-        <TextInput style={s.notesInput} placeholder="ملاحظات للطلب (اختياري)" value={notes} onChangeText={setNotes} multiline />
+        <TextInput style={s.notesInput} placeholder={tSync("ملاحظات للطلب (اختياري)", lang)} value={notes} onChangeText={setNotes} multiline />
 
         {/* Location auto-detect chip */}
         <TouchableOpacity onPress={autoDetectLocation} style={s.locBtn} disabled={locating}>
@@ -266,13 +269,13 @@ export default function CheckoutScreen() {
         />
 
         <View style={s.summaryCard}>
-          <Text style={s.summaryTitle}>ملخص الطلب</Text>
+          <TX style={s.summaryTitle}>ملخص الطلب</TX>
           <View style={s.summaryRow}><Text style={s.sLabel}>المجموع الفرعي ({cart.length} منتج)</Text><Text style={s.sVal}>{subtotal} ر.س</Text></View>
-          <View style={s.summaryRow}><Text style={s.sLabel}>التوصيل</Text><Text style={s.sVal}>{deliveryCost} ر.س</Text></View>
-          <View style={s.summaryRow}><Text style={s.sLabel}>الضريبة (١٥٪)</Text><Text style={s.sVal}>{tax} ر.س</Text></View>
-          {couponDiscount > 0 && <View style={s.summaryRow}><Text style={[s.sLabel, { color: '#10B981' }]}>خصم الكوبون</Text><Text style={[s.sVal, { color: '#10B981' }]}>-{couponDiscount} ر.س</Text></View>}
-          {loyaltyOff > 0 && <View style={s.summaryRow}><Text style={[s.sLabel, { color: '#8B5CF6' }]}>خصم نقاط الولاء</Text><Text style={[s.sVal, { color: '#8B5CF6' }]}>-{loyaltyOff} ر.س</Text></View>}
-          <View style={[s.summaryRow, s.totalRow]}><Text style={s.totalLabel}>المجموع</Text><Text style={s.totalVal}>{total} ر.س</Text></View>
+          <View style={s.summaryRow}><TX style={s.sLabel}>التوصيل</TX><Text style={s.sVal}>{deliveryCost} ر.س</Text></View>
+          <View style={s.summaryRow}><TX style={s.sLabel}>الضريبة (١٥٪)</TX><Text style={s.sVal}>{tax} ر.س</Text></View>
+          {couponDiscount > 0 && <View style={s.summaryRow}><TX style={[s.sLabel, { color: '#10B981' }]}>خصم الكوبون</TX><Text style={[s.sVal, { color: '#10B981' }]}>-{couponDiscount} ر.س</Text></View>}
+          {loyaltyOff > 0 && <View style={s.summaryRow}><TX style={[s.sLabel, { color: '#8B5CF6' }]}>خصم نقاط الولاء</TX><Text style={[s.sVal, { color: '#8B5CF6' }]}>-{loyaltyOff} ر.س</Text></View>}
+          <View style={[s.summaryRow, s.totalRow]}><TX style={s.totalLabel}>المجموع</TX><Text style={s.totalVal}>{total} ر.س</Text></View>
         </View>
       </ScrollView>
 
@@ -302,10 +305,10 @@ export default function CheckoutScreen() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setSlotModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <Text style={s.title}>اختر الفترة</Text>
+            <TX style={s.title}>اختر الفترة</TX>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            {availableSlots.length === 0 && <Text style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 40 }}>لا توجد فترات متاحة</Text>}
+            {availableSlots.length === 0 && <TX style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 40 }}>لا توجد فترات متاحة</TX>}
             {availableSlots.map((sl, i) => (
               <TouchableOpacity key={i} style={[s.slotItem, scheduledSlot?.label === sl.label && s.slotItemActive]} onPress={() => { setScheduledSlot(sl); setSlotModalOpen(false); }}>
                 <Ionicons name="time-outline" size={20} color={scheduledSlot?.label === sl.label ? 'white' : '#F5C518'} />
