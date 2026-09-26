@@ -1,13 +1,24 @@
-import { View, Text, ScrollView, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ListItem, SectionHeader, ScreenHeader } from '../../src/components/ui';
 import { useAuth } from '../_layout';
+import { useThemeMode } from '../../src/theme/mode';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { useT, LANGUAGES } from '../../src/i18n';
 
 export default function MerchantMore() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { mode, toggle: toggleThemeLegacy } = useThemeMode();
+  const { isDark, toggle: toggleTheme } = useTheme();
+  const { lang, setLang, t } = useT();
+  const [langOpen, setLangOpen] = useState(false);
+  const syncedToggleTheme = async () => { await toggleTheme(); await toggleThemeLegacy(); };
+  const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
 
   const sales = [
     { icon: 'cart', title: 'نقطة البيع POS', subtitle: 'شاشة كاشير سريعة لإصدار الفواتير', route: '/merchant/pos' },
@@ -87,12 +98,69 @@ export default function MerchantMore() {
 
           <SectionHeader title="الحساب" />
           <View style={styles.groupCard}>
+            {/* Theme Toggle */}
+            <TouchableOpacity style={styles.prefRow} onPress={syncedToggleTheme} activeOpacity={0.7}>
+              <View style={styles.prefLeft}>
+                <View style={[styles.prefIcon, { backgroundColor: (isDark ? '#F5B547' : '#6EA8FF') + '25' }]}>
+                  <Ionicons name={isDark ? 'moon' : 'sunny'} size={20} color={isDark ? '#F5B547' : '#6EA8FF'} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.prefTitle}>{isDark ? 'الوضع الليلي' : 'الوضع النهاري'}</Text>
+                  <Text style={styles.prefSub}>اضغط للتبديل بين النهاري والليلي</Text>
+                </View>
+              </View>
+              <View style={[styles.switchTrack, isDark && styles.switchTrackOn]}>
+                <View style={[styles.switchThumb, isDark && styles.switchThumbOn]} />
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            {/* Language Picker */}
+            <TouchableOpacity style={styles.prefRow} onPress={() => setLangOpen(true)} activeOpacity={0.7}>
+              <View style={styles.prefLeft}>
+                <View style={[styles.prefIcon, { backgroundColor: '#A895FF25' }]}>
+                  <Ionicons name="language" size={20} color="#A895FF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.prefTitle}>{t('settings.language', 'اللغة')}</Text>
+                  <Text style={styles.prefSub}>{currentLang.flag}  {currentLang.nativeName}  ·  {currentLang.name}</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-back" size={18} color={colors.onSurfaceSecondary} />
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
             <ListItem icon="log-out" title="تسجيل الخروج" onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zenrex Store Merchant v1.13.13</Text>
+          <Text style={styles.version}>Zenrex Store Merchant v1.14.1</Text>
         </ScrollView>
       </SafeAreaView>
+
+      {/* Language picker modal */}
+      <Modal transparent animationType="slide" visible={langOpen} onRequestClose={() => setLangOpen(false)}>
+        <Pressable style={styles.modalBg} onPress={() => setLangOpen(false)}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>{t('settings.changeLanguage', 'تغيير اللغة')}</Text>
+            <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false}>
+              {LANGUAGES.map(L => (
+                <TouchableOpacity key={L.code} style={styles.langRow}
+                  onPress={async () => { await setLang(L.code); setLangOpen(false); }}>
+                  <Text style={{ fontSize: 22 }}>{L.flag}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.langNative}>{L.nativeName}</Text>
+                    <Text style={styles.langName}>{L.name}</Text>
+                  </View>
+                  {L.code === lang && <Ionicons name="checkmark-circle" size={22} color={colors.brand} />}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -117,4 +185,21 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border,
   },
   version: { textAlign: 'center', color: colors.onSurfaceTertiary, fontSize: 11, marginTop: spacing.xl },
+  prefRow: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, gap: spacing.sm },
+  prefLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
+  prefIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  prefTitle: { ...typography.body, color: colors.onSurface, fontWeight: '700' as any },
+  prefSub: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
+  switchTrack: { width: 44, height: 24, borderRadius: 12, backgroundColor: colors.border, padding: 2, justifyContent: 'center' },
+  switchTrackOn: { backgroundColor: colors.brand },
+  switchThumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#FFFFFF' },
+  switchThumbOn: { alignSelf: 'flex-end' },
+  divider: { height: 1, backgroundColor: colors.border, marginHorizontal: spacing.md },
+  modalBg: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' },
+  modalCard: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.lg, paddingBottom: 32, maxHeight: '85%' },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: spacing.md },
+  modalTitle: { ...typography.titleMedium, color: colors.onSurface, textAlign: 'center', marginBottom: spacing.md },
+  langRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 12, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: colors.border },
+  langNative: { ...typography.body, color: colors.onSurface, fontWeight: '700' as any },
+  langName: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
 });
