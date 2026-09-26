@@ -151,9 +151,14 @@ async def run(db):
     print("── Starting rich content seed ─────────────────────")
     now = datetime.now(timezone.utc)
 
-    # 1) Add 50+ diverse social posts
+    # 1) Add 50+ diverse social posts (upgrade existing rich-seed posts to include multi-image + video)
     merchant = await db.users.find_one({"role": "merchant"}) or await db.users.find_one({})
     merchant_id = str(merchant["_id"]) if merchant else "seed_merchant"
+    # First — upgrade any old seed_rich posts that only have single image
+    posts_without_multi = await db.social_posts.count_documents({"seed_rich": True, "$or": [{"images": {"$exists": False}}, {"images": {"$size": 0}}]})
+    if posts_without_multi > 0:
+        print(f"  ↻ Deleting {posts_without_multi} old single-image seed posts to re-seed with multi-media")
+        await db.social_posts.delete_many({"seed_rich": True})
     existing_posts = await db.social_posts.count_documents({})
     if existing_posts < 40:
         posts_to_add = POST_TEMPLATES
@@ -186,13 +191,33 @@ async def run(db):
                 "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=800",
                 "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800",
                 "https://images.unsplash.com/photo-1592286927505-1def25115558?w=800",
+                "https://images.unsplash.com/photo-1616348436168-de43ad0db179?w=800",
+                "https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=800",
+                "https://images.unsplash.com/photo-1601924582970-9238bcb495d9?w=800",
+                "https://images.unsplash.com/photo-1605236453806-6ff36851218e?w=800",
+                "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=800",
+                "https://images.unsplash.com/photo-1567581935884-3349723552ca?w=800",
             ]
+            # Pick 1-4 images randomly, more for event/product-focused posts
+            n_images = random.choices([1, 2, 3, 4], weights=[30, 30, 25, 15])[0]
+            images = random.sample(image_pool, min(n_images, len(image_pool)))
+            # 25% chance of adding a video at end
+            video_obj = None
+            if random.random() < 0.25:
+                v_tpl = random.choice(PROMO_VIDEOS)
+                video_obj = {
+                    "url": v_tpl["url"],
+                    "thumbnail": v_tpl["thumb"],
+                    "duration": v_tpl["dur"],
+                }
             doc = {
                 "author": "Zenrex Store",
                 "author_id": merchant_id,
                 "text": f"{p['text']}\n\n{p['hashtags']}",
-                "image": random.choice(image_pool),
-                "media": [random.choice(image_pool)],
+                "image": images[0] if images else None,
+                "images": images,
+                "media": images,
+                "video": video_obj,
                 "type": p["type"],
                 "views": views_n,
                 "likes": likes_n,

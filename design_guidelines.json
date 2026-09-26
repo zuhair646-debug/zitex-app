@@ -1,40 +1,54 @@
 {
   "app_name": "Zenrex Store",
-  "personality": "6 Glass / Luxe DARK",
-  "personality_one_liner": "A cinematic and premium e-commerce experience with deep midnight surfaces, rich gold accents, and frosted glass depth that puts high-end functionality first.",
+  "personality": "6 Glass / Luxe DARK (with Light equivalent)",
+  "personality_one_liner": "A premium, cinematic super-app with precise layout guardrails to enforce cross-platform and RTL consistency without altering the core visual foundation.",
   "color": {
-    "surface": "#0D0D0D",
-    "onSurface": "#F7F7F7",
-    "surfaceSecondary": "#1A1A1A",
-    "onSurfaceSecondary": "#EBEBEB",
-    "surfaceTertiary": "#262626",
-    "onSurfaceTertiary": "#D4D4D4",
-    "surfaceInverse": "#FFFFFF",
-    "onSurfaceInverse": "#000000",
-    "brand": "#D4AF37",
-    "brandPrimary": "#D4AF37",
-    "onBrandPrimary": "#000000",
-    "brandSecondary": "#F4C744",
-    "onBrandSecondary": "#000000",
-    "brandTertiary": "#8F7523",
-    "onBrandTertiary": "#F7F7F7",
-    "success": "#2D6A4F",
+    "surface": "#FAFAFA",
+    "onSurface": "#1A181D",
+    "surfaceSecondary": "#FFFFFF",
+    "onSurfaceSecondary": "#1A181D",
+    "surfaceTertiary": "#F3F3F5",
+    "onSurfaceTertiary": "#1A181D",
+    "surfaceInverse": "#0A0A0A",
+    "onSurfaceInverse": "#EFECE7",
+    "brand": "#B48F3B",
+    "brandPrimary": "#B48F3B",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#2A75E6",
+    "onBrandSecondary": "#FFFFFF",
+    "brandTertiary": "#F3F3F5",
+    "onBrandTertiary": "#1A181D",
+    "success": "#2DAB76",
     "onSuccess": "#FFFFFF",
-    "warning": "#D4AF37",
-    "onWarning": "#000000",
-    "error": "#9B2226",
+    "warning": "#D98F22",
+    "onWarning": "#FFFFFF",
+    "error": "#E5484D",
     "onError": "#FFFFFF",
-    "info": "#4A4E69",
+    "info": "#2A75E6",
     "onInfo": "#FFFFFF",
-    "border": "#333333",
-    "borderStrong": "#555555",
-    "divider": "#1F1F1F",
-    "muted": "#888888",
-    "onBrand": "#000000"
+    "border": "#E2E0E5",
+    "borderStrong": "#C8C5CE",
+    "divider": "#E2E0E5",
+    "muted": "#766C60",
+    "onBrand": "#FFFFFF",
+    "dark_theme": {
+      "surface": "#0A0A0A",
+      "onSurface": "#EFECE7",
+      "surfaceSecondary": "#17151A",
+      "onSurfaceSecondary": "#EFECE7",
+      "border": "#2E2A32",
+      "divider": "#2E2A32",
+      "muted": "#9A8F80",
+      "brandPrimary": "#C9A85C",
+      "brandSecondary": "#6EA8FF",
+      "success": "#4CD69C",
+      "warning": "#F5B547",
+      "error": "#FF6B6B"
+    }
   },
   "typography": {
-    "displayFontFamily": "Fraunces",
-    "textFontFamily": "Geist",
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Plus Jakarta Sans",
     "scale": {
       "sm": 12,
       "base": 14,
@@ -44,7 +58,7 @@
     }
   },
   "spacing": {
-    "rule": "Generous spacing. Cinematic feel. Empty space is content on purpose.",
+    "rule": "Use safe area insets to pad screen boundaries. Use flex gaps over rigid margins where possible.",
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -59,21 +73,16 @@
     "lg": 20,
     "pill": 999
   },
-  "shadow_tier": "0",
+  "shadow_tier": "1",
   "navigation": "bottom_tabs",
   "icon_set": "Phosphor",
   "glassmorphism": {
-    "enabled": true,
+    "enabled": "true",
     "do's": [
-      "Sticky headers over scrolling content",
-      "Sticky payment ribbon at bottom of checkout",
-      "Bottom-sheet headers and drag handles",
-      "Floating panels and premium status surfaces"
+      "Use blur on bottom tabs, floating action buttons, and sticky headers over scroll."
     ],
     "dont's": [
-      "Form fields",
-      "Dense cards in list rows",
-      "Body text regions"
+      "Don't blur simple list rows or standard content cards; prefer solid surfaceSecondary for performance."
     ]
   },
   "platform_libraries": {
@@ -90,89 +99,39 @@
   },
   "screens": [
     {
-      "name": "Checkout Flow",
-      "purpose": "A unified single-screen checkout with dynamic shipping discovery and an elegant bottom-anchored payment ribbon.",
+      "name": "GlobalFixes",
+      "purpose": "Apply exact numeric and layout guardrails to fix text clipping, navigation overlap, and multi-media implementation.",
       "states": {
-        "loading": "Centered premium gold spinner on midnight background.",
-        "empty": "N/A for checkout",
-        "error": "Readable ruby-tinted message with a retry button."
+        "loading": "Spinner centered.",
+        "empty": "Illustration + primary CTA.",
+        "error": "Message + Retry button."
       },
-      "layout": "Stacked card layout with generous spacing. Sections: 1. Location Map (العنوان على الخريطة), 2. Delivery Mode (طريقة التوصيل - Auto-decided based on map radius), 3. Shipping Carrier Selection (شركات الشحن - logo, name, ETA, cost), 4. Warranty Summary (الضمان), 5. Payment Selection (طرق الدفع - BNPL previews included), 6. Loyalty Points Slider (استبدال النقاط). Crucial: A fixed bottom glass ribbon over scrolling content that contains 'Confirm' button, Total, and horizontal scroll of supported payment mini-logos."
-    },
-    {
-      "name": "Merchant Payment Settings (Admin)",
-      "purpose": "Allows merchants to configure and input credentials for multiple payment gateways.",
-      "states": {
-        "loading": "Skeleton rows of payment providers.",
-        "empty": "N/A",
-        "error": "Error loading configurations, with retry."
-      },
-      "layout": "List of available providers (Mada, Apple Pay, STC Pay, Tabby, Tamara, etc.). Each row has an enable/disable switch. Tapping a row opens a bottom sheet or modal for entering credentials (API keys, secret keys). Display 'معتمد قانونياً في المملكة' SAMA badge for approved gateways. Include Bulk Enable preset chips at the top."
-    },
-    {
-      "name": "Merchant Shipping Settings (Admin)",
-      "purpose": "Allows merchants to toggle Saudi shipping carriers and enter API keys.",
-      "states": {
-        "loading": "Skeleton rows of shipping providers.",
-        "empty": "N/A",
-        "error": "Error loading shipping settings."
-      },
-      "layout": "List of carriers (SMSA, SPL, Aramex, etc.) with switches. Tapping reveals a credential modal. Fields include base price, per-kg price, COD support toggle. Map delivery radius configuration is included at the top."
-    },
-    {
-      "name": "Loyalty & Rewards Hub",
-      "purpose": "Showcases the user's loyalty tier, point balance, and redeemable rewards.",
-      "states": {
-        "loading": "Spinner",
-        "empty": "Illustration of empty wallet with 'ابدأ التسوق لجمع النقاط' (Start shopping to collect points)",
-        "error": "Failed to load balance."
-      },
-      "layout": "Hero section with a dark abstract gold background and frosted glass overlay displaying 'رصيد نقاط الولاء: X نقطة' and a progress bar to the next tier (Bronze/Silver/Gold/Platinum). Below, a grid of rewards (Rewards Shop) and recent transaction history."
+      "layout": "Follow strict safe-area and RTL layout adjustments as specified in the instructions."
     }
   ],
-  "images": {
-    "mada_logo": {
-      "url": "https://images.unsplash.com/photo-1618200469989-152fab5d41a2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwxfHxtYWRhJTIwbG9nbyUyMHRyYW5zcGFyZW50fGVufDB8fHx8MTc5MDM1NDQwN3ww&ixlib=rb-4.1.0&q=85",
-      "alt": "Mada Payment"
-    },
-    "loyalty_bg": {
-      "url": "https://images.unsplash.com/photo-1513346940221-6f673d962e97?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwxfHxsb3lhbHR5JTIwZ29sZCUyMGFic3RyYWN0JTIwZGFyayUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzkwMzU0NDA3fDA&ixlib=rb-4.1.0&q=85",
-      "alt": "Loyalty Gold Abstract Background"
-    },
-    "stc_pay_logo": {
-      "url": "Fallback initials: 'STC' | Original query: 'stc pay logo transparent'",
-      "alt": "STC Pay Logo"
-    },
-    "tabby_logo": {
-      "url": "Fallback initials: 'TAB' | Original query: 'tabby logo transparent'",
-      "alt": "Tabby Logo"
-    },
-    "tamara_logo": {
-      "url": "Fallback initials: 'TAM' | Original query: 'tamara logo transparent'",
-      "alt": "Tamara Logo"
-    },
-    "aramex_logo": {
-      "url": "Fallback initials: 'ARA' | Original query: 'aramex logo transparent'",
-      "alt": "Aramex Logo"
-    },
-    "smsa_logo": {
-      "url": "Fallback initials: 'SMS' | Original query: 'smsa express logo transparent'",
-      "alt": "SMSA Express Logo"
-    }
-  },
-  "haptics": {
-    "primary_cta_press": "impactMedium",
-    "loyalty_slider_commit": "impactLight",
-    "toggle_payment_provider": "selection",
-    "select_shipping_carrier": "selection"
-  },
+  "images": {},
   "instructions_to_main_agent": [
-    "Design heavily around the Glass / Luxe DARK personality. No blue colors anywhere. Default primary accents are Zenrex Gold.",
-    "Implement a highly prominent, elegant glassmorphic sticky ribbon anchored at the bottom of the checkout flow containing the total amount, the primary 'Confirm' CTA, and horizontally scrolling mini-logos of the supported Saudi payment providers.",
-    "The checkout screen MUST be a unified single-page scroll layout containing Location, Delivery, Shipping Options, Warranty, Payment, and Loyalty sliders, strictly following progressive disclosure patterns.",
-    "Implement the map-based auto-detection logic: compare user's location radius to the branch delivery zone. If outside, auto-show the Shipping Carriers component. Hide local delivery.",
-    "In Admin screens, implement bottom sheet modals for entering exact credentials per provider. Display an official SAMA badge ('معتمد قانونياً في المملكة') on Mada and licensed BNPL (Tabby/Tamara).",
-    "Loyalty tier progress, point redemption sliders, and dynamic BNPL text (e.g., '4 دفعات بقيمة 125 ر.س') must be fully baked into the checkout schema.",
-    "Use Arabic texts as requested for primary labels and English for system structures."
+    "IMPLEMENTATION GOAL: You are NOT redesigning screens. You are fixing specific layout constraints, injecting a global Light/Dark theme provider, and resolving text clipping/overlap bugs based on these guardrails.",
+    "1. SAFE AREA STRATEGY:",
+    "- Bottom Tab Bar: Base height 56pt + safe area. Use `const insets = useSafeAreaInsets(); paddingBottom: insets.bottom > 0 ? insets.bottom : 16`. This clears the iOS Home Indicator and Android 3-button/gesture bars.",
+    "- Header: Base height 44pt + safe area. Use `paddingTop: insets.top`.",
+    "- Modals/Sheets: Include `paddingBottom: insets.bottom` on the inner scroll view or container. Do NOT apply safe area to the outer sheet container itself.",
+    "- RTL Padding Rules: NEVER use `paddingLeft` or `paddingRight`. Use `paddingStart` and `paddingEnd`. Avoid explicit width/height constraints on text elements. Use `flexWrap: 'wrap'` and allow flexbox to handle alignment. Remove any hardcoded `textAlign: 'left'`; use `textAlign: 'auto'` to respect the device locale.",
+    "2. THEME IMPLEMENTATION:",
+    "- The 'Luxe Dark' palette provided is stored in color.dark_theme. The 'Luxe Light' mapping is stored in the root color object.",
+    "- Replace hardcoded hex values across the app with dynamic theme tokens from a Context or NativeWind/Zustand store.",
+    "3. KPI CARD RULES:",
+    "- Use `adjustsFontSizeToFit={true}` and `numberOfLines={1}` on KPI values.",
+    "- Implement a K/M number formatter (e.g., 1,500 -> 1.5K) before passing the value to the text component.",
+    "- Grid Layout: 2 columns on phones (390px, width: '48%'), 3-4 columns on tablets (768px). Use flex-wrap and gap, not hardcoded percentages where possible.",
+    "- Inner Padding: Always use `lg` (16pt) padding inside KPI cards.",
+    "4. MULTI-MEDIA CAROUSEL SPEC (Social Feed):",
+    "- Aspect Ratio: Use exactly 4:5 for feed carousels.",
+    "- Indicator: Dots below the carousel. Maximum 5 visible dots (scale down extremes) if >5 items.",
+    "- Video Rules: Can be positioned anywhere in the sequence. Auto-play ONLY if it is the active slide AND muted. Tap to toggle sound. Add a distinct visual video icon badge in the top right corner of the slide to distinguish from images.",
+    "- Zoom: Do not zoom inline; tap media to open a full-screen viewer.",
+    "5. LANGUAGE COVERAGE CHECKLIST:",
+    "- Target locations for hardcoded strings: bottom tab labels, empty states, error messages in form validation, API fallback error messages, and onboarding steps.",
+    "- Recommended pattern: Use `i18n-js` or `react-i18next`. Keys should be nested by screen/component (e.g., `home.feed.title`, `auth.login.submit_button`)."
   ]
 }

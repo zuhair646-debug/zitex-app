@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
+import MediaCarousel from '../../src/components/MediaCarousel';
 
 const { width } = Dimensions.get('window');
 
@@ -226,13 +227,32 @@ export default function SocialScreen() {
                 {!!post.text && <Text style={s.postText}>{post.text}</Text>}
 
                 {/* Images */}
-                {(post.images && post.images.length > 1) ? (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} pagingEnabled style={s.imgScroll}>
-                    {post.images.map((img: string, i: number) => <Image key={i} source={{ uri: img }} style={s.multiImg} />)}
-                  </ScrollView>
-                ) : (post.image || (post.images && post.images[0])) ? (
-                  <Image source={{ uri: post.image || post.images[0] }} style={s.postImage} />
-                ) : null}
+                {(() => {
+                  const mediaItems: any[] = [];
+                  if (Array.isArray(post.images) && post.images.length > 0) {
+                    post.images.forEach((img: string) => mediaItems.push({ type: 'image', url: img }));
+                  } else if (Array.isArray(post.media) && post.media.length > 0) {
+                    post.media.forEach((m: any) => {
+                      if (typeof m === 'string') mediaItems.push({ type: 'image', url: m });
+                      else if (m?.url) mediaItems.push(m);
+                    });
+                  } else if (post.image) {
+                    mediaItems.push({ type: 'image', url: post.image });
+                  }
+                  if (post.video) {
+                    mediaItems.push({
+                      type: 'video',
+                      url: post.video.url || post.video,
+                      thumbnail: post.video.thumbnail || post.video_thumbnail,
+                      duration: post.video.duration || post.video_duration,
+                    });
+                  }
+                  return mediaItems.length > 0 ? (
+                    <View style={{ marginTop: 8, borderRadius: 14, overflow: 'hidden' }}>
+                      <MediaCarousel items={mediaItems} borderRadius={14} />
+                    </View>
+                  ) : null;
+                })()}
 
                 {/* Event details */}
                 {isEvent && (

@@ -2,11 +2,14 @@ import { Tabs, useRouter, useSegments } from 'expo-router';
 import { View, Text, StyleSheet, Platform, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../../src/theme/tokens';
 
 /* ─── Custom tab bar with big center "Live Preview" FAB ─────────────────── */
 function MerchantTabBar({ state, descriptors, navigation }: any) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const bottomOffset = Math.max(insets.bottom, spacing.md);
   // Filter routes we want visible in the bar (custom order + center FAB slot)
   const leftKeys = ['index', 'orders'];         // left side
   const rightKeys = ['products', 'more'];        // right side
@@ -37,7 +40,7 @@ function MerchantTabBar({ state, descriptors, navigation }: any) {
   };
 
   return (
-    <View style={s.wrap} pointerEvents="box-none">
+    <View style={[s.wrap, { bottom: bottomOffset }]} pointerEvents="box-none">
       <BlurView tint="dark" intensity={Platform.OS === 'ios' ? 90 : 100} style={StyleSheet.absoluteFill} />
       <View style={s.bar}>
         {leftKeys.map(buildBtn)}
@@ -89,7 +92,7 @@ export default function MerchantLayout() {
 const s = StyleSheet.create({
   wrap: {
     position: 'absolute',
-    left: spacing.md, right: spacing.md, bottom: spacing.md,
+    left: spacing.md, right: spacing.md,
     height: 72,
     borderRadius: 28,
     overflow: 'visible',

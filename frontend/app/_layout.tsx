@@ -3,6 +3,7 @@ import { useEffect, useState, createContext, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { I18nProvider } from '../src/i18n';
+import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -121,9 +122,10 @@ export default function RootLayout() {
   }, [user, segments, loading]);
 
   return (
+    <ThemeProvider>
     <I18nProvider>
     <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, apiCall }}>
-      <StatusBar style="dark" />
+      <StatusBarAdaptive />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="login" />
@@ -152,5 +154,11 @@ export default function RootLayout() {
       </Stack>
     </AuthContext.Provider>
     </I18nProvider>
+    </ThemeProvider>
   );
+}
+
+function StatusBarAdaptive() {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? 'light' : 'dark'} />;
 }

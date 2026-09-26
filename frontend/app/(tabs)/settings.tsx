@@ -6,12 +6,16 @@ import { useAuth } from '../_layout';
 import { useRouter } from 'expo-router';
 import { useT, LANGUAGES } from '../../src/i18n';
 import { useThemeMode } from '../../src/theme/mode';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const { t, lang, setLang } = useT();
-  const { mode, toggle: toggleTheme } = useThemeMode();
+  const { mode, toggle: toggleThemeLegacy } = useThemeMode();
+  const { toggle: toggleTheme } = useTheme();
+  // Sync both stores so the whole app switches together
+  const syncedToggle = async () => { await toggleTheme(); await toggleThemeLegacy(); };
   const [langModal, setLangModal] = useState(false);
   const [langSearch, setLangSearch] = useState('');
 
@@ -103,7 +107,7 @@ export default function SettingsScreen() {
             label={lang === 'ar' ? (mode === 'dark' ? 'الوضع الليلي' : 'الوضع النهاري') : (mode === 'dark' ? 'Night Mode' : 'Day Mode')}
             color="#D4AF37"
             badge={lang === 'ar' ? (mode === 'dark' ? '🌙 ليلي' : '☀️ نهاري') : (mode === 'dark' ? '🌙 Night' : '☀️ Day')}
-            onPress={toggleTheme}
+            onPress={syncedToggle}
           />
         </View>
 
