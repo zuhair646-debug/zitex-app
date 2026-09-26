@@ -80,6 +80,28 @@ const T: Record<Lang, Record<string, string>> = {
     'notif.title': 'الإشعارات', 'notif.empty': 'لا توجد إشعارات',
     'settings.language': 'اللغة', 'settings.changeLanguage': 'تغيير اللغة',
     'support.title': 'الدعم الفني', 'support.howCanWeHelp': 'كيف يمكننا مساعدتك؟', 'support.channels': 'وسائل التواصل',
+    // Merchant panel
+    'merchant.home': 'الرئيسية', 'merchant.orders': 'الطلبات', 'merchant.products': 'المنتجات',
+    'merchant.live': 'بث المتجر', 'merchant.more': 'المزيد', 'merchant.dashboard': 'لوحة التاجر',
+    'merchant.services': 'الخدمات', 'merchant.competitions': 'المسابقات', 'merchant.social': 'السوشيال ميديا',
+    'merchant.overview': 'العام', 'merchant.store': 'المتجر', 'merchant.maintenance': 'الصيانة',
+    'merchant.newOrder': 'جديد', 'merchant.processing': 'قيد التنفيذ', 'merchant.ready': 'جاهز',
+    'merchant.completed': 'مكتمل', 'merchant.all': 'الكل', 'merchant.active': 'نشطة', 'merchant.ended': 'منتهية',
+    'merchant.acceptPrepare': 'قبول وتجهيز', 'merchant.cancelOrder': 'إلغاء', 'merchant.delivery': 'توصيل',
+    'merchant.pickupBranch': 'استلام من الفرع', 'merchant.delivered': 'تم التسليم',
+    'merchant.available': 'متوفر', 'merchant.featured': 'مميز', 'merchant.searchProduct': 'ابحث عن منتج...',
+    'merchant.needsReply': 'يحتاج رد', 'merchant.topEngagement': 'الأكثر تفاعلاً',
+    'merchant.livePreviewMode': 'وضع البث المباشر', 'merchant.storeView': 'عرض التاجر — تطابق تام مع تجربة العميل',
+    'merchant.account': 'الحساب', 'merchant.dayMode': 'الوضع النهاري', 'merchant.nightMode': 'الوضع الليلي',
+    'merchant.tapToToggle': 'اضغط للتبديل بين النهاري والليلي',
+    // Analytics tabs
+    'a.overview': 'نظرة عامة', 'a.visitors': 'الزوار', 'a.buyers': 'المشترون',
+    'a.bookings': 'الحجوزات', 'a.participants': 'المشاركون', 'a.shares': 'المشاركات',
+    'a.reviews': 'التقييمات', 'a.compare': 'مقارنة', 'a.returns': 'الإرجاعات',
+    'a.complaints': 'الشكاوى', 'a.winners': 'الفائزون', 'a.videos': 'الفيديوهات',
+    // Translate
+    't.translate': 'ترجم', 't.translated': 'مُترجم', 't.showOriginal': 'إظهار النص الأصلي',
+    't.translating': 'جاري الترجمة...',
   },
   en: {
     'common.home': 'Home', 'common.search': 'Search', 'common.cart': 'Cart', 'common.profile': 'Profile',
@@ -103,6 +125,28 @@ const T: Record<Lang, Record<string, string>> = {
     'notif.title': 'Notifications', 'notif.empty': 'No notifications',
     'settings.language': 'Language', 'settings.changeLanguage': 'Change Language',
     'support.title': 'Customer Support', 'support.howCanWeHelp': 'How can we help you?', 'support.channels': 'Contact Channels',
+    // Merchant panel
+    'merchant.home': 'Home', 'merchant.orders': 'Orders', 'merchant.products': 'Products',
+    'merchant.live': 'Live Store', 'merchant.more': 'More', 'merchant.dashboard': 'Merchant Dashboard',
+    'merchant.services': 'Services', 'merchant.competitions': 'Contests', 'merchant.social': 'Social Media',
+    'merchant.overview': 'Overview', 'merchant.store': 'Store', 'merchant.maintenance': 'Maintenance',
+    'merchant.newOrder': 'New', 'merchant.processing': 'Processing', 'merchant.ready': 'Ready',
+    'merchant.completed': 'Completed', 'merchant.all': 'All', 'merchant.active': 'Active', 'merchant.ended': 'Ended',
+    'merchant.acceptPrepare': 'Accept & Prepare', 'merchant.cancelOrder': 'Cancel', 'merchant.delivery': 'Delivery',
+    'merchant.pickupBranch': 'Pickup from branch', 'merchant.delivered': 'Delivered',
+    'merchant.available': 'Available', 'merchant.featured': 'Featured', 'merchant.searchProduct': 'Search products...',
+    'merchant.needsReply': 'Needs Reply', 'merchant.topEngagement': 'Top Engagement',
+    'merchant.livePreviewMode': 'Live Preview Mode', 'merchant.storeView': 'Merchant view — pixel-match to customer experience',
+    'merchant.account': 'Account', 'merchant.dayMode': 'Day Mode', 'merchant.nightMode': 'Night Mode',
+    'merchant.tapToToggle': 'Tap to toggle Day/Night mode',
+    // Analytics tabs
+    'a.overview': 'Overview', 'a.visitors': 'Visitors', 'a.buyers': 'Buyers',
+    'a.bookings': 'Bookings', 'a.participants': 'Participants', 'a.shares': 'Shares',
+    'a.reviews': 'Reviews', 'a.compare': 'Compare', 'a.returns': 'Returns',
+    'a.complaints': 'Complaints', 'a.winners': 'Winners', 'a.videos': 'Videos',
+    // Translate
+    't.translate': 'Translate', 't.translated': 'Translated', 't.showOriginal': 'Show original',
+    't.translating': 'Translating...',
   },
   ur: {
     'common.home': 'ہوم', 'common.search': 'تلاش', 'common.cart': 'کارٹ', 'common.profile': 'پروفائل',
@@ -313,6 +357,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
         I18nManager.forceRTL(wantRTL);
       }
     }
+    // Fire global listeners so root layout remounts entire Stack
+    try {
+      const arr = (global as any).__zenrex_lang_listeners || [];
+      arr.forEach((fn: any) => { try { fn(); } catch {} });
+    } catch {}
   }, []);
 
   return (

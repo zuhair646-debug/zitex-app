@@ -15,6 +15,7 @@ import OrderHeatmap from '../../src/components/live-preview/OrderHeatmap';
 import { AlertsBell } from '../../src/components/live-preview/AlertsAndExport';
 import CompetitionDetailSheet from '../../src/components/live-preview/CompetitionDetailSheet';
 import LiveToastNotifications from '../../src/components/live-preview/LiveToastNotifications';
+import { useT } from '../../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -28,6 +29,7 @@ type Section = 'products' | 'services' | 'competitions' | 'social' | 'overview';
 export default function LivePreview() {
   const router = useRouter();
   const { apiCall } = useAuth();
+  const { t } = useT();
   const [section, setSection] = useState<Section>('products');
   const [analyticsFor, setAnalyticsFor] = useState<any>(null);
   const [serviceAnalyticsFor, setServiceAnalyticsFor] = useState<any>(null);
@@ -69,16 +71,16 @@ export default function LivePreview() {
           decelerationRate="fast"
         >
           {[
-            { id: 'products', name: 'المتجر', icon: 'storefront' },
-            { id: 'services', name: 'الصيانة', icon: 'construct' },
-            { id: 'competitions', name: 'المسابقات', icon: 'trophy' },
-            { id: 'social', name: 'السوشيال ميديا', icon: 'chatbubbles' },
-            { id: 'overview', name: 'العام', icon: 'grid' },
-          ].map(t => (
-            <TouchableOpacity key={t.id} onPress={() => { setSection(t.id as Section); setCompareMode(false); setSelectedIds([]); }}
-              style={[s.sectionBtn, section === t.id && s.sectionBtnActive]}>
-              <Ionicons name={t.icon as any} size={18} color={section === t.id ? BG : GOLD} />
-              <Text style={[s.sectionText, section === t.id && { color: BG }]}>{t.name}</Text>
+            { id: 'products', name: t('merchant.store','المتجر'), icon: 'storefront' },
+            { id: 'services', name: t('merchant.maintenance','الصيانة'), icon: 'construct' },
+            { id: 'competitions', name: t('merchant.competitions','المسابقات'), icon: 'trophy' },
+            { id: 'social', name: t('merchant.social','السوشيال ميديا'), icon: 'chatbubbles' },
+            { id: 'overview', name: t('merchant.overview','العام'), icon: 'grid' },
+          ].map(t2 => (
+            <TouchableOpacity key={t2.id} onPress={() => { setSection(t2.id as Section); setCompareMode(false); setSelectedIds([]); }}
+              style={[s.sectionBtn, section === t2.id && s.sectionBtnActive]}>
+              <Ionicons name={t2.icon as any} size={18} color={section === t2.id ? BG : GOLD} />
+              <Text style={[s.sectionText, section === t2.id && { color: BG }]}>{t2.name}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>

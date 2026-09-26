@@ -5,6 +5,7 @@
  */
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setColorsMode } from './tokens';
 
 const KEY = '@zenrex_theme_mode';
 export type ThemeMode = 'light' | 'dark';
@@ -73,6 +74,7 @@ interface ThemeContextValue {
   mode: ThemeMode;
   colors: ThemeColors;
   isDark: boolean;
+  themeKey: number;   // increments on every toggle for full remount
   setMode: (m: ThemeMode) => Promise<void>;
   toggle: () => Promise<void>;
 }
@@ -81,24 +83,31 @@ const ThemeContext = createContext<ThemeContextValue>({
   mode: 'dark',
   colors: DARK,
   isDark: true,
+  themeKey: 0,
   setMode: async () => {},
   toggle: async () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('dark');
+  const [themeKey, setThemeKey] = useState(0);
 
   useEffect(() => {
     (async () => {
       try {
         const v = (await AsyncStorage.getItem(KEY)) as ThemeMode | null;
-        if (v === 'light' || v === 'dark') setModeState(v);
+        if (v === 'light' || v === 'dark') {
+          setModeState(v);
+          setColorsMode(v);
+        }
       } catch {}
     })();
   }, []);
 
   const setMode = useCallback(async (m: ThemeMode) => {
+    setColorsMode(m);       // mutate tokens.colors
     setModeState(m);
+    setThemeKey(k => k + 1); // bump key → force remount of subtree
     try { await AsyncStorage.setItem(KEY, m); } catch {}
   }, []);
 
@@ -111,9 +120,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     mode,
     colors: mode === 'dark' ? DARK : LIGHT,
     isDark: mode === 'dark',
+    themeKey,
     setMode,
     toggle,
-  }), [mode, setMode, toggle]);
+  }), [mode, themeKey, setMode, toggle]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

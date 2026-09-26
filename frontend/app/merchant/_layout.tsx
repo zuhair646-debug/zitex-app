@@ -4,11 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../../src/theme/tokens';
+import { useT } from '../../src/i18n';
 
 /* ─── Custom tab bar with big center "Live Preview" FAB ─────────────────── */
 function MerchantTabBar({ state, descriptors, navigation }: any) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useT();
   const bottomOffset = Math.max(insets.bottom, spacing.md);
   // Filter routes we want visible in the bar (custom order + center FAB slot)
   const leftKeys = ['index', 'orders'];         // left side
@@ -62,7 +64,7 @@ function MerchantTabBar({ state, descriptors, navigation }: any) {
         <View style={s.fab}>
           <Ionicons name="radio" size={26} color="#0A0A0A" />
         </View>
-        <Text style={s.fabLbl}>بث المتجر</Text>
+        <Text style={s.fabLbl}>{t('merchant.live','بث المتجر')}</Text>
       </TouchableOpacity>
     </View>
     </>
@@ -70,15 +72,16 @@ function MerchantTabBar({ state, descriptors, navigation }: any) {
 }
 
 export default function MerchantLayout() {
+  const { t } = useT();
   return (
     <Tabs
       tabBar={props => <MerchantTabBar {...props} />}
       screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.brand }}
     >
-      <Tabs.Screen name="index" options={{ title: 'الرئيسية' }} />
-      <Tabs.Screen name="orders" options={{ title: 'الطلبات' }} />
-      <Tabs.Screen name="products" options={{ title: 'المنتجات' }} />
-      <Tabs.Screen name="more" options={{ title: 'المزيد' }} />
+      <Tabs.Screen name="index" options={{ title: t('merchant.home','الرئيسية') }} />
+      <Tabs.Screen name="orders" options={{ title: t('merchant.orders','الطلبات') }} />
+      <Tabs.Screen name="products" options={{ title: t('merchant.products','المنتجات') }} />
+      <Tabs.Screen name="more" options={{ title: t('merchant.more','المزيد') }} />
 
       {/* Hidden routes — accessible via router.push */}
       {[

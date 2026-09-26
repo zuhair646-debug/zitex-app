@@ -1,5 +1,5 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useState, createContext, useContext } from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { I18nProvider } from '../src/i18n';
@@ -126,6 +126,7 @@ export default function RootLayout() {
     <I18nProvider>
     <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, apiCall }}>
       <StatusBarAdaptive />
+      <RemountOnThemeOrLang>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="login" />
@@ -152,6 +153,7 @@ export default function RootLayout() {
         <Stack.Screen name="group-buys" options={{ presentation: 'card' }} />
         <Stack.Screen name="points" options={{ presentation: 'card' }} />
       </Stack>
+      </RemountOnThemeOrLang>
     </AuthContext.Provider>
     </I18nProvider>
     </ThemeProvider>
@@ -161,4 +163,24 @@ export default function RootLayout() {
 function StatusBarAdaptive() {
   const { isDark } = useTheme();
   return <StatusBar style={isDark ? 'light' : 'dark'} />;
+}
+
+// Force full remount of the Stack (and every screen) when theme or language changes.
+// This causes each screen's StyleSheet.create() to re-run so mode-mutated tokens apply.
+function RemountOnThemeOrLang({ children }: { children: React.ReactNode }) {
+  const { themeKey, mode } = useTheme();
+  // Read language from I18n context — but avoid circular; we use a lightweight approach
+  const [langBump, setLangBump] = useState(0);
+  useEffect(() => {
+    const listener = () => setLangBump(x => x + 1);
+    // Attach listener via a global emitter — set by I18nProvider
+    (global as any).__zenrex_lang_listeners = (global as any).__zenrex_lang_listeners || [];
+    (global as any).__zenrex_lang_listeners.push(listener);
+    return () => {
+      const arr = (global as any).__zenrex_lang_listeners || [];
+      const i = arr.indexOf(listener);
+      if (i >= 0) arr.splice(i, 1);
+    };
+  }, []);
+  return <React.Fragment key={`${mode}-${themeKey}-${langBump}`}>{children}</React.Fragment>;
 }

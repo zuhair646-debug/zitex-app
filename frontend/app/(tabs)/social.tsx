@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import MediaCarousel from '../../src/components/MediaCarousel';
+import TranslateButton from '../../src/components/TranslateButton';
 
 const { width } = Dimensions.get('window');
 
@@ -224,7 +225,7 @@ export default function SocialScreen() {
                   </View>
                 </View>
 
-                {!!post.text && <Text style={s.postText}>{post.text}</Text>}
+                {!!post.text && <TranslateButton text={post.text} sourceLang="ar" textStyle={s.postText} />}
 
                 {/* Images */}
                 {(() => {

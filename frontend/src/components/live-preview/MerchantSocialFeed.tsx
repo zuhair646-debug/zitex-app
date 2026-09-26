@@ -5,6 +5,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LP, K, KM } from './theme';
 import MediaCarousel from '../MediaCarousel';
+import TranslateButton from '../TranslateButton';
 
 const { width } = Dimensions.get('window');
 const timeAgo = (iso?: string) => {
@@ -220,7 +221,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
                 </View>
               </View>
 
-              {!!post.text && <Text style={s.postText}>{post.text}</Text>}
+              {!!post.text && <TranslateButton text={post.text} sourceLang="ar" textStyle={s.postText} />}
 
               {(() => {
                 // Assemble media array: images[] first, then video at end if present
