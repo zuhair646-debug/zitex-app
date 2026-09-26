@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, RefreshControl, StatusBar } from 'react-native';
+import { View, Text, FlatList, ScrollView, TouchableOpacity, StyleSheet, Alert, RefreshControl, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 import { SegmentedControl, EmptyState, SkeletonBox, Badge, PrimaryButton, SecondaryButton } from '../../src/components/ui';
 
 type OrderFilter = 'new' | 'processing' | 'ready' | 'delivering' | 'done' | 'all';
@@ -97,13 +98,18 @@ export default function MerchantOrders() {
             description="حين يبدأ العملاء بالطلب، ستظهر هنا للمتابعة"
           />
         ) : (
-          <ScrollView
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brand} />}
-            contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140, gap: spacing.md }}
+          <FlatList
+            data={filtered}
+            keyExtractor={(o) => o.id}
+            initialNumToRender={8}
+            maxToRenderPerBatch={10}
+            windowSize={7}
+            removeClippedSubviews
             showsVerticalScrollIndicator={false}
-          >
-            {filtered.map(o => (
-              <View key={o.id} style={s.card}>
+            contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140, gap: spacing.md }}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brand} />}
+            renderItem={({ item: o }) => (
+              <View style={s.card}>
                 {/* Top row: ID + status + amount */}
                 <View style={s.topRow}>
                   <View style={s.idPill}>
@@ -168,8 +174,8 @@ export default function MerchantOrders() {
                   )}
                 </View>
               </View>
-            ))}
-          </ScrollView>
+            )}
+          />
         )}
       </SafeAreaView>
     </View>
@@ -177,6 +183,7 @@ export default function MerchantOrders() {
 }
 
 function useSStyles() {
+  const { themeKey } = useTheme();
   return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
@@ -217,6 +224,6 @@ function useSStyles() {
     flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs,
     paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderSubtle,
   },
-}), []);
+}), [themeKey]);
 }
 

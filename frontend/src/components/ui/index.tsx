@@ -275,9 +275,21 @@ export function ScreenHeader({ title, onBack, rightIcon, onRight, subtitle }: {
           <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
       ) : <View style={styles.hBtn} />}
-      <View style={{ flex: 1, alignItems: 'center' }}>
-        <Text style={styles.hTitle} numberOfLines={1}>{title}</Text>
-        {subtitle && <Text style={styles.hSubtitle} numberOfLines={1}>{subtitle}</Text>}
+      <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 4 }}>
+        <Text
+          style={styles.hTitle}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >{title}</Text>
+        {subtitle && (
+          <Text
+            style={styles.hSubtitle}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+          >{subtitle}</Text>
+        )}
       </View>
       {rightIcon && onRight ? (
         <TouchableOpacity onPress={onRight} style={styles.hBtn} activeOpacity={0.6}>

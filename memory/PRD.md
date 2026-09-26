@@ -1,6 +1,43 @@
 # Zitex — Product Requirements (Living Doc)
 
 
+## Product Roadmap (User confirmed 2026-09-26)
+
+### Vision — Multi-Tenant SaaS with per-merchant isolation
+- Each merchant gets **their own deployment** (own server, domain, DB)
+- Pricing tiers (planned): ~700 SAR small, ~1000 SAR large — based on user count / features
+- White-label: logo, colors, brand name configurable per tenant
+- Foundation must be **clone-ready** without redesign
+
+### Non-Negotiable Rule
+**Zero visual changes** during performance work. All optimizations must be under-the-hood.
+Design, layouts, colors, features, screens all remain untouched.
+
+### Current Sprint (P0 — Performance & Reactivity)
+1. Instant theme switching (no full app remount) — use React Context reactivity
+2. Instant language switching (with RTL restart prompt)
+3. Convert Products/Orders lists to FlatList with virtualization
+4. Fix ScreenHeader Arabic text truncation
+5. Translate hardcoded Arabic strings in merchant/products.tsx and orders.tsx
+6. Consolidate legacy mode.ts into ThemeContext
+
+### Upcoming Sprints (in priority order)
+- **Sprint 2**: Merchant dashboard completion (remaining sections)
+- **Sprint 3**: Customer internal store (منتجات، شراء، تسوق داخلي)
+- **Sprint 4**: Driver dashboard cleanup + delivery flow polish
+- **Sprint 5**: Chamber of Commerce employee section (kanban, tickets, tasks)
+- **Sprint 6**: Marketer/Affiliate dashboard
+
+### Foundation Sprint (Parallel — no visual impact)
+- Backend pagination on all list endpoints (`?page=1&limit=20`)
+- MongoDB indexes on merchant_id, branch_id, status, created_at
+- Redis cache for hot data (categories, product lists)
+- Cloudflare CDN in front of VPS for image acceleration
+- Automated per-merchant provisioning script (`zenrex clone <merchant>`)
+- Environment-driven branding (logo, colors, features via tenant.ts)
+
+
+
 ## v1.16.0 — Pearl Light + Custom Theme + Fonts (2026-09-26)
 
 ### Global Appearance System

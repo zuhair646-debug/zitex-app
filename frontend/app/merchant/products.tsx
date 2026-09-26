@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Alert, RefreshControl, TextInput, Switch, StatusBar } from 'react-native';
+import { View, Text, FlatList, ScrollView, TouchableOpacity, StyleSheet, Image, Alert, RefreshControl, TextInput, Switch, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 import { Chip, EmptyState, SkeletonBox, Badge, PrimaryButton } from '../../src/components/ui';
 
 export default function MerchantProducts() {
@@ -116,13 +117,18 @@ export default function MerchantProducts() {
             onAction={products.length === 0 ? () => router.push('/merchant/product-form') : undefined}
           />
         ) : (
-          <ScrollView
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brand} />}
-            contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140, gap: spacing.md }}
+          <FlatList
+            data={filtered}
+            keyExtractor={(p) => p.id}
+            initialNumToRender={8}
+            maxToRenderPerBatch={10}
+            windowSize={7}
+            removeClippedSubviews
             showsVerticalScrollIndicator={false}
-          >
-            {filtered.map(p => (
-              <View key={p.id} style={s.card}>
+            contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140, gap: spacing.md }}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brand} />}
+            renderItem={({ item: p }) => (
+              <View style={s.card}>
                 <View style={s.cardRow}>
                   <Image
                     source={{ uri: p.images?.[0] || 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=200' }}
@@ -180,8 +186,8 @@ export default function MerchantProducts() {
                   </TouchableOpacity>
                 </View>
               </View>
-            ))}
-          </ScrollView>
+            )}
+          />
         )}
       </SafeAreaView>
     </View>
@@ -189,6 +195,7 @@ export default function MerchantProducts() {
 }
 
 function useSStyles() {
+  const { themeKey } = useTheme();
   return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
@@ -232,6 +239,6 @@ function useSStyles() {
   stockLabel: { ...typography.labelSmall, fontWeight: '700' },
   editBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center' },
   delBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.errorSoft, alignItems: 'center', justifyContent: 'center' },
-}), []);
+}), [themeKey]);
 }
 

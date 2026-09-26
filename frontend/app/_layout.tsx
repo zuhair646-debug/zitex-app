@@ -167,13 +167,10 @@ function StatusBarAdaptive() {
   return <StatusBar style={isDark ? 'light' : 'dark'} />;
 }
 
-// Force full remount of the Stack (and every screen) when theme or language changes.
-// This causes each screen's StyleSheet.create() to re-run so mode-mutated tokens apply.
+// Apply global font & keep app subscribed to theme + language WITHOUT full remount.
+// Screens re-render normally via `themeKey` in their useMemo deps (see products/orders).
 function RemountOnThemeOrLang({ children }: { children: React.ReactNode }) {
-  const { themeKey, mode, fontOption } = useTheme();
-  // Apply global font family to all <Text> and <TextInput> components.
-  // CRITICAL: rebuild from scratch each time — never append to previous style
-  // (previous impl caused unbounded array growth on every remount).
+  const { fontOption } = useTheme();
   useEffect(() => {
     const anyText: any = Text;
     const anyTI: any = TextInput;
@@ -184,23 +181,9 @@ function RemountOnThemeOrLang({ children }: { children: React.ReactNode }) {
       anyText.defaultProps.style = style;
       anyTI.defaultProps.style = style;
     } else {
-      // System font — clear any previously set default
       delete anyText.defaultProps.style;
       delete anyTI.defaultProps.style;
     }
   }, [fontOption.regular]);
-  // Read language from I18n context — but avoid circular; we use a lightweight approach
-  const [langBump, setLangBump] = useState(0);
-  useEffect(() => {
-    const listener = () => setLangBump(x => x + 1);
-    // Attach listener via a global emitter — set by I18nProvider
-    (global as any).__zenrex_lang_listeners = (global as any).__zenrex_lang_listeners || [];
-    (global as any).__zenrex_lang_listeners.push(listener);
-    return () => {
-      const arr = (global as any).__zenrex_lang_listeners || [];
-      const i = arr.indexOf(listener);
-      if (i >= 0) arr.splice(i, 1);
-    };
-  }, []);
-  return <React.Fragment key={`${mode}-${themeKey}-${langBump}`}>{children}</React.Fragment>;
+  return <>{children}</>;
 }

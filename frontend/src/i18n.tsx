@@ -348,21 +348,46 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, [lang]);
 
   const setLang = useCallback(async (l: Lang) => {
+    const previousRTL = RTL_LANGS.includes(lang);
+    const wantRTL = RTL_LANGS.includes(l);
     setLangState(l);
     await AsyncStorage.setItem('app_lang', l);
     if (Platform.OS !== 'web') {
-      const wantRTL = RTL_LANGS.includes(l);
       if (I18nManager.isRTL !== wantRTL) {
         I18nManager.allowRTL(wantRTL);
         I18nManager.forceRTL(wantRTL);
+        // RTL flip requires an app reload to fully apply layout mirroring.
+        // Prompt user to restart. On dev builds we can use DevSettings.reload().
+        if (previousRTL !== wantRTL) {
+          const { Alert } = require('react-native');
+          const isAr = l === 'ar';
+          Alert.alert(
+            isAr ? 'إعادة تشغيل التطبيق' : 'Restart Required',
+            isAr
+              ? 'لتفعيل اللغة والاتجاه بشكل كامل، أعد تشغيل التطبيق (اغلقه ثم افتحه من جديد).'
+              : 'To apply the language direction fully, please restart the app (close and reopen).',
+            [
+              { text: isAr ? 'حسناً' : 'OK' },
+              {
+                text: isAr ? 'إعادة تشغيل الآن' : 'Restart Now',
+                onPress: () => {
+                  try {
+                    const { DevSettings } = require('react-native');
+                    if (DevSettings?.reload) DevSettings.reload();
+                  } catch {}
+                },
+              },
+            ]
+          );
+        }
       }
     }
-    // Fire global listeners so root layout remounts entire Stack
+    // Fire global listeners for legacy screens that need immediate re-render
     try {
       const arr = (global as any).__zenrex_lang_listeners || [];
       arr.forEach((fn: any) => { try { fn(); } catch {} });
     } catch {}
-  }, []);
+  }, [lang]);
 
   return (
     <I18nContext.Provider value={{ lang, t, setLang, isRTL: RTL_LANGS.includes(lang), languages: LANGUAGES }}>
