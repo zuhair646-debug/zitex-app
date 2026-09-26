@@ -52,7 +52,7 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.13.13 ✨</Text>
+        <Text style={s.previewText}>🔴 وضع البث المباشر — v1.14.1 ✨</Text>
         <AlertsBell apiCall={apiCall} />
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
@@ -71,7 +71,7 @@ export default function LivePreview() {
           <TouchableOpacity key={t.id} onPress={() => { setSection(t.id as Section); setCompareMode(false); setSelectedIds([]); }}
             style={[s.sectionBtn, section === t.id && s.sectionBtnActive]}>
             <Ionicons name={t.icon as any} size={18} color={section === t.id ? BG : GOLD} />
-            <Text style={[s.sectionText, section === t.id && { color: BG }]}>{t.name}</Text>
+            <Text style={[s.sectionText, section === t.id && { color: BG }]} numberOfLines={1}>{t.name}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -1799,11 +1799,11 @@ const s = StyleSheet.create({
   previewPill: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7f1d1d', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, margin: 10 },
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
   previewText: { flex: 1, color: '#FFFFFF', fontSize: 12, fontWeight: '700', textAlign: 'right' },
-  sectionRowWrap: { maxHeight: 52, flexGrow: 0 },
-  sectionRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 10, paddingBottom: 8, alignItems: 'center' },
-  sectionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: CARD, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: BORDER },
+  sectionRowWrap: { maxHeight: 56, flexGrow: 0 },
+  sectionRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 14, paddingEnd: 20, paddingBottom: 8, alignItems: 'center' },
+  sectionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: CARD, paddingVertical: 10, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: BORDER, flexShrink: 0 },
   sectionBtnActive: { backgroundColor: GOLD, borderColor: GOLD },
-  sectionText: { color: GOLD, fontSize: 12, fontWeight: '800' },
+  sectionText: { color: GOLD, fontSize: 12, fontWeight: '800', flexShrink: 0 },
   toolbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8 },
   liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#0F5132', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   livePulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' },

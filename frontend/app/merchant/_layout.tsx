@@ -40,7 +40,10 @@ function MerchantTabBar({ state, descriptors, navigation }: any) {
   };
 
   return (
-    <View style={[s.wrap, { bottom: bottomOffset }]} pointerEvents="box-none">
+    <>
+      {/* Solid backdrop scrim so nothing peeks under the bar (like Snapchat) */}
+      <View pointerEvents="none" style={[s.scrim, { height: 72 + bottomOffset + 24 }]} />
+      <View style={[s.wrap, { bottom: bottomOffset }]} pointerEvents="box-none">
       <BlurView tint="dark" intensity={Platform.OS === 'ios' ? 90 : 100} style={StyleSheet.absoluteFill} />
       <View style={s.bar}>
         {leftKeys.map(buildBtn)}
@@ -62,6 +65,7 @@ function MerchantTabBar({ state, descriptors, navigation }: any) {
         <Text style={s.fabLbl}>بث المتجر</Text>
       </TouchableOpacity>
     </View>
+    </>
   );
 }
 
@@ -90,6 +94,12 @@ export default function MerchantLayout() {
 }
 
 const s = StyleSheet.create({
+  scrim: {
+    position: 'absolute',
+    left: 0, right: 0, bottom: 0,
+    backgroundColor: '#0A0A0A',
+    zIndex: 5,
+  },
   wrap: {
     position: 'absolute',
     left: spacing.md, right: spacing.md,
@@ -98,7 +108,8 @@ const s = StyleSheet.create({
     overflow: 'visible',
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: Platform.OS === 'android' ? 'rgba(15, 17, 24, 0.94)' : 'transparent',
+    backgroundColor: Platform.OS === 'android' ? 'rgba(15, 17, 24, 0.98)' : 'transparent',
+    zIndex: 10,
     shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 12,
   },
   bar: {
