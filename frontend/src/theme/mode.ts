@@ -48,13 +48,13 @@ export function useThemeMode() {
 export function palette(mode: ThemeMode) {
   const isDark = mode === 'dark';
   return {
-    bg: isDark ? '#0A0A0A' : '#FFFFFF',
-    surface: isDark ? '#151515' : '#F9FAFB',
-    text: isDark ? '#FFFFFF' : '#0A0A0A',
-    textSecondary: isDark ? '#A3A6B0' : '#6B7280',
-    border: isDark ? '#2A2A2A' : '#E5E7EB',
-    accent: '#D4AF37',            // gold — same in both modes
-    accentInk: isDark ? '#0A0A0A' : '#0A0A0A',
-    accentSoft: isDark ? 'rgba(212,175,55,0.15)' : '#FFF7DA',
+    bg: isDark ? '#0A0A0A' : '#F4F4F6',                 // pearl gray light bg
+    surface: isDark ? '#17151A' : '#FFFFFF',            // pure card white
+    text: isDark ? '#EFECE7' : '#1C1B20',
+    textSecondary: isDark ? '#9A8F80' : '#6E6B75',
+    border: isDark ? '#2E2A32' : '#DAD8DE',
+    accent: isDark ? '#C9A85C' : '#B8924A',             // luxe gold
+    accentInk: '#FFFFFF',
+    accentSoft: isDark ? 'rgba(201,168,92,0.15)' : 'rgba(184,146,74,0.10)',
   };
 }

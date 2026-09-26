@@ -99,6 +99,24 @@ export default function MerchantMore() {
 
           <SectionHeader title="الحساب" />
           <View style={styles.groupCard}>
+            {/* Appearance & Fonts (unified control) */}
+            <TouchableOpacity style={styles.prefRow} onPress={() => router.push('/appearance' as any)} activeOpacity={0.7}>
+              <View style={styles.prefLeft}>
+                <View style={[styles.prefIcon, { backgroundColor: colors.brandTertiary }]}>
+                  <Ionicons name="color-palette" size={20} color={colors.brand} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.prefTitle}>{lang === 'ar' ? 'المظهر والخطوط' : 'Appearance & Fonts'}</Text>
+                  <Text style={styles.prefSub}>
+                    {lang === 'ar' ? 'ليلي • نهاري • مخصص + اختر الخطوط والألوان' : 'Dark • Light • Custom + fonts & colors'}
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-back" size={18} color={colors.onSurfaceSecondary} />
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
             {/* Theme Toggle */}
             <TouchableOpacity style={styles.prefRow} onPress={syncedToggleTheme} activeOpacity={0.7}>
               <View style={styles.prefLeft}>
@@ -107,7 +125,7 @@ export default function MerchantMore() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.prefTitle}>{isDark ? 'الوضع الليلي' : 'الوضع النهاري'}</Text>
-                  <Text style={styles.prefSub}>اضغط للتبديل بين النهاري والليلي</Text>
+                  <Text style={styles.prefSub}>اضغط للتبديل بين النهاري والليلي والمخصص</Text>
                 </View>
               </View>
               <View style={[styles.switchTrack, isDark && styles.switchTrackOn]}>

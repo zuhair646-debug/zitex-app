@@ -1,73 +1,76 @@
 /**
- * Zenrex Design Tokens — MODE-AWARE (Dark ↔ Light)
+ * Zenrex Design Tokens — v2.0.0
+ * MODE-AWARE: Luxe Dark ↔ Pearl Light ↔ Custom (user-defined)
  *
  * Strategy: A mutable `colors` object whose keys are re-assigned when
- * `setMode()` is called by ThemeContext. Combined with a key-based remount
+ * `setColorsMode()` is called by ThemeContext. Combined with a key-based remount
  * of the root Stack, this flips every screen's StyleSheet on next render.
  */
 
-// ── Palette definitions ──────────────────────────────────────────
+// ── Luxe Dark ────────────────────────────────────────────────
 const DARK = {
-  background: '#0B0C10',
-  onBackground: '#FFFFFF',
-  surface: '#0B0C10',
-  surfaceSecondary: '#15171E',
-  surfaceTertiary: '#20232B',
+  background: '#0A0A0A',
+  onBackground: '#EFECE7',
+  surface: '#17151A',
+  surfaceSecondary: '#20232B',
+  surfaceTertiary: '#2A2732',
   surfaceInverse: '#FFFFFF',
 
-  onSurface: '#FFFFFF',
-  onSurfaceSecondary: '#A3A6B0',
+  onSurface: '#EFECE7',
+  onSurfaceSecondary: '#9A8F80',
   onSurfaceTertiary: '#6C6F78',
   onSurfaceInverse: '#0B0C10',
 
-  brand: '#D4AF37',
-  brandPrimary: '#D4AF37',
-  onBrandPrimary: '#000000',
+  brand: '#C9A85C',
+  brandPrimary: '#C9A85C',
+  onBrandPrimary: '#0A0A0A',
   brandSecondary: '#B59124',
-  brandTertiary: 'rgba(212, 175, 55, 0.12)',
-  brandTertiaryStrong: 'rgba(212, 175, 55, 0.25)',
-  onBrandTertiary: '#D4AF37',
+  brandTertiary: 'rgba(201, 168, 92, 0.15)',
+  brandTertiaryStrong: 'rgba(201, 168, 92, 0.28)',
+  onBrandTertiary: '#C9A85C',
 
-  success: '#34C759',
+  success: '#4CD69C',
   onSuccess: '#000000',
-  successSoft: 'rgba(52, 199, 89, 0.15)',
-  warning: '#FF9F0A',
+  successSoft: 'rgba(76, 214, 156, 0.15)',
+  warning: '#F5B547',
   onWarning: '#000000',
-  warningSoft: 'rgba(255, 159, 10, 0.15)',
-  error: '#FF453A',
+  warningSoft: 'rgba(245, 181, 71, 0.15)',
+  error: '#FF6B6B',
   onError: '#FFFFFF',
-  errorSoft: 'rgba(255, 69, 58, 0.15)',
-  info: '#5AC8FA',
-  infoSoft: 'rgba(90, 200, 250, 0.15)',
+  errorSoft: 'rgba(255, 107, 107, 0.15)',
+  info: '#6EA8FF',
+  infoSoft: 'rgba(110, 168, 255, 0.15)',
 
-  border: '#2A2D37',
+  border: '#2E2A32',
   borderStrong: '#3D414D',
-  borderSubtle: '#1F222B',
-  divider: '#1F222B',
+  borderSubtle: '#1F1D22',
+  divider: '#2E2A32',
 
-  overlay: 'rgba(0, 0, 0, 0.6)',
+  overlay: 'rgba(0, 0, 0, 0.7)',
   scrim: 'rgba(11, 12, 16, 0.85)',
 } as const;
 
+// ── Pearl Light (Palette B — LUXE PEARL) ────────────────────────
+// Refined pearl gray palette with soft warm undertones. Chosen by user.
 const LIGHT = {
-  background: '#FAFAFA',
-  onBackground: '#1A181D',
-  surface: '#FFFFFF',
-  surfaceSecondary: '#F3F3F5',
-  surfaceTertiary: '#E9E9EC',
-  surfaceInverse: '#0B0C10',
+  background: '#F4F4F6',        // soft pearl base
+  onBackground: '#1C1B20',
+  surface: '#FFFFFF',           // pure card white
+  surfaceSecondary: '#EBEAEE',  // subtle elevated pearl
+  surfaceTertiary: '#DEDCE1',   // deeper pearl
+  surfaceInverse: '#17151A',
 
-  onSurface: '#1A181D',
-  onSurfaceSecondary: '#5A5860',
-  onSurfaceTertiary: '#8F8D95',
-  onSurfaceInverse: '#FFFFFF',
+  onSurface: '#1C1B20',         // rich near-black
+  onSurfaceSecondary: '#6E6B75', // elegant mid gray
+  onSurfaceTertiary: '#A9A5B0', // whisper gray
+  onSurfaceInverse: '#EFECE7',
 
-  brand: '#B48F3B',
-  brandPrimary: '#B48F3B',
+  brand: '#B8924A',             // deeper luxe gold — pops on pearl
+  brandPrimary: '#B8924A',
   onBrandPrimary: '#FFFFFF',
   brandSecondary: '#8F6C1F',
-  brandTertiary: 'rgba(180, 143, 59, 0.10)',
-  brandTertiaryStrong: 'rgba(180, 143, 59, 0.20)',
+  brandTertiary: 'rgba(184, 146, 74, 0.10)',
+  brandTertiaryStrong: 'rgba(184, 146, 74, 0.20)',
   onBrandTertiary: '#8F6C1F',
 
   success: '#2DAB76',
@@ -82,36 +85,74 @@ const LIGHT = {
   info: '#2A75E6',
   infoSoft: 'rgba(42, 117, 230, 0.10)',
 
-  border: '#E2E0E5',
-  borderStrong: '#C8C5CE',
-  borderSubtle: '#EFEEF1',
-  divider: '#E2E0E5',
+  border: '#DAD8DE',            // pearl border
+  borderStrong: '#B8B5BE',
+  borderSubtle: '#E8E7EB',
+  divider: '#E8E7EB',
 
-  overlay: 'rgba(0, 0, 0, 0.4)',
-  scrim: 'rgba(250, 250, 250, 0.85)',
+  overlay: 'rgba(28, 27, 32, 0.4)',
+  scrim: 'rgba(244, 244, 246, 0.85)',
 } as const;
 
-// Palette exports for direct import when writing NEW themed screens
+// Palette exports for direct import
 export const PALETTES = { dark: DARK, light: LIGHT };
 
-// Current active mode — starts dark, mutated by setColorsMode()
-let CURRENT_MODE: 'dark' | 'light' = 'dark';
+// Current active mode
+export type Mode = 'dark' | 'light' | 'custom';
+let CURRENT_MODE: Mode = 'dark';
 
 // Live-mutable colors object. All screens import { colors } from here.
-// Reassign every key on setMode so subsequent StyleSheet.create()s pick up new values.
 export const colors: any = { ...DARK };
 
-export function setColorsMode(mode: 'dark' | 'light'): void {
-  CURRENT_MODE = mode;
-  const palette = mode === 'light' ? LIGHT : DARK;
-  // Delete removed keys then assign new ones
-  for (const k of Object.keys(colors)) delete colors[k];
-  Object.assign(colors, palette);
-  // Update gradients that depend on mode
-  updateGradients(mode);
+/** Custom overrides supplied by ThemeContext when mode === 'custom'. */
+export interface CustomOverrides {
+  base?: 'dark' | 'light';       // starting palette
+  background?: string;
+  surface?: string;
+  surfaceSecondary?: string;
+  onSurface?: string;            // primary text
+  onSurfaceSecondary?: string;   // secondary text
+  brand?: string;
+  border?: string;
 }
 
-export function getMode(): 'dark' | 'light' { return CURRENT_MODE; }
+export function setColorsMode(mode: Mode, custom?: CustomOverrides): void {
+  CURRENT_MODE = mode;
+  let base: any;
+  if (mode === 'custom') {
+    base = { ...(custom?.base === 'light' ? LIGHT : DARK) };
+    if (custom) {
+      if (custom.background) base.background = custom.background;
+      if (custom.surface) base.surface = custom.surface;
+      if (custom.surfaceSecondary) base.surfaceSecondary = custom.surfaceSecondary;
+      if (custom.onSurface) { base.onSurface = custom.onSurface; base.onBackground = custom.onSurface; }
+      if (custom.onSurfaceSecondary) base.onSurfaceSecondary = custom.onSurfaceSecondary;
+      if (custom.brand) {
+        base.brand = custom.brand;
+        base.brandPrimary = custom.brand;
+        base.brandTertiary = hexToRgba(custom.brand, 0.12);
+        base.brandTertiaryStrong = hexToRgba(custom.brand, 0.24);
+      }
+      if (custom.border) { base.border = custom.border; base.divider = custom.border; }
+    }
+  } else {
+    base = mode === 'light' ? LIGHT : DARK;
+  }
+  for (const k of Object.keys(colors)) delete colors[k];
+  Object.assign(colors, base);
+  updateGradients(mode, custom);
+}
+
+export function getMode(): Mode { return CURRENT_MODE; }
+
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const r = parseInt(full.substring(0, 2), 16);
+  const g = parseInt(full.substring(2, 4), 16);
+  const b = parseInt(full.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export const spacing = {
   xs: 4, sm: 8, md: 12, lg: 16, xl: 24, '2xl': 32, '3xl': 48,
@@ -121,6 +162,7 @@ export const radius = {
   sm: 6, md: 12, lg: 20, xl: 28, pill: 999,
 } as const;
 
+// ── Typography (font family is applied dynamically via ThemeContext) ──
 export const typography = {
   displayLarge: { fontSize: 32, fontWeight: '800' as const, letterSpacing: -0.5 },
   displayMedium: { fontSize: 28, fontWeight: '800' as const, letterSpacing: -0.3 },
@@ -141,32 +183,45 @@ export const typography = {
 
 export const shadows = {
   card: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 4 },
-  cardGold: { shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 6 },
+  cardGold: { shadowColor: '#C9A85C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 6 },
   header: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 3 },
 } as const;
 
 export const gradients: any = {
-  brandGold: ['#D4AF37', '#B59124', '#8C6E1B'],
-  brandGoldSoft: ['rgba(212, 175, 55, 0.35)', 'rgba(212, 175, 55, 0)'],
+  brandGold: ['#C9A85C', '#B59124', '#8C6E1B'],
+  brandGoldSoft: ['rgba(201, 168, 92, 0.35)', 'rgba(201, 168, 92, 0)'],
   scrimDark: ['transparent', 'rgba(11, 12, 16, 0.4)', 'rgba(11, 12, 16, 0.95)'],
-  cardElevated: ['#20232B', '#15171E'],
-  cardGoldSubtle: ['rgba(212, 175, 55, 0.08)', 'rgba(212, 175, 55, 0.02)'],
+  cardElevated: ['#20232B', '#17151A'],
+  cardGoldSubtle: ['rgba(201, 168, 92, 0.08)', 'rgba(201, 168, 92, 0.02)'],
 };
 
-function updateGradients(mode: 'dark' | 'light') {
-  if (mode === 'light') {
-    gradients.brandGold = ['#B48F3B', '#8F6C1F', '#6D5518'];
-    gradients.brandGoldSoft = ['rgba(180, 143, 59, 0.25)', 'rgba(180, 143, 59, 0)'];
-    gradients.scrimDark = ['transparent', 'rgba(250, 250, 250, 0.4)', 'rgba(250, 250, 250, 0.95)'];
-    gradients.cardElevated = ['#FFFFFF', '#F3F3F5'];
-    gradients.cardGoldSubtle = ['rgba(180, 143, 59, 0.08)', 'rgba(180, 143, 59, 0.02)'];
+function updateGradients(mode: Mode, custom?: CustomOverrides) {
+  const base = mode === 'custom' ? (custom?.base === 'light' ? 'light' : 'dark') : mode;
+  const gold = mode === 'custom' && custom?.brand ? custom.brand : (base === 'light' ? '#B8924A' : '#C9A85C');
+  if (base === 'light') {
+    gradients.brandGold = [gold, shade(gold, -15), shade(gold, -30)];
+    gradients.brandGoldSoft = [hexToRgba(gold, 0.25), hexToRgba(gold, 0)];
+    gradients.scrimDark = ['transparent', 'rgba(244, 244, 246, 0.4)', 'rgba(244, 244, 246, 0.95)'];
+    gradients.cardElevated = ['#FFFFFF', '#EBEAEE'];
+    gradients.cardGoldSubtle = [hexToRgba(gold, 0.08), hexToRgba(gold, 0.02)];
   } else {
-    gradients.brandGold = ['#D4AF37', '#B59124', '#8C6E1B'];
-    gradients.brandGoldSoft = ['rgba(212, 175, 55, 0.35)', 'rgba(212, 175, 55, 0)'];
+    gradients.brandGold = [gold, shade(gold, -15), shade(gold, -30)];
+    gradients.brandGoldSoft = [hexToRgba(gold, 0.35), hexToRgba(gold, 0)];
     gradients.scrimDark = ['transparent', 'rgba(11, 12, 16, 0.4)', 'rgba(11, 12, 16, 0.95)'];
-    gradients.cardElevated = ['#20232B', '#15171E'];
-    gradients.cardGoldSubtle = ['rgba(212, 175, 55, 0.08)', 'rgba(212, 175, 55, 0.02)'];
+    gradients.cardElevated = ['#20232B', '#17151A'];
+    gradients.cardGoldSubtle = [hexToRgba(gold, 0.08), hexToRgba(gold, 0.02)];
   }
+}
+
+function shade(hex: string, percent: number): string {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const num = parseInt(full, 16);
+  const amt = Math.round(2.55 * percent);
+  const r = Math.max(0, Math.min(255, (num >> 16) + amt));
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + amt));
+  const b = Math.max(0, Math.min(255, (num & 0xff) + amt));
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 export const theme = { colors, spacing, radius, typography, shadows, gradients };

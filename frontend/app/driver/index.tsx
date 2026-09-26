@@ -79,7 +79,14 @@ export default function DriverDashboard() {
           <Text style={s.welcome}>{user?.name}</Text>
           <Text style={s.role}>Driver Dashboard</Text>
         </View>
-        <TouchableOpacity onPress={() => { stopLocationBeacon(); logout(); router.replace('/login'); }}><Ionicons name="log-out-outline" size={22} color="#EF4444" /></TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => router.push('/appearance' as any)}>
+            <Ionicons name="color-palette-outline" size={22} color="#F5C518" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => { stopLocationBeacon(); logout(); router.replace('/login'); }}>
+            <Ionicons name="log-out-outline" size={22} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
       </View>
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
         <View style={[s.statusCard, { backgroundColor: profile?.online ? '#10B981' : '#6B7280' }]}>

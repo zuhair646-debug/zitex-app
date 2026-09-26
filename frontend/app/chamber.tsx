@@ -91,9 +91,14 @@ export default function ChamberScreen() {
           <Text style={s.headerTitle}>Chamber of Commerce</Text>
           <Text style={s.headerSub}>Competition Control Room</Text>
         </View>
-        <TouchableOpacity testID="chamber-logout" onPress={handleLogout} style={s.logoutBtn}>
-          <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity onPress={() => router.push('/appearance' as any)} style={[s.logoutBtn, { backgroundColor: 'rgba(212,175,55,0.15)' }]}>
+            <Ionicons name="color-palette-outline" size={20} color="#D4AF37" />
+          </TouchableOpacity>
+          <TouchableOpacity testID="chamber-logout" onPress={handleLogout} style={s.logoutBtn}>
+            <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={s.statsRow}>

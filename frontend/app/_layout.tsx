@@ -1,5 +1,6 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect, useState, createContext, useContext } from 'react';
+import { Text, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { I18nProvider } from '../src/i18n';
@@ -152,6 +153,7 @@ export default function RootLayout() {
         <Stack.Screen name="draw" options={{ headerShown: false }} />
         <Stack.Screen name="group-buys" options={{ presentation: 'card' }} />
         <Stack.Screen name="points" options={{ presentation: 'card' }} />
+        <Stack.Screen name="appearance" options={{ presentation: 'card' }} />
       </Stack>
       </RemountOnThemeOrLang>
     </AuthContext.Provider>
@@ -168,7 +170,22 @@ function StatusBarAdaptive() {
 // Force full remount of the Stack (and every screen) when theme or language changes.
 // This causes each screen's StyleSheet.create() to re-run so mode-mutated tokens apply.
 function RemountOnThemeOrLang({ children }: { children: React.ReactNode }) {
-  const { themeKey, mode } = useTheme();
+  const { themeKey, mode, fontOption } = useTheme();
+  // Apply global font family to all <Text> and <TextInput> components
+  useEffect(() => {
+    const anyText: any = Text;
+    const anyTI: any = TextInput;
+    anyText.defaultProps = anyText.defaultProps || {};
+    anyTI.defaultProps = anyTI.defaultProps || {};
+    if (fontOption.regular) {
+      anyText.defaultProps.style = [{ fontFamily: fontOption.regular }, anyText.defaultProps.style].flat().filter(Boolean);
+      anyTI.defaultProps.style = [{ fontFamily: fontOption.regular }, anyTI.defaultProps.style].flat().filter(Boolean);
+    } else {
+      // Reset to system
+      anyText.defaultProps.style = undefined;
+      anyTI.defaultProps.style = undefined;
+    }
+  }, [fontOption.regular]);
   // Read language from I18n context — but avoid circular; we use a lightweight approach
   const [langBump, setLangBump] = useState(0);
   useEffect(() => {

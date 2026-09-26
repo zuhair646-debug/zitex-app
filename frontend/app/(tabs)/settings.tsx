@@ -9,11 +9,12 @@ import { useThemeMode } from '../../src/theme/mode';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function SettingsScreen() {
-  const styles = useStylesStyles();
+  const { colors, mode } = useTheme();
+  const styles = useStylesStyles(colors);
   const { user, logout } = useAuth();
   const router = useRouter();
   const { t, lang, setLang } = useT();
-  const { mode, toggle: toggleThemeLegacy } = useThemeMode();
+  const { mode: legacyMode, toggle: toggleThemeLegacy } = useThemeMode();
   const { toggle: toggleTheme } = useTheme();
   // Sync both stores so the whole app switches together
   const syncedToggle = async () => { await toggleTheme(); await toggleThemeLegacy(); };
@@ -21,6 +22,12 @@ export default function SettingsScreen() {
   const [langSearch, setLangSearch] = useState('');
 
   const currentLang = LANGUAGES.find(l => l.code === lang);
+
+  const modeLabel = mode === 'dark'
+    ? (lang === 'ar' ? '🌙 ليلي' : '🌙 Dark')
+    : mode === 'light'
+      ? (lang === 'ar' ? '☀️ نهاري' : '☀️ Light')
+      : (lang === 'ar' ? '🎨 مخصص' : '🎨 Custom');
 
   const handleLogout = () => {
     Alert.alert(t('auth.logout'), '', [
@@ -43,13 +50,13 @@ export default function SettingsScreen() {
 
   const MenuItem = ({ icon, label, onPress, color, badge }: { icon: string; label: string; onPress?: () => void; color?: string; badge?: string }) => (
     <TouchableOpacity testID={`settings-${icon}`} style={styles.menuItem} onPress={onPress}>
-      <View style={[styles.menuIconWrap, { backgroundColor: (color || '#F5C518') + '15' }]}>
-        <Ionicons name={icon as any} size={22} color={color || '#F5C518'} />
+      <View style={[styles.menuIconWrap, { backgroundColor: (color || colors.gold) + '25' }]}>
+        <Ionicons name={icon as any} size={22} color={color || colors.gold} />
       </View>
       <Text style={styles.menuLabel}>{label}</Text>
       <View style={styles.menuRight}>
         {badge && <View style={styles.badge}><Text style={styles.badgeText}>{badge}</Text></View>}
-        <Ionicons name="chevron-forward" size={18} color="#A1A1AA" />
+        <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
       </View>
     </TouchableOpacity>
   );
@@ -62,13 +69,13 @@ export default function SettingsScreen() {
         {/* Profile Card */}
         <TouchableOpacity testID="profile-card" style={styles.profileCard}>
           <View style={styles.avatarWrap}>
-            <Ionicons name="person" size={32} color="#F5C518" />
+            <Ionicons name="person" size={32} color={colors.gold} />
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.name}</Text>
             <Text style={styles.profilePhone}>{user?.phone}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#A1A1AA" />
+          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
 
         {/* Wallet + Points */}
@@ -104,10 +111,17 @@ export default function SettingsScreen() {
           <MenuItem icon="headset" label={lang === 'ar' ? 'الدعم' : 'Support'} color="#10B981" onPress={() => router.push('/support')} />
           <MenuItem icon="language" label={t('settings.language')} color="#9333EA" badge={`${currentLang?.flag || ''} ${currentLang?.nativeName || ''}`} onPress={() => setLangModal(true)} />
           <MenuItem
-            icon={mode === 'dark' ? 'moon' : 'sunny'}
-            label={lang === 'ar' ? (mode === 'dark' ? 'الوضع الليلي' : 'الوضع النهاري') : (mode === 'dark' ? 'Night Mode' : 'Day Mode')}
+            icon="color-palette"
+            label={lang === 'ar' ? 'المظهر والخطوط' : 'Appearance & Fonts'}
+            color={colors.gold}
+            badge={modeLabel}
+            onPress={() => router.push('/appearance' as any)}
+          />
+          <MenuItem
+            icon={mode === 'dark' ? 'moon' : mode === 'light' ? 'sunny' : 'color-wand'}
+            label={lang === 'ar' ? 'تبديل سريع للوضع' : 'Quick Mode Toggle'}
             color="#D4AF37"
-            badge={lang === 'ar' ? (mode === 'dark' ? '🌙 ليلي' : '☀️ نهاري') : (mode === 'dark' ? '🌙 Night' : '☀️ Day')}
+            badge={modeLabel}
             onPress={syncedToggle}
           />
         </View>
@@ -129,13 +143,13 @@ export default function SettingsScreen() {
       <Modal visible={langModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setLangModal(false)}>
         <SafeAreaView style={styles.safe}>
           <View style={styles.langHeader}>
-            <TouchableOpacity onPress={() => setLangModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setLangModal(false)}><Ionicons name="close" size={24} color={colors.text} /></TouchableOpacity>
             <Text style={styles.langTitle}>🌐 {t('settings.changeLanguage')}</Text>
             <View style={{ width: 24 }} />
           </View>
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color="#A1A1AA" />
-            <TextInput style={styles.searchInput} value={langSearch} onChangeText={setLangSearch} placeholder={lang === 'ar' ? 'ابحث عن لغة...' : 'Search language...'} placeholderTextColor="#A1A1AA" />
+            <Ionicons name="search" size={18} color={colors.textSecondary} />
+            <TextInput style={styles.searchInput} value={langSearch} onChangeText={setLangSearch} placeholder={lang === 'ar' ? 'ابحث عن لغة...' : 'Search language...'} placeholderTextColor={colors.textSecondary} />
           </View>
           <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
             {filteredLangs.map(l => (
@@ -145,7 +159,7 @@ export default function SettingsScreen() {
                   <Text style={styles.langNative}>{l.nativeName}</Text>
                   <Text style={styles.langEng}>{l.name}</Text>
                 </View>
-                {lang === l.code && <Ionicons name="checkmark-circle" size={22} color="#F5C518" />}
+                {lang === l.code && <Ionicons name="checkmark-circle" size={22} color={colors.gold} />}
               </TouchableOpacity>
             ))}
             {filteredLangs.length === 0 && <Text style={styles.noResult}>{lang === 'ar' ? 'لا توجد نتائج' : 'No results'}</Text>}
@@ -156,39 +170,39 @@ export default function SettingsScreen() {
   );
 }
 
-function useStylesStyles() {
+function useStylesStyles(c: any) {
   return useMemo(() => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
-  pageTitle: { fontSize: 24, fontWeight: '800', color: '#0A0A0A', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  profileCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, padding: 16, backgroundColor: '#F9F9FB', borderRadius: 16, marginBottom: 16 },
-  avatarWrap: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
+  safe: { flex: 1, backgroundColor: c.bg },
+  pageTitle: { fontSize: 24, fontWeight: '800', color: c.text, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
+  profileCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, padding: 16, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border, borderRadius: 16, marginBottom: 16 },
+  avatarWrap: { width: 56, height: 56, borderRadius: 28, backgroundColor: c.goldSoft, alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
   profileInfo: { flex: 1 },
-  profileName: { fontSize: 18, fontWeight: '700', color: '#0A0A0A', marginBottom: 2 },
-  profilePhone: { fontSize: 14, color: '#52525B' },
-  walletCard: { flexDirection: 'row', marginHorizontal: 20, padding: 20, backgroundColor: '#F5C518', borderRadius: 16, marginBottom: 20 },
+  profileName: { fontSize: 18, fontWeight: '700', color: c.text, marginBottom: 2 },
+  profilePhone: { fontSize: 14, color: c.textSecondary },
+  walletCard: { flexDirection: 'row', marginHorizontal: 20, padding: 20, backgroundColor: c.gold, borderRadius: 16, marginBottom: 20 },
   walletItem: { flex: 1, alignItems: 'center' },
   walletValue: { fontSize: 22, fontWeight: '800', color: '#FFFFFF', marginBottom: 4 },
-  walletLabel: { fontSize: 13, color: '#FFFFFF', opacity: 0.8 },
+  walletLabel: { fontSize: 13, color: '#FFFFFF', opacity: 0.85 },
   walletDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.3)' },
-  menuSection: { marginHorizontal: 20, backgroundColor: '#F9F9FB', borderRadius: 16, marginBottom: 16, overflow: 'hidden' },
-  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#F4F4F5' },
+  menuSection: { marginHorizontal: 20, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border, borderRadius: 16, marginBottom: 16, overflow: 'hidden' },
+  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: c.divider },
   menuIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
-  menuLabel: { flex: 1, fontSize: 15, fontWeight: '500', color: '#0A0A0A' },
+  menuLabel: { flex: 1, fontSize: 15, fontWeight: '500', color: c.text },
   menuRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  badge: { backgroundColor: '#FFF7DA', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, color: '#F5C518', fontWeight: '600' },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, paddingVertical: 16, borderRadius: 14, backgroundColor: '#FEF2F2', gap: 8 },
-  logoutText: { fontSize: 16, fontWeight: '600', color: '#EF4444' },
-  langHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#F4F4F5' },
-  langTitle: { fontSize: 17, fontWeight: '800', color: '#0A0A0A' },
-  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginVertical: 12, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#F4F4F5', borderRadius: 12 },
-  searchInput: { flex: 1, fontSize: 14, color: '#0A0A0A', padding: 0 },
-  langRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#F9F9FB' },
-  langRowActive: { backgroundColor: '#FFF7DA' },
+  badge: { backgroundColor: c.goldSoft, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
+  badgeText: { fontSize: 11, color: c.gold, fontWeight: '600' },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, paddingVertical: 16, borderRadius: 14, backgroundColor: c.redSoft, gap: 8 },
+  logoutText: { fontSize: 16, fontWeight: '600', color: c.red },
+  langHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: c.divider, backgroundColor: c.surface },
+  langTitle: { fontSize: 17, fontWeight: '800', color: c.text },
+  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginVertical: 12, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: c.surfaceElevated, borderRadius: 12 },
+  searchInput: { flex: 1, fontSize: 14, color: c.text, padding: 0 },
+  langRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: c.divider, backgroundColor: c.surface },
+  langRowActive: { backgroundColor: c.goldSoft },
   langFlag: { fontSize: 28 },
-  langNative: { fontSize: 16, fontWeight: '700', color: '#0A0A0A' },
-  langEng: { fontSize: 12, color: '#71717A', marginTop: 1 },
-  noResult: { textAlign: 'center', color: '#A1A1AA', marginTop: 40, fontSize: 14 },
-}), []);
+  langNative: { fontSize: 16, fontWeight: '700', color: c.text },
+  langEng: { fontSize: 12, color: c.textSecondary, marginTop: 1 },
+  noResult: { textAlign: 'center', color: c.textDisabled, marginTop: 40, fontSize: 14 },
+}), [c]);
 }
 
