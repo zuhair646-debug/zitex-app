@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.smartangle.zitex",
-      "buildNumber": "48",
+      "buildNumber": "49",
       "infoPlist": {
         "NSCameraUsageDescription": "Take photos of products and receipts",
         "NSPhotoLibraryUsageDescription": "Upload photos from your gallery",
@@ -31,7 +31,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.smartangle.zitex",
-      "versionCode": 54,
+      "versionCode": 55,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
