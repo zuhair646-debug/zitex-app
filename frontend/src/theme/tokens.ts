@@ -122,18 +122,44 @@ export function setColorsMode(mode: Mode, custom?: CustomOverrides): void {
   if (mode === 'custom') {
     base = { ...(custom?.base === 'light' ? LIGHT : DARK) };
     if (custom) {
-      if (custom.background) base.background = custom.background;
+      const isLightBase = custom.base === 'light';
+      if (custom.background) {
+        base.background = custom.background;
+        base.scrim = hexToRgba(custom.background, 0.85);
+      }
       if (custom.surface) base.surface = custom.surface;
-      if (custom.surfaceSecondary) base.surfaceSecondary = custom.surfaceSecondary;
-      if (custom.onSurface) { base.onSurface = custom.onSurface; base.onBackground = custom.onSurface; }
-      if (custom.onSurfaceSecondary) base.onSurfaceSecondary = custom.onSurfaceSecondary;
+      if (custom.surfaceSecondary) {
+        base.surfaceSecondary = custom.surfaceSecondary;
+        // Derive surfaceTertiary as a step further from bg (elevated cards)
+        base.surfaceTertiary = shade(custom.surfaceSecondary, isLightBase ? -6 : 8);
+      }
+      if (custom.onSurface) {
+        base.onSurface = custom.onSurface;
+        base.onBackground = custom.onSurface;
+        // Inverse surface (used for buttons like "Add to cart" contrast card)
+        base.surfaceInverse = custom.onSurface;
+        base.onSurfaceInverse = custom.surface || (isLightBase ? '#FFFFFF' : '#0A0A0A');
+      }
+      if (custom.onSurfaceSecondary) {
+        base.onSurfaceSecondary = custom.onSurfaceSecondary;
+        base.onSurfaceTertiary = shade(custom.onSurfaceSecondary, isLightBase ? 25 : -25);
+      }
       if (custom.brand) {
         base.brand = custom.brand;
         base.brandPrimary = custom.brand;
+        base.brandSecondary = shade(custom.brand, -15);
         base.brandTertiary = hexToRgba(custom.brand, 0.12);
         base.brandTertiaryStrong = hexToRgba(custom.brand, 0.24);
+        base.onBrandTertiary = custom.brand;
+        // Choose readable ink for brand buttons based on brand luminance
+        base.onBrandPrimary = isLightColor(custom.brand) ? '#000000' : '#FFFFFF';
       }
-      if (custom.border) { base.border = custom.border; base.divider = custom.border; }
+      if (custom.border) {
+        base.border = custom.border;
+        base.divider = custom.border;
+        base.borderStrong = shade(custom.border, isLightBase ? -20 : 20);
+        base.borderSubtle = shade(custom.border, isLightBase ? 10 : -8);
+      }
     }
   } else {
     base = mode === 'light' ? LIGHT : DARK;
@@ -141,6 +167,16 @@ export function setColorsMode(mode: Mode, custom?: CustomOverrides): void {
   for (const k of Object.keys(colors)) delete colors[k];
   Object.assign(colors, base);
   updateGradients(mode, custom);
+}
+
+function isLightColor(hex: string): boolean {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const r = parseInt(full.substring(0, 2), 16);
+  const g = parseInt(full.substring(2, 4), 16);
+  const b = parseInt(full.substring(4, 6), 16);
+  const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luma > 155;
 }
 
 export function getMode(): Mode { return CURRENT_MODE; }

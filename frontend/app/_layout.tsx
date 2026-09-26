@@ -171,19 +171,22 @@ function StatusBarAdaptive() {
 // This causes each screen's StyleSheet.create() to re-run so mode-mutated tokens apply.
 function RemountOnThemeOrLang({ children }: { children: React.ReactNode }) {
   const { themeKey, mode, fontOption } = useTheme();
-  // Apply global font family to all <Text> and <TextInput> components
+  // Apply global font family to all <Text> and <TextInput> components.
+  // CRITICAL: rebuild from scratch each time — never append to previous style
+  // (previous impl caused unbounded array growth on every remount).
   useEffect(() => {
     const anyText: any = Text;
     const anyTI: any = TextInput;
     anyText.defaultProps = anyText.defaultProps || {};
     anyTI.defaultProps = anyTI.defaultProps || {};
     if (fontOption.regular) {
-      anyText.defaultProps.style = [{ fontFamily: fontOption.regular }, anyText.defaultProps.style].flat().filter(Boolean);
-      anyTI.defaultProps.style = [{ fontFamily: fontOption.regular }, anyTI.defaultProps.style].flat().filter(Boolean);
+      const style = { fontFamily: fontOption.regular };
+      anyText.defaultProps.style = style;
+      anyTI.defaultProps.style = style;
     } else {
-      // Reset to system
-      anyText.defaultProps.style = undefined;
-      anyTI.defaultProps.style = undefined;
+      // System font — clear any previously set default
+      delete anyText.defaultProps.style;
+      delete anyTI.defaultProps.style;
     }
   }, [fontOption.regular]);
   // Read language from I18n context — but avoid circular; we use a lightweight approach

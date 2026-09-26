@@ -177,7 +177,6 @@ export default function MerchantOrders() {
 }
 
 function useSStyles() {
-  const s = useSStyles();
   return useMemo(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   header: {

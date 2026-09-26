@@ -268,6 +268,9 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 function buildCustomColors(c: CustomAppearance): ThemeColors {
   const base = c.base === 'light' ? LIGHT : DARK;
+  const isLightBase = c.base === 'light';
+  // Auto-adjust support colors (border strong, on-brand text) based on brand luminance
+  const onBrandInk = isLightHex(c.gold) ? '#000000' : '#FFFFFF';
   return {
     ...base,
     bg: c.bg,
@@ -276,14 +279,39 @@ function buildCustomColors(c: CustomAppearance): ThemeColors {
     card: c.surface,
     text: c.text,
     textSecondary: c.textSecondary,
+    textDisabled: shadeHex(c.textSecondary, isLightBase ? 25 : -25),
     gold: c.gold,
     goldSoft: hexToRgba(c.gold, 0.15),
+    // Derive tint colors from base to keep consistency (info/blue/purple stay from base palette)
     border: c.border,
+    borderStrong: shadeHex(c.border, isLightBase ? -20 : 20),
     divider: c.border,
     header: c.bg,
-    statusBar: c.base === 'light' ? 'dark' : 'light',
-    tabBar: c.base === 'light' ? 'rgba(255,255,255,0.96)' : 'rgba(15,17,24,0.94)',
+    statusBar: isLightBase ? 'dark' : 'light',
+    tabBar: isLightBase ? 'rgba(255,255,255,0.96)' : 'rgba(15,17,24,0.94)',
+    overlay: hexToRgba(c.text, 0.5),
+    // Support-tone soft backgrounds — keep base palette hues but they'll match text automatically
   };
+}
+
+function isLightHex(hex: string): boolean {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const r = parseInt(full.substring(0, 2), 16);
+  const g = parseInt(full.substring(2, 4), 16);
+  const b = parseInt(full.substring(4, 6), 16);
+  return 0.299 * r + 0.587 * g + 0.114 * b > 155;
+}
+
+function shadeHex(hex: string, percent: number): string {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const num = parseInt(full, 16);
+  const amt = Math.round(2.55 * percent);
+  const r = Math.max(0, Math.min(255, (num >> 16) + amt));
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + amt));
+  const b = Math.max(0, Math.min(255, (num & 0xff) + amt));
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -329,6 +357,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const m = savedMode === 'light' || savedMode === 'dark' || savedMode === 'custom' ? savedMode : 'dark';
         setModeState(m);
         setColorsMode(m, m === 'custom' ? customToOverrides(cus) : undefined);
+        // Bump themeKey so any screen mounted before this effect completes re-renders
+        // with the correct persisted theme (prevents flash of dark-then-custom).
+        setThemeKey(k => k + 1);
       } catch {}
     })();
   }, []);
