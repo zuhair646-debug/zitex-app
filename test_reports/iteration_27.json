@@ -1,0 +1,75 @@
+{
+  "summary": "Zenrex Store v1.14.0 tested (Global Theme + Safe-Area + Multi-Media Carousel). PARTIAL PASS. CRITICAL red-screen crash on /social — fixed by testing agent (post.comments is now an array of objects, not a number; social.tsx:286 was rendering the array directly). After the fix, MediaCarousel renders correctly with dot indicators, counter chips (1/2, 1/3, 1/4, 1/5 observed 20+ times), and 7 <video> elements are present on the feed. Theme toggle works end-to-end: tapping 'Night Mode' switched tab bar bg from rgb(23,21,26) → rgb(255,255,255) and localStorage @zenrex_theme_mode persisted 'light' across reload. Customer bottom tab bar (Home/Services/Contests/Social/Profile) is unclipped in mobile viewport 390x844. Merchant Live Preview FAB positioned at bottom:824 (viewport 844) → sits above the system nav zone. Backend content check FAILS spec: /api/social/posts returns only 30 posts due to `to_list(30)` cap → only 19 posts with images[]>=2 (spec >=30) and only 7 posts with Pexels video (spec >=10). DB itself has 39 multi-image + 16 video Pexels posts, so seed is correct but endpoint truncates. Additionally, /api/merchant/social/posts serializer omits `video` field entirely → merchant Live Preview cannot display videos in posts carousel.",
+  "status_per_area": {
+    "1_theme_toggle_persists": "PASS — localStorage @zenrex_theme_mode='light' retained after page reload.",
+    "2_statusbar_adapts": "PASS (indirect) — ThemeContext exports statusBar: 'light'/'dark' per palette; tab bar bg switches correctly; StatusBar component uses colors.statusBar (verified in code).",
+    "3_customer_tab_bar_no_clipping": "PASS — all 5 labels visible in 390x844; formula 56+insets.bottom applied in (tabs)/_layout.tsx:35-36.",
+    "4_merchant_floating_tab_bar_clears_nav": "PASS — FAB DOM bottom=824 of 844 viewport (≈20px gap); Math.max(insets.bottom, spacing.md) applied in merchant/_layout.tsx:12.",
+    "5_multi_image_swipe_carousel_with_dots": "PASS after fix — counter chips '1/2..1/5' visible on 20+ posts; MediaCarousel FlatList + dots + counter render correctly.",
+    "6_video_autoplay_muted": "PASS (partial) — 7 <video> elements auto-instantiated on customer feed via expo-video useVideoPlayer with p.muted=true. Cannot verify actual playback in web preview (expo-av→expo-video migration complete, no red screen). Merchant preview cannot show videos (see backend issue).",
+    "7_fullscreen_preview": "PASS (code) — Modal wired in MediaCarousel.tsx:128-142; opens on tap. Not exhaustively tapped through in this run.",
+    "8_backend_content_counts": "FAIL — /api/social/posts caps at to_list(30). Response: 19 multi-image (need 30), 7 Pexels videos (need 10). DB has 39 and 16 respectively.",
+    "9_analytics_regression": "NOT RE-TESTED THIS ITER — trust iteration_26 result (was PASS). Comments-shape change could affect deep-analytics summing comments; recommend main-agent quick spot-check.",
+    "10_critical_red_screen_bug": "FIXED by testing agent — social.tsx:286 was `{post.comments || 0}` where post.comments is now Array<CommentObj>; changed to `formatNum(Array.isArray(post.comments) ? post.comments.length : (post.comments || 0))`."
+  },
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/social/posts", "issue": "Hard cap `to_list(30)` in server.py:1168 makes v1.14.0 spec impossible (need >=30 multi-image + >=10 video in same response). Raise to at least 60 or paginate.", "priority": "HIGH"},
+      {"endpoint": "GET /api/merchant/social/posts", "issue": "Response serializer (server.py:3997-4011) omits the `video` field. Merchant Live Preview → منشورات المتجر tab cannot render Pexels videos in the carousel. Add `\"video\": p.get(\"video\")` and preserve `comments` array shape.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "GET /api/merchant/social/posts", "issue": "Serializer coerces `comments` to array via p.get('comments', 0)? actually returns raw list — but MerchantSocialFeed already handles Array.isArray. Just confirm consistency between customer and merchant endpoints."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "app/(tabs)/social.tsx", "issue": "CRITICAL red screen: `{post.comments || 0}` renders array of comment objects (React: 'Objects are not valid as a React child'). FIXED by testing agent at line 286 → wrap with Array.isArray check + .length. Reference: /app/frontend/app/(tabs)/social.tsx:286.", "testID": "n/a", "priority": "CRITICAL_FIXED"}
+    ],
+    "integration_issues": [
+      {"flow": "Merchant Live Preview → منشورات carousel video slide", "issue": "Backend /api/merchant/social/posts drops `video` field → carousel builds mediaItems without videos → video badge/duration/play overlay never appear in merchant preview.", "affected_testIDs": ["n/a"]}
+    ],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "global (web preview)", "issue": "Pre-existing 'shadow*' style props deprecated warnings — should migrate to boxShadow (not introduced in v1.14.0)."},
+      {"component": "global (web preview)", "issue": "Pre-existing Image.style.resizeMode deprecated warnings — migrate to props.resizeMode."},
+      {"component": "expo/expo-constants version mismatch", "issue": "expo@54.0.35 (expected ~54.0.37), expo-constants@18.0.13 (expected ~18.0.14). Metro reports version mismatch — 'project may not work correctly'. Run `npx expo install --check`."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_v1_14_media_carousel.py",
+    "/app/test_reports/pytest/v1_14_media.xml",
+    "/app/test_reports/v1_14_social_fixed.png",
+    "/app/test_reports/v1_14_social_fixed_scrolled.png",
+    "/app/test_reports/v1_14_profile_scrolled.png",
+    "/app/test_reports/v1_14_profile_bottom.png",
+    "/app/test_reports/v1_14_theme_toggled.png",
+    "/app/test_reports/v1_14_theme_persist.png",
+    "/app/test_reports/v1_14_merchant_home.png",
+    "/app/test_reports/v1_14_merchant_live_preview.png"
+  ],
+  "action_items": [
+    "CRITICAL: In backend/server.py:1168 raise `to_list(30)` to `to_list(80)` (or add pagination) so v1.14.0 content spec (>=30 multi-image + >=10 video in feed) is satisfied.",
+    "CRITICAL: In backend/server.py:3997-4011 add `\"video\": p.get(\"video\")` to the merchant list serializer so Live Preview can render videos in carousel.",
+    "Verify main-agent has already committed the fix I applied to app/(tabs)/social.tsx:286 (Array.isArray guard for post.comments). Same guard is already present in MerchantSocialFeed.tsx:184 — pattern is consistent.",
+    "Optional: Header of merchant Live Preview still shows 'v1.13.13' — bump to v1.14.0 for user-visible consistency.",
+    "Optional: Run `npx expo install --check` to resolve expo/expo-constants version drift warnings."
+  ],
+  "critical_code_review_comments": [
+    "server.py:1168 — hardcoded to_list(30) with no pagination knob is a scalability + spec-violation risk. Should honor a `?limit=` query param.",
+    "server.py:3997-4011 — merchant serializer misses 3 fields present in customer serializer: `video`, `media`, `liked_by`. Consistency between endpoints is a maintainability concern (dedupe via shared serialize_post helper).",
+    "MediaCarousel.tsx uses expo-video correctly (not deprecated expo-av). Compliant with <Expo Related Pointers>.",
+    "app/(tabs)/social.tsx:49 — filters `p.type !== 'story'` client-side, redundant with server-side filter at server.py:1164-1167. Not a bug, just dead code.",
+    "ThemeContext.tsx is well-scoped (128 lines) and uses AsyncStorage properly. Legacy `useThemeMode()` still called in settings.tsx:15 — recommend consolidation."
+  ],
+  "updated_files": [
+    "/app/frontend/app/(tabs)/social.tsx (fixed red-screen crash at line 286)",
+    "/app/backend/tests/test_v1_14_media_carousel.py (new)",
+    "/app/test_reports/pytest/v1_14_media.xml (new)"
+  ],
+  "success_rate": {"backend": "60% (3/5 pytest cases pass — 2 content-count failures reflect real backend issue)", "frontend": "85% (7/8 features PASS after 1 critical fix; only merchant video carousel blocked by backend)"},
+  "seed_data_creation": "No new seed data. seed_rich_content.py produced 56 posts (52 seed_rich); DB has 39 multi-image + 16 Pexels-video posts — seed exceeds spec locally but is invisible through capped /api/social/posts endpoint.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "After main-agent fixes to_list cap in server.py:1168 and adds `video` to merchant serializer at server.py:3997-4011, re-run `pytest /app/backend/tests/test_v1_14_media_carousel.py -v` — expect all 5 tests green. Also re-verify merchant Live Preview → منشورات tab shows video badges + play overlay. Test file uses EXPO_PUBLIC_BACKEND_URL (not EXPO_BACKEND_URL). Customer login 0500000000/test1234; Merchant 0509999999/merchant2025. To bypass setup-location gate, navigate directly to /social or /settings after login.",
+  "rca_of_issue": "Red-screen crash on Social feed: seed_rich_content.py:175-179 changed `post.comments` from an integer count to a list of comment objects (user_name/text/created_at/likes). Frontend social.tsx:286 rendered `{post.comments || 0}` inside a <Text> — React refused because value was a non-empty array of plain objects. Mitigation: coerce via `Array.isArray(post.comments) ? post.comments.length : (post.comments || 0)` (already the pattern in MerchantSocialFeed.tsx:184). Fixed in this iteration."
+}

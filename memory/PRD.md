@@ -209,3 +209,41 @@ Kind-aware label set (`L`) drives:
 - iOS build: 46 → **47**
 - Android versionCode: 52 → **53**
 - EAS build triggered; auto-submit poller running
+
+## v1.14.0 — Global Theme + Safe-Area + Multi-Media Carousel
+### Foundation (design_agent guardrails)
+- Bottom Tab Bar: `height = 56 + insets.bottom` (clears Android gesture bar + iOS home indicator)
+- Merchant floating tab bar: `bottom = max(insets.bottom, 12)`
+- KPI cards: `adjustsFontSizeToFit + numberOfLines=1 + K/M formatter` (v1.13.14+)
+- RTL: prefer paddingStart/End, `textAlign: 'auto'`
+
+### Global Theme Provider (src/theme/ThemeContext.tsx)
+- Luxe Dark ↔ Luxe Light palettes with full accent set (gold/blue/purple/rose/ok/red/amber)
+- Persisted via `AsyncStorage @zenrex_theme_mode`
+- StatusBar adapts automatically to mode
+- Toggle in customer Settings (syncs both new ThemeContext + legacy mode.ts)
+
+### Multi-Media Carousel (src/components/MediaCarousel.tsx)
+- Instagram-style 4:5 paged FlatList
+- Dots indicator (max 8, condensed for >8)
+- Counter chip top-right
+- Image → tap opens full-screen Modal viewer
+- Video via expo-video: auto-play muted on active slide, tap to open, duration badge
+- Video icon badge distinguishes video slides from image slides
+- Handles mixed sequences (images first, video at end)
+
+### Rich Media Seed
+- 39/52 posts have 2-4 images
+- 16/52 posts include a short organic Pexels promo video at the end
+- Deletes and re-seeds legacy single-image posts
+
+### Backend fixes (hotfix commit)
+- `/api/social/posts` limit raised 30 → 100
+- `/api/merchant/social/posts` serializer now includes `video`, `media`, `shares`, `liked_by`, `shared_by`
+- Customer social feed `comments` treated as array-or-number safely
+
+### Version
+- app.json: 1.13.15 → **1.14.0**
+- iOS build: 47 → **49**
+- Android versionCode: 53 → **55**
+- EAS build triggered (fresh, latest hotfix included); auto-submit poller running
