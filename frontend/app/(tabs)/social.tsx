@@ -283,7 +283,7 @@ export default function SocialScreen() {
                   </TouchableOpacity>
                   <TouchableOpacity style={s.actionItem} onPress={() => openThread(postId)}>
                     <Ionicons name="chatbubble-outline" size={20} color="#52525B" />
-                    <Text style={s.actionCount}>{post.comments || 0}</Text>
+                    <Text style={s.actionCount}>{formatNum(Array.isArray(post.comments) ? post.comments.length : (post.comments || 0))}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => toggleBookmark(postId)} style={s.actionItem}>
                     <Ionicons name={bookmarked.has(postId) ? 'bookmark' : 'bookmark-outline'} size={20} color={bookmarked.has(postId) ? '#F5C518' : '#52525B'} />

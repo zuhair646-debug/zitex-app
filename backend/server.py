@@ -1165,7 +1165,7 @@ async def get_social_posts():
         {"type": {"$ne": "story"}},
         {"type": "story", "$or": [{"expires_at": {"$gt": now}}, {"expires_at": {"$exists": False}}]}
     ]}
-    posts = await db.social_posts.find(query).sort("created_at", -1).to_list(30)
+    posts = await db.social_posts.find(query).sort("created_at", -1).to_list(100)
     return [serialize_doc(p) for p in posts]
 
 @api_router.post("/social/posts/{post_id}/like")
@@ -4000,10 +4000,15 @@ async def merchant_list_posts(user=Depends(get_current_user)):
         "text": p.get("text", ""),
         "image": p.get("image"),
         "images": p.get("images", []),
+        "media": p.get("media", []),
+        "video": p.get("video"),
         "author": p.get("author", "Zitex"),
         "likes": p.get("likes", 0),
         "comments": p.get("comments", 0),
+        "shares": p.get("shares", 0),
         "views": p.get("views", 0),
+        "liked_by": p.get("liked_by", []),
+        "shared_by": p.get("shared_by", []),
         "poll_options": p.get("poll_options", []),
         "event_date": p.get("event_date"),
         "event_location": p.get("event_location"),
