@@ -467,3 +467,50 @@ Plus `i18n.tsx` Restart Required alert.
 - Customer sub-screens (cart, checkout, orders, favorites, addresses, etc.)
 - Chamber & Driver portals
 - Appearance screen
+
+---
+
+## v1.16.3 — Screens 6-10/N: Customer Tabs Migration (June 2026)
+
+### Delivered
+- **~80 new i18n keys** added for AR / EN / FA / HI / ZH:
+  - `tabs.profile`
+  - `reg.*` (register title, subtitle, fields, error messages)
+  - `cs.*` (customer services: title, promo card, all services list)
+  - `cc.*` (customer competitions: title, stats, status labels, progress)
+  - `pf.*` (customer profile: returns, my services, favorites, addresses, invoices, wallet, about, support, appearance, quick mode, terms, policy, mode labels)
+  - `orders.title`, `points.title`, `gb.title`, `notif.title`, `product.warranty`, `common.profile`, `common.confirm` in FA/HI/ZH (were AR/EN only)
+- **Rewrote 5 files** from `<TX>` / hardcoded to pure `t()`:
+  1. `/app/frontend/app/(tabs)/_layout.tsx` — customer bottom tabs
+  2. `/app/frontend/app/(tabs)/services.tsx` — customer services tab
+  3. `/app/frontend/app/(tabs)/competitions.tsx` — customer contests tab
+  4. `/app/frontend/app/(tabs)/settings.tsx` — customer profile tab
+  5. `/app/frontend/app/register.tsx` — register screen
+
+### Visual verification (Chinese)
+- ✅ Bottom tabs: 主页 / 服务 / 竞赛 / 社交 / 个人资料
+- ✅ Services tab: 服务 / 专业维修 / 让我们修好您的设备! / 认证技术员使用原装配件 / 预约服务 / 所有服务 / 12 项服务 / 199 SAR 起
+- ✅ Contests tab: 比赛 / 活跃(6) / 已参加(0) / 您的积分(448) / 进行中 / 2456/10000 已加入
+- ✅ Profile tab: 个人资料 / 我的订单 / 退货 / 我的服务 / 团购 / 积分 / 通知 / 收藏 / 保修 / 地址 / 发票 / 钱包 / 关于商店 / 支持 / 语言 🇨🇳 中文 / 外观与字体 🌙 深色 / 快速切换模式 / 退货政策 / 条款与条件 / 退出
+
+### Cumulative status (12 screens migrated to static i18n)
+1. ✅ Merchant Home
+2. ✅ Merchant More
+3. ✅ Merchant bottom tabs
+4. ✅ Merchant Restart alert
+5. ✅ Login
+6. ✅ Merchant Orders
+7. ✅ Merchant Products (+ TDZ bug fix)
+8. ✅ Register
+9. ✅ Customer bottom tabs
+10. ✅ Customer Services tab
+11. ✅ Customer Contests tab
+12. ✅ Customer Profile tab
+
+### Still to migrate
+- Customer Home (`(tabs)/index.tsx` — 445 lines, biggest)
+- Customer Social (`(tabs)/social.tsx` — 489 lines)
+- Merchant Social (`merchant/social.tsx`)
+- Merchant Live Preview
+- Chamber & Driver portals
+- Appearance screen + all sub-screens (cart, checkout, addresses, favorites, etc.)

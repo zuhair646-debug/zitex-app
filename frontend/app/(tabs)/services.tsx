@@ -1,28 +1,35 @@
-import { useMemo,  useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
+import { useMemo, useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
-
-const { width } = Dimensions.get('window');
-const CARD_W = width - 40;
+import { useT } from '../../src/i18n';
 
 export default function ServicesScreen() {
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
+  const { t } = useT();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const currency = t('common.currency');
 
-  useEffect(() => { (async () => { try { const d = await apiCall('/api/services'); setServices(d); } catch {} finally { setLoading(false); } })(); }, []);
+  useEffect(() => {
+    (async () => {
+      try { const d = await apiCall('/api/services'); setServices(d); }
+      catch { /* ignore */ }
+      finally { setLoading(false); }
+    })();
+  }, []);
 
   if (loading) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#F5C518" /></View>;
+
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Text style={s.title}>Services</Text>
+          <Text style={s.title}>{t('cs.title')}</Text>
           <TouchableOpacity testID="service-search-btn" style={s.searchBtn}>
             <Ionicons name="search-outline" size={20} color="#52525B" />
           </TouchableOpacity>
@@ -30,11 +37,11 @@ export default function ServicesScreen() {
 
         <View style={s.promoCard}>
           <View style={s.promoContent}>
-            <Text style={s.promoTag}>Expert Repair</Text>
-            <Text style={s.promoTitle}>Fix your device{'\n'}with us!</Text>
-            <Text style={s.promoDesc}>Certified technicians with genuine parts</Text>
+            <Text style={s.promoTag}>{t('cs.promoTag')}</Text>
+            <Text style={s.promoTitle}>{t('cs.promoTitle')}</Text>
+            <Text style={s.promoDesc}>{t('cs.promoDesc')}</Text>
             <TouchableOpacity testID="book-service-btn" style={s.promoBtn}>
-              <Text style={s.promoBtnText}>Book a service</Text>
+              <Text style={s.promoBtnText}>{t('cs.promoBtn')}</Text>
             </TouchableOpacity>
           </View>
           <View style={s.promoImgWrap}>
@@ -44,8 +51,8 @@ export default function ServicesScreen() {
 
         <View style={s.section}>
           <View style={s.sectionHeader}>
-            <Text style={s.sectionTitle}>All Services</Text>
-            <Text style={s.sectionCount}>{services.length} services</Text>
+            <Text style={s.sectionTitle}>{t('cs.allServices')}</Text>
+            <Text style={s.sectionCount}>{t('cs.serviceCount', { n: services.length })}</Text>
           </View>
           {services.map((svc: any) => (
             <TouchableOpacity testID={`service-${svc.id}`} key={svc.id} style={s.serviceCard}
@@ -54,11 +61,11 @@ export default function ServicesScreen() {
                 <Ionicons name={(svc.icon || 'construct') as any} size={26} color={svc.color || '#F5C518'} />
               </View>
               <View style={s.serviceInfo}>
-                <Text style={s.serviceName}>{svc.name}</Text>
+                <Text style={s.serviceName} numberOfLines={1}>{svc.name}</Text>
                 <Text style={s.serviceDesc} numberOfLines={1}>{svc.desc}</Text>
                 <View style={s.serviceBottom}>
-                  <Text style={s.serviceRequests}>{svc.total_requests} REQUESTS</Text>
-                  <Text style={s.servicePrice}>From {svc.price} SAR</Text>
+                  <Text style={s.serviceRequests}>{svc.total_requests} {t('cs.requests')}</Text>
+                  <Text style={s.servicePrice}>{t('cs.priceFrom', { price: svc.price, c: currency })}</Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#A1A1AA" />
@@ -79,9 +86,9 @@ function useSStyles() {
   searchBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
   promoCard: { marginHorizontal: 20, borderRadius: 20, backgroundColor: '#F5C518', flexDirection: 'row', padding: 20, marginBottom: 24, overflow: 'hidden' },
   promoContent: { flex: 1 },
-  promoTag: { fontSize: 11, fontWeight: '700', color: '#FFF', opacity: 0.8, marginBottom: 6 },
+  promoTag: { fontSize: 11, fontWeight: '700', color: '#FFF', opacity: 0.85, marginBottom: 6 },
   promoTitle: { fontSize: 22, fontWeight: '800', color: '#FFF', lineHeight: 30, marginBottom: 6 },
-  promoDesc: { fontSize: 12, color: '#FFF', opacity: 0.8, marginBottom: 14 },
+  promoDesc: { fontSize: 12, color: '#FFF', opacity: 0.85, marginBottom: 14 },
   promoBtn: { backgroundColor: '#FFF', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
   promoBtnText: { fontSize: 13, fontWeight: '700', color: '#F5C518' },
   promoImgWrap: { width: 100, alignItems: 'center', justifyContent: 'center', opacity: 0.3 },
@@ -94,9 +101,8 @@ function useSStyles() {
   serviceInfo: { flex: 1, marginEnd: 8 },
   serviceName: { fontSize: 15, fontWeight: '600', color: '#0A0A0A', marginBottom: 3 },
   serviceDesc: { fontSize: 12, color: '#52525B', marginBottom: 6 },
-  serviceBottom: { flexDirection: 'row', justifyContent: 'space-between' },
+  serviceBottom: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap' },
   serviceRequests: { fontSize: 11, color: '#A1A1AA', fontWeight: '500' },
   servicePrice: { fontSize: 12, color: '#F5C518', fontWeight: '700' },
 }), []);
 }
-

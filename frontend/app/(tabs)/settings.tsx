@@ -1,4 +1,4 @@
-import { useMemo,  useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,21 +13,17 @@ export default function SettingsScreen() {
   const styles = useStylesStyles(colors);
   const { user, logout } = useAuth();
   const router = useRouter();
-  const { t, lang, setLang } = useT();
-  const { mode: legacyMode, toggle: toggleThemeLegacy } = useThemeMode();
+  const { t, lang, setLang, isRTL } = useT();
+  const { toggle: toggleThemeLegacy } = useThemeMode();
   const { toggle: toggleTheme } = useTheme();
-  // Sync both stores so the whole app switches together
   const syncedToggle = async () => { await toggleTheme(); await toggleThemeLegacy(); };
   const [langModal, setLangModal] = useState(false);
   const [langSearch, setLangSearch] = useState('');
 
   const currentLang = LANGUAGES.find(l => l.code === lang);
+  const chevronForward = isRTL ? 'chevron-back' : 'chevron-forward';
 
-  const modeLabel = mode === 'dark'
-    ? (lang === 'ar' ? '🌙 ليلي' : '🌙 Dark')
-    : mode === 'light'
-      ? (lang === 'ar' ? '☀️ نهاري' : '☀️ Light')
-      : (lang === 'ar' ? '🎨 مخصص' : '🎨 Custom');
+  const modeLabel = mode === 'dark' ? t('pf.modeDark') : mode === 'light' ? t('pf.modeLight') : t('pf.modeCustom');
 
   const handleLogout = () => {
     Alert.alert(t('auth.logout'), '', [
@@ -53,10 +49,10 @@ export default function SettingsScreen() {
       <View style={[styles.menuIconWrap, { backgroundColor: (color || colors.gold) + '25' }]}>
         <Ionicons name={icon as any} size={22} color={color || colors.gold} />
       </View>
-      <Text style={styles.menuLabel}>{label}</Text>
+      <Text style={styles.menuLabel} numberOfLines={1}>{label}</Text>
       <View style={styles.menuRight}>
-        {badge && <View style={styles.badge}><Text style={styles.badgeText}>{badge}</Text></View>}
-        <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+        {badge ? <View style={styles.badge}><Text style={styles.badgeText} numberOfLines={1}>{badge}</Text></View> : null}
+        <Ionicons name={chevronForward} size={18} color={colors.textSecondary} />
       </View>
     </TouchableOpacity>
   );
@@ -72,10 +68,10 @@ export default function SettingsScreen() {
             <Ionicons name="person" size={32} color={colors.gold} />
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user?.name}</Text>
+            <Text style={styles.profileName} numberOfLines={1}>{user?.name}</Text>
             <Text style={styles.profilePhone}>{user?.phone}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+          <Ionicons name={chevronForward} size={20} color={colors.textSecondary} />
         </TouchableOpacity>
 
         {/* Wallet + Points */}
@@ -87,39 +83,45 @@ export default function SettingsScreen() {
           <View style={styles.walletDivider} />
           <View style={styles.walletItem}>
             <Text style={styles.walletValue}>{user?.wallet_balance || 0} {t('common.currency')}</Text>
-            <Text style={styles.walletLabel}>{t('cart.total')}</Text>
+            <Text style={styles.walletLabel}>{t('pf.walletTotal')}</Text>
           </View>
         </TouchableOpacity>
 
         {/* Quick actions */}
         <View style={styles.menuSection}>
-          <MenuItem icon="cart" label={t('orders.title')} onPress={() => router.push('/orders')} />
-          <MenuItem icon="return-up-back" label={lang === 'ar' ? 'طلبات الإرجاع' : 'Returns'} color="#EF4444" onPress={() => router.push('/my-returns' as any)} />
-          <MenuItem icon="construct" label={lang === 'ar' ? 'خدماتي' : 'My Services'} color="#F5C518" onPress={() => router.push('/my-services')} />
-          <MenuItem icon="people" label={t('gb.title')} color="#EC4899" onPress={() => router.push('/group-buys' as any)} />
-          <MenuItem icon="medal" label={t('points.title')} color="#F59E0B" onPress={() => router.push('/points' as any)} />
-          <MenuItem icon="notifications" label={t('notif.title')} color="#3B82F6" onPress={() => router.push('/notifications' as any)} />
-          <MenuItem icon="heart" label="Favorites / المفضلة" onPress={() => router.push('/favorites')} />
-          <MenuItem icon="shield-checkmark" label={t('product.warranty')} onPress={() => router.push('/warranties')} />
-          <MenuItem icon="location" label={lang === 'ar' ? 'العناوين' : 'Addresses'} onPress={() => router.push('/addresses')} />
-          <MenuItem icon="receipt" label={lang === 'ar' ? 'الفواتير' : 'Invoices'} onPress={() => router.push('/invoices')} />
-          <MenuItem icon="wallet" label={lang === 'ar' ? 'المحفظة' : 'Wallet'} onPress={() => router.push('/wallet')} />
+          <MenuItem icon="cart"              label={t('orders.title')}   onPress={() => router.push('/orders')} />
+          <MenuItem icon="return-up-back"    label={t('pf.returns')}     color="#EF4444" onPress={() => router.push('/my-returns' as any)} />
+          <MenuItem icon="construct"         label={t('pf.myServices')}  color="#F5C518" onPress={() => router.push('/my-services')} />
+          <MenuItem icon="people"            label={t('gb.title')}       color="#EC4899" onPress={() => router.push('/group-buys' as any)} />
+          <MenuItem icon="medal"             label={t('points.title')}   color="#F59E0B" onPress={() => router.push('/points' as any)} />
+          <MenuItem icon="notifications"     label={t('notif.title')}    color="#3B82F6" onPress={() => router.push('/notifications' as any)} />
+          <MenuItem icon="heart"             label={t('pf.favorites')}   onPress={() => router.push('/favorites')} />
+          <MenuItem icon="shield-checkmark"  label={t('product.warranty')} onPress={() => router.push('/warranties')} />
+          <MenuItem icon="location"          label={t('pf.addresses')}   onPress={() => router.push('/addresses')} />
+          <MenuItem icon="receipt"           label={t('pf.invoices')}    onPress={() => router.push('/invoices')} />
+          <MenuItem icon="wallet"            label={t('pf.wallet')}      onPress={() => router.push('/wallet')} />
         </View>
 
         <View style={styles.menuSection}>
-          <MenuItem icon="storefront" label={lang === 'ar' ? 'عن المتجر' : 'About Store'} color="#3366FF" onPress={() => router.push('/about-store')} />
-          <MenuItem icon="headset" label={lang === 'ar' ? 'الدعم' : 'Support'} color="#10B981" onPress={() => router.push('/support')} />
-          <MenuItem icon="language" label={t('settings.language')} color="#9333EA" badge={`${currentLang?.flag || ''} ${currentLang?.nativeName || ''}`} onPress={() => setLangModal(true)} />
+          <MenuItem icon="storefront" label={t('pf.aboutStore')} color="#3366FF" onPress={() => router.push('/about-store')} />
+          <MenuItem icon="headset"    label={t('pf.support')}    color="#10B981" onPress={() => router.push('/support')} />
+          <MenuItem
+            icon="language"
+            label={t('settings.language')}
+            color="#9333EA"
+            badge={`${currentLang?.flag || ''} ${currentLang?.nativeName || ''}`}
+            onPress={() => setLangModal(true)}
+          />
           <MenuItem
             icon="color-palette"
-            label={lang === 'ar' ? 'المظهر والخطوط' : 'Appearance & Fonts'}
+            label={t('pf.appearance')}
             color={colors.gold}
             badge={modeLabel}
             onPress={() => router.push('/appearance' as any)}
           />
           <MenuItem
             icon={mode === 'dark' ? 'moon' : mode === 'light' ? 'sunny' : 'color-wand'}
-            label={lang === 'ar' ? 'تبديل سريع للوضع' : 'Quick Mode Toggle'}
+            label={t('pf.quickMode')}
             color="#D4AF37"
             badge={modeLabel}
             onPress={syncedToggle}
@@ -127,8 +129,8 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.menuSection}>
-          <MenuItem icon="document-text" label={lang === 'ar' ? 'سياسة الإرجاع' : 'Return Policy'} color="#52525B" />
-          <MenuItem icon="shield-checkmark" label={lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'} color="#52525B" />
+          <MenuItem icon="document-text"    label={t('pf.returnPolicy')} color="#52525B" />
+          <MenuItem icon="shield-checkmark" label={t('pf.terms')}        color="#52525B" />
         </View>
 
         <TouchableOpacity testID="logout-button" style={styles.logoutBtn} onPress={handleLogout}>
@@ -149,7 +151,13 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.searchBox}>
             <Ionicons name="search" size={18} color={colors.textSecondary} />
-            <TextInput style={styles.searchInput} value={langSearch} onChangeText={setLangSearch} placeholder={lang === 'ar' ? 'ابحث عن لغة...' : 'Search language...'} placeholderTextColor={colors.textSecondary} />
+            <TextInput
+              style={styles.searchInput}
+              value={langSearch}
+              onChangeText={setLangSearch}
+              placeholder={t('pf.searchLangPh')}
+              placeholderTextColor={colors.textSecondary}
+            />
           </View>
           <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
             {filteredLangs.map(l => (
@@ -162,7 +170,7 @@ export default function SettingsScreen() {
                 {lang === l.code && <Ionicons name="checkmark-circle" size={22} color={colors.gold} />}
               </TouchableOpacity>
             ))}
-            {filteredLangs.length === 0 && <Text style={styles.noResult}>{lang === 'ar' ? 'لا توجد نتائج' : 'No results'}</Text>}
+            {filteredLangs.length === 0 && <Text style={styles.noResult}>{t('pf.noResults')}</Text>}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -188,8 +196,8 @@ function useStylesStyles(c: any) {
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: c.divider },
   menuIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
   menuLabel: { flex: 1, fontSize: 15, fontWeight: '500', color: c.text },
-  menuRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  badge: { backgroundColor: c.goldSoft, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
+  menuRight: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 },
+  badge: { backgroundColor: c.goldSoft, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, maxWidth: 140 },
   badgeText: { fontSize: 11, color: c.gold, fontWeight: '600' },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, paddingVertical: 16, borderRadius: 14, backgroundColor: c.redSoft, gap: 8 },
   logoutText: { fontSize: 16, fontWeight: '600', color: c.red },
@@ -205,4 +213,3 @@ function useStylesStyles(c: any) {
   noResult: { textAlign: 'center', color: c.textDisabled, marginTop: 40, fontSize: 14 },
 }), [c]);
 }
-

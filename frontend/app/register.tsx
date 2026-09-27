@@ -4,11 +4,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
-import { TX, tSync } from '../src/useAutoT';
 import { useT } from '../src/i18n';
 
 export default function RegisterScreen() {
-  const { lang } = useT();
+  const { t, isRTL } = useT();
   const router = useRouter();
   const { register } = useAuth();
   const [name, setName] = useState('');
@@ -20,49 +19,51 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!name || !phone || !password) { setError('يرجى ملء جميع الحقول'); return; }
-    if (password !== confirmPass) { setError('كلمات المرور غير متطابقة'); return; }
-    if (password.length < 6) { setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
+    if (!name || !phone || !password) { setError(t('reg.err.fill')); return; }
+    if (password !== confirmPass) { setError(t('reg.err.mismatch')); return; }
+    if (password.length < 6) { setError(t('reg.err.short')); return; }
     setLoading(true); setError('');
     try {
       await register(phone, password, name);
       router.replace('/(tabs)');
     } catch (e: any) {
-      setError(e.message || 'خطأ في إنشاء الحساب');
+      setError(e.message || t('reg.err.generic'));
     } finally { setLoading(false); }
   };
+
+  const align = isRTL ? 'right' : 'left';
 
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <TouchableOpacity testID="back-button" onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color="#0A0A0A" />
+            <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={24} color="#0A0A0A" />
           </TouchableOpacity>
 
           <View style={styles.logoWrap}>
             <View style={styles.logoCircle}>
               <Ionicons name="person-add-outline" size={36} color="#F5C518" />
             </View>
-            <TX style={styles.title}>إنشاء حساب جديد</TX>
-            <TX style={styles.subtitle}>أدخل بياناتك للتسجيل</TX>
+            <Text style={styles.title}>{t('reg.title')}</Text>
+            <Text style={styles.subtitle}>{t('reg.subtitle')}</Text>
           </View>
 
           {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
 
           <View style={styles.inputWrap}>
             <Ionicons name="person-outline" size={20} color="#A1A1AA" style={styles.inputIcon} />
-            <TextInput testID="register-name-input" style={styles.input} placeholder={tSync("الاسم الكامل", lang)} placeholderTextColor="#A1A1AA" value={name} onChangeText={setName} textAlign="right" />
+            <TextInput testID="register-name-input" style={styles.input} placeholder={t('reg.fullName')} placeholderTextColor="#A1A1AA" value={name} onChangeText={setName} textAlign={align} />
           </View>
 
           <View style={styles.inputWrap}>
             <Ionicons name="call-outline" size={20} color="#A1A1AA" style={styles.inputIcon} />
-            <TextInput testID="register-phone-input" style={styles.input} placeholder={tSync("رقم الهاتف", lang)} placeholderTextColor="#A1A1AA" value={phone} onChangeText={setPhone} keyboardType="phone-pad" textAlign="right" />
+            <TextInput testID="register-phone-input" style={styles.input} placeholder={t('reg.phone')} placeholderTextColor="#A1A1AA" value={phone} onChangeText={setPhone} keyboardType="phone-pad" textAlign={align} />
           </View>
 
           <View style={styles.inputWrap}>
             <Ionicons name="lock-closed-outline" size={20} color="#A1A1AA" style={styles.inputIcon} />
-            <TextInput testID="register-password-input" style={styles.input} placeholder={tSync("كلمة المرور", lang)} placeholderTextColor="#A1A1AA" value={password} onChangeText={setPassword} secureTextEntry={!showPass} textAlign="right" />
+            <TextInput testID="register-password-input" style={styles.input} placeholder={t('reg.password')} placeholderTextColor="#A1A1AA" value={password} onChangeText={setPassword} secureTextEntry={!showPass} textAlign={align} />
             <TouchableOpacity onPress={() => setShowPass(!showPass)} style={styles.eyeBtn}>
               <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={20} color="#A1A1AA" />
             </TouchableOpacity>
@@ -70,17 +71,17 @@ export default function RegisterScreen() {
 
           <View style={styles.inputWrap}>
             <Ionicons name="lock-closed-outline" size={20} color="#A1A1AA" style={styles.inputIcon} />
-            <TextInput testID="register-confirm-input" style={styles.input} placeholder={tSync("تأكيد كلمة المرور", lang)} placeholderTextColor="#A1A1AA" value={confirmPass} onChangeText={setConfirmPass} secureTextEntry={!showPass} textAlign="right" />
+            <TextInput testID="register-confirm-input" style={styles.input} placeholder={t('reg.confirmPass')} placeholderTextColor="#A1A1AA" value={confirmPass} onChangeText={setConfirmPass} secureTextEntry={!showPass} textAlign={align} />
           </View>
 
           <TouchableOpacity testID="register-submit-button" style={styles.btn} onPress={handleRegister} disabled={loading}>
-            {loading ? <ActivityIndicator color="#FFF" /> : <TX style={styles.btnText}>إنشاء حساب</TX>}
+            {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnText}>{t('reg.submit')}</Text>}
           </TouchableOpacity>
 
           <View style={styles.bottomRow}>
-            <TX style={styles.bottomText}>لديك حساب بالفعل؟</TX>
+            <Text style={styles.bottomText}>{t('reg.haveAccount')}</Text>
             <TouchableOpacity testID="go-to-login-btn" onPress={() => router.push('/login')}>
-              <TX style={styles.linkText}>تسجيل الدخول</TX>
+              <Text style={styles.linkText}>{t('auth.signin')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -96,8 +97,8 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   logoWrap: { alignItems: 'center', marginBottom: 32 },
   logoCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: '800', color: '#0A0A0A', marginBottom: 8 },
-  subtitle: { fontSize: 15, color: '#52525B' },
+  title: { fontSize: 22, fontWeight: '800', color: '#0A0A0A', marginBottom: 8, textAlign: 'center' },
+  subtitle: { fontSize: 14, color: '#52525B', textAlign: 'center' },
   errorBox: { backgroundColor: '#FEF2F2', borderRadius: 12, padding: 12, marginBottom: 16 },
   errorText: { color: '#EF4444', textAlign: 'center', fontSize: 14 },
   inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9F9FB', borderRadius: 12, borderWidth: 1, borderColor: '#E4E4E7', paddingHorizontal: 16, marginBottom: 14, height: 52 },
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
   eyeBtn: { padding: 4 },
   btn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 3 },
   btnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
-  bottomRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, gap: 6, marginBottom: 32 },
+  bottomRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, gap: 6, marginBottom: 32, flexWrap: 'wrap' },
   bottomText: { fontSize: 14, color: '#52525B' },
   linkText: { fontSize: 14, color: '#F5C518', fontWeight: '600' },
 });
