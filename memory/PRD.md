@@ -377,3 +377,35 @@ Zero. All responses preserve their exact previous JSON shape.
 ### Files touched
 - **New**: `/app/backend/perf.py` (module)
 - **Edited**: `/app/backend/server.py` — startup hook + 5 endpoints wrapped + 2 endpoints paginated
+
+---
+
+## v1.16.1 — Screen 2/N: Merchant "More" + Bottom Tabs + Language Modal (June 2026)
+
+### Approach change (permanent)
+Runtime LLM auto-translation (`useAutoT` / `<TX>`) is being **retired screen by screen** and replaced with a static i18n dictionary for reliability. No more "flash of Arabic" while the LLM answers, no more untranslated strings if the LLM fails.
+
+### Delivered in this iteration
+- Added **~40 new translation keys** to `/app/frontend/src/i18n.tsx` for AR / EN / FA / HI / ZH covering:
+  - Merchant tabs (`merchant.home`, `merchant.orders`, `merchant.products`, `merchant.more`, `merchant.live`)
+  - Merchant "More" sections (Sales & Invoices, Marketing, Operations, Growth & Loyalty, Administration, Account)
+  - Every list item title + subtitle (POS, Invoices, Inventory, Marketing, Affiliates, Social, Contests, Banners, Services, Bookings, Branches, Drivers, Delivery, Shipping, Returns, Loyalty, App Features, Customers, Employees, Roles, Team, Support)
+  - Appearance & theme labels (Dark Mode / Light Mode / hint)
+  - "Restart Required" alert (`rr.title`, `rr.body`, `rr.ok`, `rr.now`)
+- Rewrote `/app/frontend/app/merchant/more.tsx` — removed `<TX>` and all hardcoded Arabic. Every string flows through `t()`.
+- Fixed the Restart alert in `/app/frontend/src/i18n.tsx` — it now reads localized text from the target language dictionary, no longer forced to English or Arabic.
+- Chevron direction on ListItem rows now respects RTL.
+
+### Visual verification (screenshots)
+- ✅ **AR**: sections in Arabic, tabs in Arabic (الرئيسية / الطلبات / المنتجات / المزيد / بث المتجر)
+- ✅ **EN**: full English (Sales & Invoices, POS, Inventory, Home / Orders / Products / More / Live Store, "Change Language" modal title)
+- ✅ **HI**: बिक्री और चालान, POS, इन्वेंटरी, होम / ऑर्डर / लाइव स्टोर / उत्पाद / अधिक
+- ✅ **ZH**: 销售与发票, POS, 库存, 主页 / 订单 / 直播店铺 / 产品 / 更多, 语言 / 🇨🇳 中文
+- ✅ **FA**: فروش و فاکتورها, POS, انبار, خانه / سفارش‌ها / پخش زنده / محصولات / بیشتر
+
+### Files touched
+- `/app/frontend/src/i18n.tsx` — dictionary + `interpolate()` helper + Restart alert
+- `/app/frontend/app/merchant/more.tsx` — full rewrite (no `TX`, all `t()`)
+
+### Not yet migrated to static i18n
+Login screen, Products, Orders, Social feed, Settings/appearance, Chamber/Driver portals. Will be done screen by screen.
