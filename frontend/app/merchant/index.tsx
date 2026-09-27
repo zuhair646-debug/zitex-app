@@ -1,4 +1,4 @@
-import { useMemo,  useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,13 +8,12 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, gradients } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { useT } from '../../src/i18n';
-import { TX, tSync } from '../../src/useAutoT';
 import {
   StatCard, ActionCard, SectionHeader, PrimaryButton, EmptyState, SkeletonBox, Badge,
 } from '../../src/components/ui';
 
 export default function MerchantHome() {
-  const { lang } = useT();
+  const { t, isRTL } = useT();
   const styles = useStylesStyles();
   const { isDark } = useTheme();
   const router = useRouter();
@@ -47,11 +46,11 @@ export default function MerchantHome() {
       if (attendance.checked_in) {
         const r = await apiCall('/api/employee/check-out', { method: 'POST' });
         setAttendance({ checked_in: false });
-        alert(`✅ تم تسجيل الانصراف — ${r.duration_minutes} دقيقة`);
+        alert(t('mh.attSuccessOut', { n: r.duration_minutes ?? 0 }));
       } else {
         await apiCall('/api/employee/check-in', { method: 'POST' });
         setAttendance({ checked_in: true, check_in: new Date().toISOString(), duration_minutes: 0 });
-        alert('✅ تم تسجيل الحضور');
+        alert(t('mh.attSuccessIn'));
       }
     } catch (e: any) { alert(e.message); }
   };
@@ -63,8 +62,11 @@ export default function MerchantHome() {
   const money = (n: number) => new Intl.NumberFormat('en', { maximumFractionDigits: 0 }).format(n || 0);
   const orderStatusTone = (s: string): any =>
     s === 'pending' ? 'warning' : s === 'processing' ? 'info' : s === 'ready' ? 'gold' : s === 'delivered' ? 'success' : s === 'cancelled' ? 'error' : 'default';
-  const orderStatusLabel = (s: string) =>
-    ({ pending: 'قيد الانتظار', processing: 'قيد التنفيذ', ready: 'جاهز', out_for_delivery: 'في الطريق', delivered: 'تم التسليم', cancelled: 'ملغى' }[s] || s);
+  const orderStatusLabel = (s: string) => t(`os.${s}`, s);
+
+  // Choose chevron direction based on RTL
+  const chevronForward = isRTL ? 'chevron-back' : 'chevron-forward';
+  const currency = t('common.currency');
 
   return (
     <View style={styles.root}>
@@ -78,9 +80,9 @@ export default function MerchantHome() {
           {/* Header */}
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
-              <TX style={styles.greeting}>مرحباً 👋</TX>
-              <Text style={styles.merchantName}>{user?.name || 'التاجر'}</Text>
-              <TX style={styles.merchantRole}>لوحة تحكم Zenrex Store</TX>
+              <Text style={styles.greeting}>{t('mh.hello')}</Text>
+              <Text style={styles.merchantName} numberOfLines={1}>{user?.name || t('mh.merchantFallback')}</Text>
+              <Text style={styles.merchantRole} numberOfLines={1}>{t('mh.dashboardTitle')}</Text>
             </View>
             <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications')} activeOpacity={0.7}>
               <Ionicons name="notifications-outline" size={22} color={colors.onSurface} />
@@ -97,15 +99,24 @@ export default function MerchantHome() {
             style={styles.hero}
           >
             <View style={styles.heroTop}>
-              <TX style={styles.heroLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>إجمالي مبيعات اليوم</TX>
+              <Text style={styles.heroLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('mh.todaySales')}</Text>
               <Ionicons name="trending-up" size={20} color={colors.onBrandPrimary} />
             </View>
             {loading ? <SkeletonBox height={40} width="60%" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }} />
-              : <Text style={styles.heroValue}>{money(stats?.today_revenue || 0)} <TX style={styles.heroCurrency}>ر.س</TX></Text>}
+              : (
+                <View style={styles.heroValueRow}>
+                  <Text style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+                    {money(stats?.today_revenue || 0)}
+                  </Text>
+                  <Text style={styles.heroCurrency}>{currency}</Text>
+                </View>
+              )}
             <View style={styles.heroFooter}>
               <View style={styles.heroPill}>
                 <Ionicons name="wallet" size={12} color={colors.onBrandPrimary} />
-                <Text style={styles.heroPillText}>إجمالي: {money(stats?.total_revenue || 0)} ر.س</Text>
+                <Text style={styles.heroPillText} numberOfLines={1}>
+                  {t('mh.totalPrefix')}: {money(stats?.total_revenue || 0)} {currency}
+                </Text>
               </View>
             </View>
           </LinearGradient>
@@ -116,27 +127,29 @@ export default function MerchantHome() {
               <Ionicons name={attendance.checked_in ? 'stop-circle' : 'play-circle'} size={26} color={attendance.checked_in ? colors.success : colors.brand} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.clockTitle}>{attendance.checked_in ? '🟢 أنت مسجّل حضورك' : 'سجّل حضورك'}</Text>
-              <Text style={styles.clockSubtitle}>
+              <Text style={styles.clockTitle} numberOfLines={1}>
+                {attendance.checked_in ? t('mh.attCheckedIn') : t('mh.attCheckIn')}
+              </Text>
+              <Text style={styles.clockSubtitle} numberOfLines={2}>
                 {attendance.checked_in
-                  ? `منذ ${attendance.duration_minutes || 0} دقيقة — اضغط للانصراف`
-                  : 'اضغط لبدء يوم العمل'}
+                  ? t('mh.attSinceMinutes', { n: attendance.duration_minutes || 0 })
+                  : t('mh.attTapToStart')}
               </Text>
             </View>
-            <Ionicons name="chevron-back" size={18} color={colors.onSurfaceTertiary} />
+            <Ionicons name={chevronForward} size={18} color={colors.onSurfaceTertiary} />
           </TouchableOpacity>
 
           {/* Stats Grid */}
           <View style={styles.statsGrid}>
-            <StatCard icon="receipt" label={tSync("طلبات نشطة", lang)} value={stats?.pending_orders ?? '—'} tone="gold"
+            <StatCard icon="receipt" label={t('mh.activeOrders')} value={stats?.pending_orders ?? '—'} tone="gold"
               onPress={() => router.push('/merchant/orders')} />
-            <StatCard icon="cube" label={tSync("منتجات", lang)} value={stats?.total_products ?? '—'} tone="default"
+            <StatCard icon="cube" label={t('mh.products')} value={stats?.total_products ?? '—'} tone="default"
               onPress={() => router.push('/merchant/products')} />
           </View>
           <View style={styles.statsGrid}>
-            <StatCard icon="people" label={tSync("عملاء", lang)} value={stats?.total_customers ?? '—'} tone="success"
+            <StatCard icon="people" label={t('mh.customers')} value={stats?.total_customers ?? '—'} tone="success"
               onPress={() => router.push('/merchant/customers')} />
-            <StatCard icon="trophy" label={tSync("مسابقات", lang)} value={stats?.pending_competitions_approval ?? 0} tone={stats?.pending_competitions_approval > 0 ? 'warning' : 'default'}
+            <StatCard icon="trophy" label={t('mh.contests')} value={stats?.pending_competitions_approval ?? 0} tone={stats?.pending_competitions_approval > 0 ? 'warning' : 'default'}
               onPress={() => router.push('/merchant/competitions')} />
           </View>
 
@@ -151,36 +164,36 @@ export default function MerchantHome() {
                 <Ionicons name="warning" size={22} color={colors.warning} />
               </View>
               <View style={{ flex: 1 }}>
-                <TX style={styles.invAlertTitle}>تنبيه مخزون</TX>
-                <Text style={styles.invAlertSubtitle}>
-                  {inventoryAlerts.totals?.out_of_stock ?? 0} نفدت • {inventoryAlerts.totals?.low_stock ?? 0} منخفضة
+                <Text style={styles.invAlertTitle}>{t('mh.invAlertTitle')}</Text>
+                <Text style={styles.invAlertSubtitle} numberOfLines={1}>
+                  {inventoryAlerts.totals?.out_of_stock ?? 0} {t('mh.invOutOfStock')} • {inventoryAlerts.totals?.low_stock ?? 0} {t('mh.invLowStock')}
                 </Text>
               </View>
-              <Ionicons name="chevron-back" size={18} color={colors.warning} />
+              <Ionicons name={chevronForward} size={18} color={colors.warning} />
             </TouchableOpacity>
           )}
 
           {/* Quick Actions */}
-          <SectionHeader title={tSync("إجراءات سريعة", lang)} />
+          <SectionHeader title={t('mh.quickActions')} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickRow} style={{ flexGrow: 0 }}>
-            <ActionCard icon="add-circle" label={tSync("إضافة منتج", lang)} onPress={() => router.push('/merchant/product-form')} />
-            <ActionCard icon="cart" label={tSync("نقطة البيع POS", lang)} onPress={() => router.push('/merchant/pos')} />
-            <ActionCard icon="cube" label={tSync("المخزون", lang)} onPress={() => router.push('/merchant/inventory')} />
-            <ActionCard icon="receipt" label={tSync("الفواتير", lang)} onPress={() => router.push('/merchant/invoices')} />
-            <ActionCard icon="megaphone" label={tSync("التسويق", lang)} onPress={() => router.push('/merchant/marketing')} />
-            <ActionCard icon="chatbubbles" label={tSync("منشور جديد", lang)} onPress={() => router.push('/merchant/social')} />
-            <ActionCard icon="trophy" label={tSync("إنشاء مسابقة", lang)} onPress={() => router.push('/merchant/competition-form')} />
-            <ActionCard icon="image" label={tSync("إضافة بانر", lang)} onPress={() => router.push('/merchant/banners')} />
-            <ActionCard icon="people-circle" label={tSync("إضافة موظف", lang)} onPress={() => router.push('/merchant/employees')} />
-            <ActionCard icon="settings" label={tSync("إعدادات الدعم", lang)} onPress={() => router.push('/merchant/support-settings')} />
+            <ActionCard icon="add-circle" label={t('mh.qaAddProduct')} onPress={() => router.push('/merchant/product-form')} />
+            <ActionCard icon="cart" label={t('mh.qaPOS')} onPress={() => router.push('/merchant/pos')} />
+            <ActionCard icon="cube" label={t('mh.qaInventory')} onPress={() => router.push('/merchant/inventory')} />
+            <ActionCard icon="receipt" label={t('mh.qaInvoices')} onPress={() => router.push('/merchant/invoices')} />
+            <ActionCard icon="megaphone" label={t('mh.qaMarketing')} onPress={() => router.push('/merchant/marketing')} />
+            <ActionCard icon="chatbubbles" label={t('mh.qaNewPost')} onPress={() => router.push('/merchant/social')} />
+            <ActionCard icon="trophy" label={t('mh.qaNewCompetition')} onPress={() => router.push('/merchant/competition-form')} />
+            <ActionCard icon="image" label={t('mh.qaAddBanner')} onPress={() => router.push('/merchant/banners')} />
+            <ActionCard icon="people-circle" label={t('mh.qaAddEmployee')} onPress={() => router.push('/merchant/employees')} />
+            <ActionCard icon="settings" label={t('mh.qaSupportSettings')} onPress={() => router.push('/merchant/support-settings')} />
           </ScrollView>
 
           {/* Recent Orders */}
           <SectionHeader
-            title={tSync("أحدث الطلبات", lang)}
-            subtitle={recentOrders.length > 0 ? `${recentOrders.length} طلبات تحتاج انتباهك` : undefined}
+            title={t('mh.recentOrders')}
+            subtitle={recentOrders.length > 0 ? t('mh.ordersNeedAttention', { n: recentOrders.length }) : undefined}
             action={() => router.push('/merchant/orders')}
-            actionLabel="عرض الكل"
+            actionLabel={t('mh.viewAll')}
           />
 
           {loading ? (
@@ -190,9 +203,9 @@ export default function MerchantHome() {
           ) : recentOrders.length === 0 ? (
             <EmptyState
               icon="receipt-outline"
-              title={tSync("لا توجد طلبات بعد", lang)}
-              description="ستظهر هنا كل الطلبات الجديدة من عملائك"
-              actionLabel="عرض المنتجات"
+              title={t('mh.noOrders')}
+              description={t('mh.noOrdersDesc')}
+              actionLabel={t('mh.viewProducts')}
               onAction={() => router.push('/merchant/products')}
             />
           ) : (
@@ -207,17 +220,17 @@ export default function MerchantHome() {
                     <Ionicons name="cart" size={20} color={colors.brand} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 2, flexWrap: 'wrap' }}>
                       <Text style={styles.orderId}>#{String(o.id).slice(-6).toUpperCase()}</Text>
                       <Badge label={orderStatusLabel(o.status)} tone={orderStatusTone(o.status)} />
                     </View>
                     <Text style={styles.orderCustomer} numberOfLines={1}>
-                      {o.customer_name || 'عميل'} • {o.items?.length || 0} منتج
+                      {o.customer_name || t('mh.customerFallback')} • {o.items?.length || 0} {t('mh.itemWord')}
                     </Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.orderAmount}>{money(o.total)}</Text>
-                    <TX style={styles.orderCurrency}>ر.س</TX>
+                    <Text style={styles.orderCurrency}>{currency}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -252,14 +265,15 @@ function useStylesStyles() {
     shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 20, elevation: 10,
   },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  heroLabel: { ...typography.labelMedium, color: colors.onBrandPrimary, opacity: 0.85 },
-  heroValue: { fontSize: 40, fontWeight: '900', color: colors.onBrandPrimary, marginTop: spacing.sm },
-  heroCurrency: { fontSize: 20, fontWeight: '700' },
+  heroLabel: { ...typography.labelMedium, color: colors.onBrandPrimary, opacity: 0.85, flex: 1 },
+  heroValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, marginTop: spacing.sm, flexWrap: 'wrap' },
+  heroValue: { fontSize: 40, fontWeight: '900', color: colors.onBrandPrimary },
+  heroCurrency: { fontSize: 20, fontWeight: '700', color: colors.onBrandPrimary },
   heroFooter: { marginTop: spacing.md, flexDirection: 'row' },
   heroPill: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
     backgroundColor: 'rgba(0,0,0,0.18)', paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
+    borderRadius: radius.pill, maxWidth: '100%',
   },
   heroPillText: { ...typography.labelSmall, color: colors.onBrandPrimary, fontWeight: '700' },
 
@@ -276,8 +290,8 @@ function useStylesStyles() {
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: colors.surface,
   },
-  invAlertTitle: { ...typography.titleSmall, color: colors.onSurface, textAlign: 'right' },
-  invAlertSubtitle: { ...typography.caption, color: colors.onSurfaceSecondary, textAlign: 'right', marginTop: 2 },
+  invAlertTitle: { ...typography.titleSmall, color: colors.onSurface },
+  invAlertSubtitle: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
   clockCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     marginHorizontal: spacing.lg, marginBottom: spacing.md,
@@ -301,4 +315,3 @@ function useStylesStyles() {
   orderCurrency: { ...typography.caption, color: colors.onSurfaceSecondary },
 }), [themeKey]);
 }
-

@@ -102,6 +102,33 @@ const T: Record<Lang, Record<string, string>> = {
     // Translate
     't.translate': 'ترجم', 't.translated': 'مُترجم', 't.showOriginal': 'إظهار النص الأصلي',
     't.translating': 'جاري الترجمة...',
+    // ─── Merchant Home Screen (mh.*) ───
+    'mh.hello': 'مرحباً 👋', 'mh.merchantFallback': 'التاجر',
+    'mh.dashboardTitle': 'لوحة تحكم Zenrex Store',
+    'mh.todaySales': 'إجمالي مبيعات اليوم', 'mh.totalPrefix': 'إجمالي',
+    'mh.attCheckedIn': '🟢 أنت مسجّل حضورك', 'mh.attCheckIn': 'سجّل حضورك',
+    'mh.attSinceMinutes': 'منذ {n} دقيقة — اضغط للانصراف',
+    'mh.attTapToStart': 'اضغط لبدء يوم العمل',
+    'mh.attSuccessIn': '✅ تم تسجيل الحضور',
+    'mh.attSuccessOut': '✅ تم تسجيل الانصراف — {n} دقيقة',
+    'mh.activeOrders': 'طلبات نشطة',
+    'mh.products': 'منتجات', 'mh.customers': 'عملاء', 'mh.contests': 'مسابقات',
+    'mh.invAlertTitle': 'تنبيه مخزون', 'mh.invOutOfStock': 'نفدت', 'mh.invLowStock': 'منخفضة',
+    'mh.quickActions': 'إجراءات سريعة',
+    'mh.qaAddProduct': 'إضافة منتج', 'mh.qaPOS': 'نقطة البيع', 'mh.qaInventory': 'المخزون',
+    'mh.qaInvoices': 'الفواتير', 'mh.qaMarketing': 'التسويق', 'mh.qaNewPost': 'منشور جديد',
+    'mh.qaNewCompetition': 'إنشاء مسابقة', 'mh.qaAddBanner': 'إضافة بانر',
+    'mh.qaAddEmployee': 'إضافة موظف', 'mh.qaSupportSettings': 'إعدادات الدعم',
+    'mh.recentOrders': 'أحدث الطلبات',
+    'mh.ordersNeedAttention': '{n} طلبات تحتاج انتباهك',
+    'mh.viewAll': 'عرض الكل',
+    'mh.noOrders': 'لا توجد طلبات بعد',
+    'mh.noOrdersDesc': 'ستظهر هنا كل الطلبات الجديدة من عملائك',
+    'mh.viewProducts': 'عرض المنتجات',
+    'mh.customerFallback': 'عميل', 'mh.itemWord': 'منتج',
+    // Order statuses (os.*)
+    'os.pending': 'قيد الانتظار', 'os.processing': 'قيد التنفيذ', 'os.ready': 'جاهز',
+    'os.out_for_delivery': 'في الطريق', 'os.delivered': 'تم التسليم', 'os.cancelled': 'ملغى',
   },
   en: {
     'common.home': 'Home', 'common.search': 'Search', 'common.cart': 'Cart', 'common.profile': 'Profile',
@@ -147,6 +174,33 @@ const T: Record<Lang, Record<string, string>> = {
     // Translate
     't.translate': 'Translate', 't.translated': 'Translated', 't.showOriginal': 'Show original',
     't.translating': 'Translating...',
+    // ─── Merchant Home Screen (mh.*) ───
+    'mh.hello': 'Hello 👋', 'mh.merchantFallback': 'Merchant',
+    'mh.dashboardTitle': 'Zenrex Store Dashboard',
+    'mh.todaySales': "Today's total sales", 'mh.totalPrefix': 'Total',
+    'mh.attCheckedIn': '🟢 You are checked in', 'mh.attCheckIn': 'Check in',
+    'mh.attSinceMinutes': 'Since {n} min — tap to check out',
+    'mh.attTapToStart': 'Tap to start your workday',
+    'mh.attSuccessIn': '✅ Check-in recorded',
+    'mh.attSuccessOut': '✅ Check-out recorded — {n} min',
+    'mh.activeOrders': 'Active orders',
+    'mh.products': 'Products', 'mh.customers': 'Customers', 'mh.contests': 'Contests',
+    'mh.invAlertTitle': 'Inventory alert', 'mh.invOutOfStock': 'out', 'mh.invLowStock': 'low',
+    'mh.quickActions': 'Quick actions',
+    'mh.qaAddProduct': 'Add product', 'mh.qaPOS': 'POS', 'mh.qaInventory': 'Inventory',
+    'mh.qaInvoices': 'Invoices', 'mh.qaMarketing': 'Marketing', 'mh.qaNewPost': 'New post',
+    'mh.qaNewCompetition': 'New contest', 'mh.qaAddBanner': 'Add banner',
+    'mh.qaAddEmployee': 'Add employee', 'mh.qaSupportSettings': 'Support settings',
+    'mh.recentOrders': 'Recent orders',
+    'mh.ordersNeedAttention': '{n} orders need your attention',
+    'mh.viewAll': 'View all',
+    'mh.noOrders': 'No orders yet',
+    'mh.noOrdersDesc': "All new customer orders will appear here",
+    'mh.viewProducts': 'View products',
+    'mh.customerFallback': 'Customer', 'mh.itemWord': 'item',
+    // Order statuses (os.*)
+    'os.pending': 'Pending', 'os.processing': 'Processing', 'os.ready': 'Ready',
+    'os.out_for_delivery': 'Out for delivery', 'os.delivered': 'Delivered', 'os.cancelled': 'Cancelled',
   },
   ur: {
     'common.home': 'ہوم', 'common.search': 'تلاش', 'common.cart': 'کارٹ', 'common.profile': 'پروفائل',
@@ -161,12 +215,39 @@ const T: Record<Lang, Record<string, string>> = {
   fa: {
     'common.home': 'خانه', 'common.search': 'جستجو', 'common.cart': 'سبد', 'common.profile': 'پروفایل',
     'common.settings': 'تنظیمات', 'common.save': 'ذخیره', 'common.cancel': 'لغو', 'common.back': 'بازگشت',
+    'common.currency': 'ر.س',
     'auth.welcome': 'به Zenrex Store خوش آمدید', 'auth.signin': 'ورود', 'auth.signup': 'ثبت نام',
     'auth.phone': 'شماره تلفن', 'auth.password': 'رمز عبور', 'auth.logout': 'خروج',
     'tabs.home': 'خانه', 'tabs.services': 'خدمات', 'tabs.social': 'اجتماعی', 'tabs.competitions': 'مسابقات', 'tabs.settings': 'تنظیمات',
     'product.addToCart': 'افزودن به سبد', 'product.buyNow': 'خرید',
     'cart.title': 'سبد', 'cart.checkout': 'پرداخت',
-    'settings.language': 'زبان', 'support.title': 'پشتیبانی',
+    'settings.language': 'زبان', 'settings.changeLanguage': 'تغییر زبان', 'support.title': 'پشتیبانی',
+    // Merchant Home
+    'mh.hello': 'سلام 👋', 'mh.merchantFallback': 'فروشنده',
+    'mh.dashboardTitle': 'داشبورد Zenrex Store',
+    'mh.todaySales': 'کل فروش امروز', 'mh.totalPrefix': 'مجموع',
+    'mh.attCheckedIn': '🟢 حضور شما ثبت شد', 'mh.attCheckIn': 'ثبت ورود',
+    'mh.attSinceMinutes': '{n} دقیقه پیش — برای خروج بزنید',
+    'mh.attTapToStart': 'برای شروع روز کاری بزنید',
+    'mh.attSuccessIn': '✅ ورود ثبت شد',
+    'mh.attSuccessOut': '✅ خروج ثبت شد — {n} دقیقه',
+    'mh.activeOrders': 'سفارش‌های فعال',
+    'mh.products': 'محصولات', 'mh.customers': 'مشتریان', 'mh.contests': 'مسابقات',
+    'mh.invAlertTitle': 'هشدار موجودی', 'mh.invOutOfStock': 'تمام', 'mh.invLowStock': 'کم',
+    'mh.quickActions': 'اقدامات سریع',
+    'mh.qaAddProduct': 'افزودن محصول', 'mh.qaPOS': 'POS', 'mh.qaInventory': 'انبار',
+    'mh.qaInvoices': 'فاکتورها', 'mh.qaMarketing': 'بازاریابی', 'mh.qaNewPost': 'پست جدید',
+    'mh.qaNewCompetition': 'مسابقه جدید', 'mh.qaAddBanner': 'افزودن بنر',
+    'mh.qaAddEmployee': 'افزودن کارمند', 'mh.qaSupportSettings': 'تنظیمات پشتیبانی',
+    'mh.recentOrders': 'آخرین سفارش‌ها',
+    'mh.ordersNeedAttention': '{n} سفارش نیاز به توجه دارد',
+    'mh.viewAll': 'مشاهده همه',
+    'mh.noOrders': 'هنوز سفارشی نیست',
+    'mh.noOrdersDesc': 'همه سفارش‌های جدید مشتریان اینجا نمایش داده می‌شود',
+    'mh.viewProducts': 'مشاهده محصولات',
+    'mh.customerFallback': 'مشتری', 'mh.itemWord': 'مورد',
+    'os.pending': 'در انتظار', 'os.processing': 'در حال پردازش', 'os.ready': 'آماده',
+    'os.out_for_delivery': 'در راه', 'os.delivered': 'تحویل شد', 'os.cancelled': 'لغو شد',
   },
   es: {
     'common.home': 'Inicio', 'common.search': 'Buscar', 'common.cart': 'Carrito', 'common.profile': 'Perfil',
@@ -237,11 +318,38 @@ const T: Record<Lang, Record<string, string>> = {
   zh: {
     'common.home': '主页', 'common.search': '搜索', 'common.cart': '购物车', 'common.profile': '个人资料',
     'common.settings': '设置', 'common.save': '保存', 'common.cancel': '取消', 'common.back': '返回',
+    'common.currency': 'SAR',
     'auth.welcome': '欢迎来到 Zenrex Store', 'auth.signin': '登录', 'auth.signup': '注册',
     'auth.phone': '电话', 'auth.password': '密码', 'auth.logout': '退出',
     'tabs.home': '主页', 'tabs.services': '服务', 'tabs.social': '社交', 'tabs.competitions': '竞赛', 'tabs.settings': '设置',
     'product.addToCart': '加入购物车', 'product.buyNow': '立即购买',
-    'settings.language': '语言', 'support.title': '客户支持',
+    'settings.language': '语言', 'settings.changeLanguage': '更改语言', 'support.title': '客户支持',
+    // Merchant Home
+    'mh.hello': '您好 👋', 'mh.merchantFallback': '商家',
+    'mh.dashboardTitle': 'Zenrex Store 仪表板',
+    'mh.todaySales': '今日总销售额', 'mh.totalPrefix': '总计',
+    'mh.attCheckedIn': '🟢 您已签到', 'mh.attCheckIn': '签到',
+    'mh.attSinceMinutes': '{n} 分钟前 — 点击签退',
+    'mh.attTapToStart': '点击开始您的工作日',
+    'mh.attSuccessIn': '✅ 签到成功',
+    'mh.attSuccessOut': '✅ 签退成功 — {n} 分钟',
+    'mh.activeOrders': '活跃订单',
+    'mh.products': '产品', 'mh.customers': '客户', 'mh.contests': '比赛',
+    'mh.invAlertTitle': '库存警报', 'mh.invOutOfStock': '缺货', 'mh.invLowStock': '库存低',
+    'mh.quickActions': '快速操作',
+    'mh.qaAddProduct': '添加产品', 'mh.qaPOS': 'POS', 'mh.qaInventory': '库存',
+    'mh.qaInvoices': '发票', 'mh.qaMarketing': '营销', 'mh.qaNewPost': '新帖子',
+    'mh.qaNewCompetition': '新比赛', 'mh.qaAddBanner': '添加横幅',
+    'mh.qaAddEmployee': '添加员工', 'mh.qaSupportSettings': '支持设置',
+    'mh.recentOrders': '最近订单',
+    'mh.ordersNeedAttention': '{n} 个订单需要处理',
+    'mh.viewAll': '查看全部',
+    'mh.noOrders': '暂无订单',
+    'mh.noOrdersDesc': '所有新的客户订单将显示在此处',
+    'mh.viewProducts': '查看产品',
+    'mh.customerFallback': '客户', 'mh.itemWord': '件',
+    'os.pending': '待处理', 'os.processing': '处理中', 'os.ready': '就绪',
+    'os.out_for_delivery': '配送中', 'os.delivered': '已送达', 'os.cancelled': '已取消',
   },
   ja: {
     'common.home': 'ホーム', 'common.search': '検索', 'common.cart': 'カート', 'common.profile': 'プロフィール',
@@ -264,11 +372,38 @@ const T: Record<Lang, Record<string, string>> = {
   hi: {
     'common.home': 'होम', 'common.search': 'खोज', 'common.cart': 'कार्ट', 'common.profile': 'प्रोफ़ाइल',
     'common.settings': 'सेटिंग्स', 'common.save': 'सहेजें', 'common.cancel': 'रद्द', 'common.back': 'वापस',
+    'common.currency': 'SAR',
     'auth.welcome': 'Zenrex Store में आपका स्वागत है', 'auth.signin': 'साइन इन', 'auth.signup': 'साइन अप',
     'auth.phone': 'फ़ोन', 'auth.password': 'पासवर्ड', 'auth.logout': 'लॉगआउट',
     'tabs.home': 'होम', 'tabs.services': 'सेवाएं', 'tabs.social': 'सोशल', 'tabs.competitions': 'प्रतियोगिता', 'tabs.settings': 'सेटिंग्स',
     'product.addToCart': 'कार्ट में जोड़ें', 'product.buyNow': 'अभी खरीदें',
-    'settings.language': 'भाषा', 'support.title': 'ग्राहक सहायता',
+    'settings.language': 'भाषा', 'settings.changeLanguage': 'भाषा बदलें', 'support.title': 'ग्राहक सहायता',
+    // Merchant Home
+    'mh.hello': 'नमस्ते 👋', 'mh.merchantFallback': 'व्यापारी',
+    'mh.dashboardTitle': 'Zenrex Store डैशबोर्ड',
+    'mh.todaySales': 'आज की कुल बिक्री', 'mh.totalPrefix': 'कुल',
+    'mh.attCheckedIn': '🟢 आप उपस्थित हैं', 'mh.attCheckIn': 'उपस्थिति दर्ज करें',
+    'mh.attSinceMinutes': '{n} मिनट पहले — बाहर निकलने के लिए दबाएं',
+    'mh.attTapToStart': 'कार्यदिवस शुरू करने के लिए दबाएं',
+    'mh.attSuccessIn': '✅ उपस्थिति दर्ज हुई',
+    'mh.attSuccessOut': '✅ बाहर निकल गए — {n} मिनट',
+    'mh.activeOrders': 'सक्रिय ऑर्डर',
+    'mh.products': 'उत्पाद', 'mh.customers': 'ग्राहक', 'mh.contests': 'प्रतियोगिताएं',
+    'mh.invAlertTitle': 'इन्वेंटरी अलर्ट', 'mh.invOutOfStock': 'खत्म', 'mh.invLowStock': 'कम',
+    'mh.quickActions': 'त्वरित कार्रवाई',
+    'mh.qaAddProduct': 'उत्पाद जोड़ें', 'mh.qaPOS': 'POS', 'mh.qaInventory': 'इन्वेंटरी',
+    'mh.qaInvoices': 'चालान', 'mh.qaMarketing': 'मार्केटिंग', 'mh.qaNewPost': 'नई पोस्ट',
+    'mh.qaNewCompetition': 'नई प्रतियोगिता', 'mh.qaAddBanner': 'बैनर जोड़ें',
+    'mh.qaAddEmployee': 'कर्मचारी जोड़ें', 'mh.qaSupportSettings': 'सपोर्ट सेटिंग्स',
+    'mh.recentOrders': 'हाल के ऑर्डर',
+    'mh.ordersNeedAttention': '{n} ऑर्डरों पर ध्यान चाहिए',
+    'mh.viewAll': 'सब देखें',
+    'mh.noOrders': 'अभी कोई ऑर्डर नहीं',
+    'mh.noOrdersDesc': 'ग्राहकों के सभी नए ऑर्डर यहां दिखेंगे',
+    'mh.viewProducts': 'उत्पाद देखें',
+    'mh.customerFallback': 'ग्राहक', 'mh.itemWord': 'आइटम',
+    'os.pending': 'लंबित', 'os.processing': 'प्रोसेस हो रहा', 'os.ready': 'तैयार',
+    'os.out_for_delivery': 'रास्ते में', 'os.delivered': 'डिलीवर हुआ', 'os.cancelled': 'रद्द',
   },
   bn: {
     'common.home': 'হোম', 'common.search': 'অনুসন্ধান', 'common.cart': 'কার্ট', 'common.profile': 'প্রোফাইল',
@@ -310,13 +445,18 @@ const T: Record<Lang, Record<string, string>> = {
 
 type Ctx = {
   lang: Lang;
-  t: (key: string, fallback?: string) => string;
+  t: (key: string, fallbackOrVars?: string | Record<string, string | number>, vars?: Record<string, string | number>) => string;
   setLang: (l: Lang) => Promise<void>;
   isRTL: boolean;
   languages: typeof LANGUAGES;
 };
 
-const I18nContext = createContext<Ctx>({ lang: 'ar', t: (k, f) => f || k, setLang: async () => {}, isRTL: true, languages: LANGUAGES });
+const I18nContext = createContext<Ctx>({ lang: 'ar', t: (k, f) => (typeof f === 'string' ? f : k), setLang: async () => {}, isRTL: true, languages: LANGUAGES });
+
+function interpolate(template: string, vars?: Record<string, string | number>): string {
+  if (!vars) return template;
+  return template.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? String(vars[k]) : `{${k}}`));
+}
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>('ar');
@@ -334,8 +474,17 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const t = useCallback((key: string, fallback?: string) => {
-    return T[lang]?.[key] || T['en']?.[key] || T['ar']?.[key] || fallback || key;
+  const t = useCallback((key: string, fallbackOrVars?: string | Record<string, string | number>, vars?: Record<string, string | number>) => {
+    let fallback: string | undefined;
+    let interp: Record<string, string | number> | undefined;
+    if (typeof fallbackOrVars === 'string') {
+      fallback = fallbackOrVars;
+      interp = vars;
+    } else if (fallbackOrVars && typeof fallbackOrVars === 'object') {
+      interp = fallbackOrVars;
+    }
+    const raw = T[lang]?.[key] || T['en']?.[key] || T['ar']?.[key] || fallback || key;
+    return interpolate(raw, interp);
   }, [lang]);
 
   const setLang = useCallback(async (l: Lang) => {
