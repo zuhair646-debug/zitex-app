@@ -2,7 +2,7 @@
   "expo": {
     "name": "Zenrex Store",
     "slug": "zitex",
-    "version": "1.16.6",
+    "version": "1.16.7",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "zenrex",
@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.smartangle.zitex",
-      "buildNumber": "61",
+      "buildNumber": "62",
       "infoPlist": {
         "NSCameraUsageDescription": "Take photos of products and receipts",
         "NSPhotoLibraryUsageDescription": "Upload photos from your gallery",
@@ -31,7 +31,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.smartangle.zitex",
-      "versionCode": 67,
+      "versionCode": 68,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
