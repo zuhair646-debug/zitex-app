@@ -409,3 +409,61 @@ Runtime LLM auto-translation (`useAutoT` / `<TX>`) is being **retired screen by 
 
 ### Not yet migrated to static i18n
 Login screen, Products, Orders, Social feed, Settings/appearance, Chamber/Driver portals. Will be done screen by screen.
+
+---
+
+## v1.16.2 — Screens 3-5/N: Login + Merchant Orders + Merchant Products (June 2026)
+
+### Critical bug caught & fixed
+`/app/frontend/app/merchant/products.tsx` had 5 lines from the old auto-wrap script that read:
+```
+const tSearchProduct = tSearchProduct;
+const tAvailable = tAvailable;
+…
+```
+These are `let/const` self-references — they hit the JavaScript Temporal Dead Zone and would throw `ReferenceError: Cannot access 'X' before initialization` on render. The screen was silently broken in some render paths. Now fully removed.
+
+### Delivered in this iteration
+- **~50 new keys** added to `/app/frontend/src/i18n.tsx` for AR / EN / FA / HI / ZH:
+  - Complete `auth.*` set (welcome, subtitle, phone, password, forgot, noAccount, signin, signup, invalidCredentials, networkError, fillAllFields)
+  - `mo.orders.*` (title, filters, empty state, actions, cancel dialog, status labels)
+  - `mo.prod.*` (title, filters, badges, empty states, delete dialog, stock error)
+  - `mo.common.error`
+  - `os.in_transit` (previously fell back to raw key)
+- **Rewrote `/app/frontend/app/login.tsx`** — removed `<TX>` and `tSync`, uses `useT().t()` exclusively
+- **Rewrote `/app/frontend/app/merchant/orders.tsx`** — removed `<TX>` / `tSync`, uses `t()`, localized dates via `Intl.DateTimeFormat`, action buttons and cancel dialog now translate
+- **Rewrote `/app/frontend/app/merchant/products.tsx`** — TDZ bug fixed, removed `<TX>` / `tSync`, uses `t()`, delete dialog and stock badges now translate
+
+### Visual verification
+- ✅ **AR Login**: أهلاً بك في Zenrex Store / سجّل دخولك للمتابعة / نسيت كلمة المرور / تسجيل الدخول / ليس لديك حساب؟ / إنشاء حساب
+- ✅ **AR Orders**: الطلبات / 321 طلب • 43 جديد / segmented filters with counts / status badges / accept/cancel buttons / localized dates
+- ✅ **AR Products**: المنتجات + stock stats + filters + featured/available badges
+- ✅ **ZH Login**: 欢迎来到 / 登录以继续 / 电话 / 密码 / 忘记密码? / 登录 / 还没有账户?
+- ✅ **ZH Orders**: 订单 / 321 订单 • 43 新 / 新(43) / 处理中(6) / 已完成(213) / 已送达 / 待处理 / 已取消 / 接受并准备 / 取消 / 门店自提 / 配送
+- ✅ **FA Products**: محصولات / 40 محصول / همه(40) / موجود / کم(0) / تمام(0) / ویژه
+- ✅ **HI Products**: उत्पाद / फ़िल्टर / फीचर्ड
+
+### Files touched
+- `/app/frontend/src/i18n.tsx` — dictionary additions
+- `/app/frontend/app/login.tsx` — full rewrite (no LLM auto-translate)
+- `/app/frontend/app/merchant/orders.tsx` — full rewrite
+- `/app/frontend/app/merchant/products.tsx` — full rewrite + TDZ bug fix
+
+### Cumulative status
+5 screens fully migrated to static i18n so far:
+1. ✅ `merchant/index.tsx` (Home / Dashboard)
+2. ✅ `merchant/more.tsx` (Settings / Language / Theme)
+3. ✅ `merchant/_layout.tsx` (Bottom tabs)
+4. ✅ `login.tsx`
+5. ✅ `merchant/orders.tsx`
+6. ✅ `merchant/products.tsx`
+Plus `i18n.tsx` Restart Required alert.
+
+### Remaining screens (next iterations)
+- Register screen
+- Merchant Social (`merchant/social.tsx`)
+- Merchant Live Preview (`merchant/live-preview.tsx`)
+- Customer tabs (`(tabs)/index.tsx`, `services.tsx`, `competitions.tsx`, `social.tsx`, `settings.tsx`)
+- Customer sub-screens (cart, checkout, orders, favorites, addresses, etc.)
+- Chamber & Driver portals
+- Appearance screen

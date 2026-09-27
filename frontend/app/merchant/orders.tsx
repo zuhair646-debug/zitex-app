@@ -1,27 +1,22 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, ScrollView, TouchableOpacity, StyleSheet, Alert, RefreshControl, StatusBar } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, RefreshControl, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { SegmentedControl, EmptyState, SkeletonBox, Badge, PrimaryButton, SecondaryButton } from '../../src/components/ui';
-import { TX, tSync } from '../../src/useAutoT';
 import { useT } from '../../src/i18n';
 
 type OrderFilter = 'new' | 'processing' | 'ready' | 'delivering' | 'done' | 'all';
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'جديد', processing: 'قيد التنفيذ', ready: 'جاهز',
-  out_for_delivery: 'في الطريق', delivered: 'تم التسليم', cancelled: 'ملغى',
-};
 const STATUS_TONE: Record<string, any> = {
   pending: 'warning', processing: 'info', ready: 'gold',
   out_for_delivery: 'info', delivered: 'success', cancelled: 'error',
 };
 
 export default function MerchantOrders() {
-  const { lang } = useT();
+  const { t, lang } = useT();
   const s = useSStyles();
   const { apiCall } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
@@ -31,16 +26,16 @@ export default function MerchantOrders() {
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/merchant/orders'); setOrders(Array.isArray(d) ? d : []); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(t('mo.common.error'), e.message); }
     finally { setLoading(false); setRefreshing(false); }
-  }, []);
+  }, [t]);
   useEffect(() => { load(); }, [load]);
 
   const changeStatus = async (id: string, next: string) => {
     try {
       await apiCall(`/api/merchant/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: next }) });
       load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(t('mo.common.error'), e.message); }
   };
 
   const filtered = useMemo(() => {
@@ -61,7 +56,15 @@ export default function MerchantOrders() {
   }), [orders]);
 
   const money = (n: number) => new Intl.NumberFormat('en').format(n || 0);
-  const dateFmt = (d: any) => { try { return new Date(d).toLocaleString('ar', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } };
+  const dateFmt = (d: any) => {
+    try {
+      const localeMap: any = { ar: 'ar', en: 'en', fa: 'fa-IR', hi: 'hi-IN', zh: 'zh-CN' };
+      const l = localeMap[lang] || 'en';
+      return new Date(d).toLocaleString(l, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    } catch { return ''; }
+  };
+  const statusLabel = (st: string) => t(`os.${st}`, st === 'pending' ? t('mo.orders.status.new') : st);
+  const currency = t('common.currency');
 
   return (
     <View style={s.root}>
@@ -69,8 +72,8 @@ export default function MerchantOrders() {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={s.header}>
           <View style={{ flex: 1 }}>
-            <TX style={s.title}>الطلبات</TX>
-            <Text style={s.subtitle}>{orders.length} طلب • {counts.new} جديد</Text>
+            <Text style={s.title}>{t('mo.orders.title')}</Text>
+            <Text style={s.subtitle}>{t('mo.orders.stat', { n: orders.length, newCount: counts.new })}</Text>
           </View>
           <TouchableOpacity style={s.iconBtn} onPress={load} activeOpacity={0.7}>
             <Ionicons name="refresh" size={20} color={colors.onSurface} />
@@ -82,11 +85,11 @@ export default function MerchantOrders() {
           value={filter}
           onChange={setFilter}
           labels={{
-            new: `جديد (${counts.new})`,
-            processing: `قيد التنفيذ (${counts.processing})`,
-            ready: `جاهز (${counts.ready})`,
-            done: `مكتمل (${counts.done})`,
-            all: `الكل (${counts.all})`,
+            new: t('mo.orders.f.new', { n: counts.new }),
+            processing: t('mo.orders.f.processing', { n: counts.processing }),
+            ready: t('mo.orders.f.ready', { n: counts.ready }),
+            done: t('mo.orders.f.done', { n: counts.done }),
+            all: t('mo.orders.f.all', { n: counts.all }),
           }}
         />
 
@@ -97,8 +100,8 @@ export default function MerchantOrders() {
         ) : filtered.length === 0 ? (
           <EmptyState
             icon="receipt-outline"
-            title={tSync("لا توجد طلبات", lang)}
-            description="حين يبدأ العملاء بالطلب، ستظهر هنا للمتابعة"
+            title={t('mo.orders.emptyTitle')}
+            description={t('mo.orders.emptyDesc')}
           />
         ) : (
           <FlatList
@@ -119,19 +122,19 @@ export default function MerchantOrders() {
                     <Ionicons name="receipt" size={14} color={colors.brand} />
                     <Text style={s.orderId}>#{String(o.id).slice(-6).toUpperCase()}</Text>
                   </View>
-                  <Badge label={STATUS_LABEL[o.status] || o.status} tone={STATUS_TONE[o.status] || 'default'} />
+                  <Badge label={statusLabel(o.status)} tone={STATUS_TONE[o.status] || 'default'} />
                   <View style={{ flex: 1 }} />
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={s.amount}>{money(o.total)} <TX style={s.currency}>ر.س</TX></Text>
+                    <Text style={s.amount}>{money(o.total)} <Text style={s.currency}>{currency}</Text></Text>
                   </View>
                 </View>
 
                 {/* Customer */}
                 <View style={s.custRow}>
                   <Ionicons name="person" size={14} color={colors.onSurfaceSecondary} />
-                  <Text style={s.custName}>{o.customer_name || 'عميل'}</Text>
+                  <Text style={s.custName}>{o.customer_name || t('mo.orders.customer')}</Text>
                   <Text style={s.dotSep}>•</Text>
-                  <Text style={s.custMeta}>{o.items?.length || 0} منتج</Text>
+                  <Text style={s.custMeta}>{t('mo.orders.itemsCount', { n: o.items?.length || 0 })}</Text>
                   <Text style={s.dotSep}>•</Text>
                   <Text style={s.custMeta}>{dateFmt(o.created_at)}</Text>
                 </View>
@@ -144,8 +147,8 @@ export default function MerchantOrders() {
                       size={14} color={colors.onSurfaceSecondary}
                     />
                     <Text style={s.deliveryText}>
-                      {o.delivery_type === 'pickup' ? 'استلام من الفرع' : 'توصيل'}
-                      {o.driver_name ? ` • السائق: ${o.driver_name}` : ''}
+                      {o.delivery_type === 'pickup' ? t('mo.orders.pickup') : t('mo.orders.delivery')}
+                      {o.driver_name ? ` • ${t('mo.orders.driverPrefix')}: ${o.driver_name}` : ''}
                     </Text>
                   </View>
                 )}
@@ -154,34 +157,34 @@ export default function MerchantOrders() {
                 <View style={s.actions}>
                   {o.status === 'pending' && (
                     <View style={{ flex: 1 }}>
-                      <PrimaryButton size="sm" label={tSync("قبول وتجهيز", lang)} icon="checkmark-circle"
+                      <PrimaryButton size="sm" label={t('mo.orders.a.acceptPrepare')} icon="checkmark-circle"
                         onPress={() => changeStatus(o.id, 'processing')} />
                     </View>
                   )}
                   {o.status === 'processing' && (
                     <View style={{ flex: 1 }}>
-                      <PrimaryButton size="sm" label={tSync("وضع جاهز", lang)} icon="cube"
+                      <PrimaryButton size="sm" label={t('mo.orders.a.setReady')} icon="cube"
                         onPress={() => changeStatus(o.id, 'ready')} />
                     </View>
                   )}
                   {o.status === 'ready' && (
                     <View style={{ flex: 1 }}>
-                      <PrimaryButton size="sm" label={tSync("خرج للتوصيل", lang)} icon="bicycle"
+                      <PrimaryButton size="sm" label={t('mo.orders.a.outForDelivery')} icon="bicycle"
                         onPress={() => changeStatus(o.id, 'out_for_delivery')} />
                     </View>
                   )}
                   {o.status === 'out_for_delivery' && (
                     <View style={{ flex: 1 }}>
-                      <PrimaryButton size="sm" label={tSync("تم التسليم", lang)} icon="checkmark-done"
+                      <PrimaryButton size="sm" label={t('mo.orders.a.markDelivered')} icon="checkmark-done"
                         onPress={() => changeStatus(o.id, 'delivered')} />
                     </View>
                   )}
                   {o.status !== 'cancelled' && o.status !== 'delivered' && (
                     <View style={{ flex: 1 }}>
-                      <SecondaryButton size="sm" fullWidth label={tSync("إلغاء", lang)} icon="close"
-                        onPress={() => Alert.alert('إلغاء الطلب', 'هل أنت متأكد؟', [
-                          { text: 'لا', style: 'cancel' },
-                          { text: 'نعم', style: 'destructive', onPress: () => changeStatus(o.id, 'cancelled') },
+                      <SecondaryButton size="sm" fullWidth label={t('mo.orders.a.cancel')} icon="close"
+                        onPress={() => Alert.alert(t('mo.orders.cancel.title'), t('mo.orders.cancel.body'), [
+                          { text: t('mo.orders.cancel.no'), style: 'cancel' },
+                          { text: t('mo.orders.cancel.yes'), style: 'destructive', onPress: () => changeStatus(o.id, 'cancelled') },
                         ])} />
                     </View>
                   )}
@@ -213,7 +216,7 @@ function useSStyles() {
     backgroundColor: colors.surfaceSecondary, borderRadius: radius.lg,
     padding: spacing.md, borderWidth: 1, borderColor: colors.border, gap: spacing.sm,
   },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
   idPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: colors.brandTertiary, paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radius.sm,
@@ -239,4 +242,3 @@ function useSStyles() {
   },
 }), [themeKey]);
 }
-

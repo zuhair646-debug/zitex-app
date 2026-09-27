@@ -6,12 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { Chip, EmptyState, SkeletonBox, Badge, PrimaryButton } from '../../src/components/ui';
-import { TX, tSync } from '../../src/useAutoT';
+import { Chip, EmptyState, SkeletonBox, Badge } from '../../src/components/ui';
 import { useT } from '../../src/i18n';
 
 export default function MerchantProducts() {
-  const { lang } = useT();
+  const { t } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -20,25 +19,17 @@ export default function MerchantProducts() {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'in_stock' | 'out' | 'featured' | 'low'>('all');
-  // Pre-compute translations (avoid hook-in-callback violation)
-  const tSearchProduct = tSearchProduct;
-  const tAvailable = tAvailable;
-  const tUnavailable = tUnavailable;
-  const tFeatured = tFeatured;
-  const tFeaturedBadge = tFeaturedBadge;
-  const tRemainingPrefix = tSync("متبقي", lang);
-  const tSAR = tSync("ر.س", lang);
+  const currency = t('common.currency');
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/merchant/products'); setProducts(Array.isArray(d) ? d : []); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(t('mo.common.error'), e.message); }
     finally { setLoading(false); setRefreshing(false); }
-  }, []);
+  }, [t]);
 
   useEffect(() => { load(); }, [load]);
 
   const toggleStock = async (p: any) => {
-    // Optimistic
     setProducts(prev => prev.map(x => x.id === p.id ? { ...x, in_stock: !x.in_stock } : x));
     try {
       await apiCall(`/api/merchant/products/${p.id}`, {
@@ -47,16 +38,16 @@ export default function MerchantProducts() {
       });
     } catch (e: any) {
       setProducts(prev => prev.map(x => x.id === p.id ? { ...x, in_stock: p.in_stock } : x));
-      Alert.alert('خطأ', 'تعذّر تحديث حالة المخزون');
+      Alert.alert(t('mo.common.error'), t('mo.prod.stockError'));
     }
   };
 
   const handleDelete = (id: string, name: string) => {
-    Alert.alert('حذف منتج', `هل أنت متأكد من حذف "${name}"؟`, [
-      { text: 'إلغاء', style: 'cancel' },
-      { text: 'حذف', style: 'destructive', onPress: async () => {
+    Alert.alert(t('mo.prod.del.title'), t('mo.prod.del.body', { name }), [
+      { text: t('mo.prod.del.no'), style: 'cancel' },
+      { text: t('mo.prod.del.yes'), style: 'destructive', onPress: async () => {
         try { await apiCall(`/api/merchant/products/${id}`, { method: 'DELETE' }); load(); }
-        catch (e: any) { Alert.alert('خطأ', e.message); }
+        catch (e: any) { Alert.alert(t('mo.common.error'), e.message); }
       }}
     ]);
   };
@@ -83,8 +74,8 @@ export default function MerchantProducts() {
         {/* Header */}
         <View style={s.header}>
           <View style={{ flex: 1 }}>
-            <TX style={s.title}>المنتجات</TX>
-            <Text style={s.subtitle}>{total} منتج • {outCount} نفدت • {lowCount} منخفض</Text>
+            <Text style={s.title}>{t('mo.prod.title')}</Text>
+            <Text style={s.subtitle}>{t('mo.prod.stat', { total, out: outCount, low: lowCount })}</Text>
           </View>
           <TouchableOpacity onPress={() => router.push('/merchant/product-form')} style={s.addBtn} activeOpacity={0.85}>
             <Ionicons name="add" size={24} color={colors.onBrandPrimary} />
@@ -95,7 +86,7 @@ export default function MerchantProducts() {
         <View style={s.searchWrap}>
           <Ionicons name="search" size={18} color={colors.onSurfaceTertiary} />
           <TextInput
-            value={query} onChangeText={setQuery} placeholder={tSearchProduct}
+            value={query} onChangeText={setQuery} placeholder={t('mo.prod.searchPh')}
             placeholderTextColor={colors.onSurfaceTertiary} style={s.searchInput}
           />
           {query.length > 0 && (
@@ -107,11 +98,11 @@ export default function MerchantProducts() {
 
         {/* Filters */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} style={{ flexGrow: 0, maxHeight: 44 }}>
-          <Chip label={`الكل (${total})`} active={filter === 'all'} onPress={() => setFilter('all')} />
-          <Chip label={tAvailable} icon="checkmark-circle" active={filter === 'in_stock'} onPress={() => setFilter('in_stock')} />
-          <Chip label={`منخفض (${lowCount})`} icon="warning" active={filter === 'low'} onPress={() => setFilter('low')} />
-          <Chip label={`نفد (${outCount})`} icon="close-circle" active={filter === 'out'} onPress={() => setFilter('out')} />
-          <Chip label={tFeatured} icon="star" active={filter === 'featured'} onPress={() => setFilter('featured')} />
+          <Chip label={t('mo.prod.f.all', { n: total })} active={filter === 'all'} onPress={() => setFilter('all')} />
+          <Chip label={t('mo.prod.f.available')} icon="checkmark-circle" active={filter === 'in_stock'} onPress={() => setFilter('in_stock')} />
+          <Chip label={t('mo.prod.f.low', { n: lowCount })} icon="warning" active={filter === 'low'} onPress={() => setFilter('low')} />
+          <Chip label={t('mo.prod.f.out', { n: outCount })} icon="close-circle" active={filter === 'out'} onPress={() => setFilter('out')} />
+          <Chip label={t('mo.prod.f.featured')} icon="star" active={filter === 'featured'} onPress={() => setFilter('featured')} />
         </ScrollView>
 
         {/* List */}
@@ -122,9 +113,9 @@ export default function MerchantProducts() {
         ) : filtered.length === 0 ? (
           <EmptyState
             icon="cube-outline"
-            title={products.length === 0 ? 'لا توجد منتجات بعد' : 'لا نتائج مطابقة'}
-            description={products.length === 0 ? 'ابدأ ببناء متجرك بإضافة أول منتج' : 'جرّب فلتراً مختلفاً أو مسح البحث'}
-            actionLabel={products.length === 0 ? 'إضافة منتج' : undefined}
+            title={products.length === 0 ? t('mo.prod.empty.emptyTitle') : t('mo.prod.empty.filteredTitle')}
+            description={products.length === 0 ? t('mo.prod.empty.emptyDesc') : t('mo.prod.empty.filteredDesc')}
+            actionLabel={products.length === 0 ? t('mo.prod.empty.emptyAction') : undefined}
             onAction={products.length === 0 ? () => router.push('/merchant/product-form') : undefined}
           />
         ) : (
@@ -147,20 +138,25 @@ export default function MerchantProducts() {
                   />
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={s.pname} numberOfLines={2}>{p.name_ar || p.name_en}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, flexWrap: 'wrap' }}>
                       {p.discount_price ? (
                         <>
                           <Text style={s.pprice}>{p.discount_price}</Text>
                           <Text style={s.pOldPrice}>{p.price}</Text>
-                          <TX style={s.pCurrency}>ر.س</TX>
+                          <Text style={s.pCurrency}>{currency}</Text>
                         </>
                       ) : (
-                        <><Text style={s.pprice}>{p.price}</Text><TX style={s.pCurrency}>ر.س</TX></>
+                        <>
+                          <Text style={s.pprice}>{p.price}</Text>
+                          <Text style={s.pCurrency}>{currency}</Text>
+                        </>
                       )}
                     </View>
                     <View style={{ flexDirection: 'row', gap: spacing.xs, marginTop: 4, flexWrap: 'wrap' }}>
-                      {p.featured && <Badge label={tFeaturedBadge} tone="gold" />}
-                      {(p.stock_quantity ?? 999) < 5 && p.in_stock && <Badge label={`متبقي ${p.stock_quantity}`} tone="warning" />}
+                      {p.featured && <Badge label={t('mo.prod.featuredBadge')} tone="gold" />}
+                      {(p.stock_quantity ?? 999) < 5 && p.in_stock && (
+                        <Badge label={t('mo.prod.remain', { n: p.stock_quantity })} tone="warning" />
+                      )}
                       {!!p.category && <Badge label={p.category} tone="info" />}
                     </View>
                   </View>
@@ -173,7 +169,7 @@ export default function MerchantProducts() {
                       color={p.in_stock ? colors.success : colors.error}
                     />
                     <Text style={[s.stockLabel, { color: p.in_stock ? colors.success : colors.error }]} numberOfLines={1}>
-                      {p.in_stock ? 'متوفر' : 'غير متوفر'}
+                      {p.in_stock ? t('mo.prod.available') : t('mo.prod.unavailable')}
                     </Text>
                     <Switch
                       value={p.in_stock}
@@ -251,4 +247,3 @@ function useSStyles() {
   delBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.errorSoft, alignItems: 'center', justifyContent: 'center' },
 }), [themeKey]);
 }
-
