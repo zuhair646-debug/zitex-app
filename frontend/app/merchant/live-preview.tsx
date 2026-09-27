@@ -129,6 +129,7 @@ export default function LivePreview() {
 
 /* ─── Products grid with live viewers & comparison ─────────────────────── */
 function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSelectedIds, setCompareMode, openCompare }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
@@ -171,12 +172,12 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
       <View style={s.toolbar}>
         <View style={s.liveBadge}>
           <View style={s.livePulse} />
-          <Text style={s.liveText}>{totalLive} زائر مباشر الآن</Text>
+          <Text style={s.liveText}>{totalLive} {tSync('زائر مباشر الآن', lang)}</Text>
         </View>
         <TouchableOpacity onPress={() => { setCompareMode(!compareMode); setSelectedIds([]); }}
           style={[s.cmpBtn, compareMode && { backgroundColor: GOLD }]}>
           <Ionicons name="git-compare" size={14} color={compareMode ? BG : GOLD} />
-          <Text style={[s.cmpText, compareMode && { color: BG }]}>{compareMode ? `مقارنة (${selectedIds.length})` : 'مقارنة'}</Text>
+          <Text style={[s.cmpText, compareMode && { color: BG }]}>{compareMode ? `${tSync('مقارنة', lang)} (${selectedIds.length})` : tSync('مقارنة', lang)}</Text>
         </TouchableOpacity>
       </View>
 
@@ -185,18 +186,18 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
         <View style={s.ovRow}>
           <View style={s.ovCard}>
             <TX style={s.ovLbl}>مبيعات اليوم</TX>
-            <Text style={s.ovVal}>{Math.round((overview.today?.pos_sales || 0) + (overview.today?.app_sales || 0)).toLocaleString()} ر.س</Text>
-            <Text style={s.ovSub}>{overview.today?.count || 0} عملية</Text>
+            <Text style={s.ovVal}>{Math.round((overview.today?.pos_sales || 0) + (overview.today?.app_sales || 0)).toLocaleString()} {tSync(" ر.س", lang)}</Text>
+            <Text style={s.ovSub}>{overview.today?.count || 0} {tSync('عملية', lang)}</Text>
           </View>
           <View style={s.ovCard}>
             <TX style={s.ovLbl}>هذا الأسبوع</TX>
-            <Text style={s.ovVal}>{Math.round((overview.week?.pos_sales || 0) + (overview.week?.app_sales || 0)).toLocaleString()} ر.س</Text>
-            <Text style={s.ovSub}>{overview.week?.count || 0} عملية</Text>
+            <Text style={s.ovVal}>{Math.round((overview.week?.pos_sales || 0) + (overview.week?.app_sales || 0)).toLocaleString()} {tSync(" ر.س", lang)}</Text>
+            <Text style={s.ovSub}>{overview.week?.count || 0} {tSync('عملية', lang)}</Text>
           </View>
           <View style={s.ovCard}>
             <TX style={s.ovLbl}>هذا الشهر</TX>
-            <Text style={s.ovVal}>{Math.round((overview.month?.pos_sales || 0) + (overview.month?.app_sales || 0)).toLocaleString()} ر.س</Text>
-            <Text style={s.ovSub}>{overview.month?.count || 0} عملية</Text>
+            <Text style={s.ovVal}>{Math.round((overview.month?.pos_sales || 0) + (overview.month?.app_sales || 0)).toLocaleString()} {tSync(" ر.س", lang)}</Text>
+            <Text style={s.ovSub}>{overview.month?.count || 0} {tSync('عملية', lang)}</Text>
           </View>
         </View>
       )}
@@ -211,7 +212,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                 <View style={s.topRank}><Text style={s.topRankText}>{idx + 1}</Text></View>
                 {!!t.image && <Image source={{ uri: mediaUrlSync(t.image) }} style={s.topImg} contentFit="cover" />}
                 <Text style={s.topName} numberOfLines={1}>{t.name}</Text>
-                <Text style={s.topRev}>{Math.round(t.revenue).toLocaleString()} ر.س</Text>
+                <Text style={s.topRev}>{Math.round(t.revenue).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                 <View style={s.topSplit}>
                   <Text style={s.topSplitPos}>POS {t.pos_orders}</Text>
                   <Text style={s.topSplitApp}>App {t.app_orders}</Text>
@@ -251,7 +252,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                       {!!f.images?.[0] && <Image source={{ uri: mediaUrlSync(f.images[0]) }} style={{ width: 130, height: 100 }} contentFit="cover" />}
                       <View style={{ padding: 6 }}>
                         <Text numberOfLines={1} style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800', textAlign: 'right' }}>{f.name_ar}</Text>
-                        <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900', marginTop: 2 }}>{f.price} ر.س</Text>
+                        <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900', marginTop: 2 }}>{f.price} {tSync(" ر.س", lang)}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -298,7 +299,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
               <View style={{ padding: 10 }}>
                 <Text style={s.pName} numberOfLines={2}>{item.name_ar || item.name}</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                  <Text style={s.pPrice}>{item.price} ر.س</Text>
+                  <Text style={s.pPrice}>{item.price} {tSync(" ر.س", lang)}</Text>
                   {(item.rating || 0) > 0 && (
                     <View style={{ flexDirection: 'row', gap: 2 }}>
                       <Ionicons name="star" size={10} color={GOLD} />
@@ -320,7 +321,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
       {compareMode && selectedIds.length >= 2 && (
         <TouchableOpacity style={s.compareFab} onPress={openCompare}>
           <Ionicons name="stats-chart" size={20} color={BG} />
-          <Text style={s.compareFabText}>عرض المقارنة ({selectedIds.length})</Text>
+          <Text style={s.compareFabText}>{tSync('عرض المقارنة', lang)} ({selectedIds.length})</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -328,6 +329,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
 }
 
 function ServicesSection({ apiCall, onAnalytics }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
@@ -406,7 +408,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                 <Text style={s.svcDesc2} numberOfLines={2}>{item.description || item.desc}</Text>
               )}
               <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
-                <Text style={s.svcPrice2}>{item.base_price || item.price || 0} ر.س</Text>
+                <Text style={s.svcPrice2}>{item.base_price || item.price || 0} {tSync(" ر.س", lang)}</Text>
                 {!!item.home_pickup && (
                   <View style={s.svcMetaChip}>
                     <Ionicons name="car" size={11} color={GOLD} />
@@ -434,7 +436,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                   {item.reviews.slice(0, 3).map((r: any) => (
                     <View key={r.id} style={s.svcReview}>
                       <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                        <Text style={s.svcReviewName}>{r.user_name || 'زائر'}</Text>
+                        <Text style={s.svcReviewName}>{r.user_name || tSync('زائر', lang)}</Text>
                         <View style={{ flexDirection: 'row' }}>
                           {[1,2,3,4,5].map(n => (
                             <Ionicons key={n} name="star" size={9} color={n <= (r.stars||0) ? GOLD : BORDER} />
@@ -497,6 +499,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
 }
 
 function CompetitionsSection({ apiCall, onAnalytics }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -634,6 +637,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
 }
 
 function SocialSection({ apiCall, onOpenPost }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const [posts, setPosts] = useState<any[]>([]); const [loading, setLoading] = useState(true);
   const [replying, setReplying] = useState<{ postId: string; commentId: string; commentText: string } | null>(null);
@@ -805,6 +809,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
 
 /* ─── Wave chart (SVG) for monthly sales ────────────────────────────── */
 function WaveChart({ series, width = SCREEN - 60, height = 160 }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   if (!series || series.length === 0) {
     return <View style={{ padding: 20, alignItems: 'center' }}><TX style={{ color: MUTED }}>لا بيانات</TX></View>;
@@ -851,6 +856,7 @@ function WaveChart({ series, width = SCREEN - 60, height = 160 }: any) {
 }
 
 function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const [data, setData] = useState<any>(null);
   useEffect(() => {
@@ -946,7 +952,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                       <Text style={s.visitorName}>{b.user_name}</Text>
                       <Text style={s.visitorMeta}>{b.channel} · {b.quantity} قطعة · {(b.created_at || '').slice(0, 10)}{b.branch ? ` · ${b.branch}` : ''}</Text>
                     </View>
-                    <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(b.total).toLocaleString()} ر.س</Text>
+                    <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(b.total).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                   </View>
                 ))}
               </>
@@ -965,7 +971,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                       <Text style={s.visitorName}>{tb.name}</Text>
                       <Text style={s.visitorMeta}>{tb.city} · {tb.units} قطعة · {tb.orders} فاتورة</Text>
                     </View>
-                    <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(tb.revenue).toLocaleString()} ر.س</Text>
+                    <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(tb.revenue).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                   </View>
                 ))}
               </>
@@ -1003,6 +1009,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
 }
 
 function CompareSheet({ items, onClose }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
@@ -1011,7 +1018,7 @@ function CompareSheet({ items, onClose }: any) {
           <View style={s.sheetHandle} />
           <View style={s.sheetHead}>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={GOLD} /></TouchableOpacity>
-            <Text style={s.sheetTitle}>⚖️ المقارنة بين {items.length} منتجات</Text>
+            <Text style={s.sheetTitle}>⚖️ {tSync('المقارنة بين', lang)} {items.length} {tSync('منتجات', lang)}</Text>
             <View style={{ width: 24 }} />
           </View>
           <ScrollView horizontal contentContainerStyle={{ padding: 12 }}>
@@ -1019,7 +1026,7 @@ function CompareSheet({ items, onClose }: any) {
               <View key={it.id} style={s.cmpCard}>
                 {!!it.image && <Image source={{ uri: mediaUrlSync(it.image) }} style={s.cmpImg} contentFit="cover" />}
                 <Text style={s.cmpName} numberOfLines={2}>{it.name_ar}</Text>
-                <Text style={s.cmpPrice}>{it.price} ر.س</Text>
+                <Text style={s.cmpPrice}>{it.price} {tSync(" ر.س", lang)}</Text>
                 <View style={s.cmpRow}><TX style={s.cmpLbl}>مشاهدات</TX><Text style={s.cmpVal}>{it.views_count}</Text></View>
                 <View style={s.cmpRow}><TX style={s.cmpLbl}>أضيف للسلة</TX><Text style={s.cmpVal}>{it.cart_count}</Text></View>
                 <View style={s.cmpRow}><TX style={s.cmpLbl}>طلبات</TX><Text style={s.cmpVal}>{it.orders_count}</Text></View>
@@ -1043,6 +1050,7 @@ function CompareSheet({ items, onClose }: any) {
 }
 
 function Kpi({ icon, label, value, highlight, danger }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const c = highlight ? BG : danger ? '#EF4444' : GOLD;
   return (
@@ -1056,6 +1064,7 @@ function Kpi({ icon, label, value, highlight, danger }: any) {
 
 /* ─── Service Analytics Sheet ───────────────────────────────────── */
 function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -1113,7 +1122,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
                           {t.avg_rating > 0 && <Text style={{ color: GOLD, fontSize: 10 }}>⭐ {t.avg_rating}</Text>}
                         </View>
                       </View>
-                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900' }}>{Number(t.revenue).toLocaleString()} ر.س</Text>
+                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900' }}>{Number(t.revenue).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                     </View>
                   ))}
                 </View>
@@ -1167,6 +1176,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
 
 /* ─── Competition Analytics Sheet ───────────────────────────────── */
 function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -1283,6 +1293,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
 
 /* ─── Post Detail Sheet — viewers/likers/comments/poll ──────────── */
 function PostDetailSheet({ post, onClose, apiCall }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -1430,6 +1441,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
 
 /* ─── Sharers view — WHO shared and WHERE ────────────────────────── */
 function SharersView({ postId, apiCall }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -1492,6 +1504,7 @@ const MEDAL_COLORS: Record<number, { bg: string; border: string; label: string }
 };
 
 function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondaryValue, progressPct, isOnline, avatar, onPress }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const medal = MEDAL_COLORS[rank];
   return (
@@ -1536,6 +1549,7 @@ function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondary
 
 /* ─── Entity Detail Sheet — driver / branch / marketer / employee ─────── */
 function EntityDetailSheet({ entity, kind, onClose }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   if (!entity) return null;
   const rows: { icon: string; label: string; value: string; color?: string }[] = [];
@@ -1545,12 +1559,12 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
     rows.push({ icon: 'car', label: 'المركبة', value: entity.vehicle || '—' });
     rows.push({ icon: 'radio-button-on', label: 'الحالة', value: entity.online ? '🟢 متصل الآن' : '⚪ غير متصل', color: entity.online ? '#34D399' : MUTED });
     rows.push({ icon: 'star', label: 'التقييم', value: `⭐ ${(entity.rating || 0).toFixed(1)}` });
-    rows.push({ icon: 'briefcase', label: 'نظام الدفع', value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ر.س` : entity.salary_type === 'hourly' ? `أجر بالساعة: ${K(entity.hourly_rate)} ر.س` : 'عمولة على التوصيلات' });
+    rows.push({ icon: 'briefcase', label: 'نظام الدفع', value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ${tSync(" ر.س", lang)}` : entity.salary_type === 'hourly' ? `أجر بالساعة: ${K(entity.hourly_rate)} ${tSync(" ر.س", lang)}` : 'عمولة على التوصيلات' });
     rows.push({ icon: 'today', label: 'اليوم', value: `${K(entity.today_deliveries)} توصيلة`, color: GOLD });
-    rows.push({ icon: 'calendar', label: 'هذا الأسبوع', value: `${K(entity.week_deliveries)} توصيلة · ${K(entity.week_earnings)} ر.س` });
-    rows.push({ icon: 'calendar-outline', label: 'هذا الشهر', value: `${K(entity.month_deliveries)} توصيلة · ${K(entity.month_earnings)} ر.س` });
-    rows.push({ icon: 'trending-up', label: 'هذه السنة', value: `${K(entity.year_deliveries)} توصيلة · ${K(entity.year_earnings)} ر.س` });
-    rows.push({ icon: 'wallet', label: 'رصيد المحفظة', value: `${K(entity.wallet_balance)} ر.س`, color: '#34D399' });
+    rows.push({ icon: 'calendar', label: 'هذا الأسبوع', value: `${K(entity.week_deliveries)} توصيلة · ${K(entity.week_earnings)} ${tSync(" ر.س", lang)}` });
+    rows.push({ icon: 'calendar-outline', label: 'هذا الشهر', value: `${K(entity.month_deliveries)} توصيلة · ${K(entity.month_earnings)} ${tSync(" ر.س", lang)}` });
+    rows.push({ icon: 'trending-up', label: 'هذه السنة', value: `${K(entity.year_deliveries)} توصيلة · ${K(entity.year_earnings)} ${tSync(" ر.س", lang)}` });
+    rows.push({ icon: 'wallet', label: 'رصيد المحفظة', value: `${K(entity.wallet_balance)} ${tSync(" ر.س", lang)}`, color: '#34D399' });
     rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
   }
   if (kind === 'branch') {
@@ -1559,24 +1573,24 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
     rows.push({ icon: 'time', label: 'ساعات العمل', value: entity.open_hours || '—' });
     rows.push({ icon: 'checkmark-circle', label: 'الحالة', value: entity.active ? '✅ نشط' : '⚠️ متوقف', color: entity.active ? '#34D399' : '#F87171' });
     rows.push({ icon: 'people', label: 'عدد الموظفين', value: `${entity.employees_count} موظف` });
-    rows.push({ icon: 'cart', label: 'مبيعات داخل الفرع', value: `${K(entity.in_store_revenue)} ر.س`, color: '#34D399' });
-    rows.push({ icon: 'phone-portrait', label: 'مبيعات من التطبيق', value: `${K(entity.app_revenue)} ر.س`, color: '#60A5FA' });
-    rows.push({ icon: 'calculator', label: 'إجمالي الشهر', value: `${K(entity.pos_revenue + entity.app_revenue)} ر.س`, color: GOLD });
+    rows.push({ icon: 'cart', label: 'مبيعات داخل الفرع', value: `${K(entity.in_store_revenue)} ${tSync(" ر.س", lang)}`, color: '#34D399' });
+    rows.push({ icon: 'phone-portrait', label: 'مبيعات من التطبيق', value: `${K(entity.app_revenue)} ${tSync(" ر.س", lang)}`, color: '#60A5FA' });
+    rows.push({ icon: 'calculator', label: 'إجمالي الشهر', value: `${K(entity.pos_revenue + entity.app_revenue)} ${tSync(" ر.س", lang)}`, color: GOLD });
     rows.push({ icon: 'receipt', label: 'إجمالي الطلبات', value: `${K(entity.orders_count)} طلب` });
     if (entity.monthly_target > 0) {
       const pct = ((entity.pos_revenue + entity.app_revenue) / entity.monthly_target * 100).toFixed(1);
-      rows.push({ icon: 'flag', label: 'الهدف الشهري', value: `${K(entity.monthly_target)} ر.س (${pct}%)` });
+      rows.push({ icon: 'flag', label: 'الهدف الشهري', value: `${K(entity.monthly_target)} ${tSync(" ر.س", lang)} (${pct}%)` });
     }
   }
   if (kind === 'marketer') {
     rows.push({ icon: 'megaphone', label: 'رمز الإحالة', value: entity.referral_code, color: GOLD });
     rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
     rows.push({ icon: 'link', label: 'نقرات إجمالية', value: `${K(entity.clicks)} نقرة` });
-    rows.push({ icon: 'trending-up', label: 'التحويلات', value: `${K(entity.conversions)} عملية (${((entity.conversions/(entity.clicks||1))*100).toFixed(1)}%)`, color: '#34D399' });
-    rows.push({ icon: 'cash', label: 'إجمالي المبيعات', value: `${K(entity.sales_total)} ر.س`, color: GOLD });
-    rows.push({ icon: 'gift', label: 'العمولات المكتسبة', value: `${K(entity.commission_earned)} ر.س`, color: '#34D399' });
-    rows.push({ icon: 'hourglass', label: 'قيد التسوية', value: `${K(entity.commission_pending)} ر.س`, color: '#F59E0B' });
-    rows.push({ icon: 'checkmark-done', label: 'تم دفعها', value: `${K(entity.commission_paid)} ر.س` });
+    rows.push({ icon: 'trending-up', label: 'التحويلات', value: `${K(entity.conversions)} ${tSync('عملية', lang)} (${((entity.conversions/(entity.clicks||1))*100).toFixed(1)}%)`, color: '#34D399' });
+    rows.push({ icon: 'cash', label: 'إجمالي المبيعات', value: `${K(entity.sales_total)} ${tSync(" ر.س", lang)}`, color: GOLD });
+    rows.push({ icon: 'gift', label: 'العمولات المكتسبة', value: `${K(entity.commission_earned)} ${tSync(" ر.س", lang)}`, color: '#34D399' });
+    rows.push({ icon: 'hourglass', label: 'قيد التسوية', value: `${K(entity.commission_pending)} ${tSync(" ر.س", lang)}`, color: '#F59E0B' });
+    rows.push({ icon: 'checkmark-done', label: 'تم دفعها', value: `${K(entity.commission_paid)} ${tSync(" ر.س", lang)}` });
     rows.push({ icon: 'share-social', label: 'مشاركات على السوشيال', value: `${K(entity.posts_shared)} منشور` });
     rows.push({ icon: 'globe', label: 'أكثر منصة نشاطاً', value: entity.top_platform || '—' });
   }
@@ -1588,9 +1602,9 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
     rows.push({ icon: 'hourglass', label: 'ساعات العمل يومياً', value: `${entity.shift_hours} ساعة` });
     rows.push({ icon: 'calendar', label: 'تاريخ التوظيف', value: entity.hire_date || '—' });
     rows.push({ icon: 'wallet', label: 'نظام الأجر',
-      value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ر.س` : `أجر بالساعة: ${K(entity.hourly_rate)} ر.س`,
+      value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ${tSync(" ر.س", lang)}` : `أجر بالساعة: ${K(entity.hourly_rate)} ${tSync(" ر.س", lang)}`,
       color: GOLD });
-    rows.push({ icon: 'receipt', label: 'إجمالي الفواتير', value: `${K(entity.invoices_total)} ر.س`, color: '#34D399' });
+    rows.push({ icon: 'receipt', label: 'إجمالي الفواتير', value: `${K(entity.invoices_total)} ${tSync(" ر.س", lang)}`, color: '#34D399' });
     rows.push({ icon: 'cart', label: 'الطلبات المُنجزة', value: `${K(entity.orders_handled)} طلب` });
     rows.push({ icon: 'location', label: 'الفروع', value: `${(entity.branch_ids || []).length} فرع` });
   }
@@ -1631,6 +1645,7 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
 }
 
 function OverviewSection({ apiCall }: any) {
+  const { lang } = useT();
   const s = useSStyles();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -1660,7 +1675,7 @@ function OverviewSection({ apiCall }: any) {
   const summary = [
     { icon: 'car', color: '#60A5FA', label: 'السائقون', value: data.drivers.total, sub: `${data.drivers.online} متصل الآن` },
     { icon: 'business', color: '#34D399', label: 'الفروع', value: data.branches.total, sub: `${data.branches.active} فرع نشط` },
-    { icon: 'megaphone', color: '#F59E0B', label: 'المسوّقون', value: data.marketers.total, sub: `${Math.round(data.marketers.total_commission).toLocaleString()} ر.س` },
+    { icon: 'megaphone', color: '#F59E0B', label: 'المسوّقون', value: data.marketers.total, sub: `${Math.round(data.marketers.total_commission).toLocaleString()} ${tSync(" ر.س", lang)}` },
     { icon: 'people', color: '#F472B6', label: 'الموظفون', value: data.employees.total, sub: `${data.employees.list.length} نشط` },
   ];
 
@@ -1755,7 +1770,7 @@ function OverviewSection({ apiCall }: any) {
                   avatar={b.image}
                   subtitle={`${b.city} · ${b.employees_count} موظف · ${b.open_hours}`}
                   primaryValue={`${((b.pos_revenue + b.app_revenue) / 1000).toFixed(1)}K`}
-                  primaryLabel="ر.س"
+                  primaryLabel={tSync(' ر.س', lang)}
                   secondaryValue={`${b.orders_count} طلب`}
                   progressPct={((b.pos_revenue + b.app_revenue) / maxBranches) * 100}
                   isOnline={b.active}
@@ -1781,7 +1796,7 @@ function OverviewSection({ apiCall }: any) {
                   avatar={m.avatar}
                   subtitle={`رمز: ${m.referral_code} · ${m.clicks} نقرة · ${m.conversions} تحويل`}
                   primaryValue={`${(m.commission_earned / 1000).toFixed(1)}K`}
-                  primaryLabel="ر.س"
+                  primaryLabel={tSync(' ر.س', lang)}
                   progressPct={(m.commission_earned / maxMarketers) * 100}
                   onPress={() => setMarketerId(m.id)}
                 />
@@ -1799,7 +1814,7 @@ function OverviewSection({ apiCall }: any) {
                   avatar={e.avatar}
                   subtitle={`${e.job_title} · ${e.shift_start}-${e.shift_end}`}
                   primaryValue={`${(e.invoices_total / 1000).toFixed(1)}K`}
-                  primaryLabel="ر.س"
+                  primaryLabel={tSync(' ر.س', lang)}
                   secondaryValue={`${e.orders_handled} طلب`}
                   progressPct={(e.invoices_total / maxEmployees) * 100}
                   onPress={() => setEmployeeId(e.id)}

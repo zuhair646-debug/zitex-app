@@ -1,26 +1,26 @@
 /**
- * useAutoT — Reactive auto-translation for any hardcoded string
+ * useAutoT — Reactive auto-translation for any hardcoded string.
  *
- * How it works:
- *   1. Given an Arabic (or any language) source string + current lang
- *   2. Returns the source immediately (so no flash of empty)
- *   3. Fires background call to /api/translate for missing translations
- *   4. Caches results in memory + AsyncStorage so subsequent renders are instant
- *   5. Reactively re-renders when translation arrives
+ * v3 strategy (June 2026):
+ *   1. Check the pre-baked static JSON dictionary (i18n-generated.json) — INSTANT
+ *   2. Check in-memory + AsyncStorage cache — INSTANT
+ *   3. Fall back to /api/translate — background, warms cache
  *
- * Usage:
- *   const label = useAutoT('الوضع الليلي');   // returns 'Night Mode' in EN, 'Modo Noturno' in PT, etc.
- *   <Text>{label}</Text>
- *
- *   // Or a wrapper component:
- *   <TX>الوضع الليلي</TX>
+ * The static JSON is generated offline by /app/scripts/bulk_translate.py.
+ * That script scans every <TX>, useAutoT(), tSync() usage in the source,
+ * ships the strings to Claude Haiku 4.5 in bulk, and stores the results.
+ * Refresh it whenever a batch of new Arabic strings is added.
  */
 import React, { useEffect, useState } from 'react';
 import { Text, TextProps } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useT, type Lang } from './i18n';
+// Pre-baked translations. Structure: { source_ar: { en, fa, hi, zh, ... } }
+// Do not edit by hand — regenerate via scripts/bulk_translate.py.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const STATIC_TRANSLATIONS: Record<string, Partial<Record<Lang, string>>> = require('./i18n-generated.json');
 
-const CACHE_KEY = '@zenrex_autot_cache_v1';
+const CACHE_KEY = '@zenrex_autot_cache_v2';
 const memoryCache: Record<string, Record<string, string>> = {}; // lang → { source: translated }
 let cacheLoaded = false;
 const inflight: Set<string> = new Set();
@@ -34,18 +34,26 @@ async function loadCacheOnce() {
       const obj = JSON.parse(raw);
       Object.assign(memoryCache, obj);
     }
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 async function persistCache() {
-  try {
-    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(memoryCache));
-  } catch {}
+  try { await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(memoryCache)); } catch { /* ignore */ }
+}
+
+function staticLookup(source: string, targetLang: Lang): string | undefined {
+  const entry = STATIC_TRANSLATIONS[source];
+  if (!entry) return undefined;
+  const t = entry[targetLang];
+  return t && t.trim() ? t : undefined;
 }
 
 async function translate(source: string, targetLang: Lang): Promise<string> {
   if (!source || !source.trim()) return source;
-  if (targetLang === 'ar') return source; // assume source is Arabic
+  if (targetLang === 'ar') return source;
+  // Fast path — pre-baked
+  const staticHit = staticLookup(source, targetLang);
+  if (staticHit) return staticHit;
   memoryCache[targetLang] = memoryCache[targetLang] || {};
   if (memoryCache[targetLang][source]) return memoryCache[targetLang][source];
   const inflightKey = `${targetLang}::${source}`;
@@ -63,7 +71,6 @@ async function translate(source: string, targetLang: Lang): Promise<string> {
     const data = await res.json();
     const translated = data?.translated || data?.translated_text || data?.translation || source;
     memoryCache[targetLang][source] = translated;
-    // Persist in background (debounced by JS event loop)
     setTimeout(() => persistCache(), 300);
     return translated;
   } catch {
@@ -75,29 +82,27 @@ async function translate(source: string, targetLang: Lang): Promise<string> {
 
 /**
  * Hook: returns the translated string for the CURRENT lang.
- * On first mount for a new lang+source pair, returns source immediately
- * then re-renders with translation when the API returns.
+ * If the pre-baked dictionary has a translation, returns it INSTANTLY on first render — no flash.
  */
 export function useAutoT(source: string): string {
   const { lang } = useT();
-  const [translated, setTranslated] = useState<string>(() => {
+  const initial = (): string => {
     if (lang === 'ar' || !source) return source;
+    const s = staticLookup(source, lang);
+    if (s) return s;
     return memoryCache[lang]?.[source] || source;
-  });
+  };
+  const [translated, setTranslated] = useState<string>(initial);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (lang === 'ar' || !source) {
-        setTranslated(source);
-        return;
-      }
+      if (lang === 'ar' || !source) { setTranslated(source); return; }
+      const s = staticLookup(source, lang);
+      if (s) { if (alive) setTranslated(s); return; }
       await loadCacheOnce();
       const cached = memoryCache[lang]?.[source];
-      if (cached) {
-        if (alive) setTranslated(cached);
-        return;
-      }
+      if (cached) { if (alive) setTranslated(cached); return; }
       const t = await translate(source, lang);
       if (alive) setTranslated(t);
     })();
@@ -109,7 +114,6 @@ export function useAutoT(source: string): string {
 
 /**
  * Component wrapper: <TX>الوضع الليلي</TX> → renders translated text.
- * All Text props are forwarded (style, numberOfLines, adjustsFontSizeToFit, etc.).
  */
 export function TX({ children, ...rest }: { children: string } & TextProps) {
   const translated = useAutoT(String(children ?? ''));
@@ -118,14 +122,15 @@ export function TX({ children, ...rest }: { children: string } & TextProps) {
 
 /**
  * Non-hook synchronous string translator, safe to call inside callbacks/map/renderItem.
- * Returns cached translation if available, otherwise the source (Arabic).
- * Also warms the cache in background.
+ * Returns pre-baked translation if available, otherwise cached, otherwise source.
  */
 export function tSync(source: string, lang: Lang): string {
   if (!source || lang === 'ar') return source;
+  const s = staticLookup(source, lang);
+  if (s) return s;
   const cached = memoryCache[lang]?.[source];
   if (cached) return cached;
-  // Warm the cache without blocking
+  // Warm the cache in background (no-op if pre-baked exists — checked above)
   translate(source, lang).catch(() => {});
   return source;
 }

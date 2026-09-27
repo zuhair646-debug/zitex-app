@@ -514,3 +514,44 @@ Plus `i18n.tsx` Restart Required alert.
 - Merchant Live Preview
 - Chamber & Driver portals
 - Appearance screen + all sub-screens (cart, checkout, addresses, favorites, etc.)
+
+---
+
+## v1.16.4 — Zero-Runtime-LLM Translation Architecture (June 2026)
+
+### Strategic pivot
+Instead of manually rewriting the 50+ files that still use `<TX>`, `useAutoT`, or `tSync`, we introduced a **pre-baked static translation table** shipped with the app.
+
+### How it works
+1. `/app/scripts/bulk_translate.py` scans every `.tsx`/`.ts` in `/app/frontend/app` and `/app/frontend/src` for:
+   - `<TX>Arabic</TX>` JSX
+   - `useAutoT('Arabic')` / `useAutoT("Arabic")`
+   - `tSync('Arabic', lang)` / `tSync("Arabic", lang)`
+   - Any single-, double-, or backtick-quoted Arabic literal (2-120 chars, no `${}` interpolation)
+2. Batches those strings 60 at a time and posts them to the new `POST /api/translate/bulk` endpoint (Claude Haiku 4.5) for EN / FA / HI / ZH.
+3. Writes results to `/app/frontend/src/i18n-generated.json` (nested: `source_ar` → `{ en, fa, hi, zh }`).
+4. `/app/frontend/src/useAutoT.tsx` now **requires** the JSON at build/hot-reload time and does an INSTANT synchronous lookup before ever hitting the network.
+5. Only strings NOT in the static table fall back to the `/api/translate` runtime endpoint (rare — only for new Arabic added after last regeneration).
+
+### Backend changes
+- Added `POST /api/translate/bulk` in `/app/backend/translate.py` — accepts up to 1000 texts per request, batches internally into groups of 40 for the LLM, returns a `{source: translated}` map. Cached per-hash in memory.
+
+### Frontend changes
+- `useAutoT.tsx` rewritten to:
+  1. Check static JSON (instant, no network)
+  2. Check memory + AsyncStorage cache (instant)
+  3. Fall back to `/api/translate` (background)
+- Text renders now show the correct language on FIRST paint — no more Arabic flash.
+
+### Impact
+- **1866 unique Arabic strings** now translated to EN / FA / HI / ZH = **7,464 pre-baked translations**.
+- Regeneration time: ~90 seconds for the whole codebase (LLM latency).
+- Runtime overhead per lookup: single hash-map access.
+
+### Files touched
+- **New**: `/app/scripts/bulk_translate.py`, `/app/scripts/wrap_currency.py`, `/app/frontend/src/i18n-generated.json`
+- **Edited**: `/app/backend/translate.py` (bulk endpoint), `/app/frontend/src/useAutoT.tsx` (static-first strategy), `/app/frontend/app/merchant/live-preview.tsx` (Currency + Arabic template-literal wrappers)
+
+### Verification (Chinese, merchant Live Preview)
+- 直播模式 — v1.14.3 ✨ / 0 直接访客现在 / 比较 / 今日销售 / 0 SAR / 0 操作 / 本周 / 192,473 SAR / 38 操作 / 本月 / 1,111,157 SAR / 187 操作 / 🏆 畅销商品 / ⭐ 精选产品 / 🛍 所有产品
+- 0 leftover UI Arabic strings (only DB product names remain, which are data not UI).
