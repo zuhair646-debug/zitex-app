@@ -56,8 +56,10 @@ calling `finish`:
   transiently down). The template script implements this.
 
 ## Current released versions
-- iOS: v1.13.0 (build 37) — Zenrex Store rebrand + Hetzner backend — build in progress (poller PID 13125 will auto-submit)
-- Android: v1.13.0 (versionCode 38) — Zenrex Store rebrand + Hetzner backend — build in progress (poller PID 13125 will auto-submit)
+- **v1.16.7 (iOS build 62, Android versionCode 68)** — Static i18n dictionary (7,464 pre-baked translations for EN/FA/HI/ZH) + backend perf (80 MongoDB indexes + TTL cache + /api/translate/bulk endpoint) — **build IN PROGRESS** (poller PID 1018 auto-submits when ready)
+  - iOS build: https://expo.dev/accounts/zuhair-7700/projects/zitex/builds/1b76f632-3b6f-4a8a-b8ba-5218e00a7506
+  - Android build: https://expo.dev/accounts/zuhair-7700/projects/zitex/builds/cd62cee4-7a03-4106-872c-e171deab3de6
+- v1.13.0 (build 37/38) — Zenrex Store rebrand + Hetzner backend
 - v1.11.2: Android submitted ✅ (23/9/2026)
 - v1.11.1: iOS submitted ✅ (17:18 UTC 23/9/2026)
 - v1.10.1 & prior: submitted ✅
