@@ -155,14 +155,20 @@ async def get_me(user=Depends(get_current_user)):
 # ─── Categories ───
 @api_router.get("/categories")
 async def get_categories():
-    cats = await db.categories.find({"published": True}).to_list(100)
-    return [serialize_doc(c) for c in cats]
+    from perf import cached_json
+    async def _load():
+        cats = await db.categories.find({"published": True}).to_list(100)
+        return [serialize_doc(c) for c in cats]
+    return await cached_json("categories:v1", ttl=120, loader=_load)
 
 # ─── Brands ───
 @api_router.get("/brands")
 async def get_brands():
-    brands = await db.brands.find({"published": True}).to_list(100)
-    return [serialize_doc(b) for b in brands]
+    from perf import cached_json
+    async def _load():
+        brands = await db.brands.find({"published": True}).to_list(100)
+        return [serialize_doc(b) for b in brands]
+    return await cached_json("brands:v1", ttl=120, loader=_load)
 
 # ─── Products ───
 @api_router.get("/products")
@@ -207,8 +213,11 @@ async def get_products(category: Optional[str] = None, brand: Optional[str] = No
 
 @api_router.get("/products/featured")
 async def get_featured_products():
-    products = await db.products.find({"published": True, "featured": True}).limit(10).to_list(10)
-    return [serialize_doc(p) for p in products]
+    from perf import cached_json
+    async def _load():
+        products = await db.products.find({"published": True, "featured": True}).limit(10).to_list(10)
+        return [serialize_doc(p) for p in products]
+    return await cached_json("products:featured:v1", ttl=60, loader=_load)
 
 @api_router.get("/products/{product_id}")
 async def get_product(product_id: str):
@@ -802,8 +811,11 @@ async def remove_from_cart(item_id: str, user=Depends(get_current_user)):
 
 # ─── Orders ───
 @api_router.get("/orders")
-async def get_orders(user=Depends(get_current_user)):
-    orders = await db.orders.find({"user_id": user["id"]}).sort("created_at", -1).to_list(100)
+async def get_orders(user=Depends(get_current_user), limit: int = 100, skip: int = 0):
+    from perf import safe_limit
+    n = safe_limit(limit, default=100, cap=500)
+    s = max(0, int(skip or 0))
+    orders = await db.orders.find({"user_id": user["id"]}).sort("created_at", -1).skip(s).limit(n).to_list(n)
     return [serialize_doc(o) for o in orders]
 
 @api_router.post("/orders")
@@ -1019,8 +1031,11 @@ async def toggle_favorite(product_id: str, user=Depends(get_current_user)):
 # ─── Banners ───
 @api_router.get("/banners")
 async def get_banners():
-    banners = await db.banners.find({"published": True}).to_list(20)
-    return [serialize_doc(b) for b in banners]
+    from perf import cached_json
+    async def _load():
+        banners = await db.banners.find({"published": True}).to_list(20)
+        return [serialize_doc(b) for b in banners]
+    return await cached_json("banners:v1", ttl=90, loader=_load)
 
 # ─── Seed Data ───
 
@@ -1158,14 +1173,17 @@ async def payment_webhook(request: Request):
 
 # ─── Social Posts ───
 @api_router.get("/social/posts")
-async def get_social_posts():
+async def get_social_posts(limit: int = 100, skip: int = 0):
+    from perf import safe_limit
+    n = safe_limit(limit, default=100, cap=200)
+    s = max(0, int(skip or 0))
     now = datetime.now(timezone.utc).isoformat()
     # Filter out expired stories from main feed
     query = {"$or": [
         {"type": {"$ne": "story"}},
         {"type": "story", "$or": [{"expires_at": {"$gt": now}}, {"expires_at": {"$exists": False}}]}
     ]}
-    posts = await db.social_posts.find(query).sort("created_at", -1).to_list(100)
+    posts = await db.social_posts.find(query).sort("created_at", -1).skip(s).limit(n).to_list(n)
     return [serialize_doc(p) for p in posts]
 
 @api_router.post("/social/posts/{post_id}/like")
@@ -1275,11 +1293,14 @@ SUPPORT_DEFAULTS = {
 
 @api_router.get("/store/support")
 async def get_support_info():
-    s = await db.settings.find_one({"key": "support"}) or {}
-    s.pop("_id", None); s.pop("key", None)
-    # Merge stored values over defaults so every field is always present
-    merged = {**SUPPORT_DEFAULTS, **s}
-    return merged
+    from perf import cached_json
+    async def _load():
+        s = await db.settings.find_one({"key": "support"}) or {}
+        s.pop("_id", None); s.pop("key", None)
+        # Merge stored values over defaults so every field is always present
+        merged = {**SUPPORT_DEFAULTS, **s}
+        return merged
+    return await cached_json("store:support:v1", ttl=60, loader=_load)
 
 @api_router.put("/merchant/store/support")
 async def update_support_info(request: Request, user=Depends(get_current_user)):
@@ -1287,6 +1308,12 @@ async def update_support_info(request: Request, user=Depends(get_current_user)):
     require_employee_perm(user, "settings")
     body = await request.json()
     await db.settings.update_one({"key": "support"}, {"$set": {**body, "key": "support"}}, upsert=True)
+    # Bust cache so merchants see edits immediately
+    try:
+        from perf import cache
+        await cache().invalidate("store:support:v1")
+    except Exception:
+        pass
     return {"message": "Updated"}
 
 # ─── Employee Management ───
@@ -3919,9 +3946,16 @@ async def seed_data():
             })
         logger.info(f"Seeded {len(marketer_specs)} marketers/affiliates")
 
-    # Indexes
-    await db.users.create_index("phone", unique=True)
-    await db.products.create_index([("name_ar", "text"), ("name_en", "text")])
+    # Indexes — now handled comprehensively by perf.ensure_indexes() at startup.
+    # Keep these two here as a defensive fallback in case perf.py fails to import.
+    try:
+        await db.users.create_index("phone", unique=True)
+    except Exception:
+        pass
+    try:
+        await db.products.create_index([("name_ar", "text"), ("name_en", "text")])
+    except Exception:
+        pass
 
 # NOTE: app.include_router(api_router) intentionally lives ONLY at the bottom
 # of this file (after ALL route definitions). Do not add it here.
@@ -6589,6 +6623,14 @@ except Exception as _e:
 @app.on_event("startup")
 async def startup():
     await seed_data()
+    # ─── Comprehensive DB indexes (Phase 2 performance) ───
+    try:
+        from perf import ensure_indexes
+        summary = await ensure_indexes(db)
+        logger.info(f"Indexes bootstrap: {summary['created']} created/verified, "
+                    f"{summary['skipped']} skipped, {len(summary['failed'])} failed")
+    except Exception as e:
+        logger.warning(f"Index bootstrap failed (non-fatal): {e}")
     try:
         await _seed_preview_analytics()
     except Exception as e:

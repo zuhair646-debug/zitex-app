@@ -320,3 +320,60 @@ Kind-aware label set (`L`) drives:
 - iOS build: 47 → **49**
 - Android versionCode: 53 → **55**
 - EAS build triggered (fresh, latest hotfix included); auto-submit poller running
+
+---
+
+## v1.16.0 — Phase 2 Backend Performance (June 2026)
+
+### Goal
+Prepare the Hetzner-hosted API to comfortably serve 10,000+ concurrent users without database-scan bottlenecks or repeated Mongo reads for hot public content.
+
+### New module: `/app/backend/perf.py`
+- `ensure_indexes(db)` — idempotent bootstrap that creates **80 compound/single MongoDB indexes** across **30 collections** on every startup:
+  - `users`: phone (unique), role, merchant_id, is_affiliate
+  - `products`: (merchant_id+published), (category_id+published), (brand_id+published), (published+featured), (published+created_at), (published+sold_count), condition, price, text index on name_ar/name_en
+  - `orders`: (user_id+created_at), (merchant_id+status+created_at), (branch_id+status), (driver_id+status), (status+created_at)
+  - `social_posts`: created_at, (type+created_at), (merchant_id+created_at), expires_at
+  - `social_likes/bookmarks`: (post_id+user_id) unique
+  - `social_comments`: (post_id+created_at)
+  - `competitions`: (status+created_at), (merchant_id+created_at)
+  - `competition_entries`: (competition_id+user_id) unique
+  - `services` / `service_bookings` / `service_reviews` / `service_updates`
+  - `favorites`: (user_id+product_id) unique
+  - `cart_items`, `addresses`, `notifications`, `wallet_transactions`, `points_history`, `loyalty_transactions`
+  - `time_logs`, `activity_log`
+  - `affiliates` (referral_code unique), `affiliate_conversions`
+  - `ads`, `support_tickets`, `warranties`, `settings` (key unique), `roles`, `branches`, `branch_inventory`, `employees`, `drivers`, `banners`, `categories`, `brands`, `reviews`
+- `TTLCache` — async-safe in-process cache (asyncio.Lock). No Redis dependency yet; can be swapped without touching call sites.
+- `cached_json(key, ttl, loader)` — memoises a coroutine loader for `ttl` seconds.
+- `safe_limit(limit, default, cap)` — clamps user-supplied `?limit` params.
+
+### Endpoints wrapped with TTL cache
+- `GET /api/categories` — 120s TTL
+- `GET /api/brands` — 120s TTL
+- `GET /api/banners` — 90s TTL
+- `GET /api/store/support` — 60s TTL, **auto-invalidated** on `PUT /api/merchant/store/support`
+- `GET /api/products/featured` — 60s TTL
+
+### Endpoints with backward-compatible pagination
+Both continue to return a plain JSON array (no shape change) but now accept optional query params:
+- `GET /api/orders?limit=N&skip=M` (default limit 100, cap 500)
+- `GET /api/social/posts?limit=N&skip=M` (default limit 100, cap 200)
+
+### Startup verification
+```
+[perf] Indexes ensured: created/verified=80 skipped=1 failed=0
+```
+
+### Measured impact (curl, cold vs warm)
+- `/api/categories`: 5.8ms cold → **1.3ms warm** (4.5× faster)
+- `/api/products?limit=5`: 4.4ms
+- `/api/social/posts?limit=10`: 8ms
+- `/api/orders?limit=5` (authenticated): 3.6ms
+
+### Frontend impact
+Zero. All responses preserve their exact previous JSON shape.
+
+### Files touched
+- **New**: `/app/backend/perf.py` (module)
+- **Edited**: `/app/backend/server.py` — startup hook + 5 endpoints wrapped + 2 endpoints paginated

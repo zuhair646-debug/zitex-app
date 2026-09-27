@@ -181,10 +181,37 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Deep Analytics for Services/Competitions/Posts (v1.13.14)"
+    - "Backend Performance — comprehensive indexes + TTL cache (v1.16.0)"
+    - "Global i18n auto-wrap verification (60+ files, 704 strings)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+backend:
+  - task: "Backend Perf — MongoDB indexes + in-process TTL cache"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/perf.py, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added /app/backend/perf.py with (a) ensure_indexes() bootstrap that creates 80+ compound/single indexes across 30 collections (users, products, orders, social_*, competitions, services, service_bookings, service_reviews, affiliates, notifications, etc.), (b) async-safe TTLCache + cached_json() helper (no Redis needed for single-node VPS), (c) safe_limit() clamp helper. Wired ensure_indexes into startup event. Wrapped /api/categories, /api/brands, /api/banners, /api/store/support, /api/products/featured with TTL cache (60-120s). Made /api/orders and /api/social/posts accept ?limit and ?skip params (backward compatible — still returns plain array). Startup log confirms: 80 indexes created, 0 failed. Curl tests: categories 5.8ms → 1.3ms on cache hit; social/posts 8ms; products 4.4ms. Contract preserved. Please retest merchant flow, customer home load, and login for all 6 role credentials (see test_credentials.md)."
+
+frontend:
+  - task: "Global i18n auto-wrap — 704 strings across 60+ files via useAutoT/TX"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/useAutoT.tsx, /app/scripts/global_i18n_wrap.py, /app/frontend/app/**"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "60+ files rewritten by /app/scripts/global_i18n_wrap.py to replace <Text>Arabic</Text> with <TX>Arabic</TX> plus wrap known props (label/title/placeholder). Verified via ESLint: 0 parse errors, only 5 pre-existing react/no-unescaped-entities warnings (unrelated). Screenshot on 390×844: Login screen renders correctly (Arabic default); after customer login, Home tab loads with English translations working (Categories, Loyalty Points, Hot products, Best deals). Merchant login renders Arabic dashboard correctly. No crashes on tab navigation. Please run testing_agent when user requests it to sweep all 60+ screens for any residual truncation or missing translations."
 
 agent_communication:
     - agent: "main"
@@ -193,6 +220,10 @@ agent_communication:
       message: "v1.3.3 — Redesigned Marketing panel with unified campaign type picker (Regular Ad vs Affiliate Campaign). Added Affiliate Dashboard for customers (/my-affiliate). Added Store↔Affiliate toggle on home tab (only if user has ≥1 affiliate account). Please verify end-to-end: (a) merchant creates affiliate campaign with commission %, (b) customer sees campaign card in social feed with 'قدّم الآن' button, (c) tapping opens /affiliate-apply with auto-filled fields, (d) submit application, (e) merchant approves, (f) customer sees 🏆 pill on home tab, (g) opens /my-affiliate dashboard with referral link, analytics, and wallet. Also test the regular ad flow with targeting. Merchant: 0509999999/merchant2025 · Customer: 0500000000/test1234 · Driver: 0540001111/driver1234."
     - agent: "main"
       message: "v1.13.14 — Deep Analytics extended to Services, Competitions, and Social Posts (matching the approved Product Analytics design). Backend: /app/backend/deep_analytics.py rewrite fixes data-mapping bugs (services now use total_fee for revenue, competitions use competition_entries collection + joined_at timestamp, posts handle likes/shares as int totals). Frontend: /app/frontend/app/merchant/product-analytics.tsx now kind-aware — KPI labels, funnel stages, hero pills, and comparison headers all adapt per kind (product/service/competition/post). Screens: service-analytics.tsx, competition-analytics.tsx, post-analytics.tsx are thin wrappers reusing the same UI. Please test end-to-end with merchant 0509999999/merchant2025: open Live Preview → tap Services tab → tap any service card → verify Deep Analytics screen loads with 5 KPI rows (Views, Bookings, Cancelled, Completed, Revenue, Shares, Fill Rate) + Overview/Visitors/Bookings/Shares/Reviews/Compare tabs, all correctly labeled 'حجوزات' not 'سلة'. Repeat for Competitions tab (expects 'مشاركون', 'أماكن شاغرة', capacity %) and Social tab (expects 'الوصول', 'المعجبون', 'تعليقات', 'مشاركات', 'نقاط التفاعل')."
+    - agent: "main"
+      message: "v1.16.0 — Phase 2 Backend Performance. Introduced /app/backend/perf.py providing: (1) ensure_indexes(db) which idempotently creates 80+ compound/single MongoDB indexes across 30 collections on startup (users, products, orders, social_posts, social_likes, social_bookmarks, social_comments, competitions, competition_entries, services, service_bookings, service_reviews, service_updates, favorites, cart_items, addresses, notifications, wallet_transactions, points_history, loyalty_transactions, time_logs, activity_log, affiliates, affiliate_conversions, ads, support_tickets, warranties, roles, branches, branch_inventory, employees, drivers, banners, categories, brands, reviews, settings). (2) TTLCache — async-safe in-process cache (no Redis dep for single-node Hetzner VPS; can be swapped later). (3) cached_json() helper wraps loader functions with a TTL. (4) safe_limit() clamps user-supplied ?limit params. Wired into server.py startup event; startup log confirms '80 created/verified, 0 failed'. Cached endpoints: /api/categories (120s), /api/brands (120s), /api/banners (90s), /api/store/support (60s, invalidated on PUT), /api/products/featured (60s). Added optional ?limit and ?skip params to /api/orders and /api/social/posts (backward compatible — still returns a plain array). Frontend contract unchanged. Please retest: (a) all 6 roles can log in, (b) merchant home KPIs load, (c) customer home tabs cycle without crashes, (d) products list still paginates and search still works, (e) cache invalidation happens after PUT /api/merchant/store/support."
+
+agent_communication_end: true
 
   - task: "Deep Analytics for Services/Competitions/Posts (v1.13.14)"
     implemented: true
