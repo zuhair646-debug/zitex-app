@@ -76,3 +76,10 @@ Feature category → semver bump:
 - ❌ Downgrade a version to reuse a build number
 - ❌ Leave EAS submit unattended (always spawn the retry poller)
 - ❌ Modify EXPO_PACKAGER_PROXY_URL, EXPO_PACKAGER_HOSTNAME in .env
+
+## v1.17.0 release — 2026-10-01
+- iOS build: 55762daf-4776-4259-a8e1-7892bf14ef58 (buildNumber 63)
+- Android build: 9a996324-e080-472c-b218-58b7a98e6241 (versionCode 69)
+- Commit: d2caf6a
+- Poller PID: 1279 (status log: /tmp/eas_release_v1.17.0.log)
+- Changes: Dynamic translate-on-demand + MongoDB persistent cache, VideoComposer crash fix, TranslatableName component applied on 8 screens
