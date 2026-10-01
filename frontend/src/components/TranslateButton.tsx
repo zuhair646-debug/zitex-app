@@ -17,7 +17,7 @@ interface Props {
   compact?: boolean;
 }
 
-const BACKEND = process.env.EXPO_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL || '';
+const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_BACKEND_URL || '';
 
 export default function TranslateButton({ text, sourceLang, targetLangOverride, textStyle, compact }: Props) {
   const { t, lang } = useT();

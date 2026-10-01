@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import TranslatableName from '../src/components/TranslatableName';
 
 export default function FavoritesScreen() {
   const router = useRouter();
@@ -35,7 +36,16 @@ export default function FavoritesScreen() {
           {favs.map(p => (
             <TouchableOpacity key={p.id} testID={`fav-${p.id}`} style={s.card} onPress={() => router.push(`/product/${p.id}`)}>
               <Image source={{ uri: p.images?.[0] }} style={s.img} />
-              <View style={s.info}><Text style={s.name} numberOfLines={1}>{p.name_en}</Text><Text style={s.price}>{p.discount_price || p.price} SAR</Text></View>
+              <View style={s.info}>
+                <TranslatableName
+                  text={p.name_en}
+                  sourceLang="en"
+                  style={s.name}
+                  numberOfLines={1}
+                  iconSize={11}
+                />
+                <Text style={s.price}>{p.discount_price || p.price} SAR</Text>
+              </View>
               <TouchableOpacity testID={`unfav-${p.id}`} onPress={() => removeFav(p.id)}><Ionicons name="heart" size={22} color="#EF4444" /></TouchableOpacity>
             </TouchableOpacity>
           ))}

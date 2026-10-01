@@ -60,7 +60,7 @@ async function translate(source: string, targetLang: Lang): Promise<string> {
   if (inflight.has(inflightKey)) return source;
   inflight.add(inflightKey);
   try {
-    const base = (process.env.EXPO_PUBLIC_BACKEND_URL || (globalThis as any).EXPO_BACKEND_URL || '').toString();
+    const base = (process.env.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_BACKEND_URL || (globalThis as any).EXPO_BACKEND_URL || '').toString();
     const url = `${base}/api/translate`;
     const res = await fetch(url, {
       method: 'POST',

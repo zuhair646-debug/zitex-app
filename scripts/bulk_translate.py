@@ -16,7 +16,7 @@ import requests
 FRONTEND = "/app/frontend"
 OUT = os.path.join(FRONTEND, "src", "i18n-generated.json")
 BACKEND = os.environ.get("BULK_TRANSLATE_BASE", "http://localhost:8001")
-TARGETS = ["en", "fa", "hi", "zh"]
+TARGETS = ["en", "fa", "hi", "zh", "ur", "he", "es", "fr", "de", "it", "pt", "ru", "tr", "ja", "ko", "bn", "id", "ms", "th"]
 
 PATTERNS = [
     re.compile(r"<TX[^>]*>([^<]{2,120})</TX>", re.MULTILINE),

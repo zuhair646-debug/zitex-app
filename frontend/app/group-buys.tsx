@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { useT } from '../src/i18n';
+import TranslatableName from '../src/components/TranslatableName';
 
 export default function GroupBuysScreen() {
   const router = useRouter();
@@ -63,8 +64,18 @@ export default function GroupBuysScreen() {
                 <View style={{ flexDirection: 'row' }}>
                   {!!product.image && <Image source={{ uri: product.image }} style={s.img} />}
                   <View style={{ flex: 1, marginLeft: 10 }}>
-                    <Text style={s.gTitle}>{g.title}</Text>
-                    <Text style={s.gProduct} numberOfLines={1}>{lang === 'ar' ? product.name_ar : product.name_en}</Text>
+                    <TranslatableName
+                      text={g.title}
+                      style={s.gTitle}
+                      iconSize={12}
+                    />
+                    <TranslatableName
+                      text={lang === 'ar' ? product.name_ar : (product.name_en || product.name_ar)}
+                      sourceLang={lang === 'ar' ? 'ar' : 'en'}
+                      style={s.gProduct}
+                      numberOfLines={1}
+                      iconSize={11}
+                    />
                     <View style={s.priceRow}>
                       <Text style={s.gPrice}>{g.group_price} {t('common.currency')}</Text>
                       {orig > g.group_price && <Text style={s.gOrig}>{orig}</Text>}

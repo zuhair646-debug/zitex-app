@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { TX } from '../src/useAutoT';
+import TranslatableName from '../src/components/TranslatableName';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 56) / 2;
@@ -99,7 +100,13 @@ export default function SearchScreen() {
               <Image source={{ uri: p.images?.[0] }} style={styles.productImg} />
               {!!p.discount_price && <View style={styles.discBadge}><TX style={styles.discText}>خصم</TX></View>}
               {p.condition !== 'new' && <View style={styles.usedBadge}><TX style={styles.usedText}>مستعمل</TX></View>}
-              <Text style={styles.productName} numberOfLines={2}>{p.name_en}</Text>
+              <TranslatableName
+                text={p.name_en}
+                sourceLang="en"
+                style={styles.productName}
+                numberOfLines={2}
+                iconSize={11}
+              />
               <View style={styles.ratingRow}>
                 <Ionicons name="star" size={12} color="#FACC15" />
                 <Text style={styles.ratingVal}>{p.rating}</Text>

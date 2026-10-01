@@ -9,6 +9,7 @@ import { ScreenHeader, PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, 
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 
 type CartItem = { product_id: string; name: string; price: number; quantity: number };
 
@@ -117,7 +118,13 @@ export default function POSTerminal() {
                 <TouchableOpacity style={s.pcard} onPress={() => addToCart(p)} activeOpacity={0.7}>
                   <View style={s.pIcon}><Ionicons name="cube" size={20} color={colors.brand} /></View>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.pname} numberOfLines={1}>{p.name_ar || p.name_en}</Text>
+                    <TranslatableName
+                      text={p.name_ar || p.name_en}
+                      sourceLang="ar"
+                      style={s.pname}
+                      numberOfLines={1}
+                      iconSize={11}
+                    />
                     <Text style={s.pprice}>{price} ر.س</Text>
                   </View>
                   {cartItem ? (
