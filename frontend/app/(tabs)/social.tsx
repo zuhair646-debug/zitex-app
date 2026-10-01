@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import MediaCarousel from '../../src/components/MediaCarousel';
 import TranslateButton from '../../src/components/TranslateButton';
+import TranslatableName from '../../src/components/TranslatableName';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT } from '../../src/i18n';
 
@@ -220,7 +221,11 @@ export default function SocialScreen() {
                 <View style={s.postHeader}>
                   <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#F5C518" /></View>
                   <View style={s.postAuthorInfo}>
-                    <Text style={s.postAuthor}>{post.author || 'Zenrex Store'}</Text>
+                    <TranslatableName
+                      text={post.author || 'Zenrex Store'}
+                      style={s.postAuthor}
+                      iconSize={11}
+                    />
                     <Text style={s.postTime}>{timeAgo(post.created_at)}</Text>
                   </View>
                   <View style={s.postViews}>

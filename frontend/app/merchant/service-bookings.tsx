@@ -222,6 +222,7 @@ function UpdateCard({ update, apiCall, onChange }: any) {
 }
 
 function VideoComposer({ bookingId, apiCall, onDone, onCancel }: any) {
+  const { lang } = useT();
   const [caption, setCaption] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [imageUrl, setImageUrl] = useState('');

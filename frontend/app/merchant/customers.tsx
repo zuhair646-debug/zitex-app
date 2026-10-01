@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import TranslatableName from '../../src/components/TranslatableName';
 
 export default function MerchantCustomers() {
   const router = useRouter();
@@ -29,7 +30,11 @@ export default function MerchantCustomers() {
             <View key={c.id} style={s.card}>
               <View style={s.avatar}><Text style={s.avatarText}>{(c.name || '?').charAt(0)}</Text></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={s.name}>{c.name || 'No Name'}</Text>
+                <TranslatableName
+                  text={c.name || 'No Name'}
+                  style={s.name}
+                  iconSize={12}
+                />
                 <Text style={s.phone}>{c.phone}</Text>
                 <Text style={s.email}>{c.email || 'No email'}</Text>
               </View>

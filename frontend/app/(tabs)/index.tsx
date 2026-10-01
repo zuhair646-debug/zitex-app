@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { TX } from '../../src/useAutoT';
+import TranslatableName from '../../src/components/TranslatableName';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 60) / 2;
@@ -115,7 +116,13 @@ export default function HomeScreen() {
             <Ionicons name="star" size={12} color="#FACC15" />
             <Text style={s.ratingText}>{p.rating}</Text>
           </View>
-          <Text style={s.productName} numberOfLines={1}>{p.name_en}</Text>
+          <TranslatableName
+            text={p.name_en}
+            sourceLang="en"
+            style={s.productName}
+            numberOfLines={1}
+            iconSize={12}
+          />
           <Text style={s.soldText}>{p.sold_count} SOLD</Text>
           <View style={s.priceRow}>
             <Text style={s.price}>{price}</Text>
@@ -202,7 +209,13 @@ export default function HomeScreen() {
                 <View style={[s.catIconWrap, { backgroundColor: cat.color1 + '18' }]}>
                   <Ionicons name={(catImages[cat.name_en] || 'grid') as any} size={28} color={cat.color1} />
                 </View>
-                <Text style={s.catLabel} numberOfLines={1}>{cat.name_en}</Text>
+                <TranslatableName
+                  text={cat.name_en}
+                  sourceLang="en"
+                  style={s.catLabel}
+                  numberOfLines={1}
+                  iconSize={11}
+                />
               </TouchableOpacity>
             ))}
           </ScrollView>

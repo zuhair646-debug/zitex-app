@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { TX } from '../../src/useAutoT';
+import TranslatableName from '../../src/components/TranslatableName';
 
 const { width } = Dimensions.get('window');
 
@@ -78,7 +79,13 @@ export default function ProductDetailScreen() {
 
         <View style={styles.content}>
           {/* Name & Rating */}
-          <Text style={styles.productName}>{product.name_en}</Text>
+          <TranslatableName
+            text={product.name_en}
+            sourceLang="en"
+            style={styles.productName}
+            iconSize={14}
+            showToggleLabel
+          />
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={16} color="#FACC15" />
             <Text style={styles.ratingVal}>{product.rating}</Text>

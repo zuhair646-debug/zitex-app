@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import { useT } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 
 export default function ServicesScreen() {
   const s = useSStyles();
@@ -61,8 +62,20 @@ export default function ServicesScreen() {
                 <Ionicons name={(svc.icon || 'construct') as any} size={26} color={svc.color || '#F5C518'} />
               </View>
               <View style={s.serviceInfo}>
-                <Text style={s.serviceName} numberOfLines={1}>{svc.name}</Text>
-                <Text style={s.serviceDesc} numberOfLines={1}>{svc.desc}</Text>
+                <TranslatableName
+                  text={svc.name}
+                  style={s.serviceName}
+                  numberOfLines={1}
+                  iconSize={12}
+                />
+                {!!svc.desc && (
+                  <TranslatableName
+                    text={svc.desc}
+                    style={s.serviceDesc}
+                    numberOfLines={1}
+                    iconSize={11}
+                  />
+                )}
                 <View style={s.serviceBottom}>
                   <Text style={s.serviceRequests}>{svc.total_requests} {t('cs.requests')}</Text>
                   <Text style={s.servicePrice}>{t('cs.priceFrom', { price: svc.price, c: currency })}</Text>

@@ -6612,11 +6612,11 @@ try:
 except Exception as _e:
     logger.error(f"Failed to mount deep_analytics router: {_e}")
 
-# Translation router (v1.15.0) — uses Emergent LLM
+# Translation router (v1.17.0) — Persistent MongoDB cache + Emergent LLM
 try:
     from translate import build_router as _build_translate_router
-    app.include_router(_build_translate_router())
-    logger.info("Translation router mounted")
+    app.include_router(_build_translate_router(db))
+    logger.info("Translation router mounted (persistent cache)")
 except Exception as _e:
     logger.error(f"Failed to mount translation router: {_e}")
 

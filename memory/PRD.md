@@ -1,6 +1,42 @@
 # Zitex — Product Requirements (Living Doc)
 
 
+## v1.17.0 — Dynamic Content Translation on Demand (2026-10-01)
+
+### Architecture: Translate-on-Demand + Persistent MongoDB Cache
+- Original names (products, categories, customers, services, posts) stay in
+  their authentic source language forever — set by whoever created them.
+- Next to every dynamic name a small 🌐 (globe) icon appears **only** when
+  the viewer's UI language differs from the source. Tapping it translates
+  to the viewer's current UI language; tapping again restores the original.
+- First-ever translation hits Claude Haiku 4.5 (via EMERGENT_LLM_KEY), is
+  stored forever in MongoDB `translations_cache` (hash + target_lang unique
+  key). Subsequent requests from any user, any device, hit the cache in
+  milliseconds — **zero LLM cost after the first translation per language**.
+- Three-tier cache: in-process LRU → MongoDB `translations_cache` → LLM.
+
+### Where the globe icon is shown
+- Customer home: product cards, category chips
+- Product detail: product name
+- Cart: product names
+- Services tab: service name + description
+- Social feed: post author (post text already uses TranslateButton)
+- Merchant Products: product name
+- Merchant Orders: customer name
+- Merchant Customers: customer name
+- (More screens will inherit automatically by importing `TranslatableName`)
+
+### API
+- `POST /api/translate` — single text
+- `POST /api/translate/bulk` — up to 1000 strings
+- `GET /api/translate/cache/stats` — observability
+
+### Fix
+- `VideoComposer` runtime crash: `lang` was undefined inside the component
+  scope. Added `const { lang } = useT();` locally.
+
+
+
 ## Product Roadmap (User confirmed 2026-09-26)
 
 ### Vision — Multi-Tenant SaaS with per-merchant isolation

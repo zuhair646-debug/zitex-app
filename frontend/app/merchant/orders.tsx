@@ -7,6 +7,7 @@ import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { SegmentedControl, EmptyState, SkeletonBox, Badge, PrimaryButton, SecondaryButton } from '../../src/components/ui';
 import { useT } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 
 type OrderFilter = 'new' | 'processing' | 'ready' | 'delivering' | 'done' | 'all';
 
@@ -132,7 +133,11 @@ export default function MerchantOrders() {
                 {/* Customer */}
                 <View style={s.custRow}>
                   <Ionicons name="person" size={14} color={colors.onSurfaceSecondary} />
-                  <Text style={s.custName}>{o.customer_name || t('mo.orders.customer')}</Text>
+                  <TranslatableName
+                    text={o.customer_name || t('mo.orders.customer')}
+                    style={s.custName}
+                    iconSize={11}
+                  />
                   <Text style={s.dotSep}>•</Text>
                   <Text style={s.custMeta}>{t('mo.orders.itemsCount', { n: o.items?.length || 0 })}</Text>
                   <Text style={s.dotSep}>•</Text>

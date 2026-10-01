@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import TranslatableName from '../src/components/TranslatableName';
 
 export default function CartScreen() {
   const router = useRouter();
@@ -100,7 +101,13 @@ export default function CartScreen() {
                 <View key={item.id} style={styles.cartItem}>
                   <Image source={{ uri: p.images?.[0] }} style={styles.cartImg} />
                   <View style={styles.cartInfo}>
-                    <Text style={styles.cartName} numberOfLines={2}>{p.name_en}</Text>
+                    <TranslatableName
+                      text={p.name_en}
+                      sourceLang="en"
+                      style={styles.cartName}
+                      numberOfLines={2}
+                      iconSize={12}
+                    />
                     {!!item.color && <Text style={styles.cartOption}>{item.color}</Text>}
                     {!!item.storage && <Text style={styles.cartOption}>{item.storage}</Text>}
                     <Text style={styles.cartPrice}>{price} ر.س</Text>
