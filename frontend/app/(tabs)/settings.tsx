@@ -165,7 +165,6 @@ export default function SettingsScreen() {
                 <Text style={styles.langFlag}>{l.flag}</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.langNative}>{l.nativeName}</Text>
-                  <Text style={styles.langEng}>{l.name}</Text>
                 </View>
                 {lang === l.code && <Ionicons name="checkmark-circle" size={22} color={colors.gold} />}
               </TouchableOpacity>

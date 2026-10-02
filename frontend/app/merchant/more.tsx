@@ -145,7 +145,7 @@ export default function MerchantMore() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.prefTitle} numberOfLines={1}>{t('settings.language')}</Text>
                   <Text style={styles.prefSub} numberOfLines={1}>
-                    {currentLang.flag}  {currentLang.nativeName}  ·  {currentLang.name}
+                    {currentLang.flag}  {currentLang.nativeName}
                   </Text>
                 </View>
               </View>
@@ -174,7 +174,6 @@ export default function MerchantMore() {
                   <Text style={{ fontSize: 22 }}>{L.flag}</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.langNative}>{L.nativeName}</Text>
-                    <Text style={styles.langName}>{L.name}</Text>
                   </View>
                   {L.code === lang && <Ionicons name="checkmark-circle" size={22} color={colors.brand} />}
                 </TouchableOpacity>

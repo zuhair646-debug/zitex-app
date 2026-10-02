@@ -22,7 +22,6 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useT, type Lang } from '../i18n';
 import { colors } from '../theme/tokens';
-
 interface Props {
   text?: string | null;
   /** Optional hint of the source language (e.g. "ar", "en"). If omitted
@@ -122,7 +121,7 @@ export default function TranslatableName({
   iconOnly = false,
   onToggle,
 }: Props) {
-  const { lang, isRTL } = useT();
+  const { lang, isRTL, t } = useT();
   const original = (text || '').toString();
   const [translated, setTranslated] = useState<string | null>(null);
   const [showing, setShowing] = useState<'original' | 'translated'>('original');
@@ -162,7 +161,7 @@ export default function TranslatableName({
       setShowing('translated');
       if (translated === original && !toastedSameRef.current) {
         toastedSameRef.current = true;
-        showToast('هذا الاسم لا يتغيّر عند الترجمة');
+        showToast(t('tn.sameName', 'This name does not change when translated'));
       }
       onToggle?.(true, translated);
       return;
@@ -175,14 +174,14 @@ export default function TranslatableName({
       setShowing('translated');
       if (tr === original && !toastedSameRef.current) {
         toastedSameRef.current = true;
-        showToast('هذا الاسم لا يتغيّر عند الترجمة');
+        showToast(t('tn.sameName', 'This name does not change when translated'));
       }
       onToggle?.(true, tr);
     } else {
       // Hard network / server failure — do NOT revert silently
-      showToast('تعذّر الاتصال بخدمة الترجمة. حاول مجددًا.');
+      showToast(t('tn.networkError', 'Could not reach the translation service. Please retry.'));
     }
-  }, [original, lang, showing, translated, sourceLang, onToggle]);
+  }, [original, lang, showing, translated, sourceLang, onToggle, t]);
 
   // Decide whether to show the globe icon.
   // Rule: show whenever we DON'T have a confirmed match between source and target lang.
@@ -205,7 +204,7 @@ export default function TranslatableName({
         isTr && styles.iconBtnActive,
         isRTL ? { marginRight: 6 } : { marginLeft: 6 },
       ]}
-      accessibilityLabel={isTr ? 'رجوع للنص الأصلي' : 'ترجمة'}
+      accessibilityLabel={isTr ? t('tn.backToOriginal', 'Back to original') : t('tn.translate', 'Translate')}
     >
       {loading ? (
         <ActivityIndicator size="small" color={colors.brand} />
@@ -218,7 +217,7 @@ export default function TranslatableName({
           />
           {showToggleLabel ? (
             <Text style={styles.toggleLabel} numberOfLines={1}>
-              {isTr ? 'الأصلي' : 'ترجم'}
+              {isTr ? t('tn.original', 'Original') : t('tn.translate', 'Translate')}
             </Text>
           ) : null}
         </>

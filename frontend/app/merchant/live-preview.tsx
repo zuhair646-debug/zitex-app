@@ -913,7 +913,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                 <View style={s.visitorAvatar}><Text style={{ color: BG, fontWeight: '900' }}>{(v.user_name || 'ز')[0]}</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.visitorName}>{v.user_name}</Text>
-                  <Text style={s.visitorMeta}>⏱ {v.duration_seconds || 0}ث • {v.added_to_cart ? '🛒 أضاف للسلة ' : ''}{v.reached_checkout ? '✅ وصل الدفع' : ''}</Text>
+                  <Text style={s.visitorMeta}>⏱ {v.duration_seconds || 0}{tSync('ث', lang)} • {v.added_to_cart ? `🛒 ${tSync('أضاف للسلة', lang)} ` : ''}{v.reached_checkout ? `✅ ${tSync('وصل الدفع', lang)}` : ''}</Text>
                 </View>
                 <Text style={s.visitorTime}>{(v.created_at || '').slice(5, 10)}</Text>
               </View>
@@ -950,7 +950,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.visitorName}>{b.user_name}</Text>
-                      <Text style={s.visitorMeta}>{b.channel} · {b.quantity} قطعة · {(b.created_at || '').slice(0, 10)}{b.branch ? ` · ${b.branch}` : ''}</Text>
+                      <Text style={s.visitorMeta}>{b.channel} · {b.quantity} {tSync('قطعة', lang)} · {(b.created_at || '').slice(0, 10)}{b.branch ? ` · ${b.branch}` : ''}</Text>
                     </View>
                     <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(b.total).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                   </View>
@@ -969,7 +969,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.visitorName}>{tb.name}</Text>
-                      <Text style={s.visitorMeta}>{tb.city} · {tb.units} قطعة · {tb.orders} فاتورة</Text>
+                      <Text style={s.visitorMeta}>{tb.city} · {tb.units} {tSync('قطعة', lang)} · {tb.orders} {tSync('فاتورة', lang)}</Text>
                     </View>
                     <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(tb.revenue).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                   </View>
