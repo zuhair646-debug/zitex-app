@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useT } from '../../i18n';
+import { tSync } from '../../useAutoT';
 import { View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +37,8 @@ const timeAgo = (iso?: string) => {
 };
 
 export default function CompetitionDetailSheet({ competitionId, apiCall, onClose }: any) {
+  const { lang } = useT();
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'overview' | 'participants' | 'winners' | 'rules'>('overview');
@@ -45,7 +49,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
       try {
         const d = await apiCall(`/api/merchant/competitions/${competitionId}/analytics`);
         if (alive) setData(d);
-      } catch (e: any) { Alert.alert('خطأ', e.message); }
+      } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; };
@@ -134,10 +138,10 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
               <>
                 {/* KPI cards */}
                 <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                  <KpiCard icon="people" label="إجمالي المشاركين" value={K(data.kpis.total_participants)} color={LP.GOLD} />
-                  <KpiCard icon="person" label="مستخدم فريد" value={K(data.kpis.unique_users)} color={LP.INFO} />
-                  <KpiCard icon="add-circle" label="متابع مكتسب" value={`+${K(data.kpis.followers_gained)}`} color={LP.SUCCESS} />
-                  <KpiCard icon="trending-up" label="معدل التفاعل" value={`${data.kpis.engagement_rate}%`} color={LP.MAGENTA} />
+                  <KpiCard icon="people" label={tSync('إجمالي المشاركين', lang)} value={K(data.kpis.total_participants)} color={LP.GOLD} />
+                  <KpiCard icon="person" label={tSync('مستخدم فريد', lang)} value={K(data.kpis.unique_users)} color={LP.INFO} />
+                  <KpiCard icon="add-circle" label={tSync('متابع مكتسب', lang)} value={`+${K(data.kpis.followers_gained)}`} color={LP.SUCCESS} />
+                  <KpiCard icon="trending-up" label={tSync('معدل التفاعل', lang)} value={`${data.kpis.engagement_rate}%`} color={LP.MAGENTA} />
                 </View>
 
                 {/* Peak chips */}
@@ -157,7 +161,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 {/* Daily trend */}
                 {(data.daily_series || []).length > 0 && (
                   <>
-                    <Section icon="pulse" title="نبض المشاركات اليومي" />
+                    <Section icon="pulse" title={tSync('نبض المشاركات اليومي', lang)} />
                     <View style={st.chartBox}>
                       <Sparkline data={data.daily_series.map((x: any) => x.count)} color={LP.GOLD} height={80} />
                     </View>
@@ -167,7 +171,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 {/* Sources */}
                 {(data.sources || []).length > 0 && (
                   <>
-                    <Section icon="link" title="مصادر المشاركين" />
+                    <Section icon="link" title={tSync('مصادر المشاركين', lang)} />
                     {data.sources.map((row: any) => {
                       const total = data.sources.reduce((a: number, b: any) => a + b.count, 0) || 1;
                       const pct = (row.count / total) * 100;
@@ -184,7 +188,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 {/* Top cities */}
                 {(data.top_cities || []).length > 0 && (
                   <>
-                    <Section icon="map" title="أكثر المدن مشاركة" />
+                    <Section icon="map" title={tSync('أكثر المدن مشاركة', lang)} />
                     {data.top_cities.map((c: any, i: number) => (
                       <HBar key={c.city} label={c.city} value={c.count} max={data.top_cities[0].count}
                         color={i === 0 ? LP.GOLD : LP.INFO} />
@@ -271,7 +275,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
 
             {tab === 'rules' && (
               <>
-                <Section icon="information-circle" title="عن المسابقة" />
+                <Section icon="information-circle" title={tSync('عن المسابقة', lang)} />
                 <View style={st.infoBox}>
                   {comp.description ? (
                     <Text style={st.descText}>{comp.description}</Text>
@@ -280,7 +284,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   )}
                 </View>
 
-                <Section icon="trophy" title="الجائزة" />
+                <Section icon="trophy" title={tSync('الجائزة', lang)} />
                 <View style={st.infoBox}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: LP.GOLD + '30', alignItems: 'center', justifyContent: 'center' }}>
@@ -296,7 +300,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   )}
                 </View>
 
-                <Section icon="checkmark-circle" title="شروط المشاركة" />
+                <Section icon="checkmark-circle" title={tSync('شروط المشاركة', lang)} />
                 <View style={st.infoBox}>
                   {(comp.rules || []).map((r: string, i: number) => (
                     <View key={i} style={st.ruleRow}>
@@ -306,7 +310,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   ))}
                 </View>
 
-                <Section icon="calendar" title="التوقيتات" />
+                <Section icon="calendar" title={tSync('التوقيتات', lang)} />
                 <View style={st.infoBox}>
                   <View style={st.timelineRow}>
                     <Ionicons name="play-circle" size={16} color={LP.SUCCESS} />
@@ -318,7 +322,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   </View>
                 </View>
 
-                <Section icon="options" title="نوع المسابقة" />
+                <Section icon="options" title={tSync('نوع المسابقة', lang)} />
                 <View style={st.infoBox}>
                   <Text style={{ color: LP.TEXT, fontSize: 13, textAlign: 'right' }}>
                     {comp.competition_type === 'story_share' ? '📸 مشاركة قصة' :

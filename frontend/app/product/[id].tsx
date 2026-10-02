@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Dimensions, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,10 +8,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { TX } from '../../src/useAutoT';
 import TranslatableName from '../../src/components/TranslatableName';
+import Translatable from '../../src/components/Translatable';
 
 const { width } = Dimensions.get('window');
 
 export default function ProductDetailScreen() {
+  const { lang } = useT();
+
   const { id, preview } = useLocalSearchParams<{ id: string; preview?: string }>();
   const isPreview = preview === '1';
   const router = useRouter();
@@ -47,7 +52,7 @@ export default function ProductDetailScreen() {
         { text: 'Go to Cart', onPress: () => router.push('/cart') },
       ]);
     } catch (e: any) {
-      Alert.alert('خطأ', e.message);
+      Alert.alert(tSync('خطأ', lang), e.message);
     } finally { setAdding(false); }
   };
 
@@ -78,12 +83,13 @@ export default function ProductDetailScreen() {
         </View>
 
         <View style={styles.content}>
-          {/* Name & Rating */}
-          <TranslatableName
-            text={product.name_en}
-            sourceLang="en"
+          {/* Name & Rating - unified across Arabic + English fields */}
+          <Translatable
+            value={{ ar: product.name_ar, en: product.name_en }}
+            joiner={'\n'}
             style={styles.productName}
             iconSize={14}
+            inline={false}
             showToggleLabel
           />
           <View style={styles.ratingRow}>

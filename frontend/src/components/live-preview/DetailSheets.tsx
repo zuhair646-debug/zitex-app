@@ -57,6 +57,8 @@ function SheetShell({ visible, onClose, title, subtitle, avatar, icon, accent = 
 
 /* ═════════════════════════ DRIVER SHEET ═════════════════════════ */
 export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: any) {
+  const { lang } = useT();
+
   const [d, setD] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'stats' | 'reviews' | 'earnings'>('stats');
@@ -65,14 +67,14 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
     let alive = true;
     (async () => {
       try { const data = await apiCall(`/api/merchant/live-preview/driver/${driverId}`); if (alive) setD(data); }
-      catch (e: any) { Alert.alert('خطأ', e.message); }
+      catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; };
   }, [driverId]);
 
   if (loading || !d) return (
-    <SheetShell visible onClose={onClose} title="جاري التحميل..." icon="car">
+    <SheetShell visible onClose={onClose} title={tSync('جاري التحميل...', lang)} icon="car">
       <View style={{ alignItems: 'center', padding: 40 }}><ActivityIndicator color={LP.GOLD} /></View>
     </SheetShell>
   );
@@ -114,15 +116,15 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
 
       {tab === 'stats' && (
         <>
-          <Section icon="rocket" title="عدد التوصيلات" />
+          <Section icon="rocket" title={tSync('عدد التوصيلات', lang)} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="today" label="اليوم" value={K(d.kpis.today)} color={LP.GOLD} sub="توصيلة" />
-            <KpiCard icon="calendar" label="هذا الأسبوع" value={K(d.kpis.week)} color={LP.INFO} sub="توصيلة" />
-            <KpiCard icon="calendar-outline" label="الشهر" value={K(d.kpis.month)} color={LP.SUCCESS} sub="توصيلة" />
-            <KpiCard icon="trending-up" label="السنة" value={K(d.kpis.year)} color={LP.MAGENTA} sub="توصيلة" />
+            <KpiCard icon="today" label={tSync('اليوم', lang)} value={K(d.kpis.today)} color={LP.GOLD} sub="توصيلة" />
+            <KpiCard icon="calendar" label={tSync('هذا الأسبوع', lang)} value={K(d.kpis.week)} color={LP.INFO} sub="توصيلة" />
+            <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={K(d.kpis.month)} color={LP.SUCCESS} sub="توصيلة" />
+            <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={K(d.kpis.year)} color={LP.MAGENTA} sub="توصيلة" />
           </View>
 
-          <Section icon="pulse" title="نبض التوصيلات (7 أيام)" />
+          <Section icon="pulse" title={tSync('نبض التوصيلات (7 أيام)', lang)} />
           <View style={st.chartBox}>
             <Sparkline data={d.week_series} color={LP.GOLD} height={70} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
@@ -130,22 +132,22 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
             </View>
           </View>
 
-          <Section icon="briefcase" title="الدوام وتفاصيل التوظيف" />
+          <Section icon="briefcase" title={tSync('الدوام وتفاصيل التوظيف', lang)} />
           <View style={st.infoBox}>
-            <Row label="الدوام اليومي" value={`${d.shift_start} - ${d.shift_end} (${d.shift_hours} ساعة)`} />
-            <Row label="تاريخ التوظيف" value={d.hire_date || '—'} />
-            <Row label="نظام الأجر" value={
+            <Row label={tSync('الدوام اليومي', lang)} value={`${d.shift_start} - ${d.shift_end} (${d.shift_hours} ساعة)`} />
+            <Row label={tSync('تاريخ التوظيف', lang)} value={d.hire_date || '—'} />
+            <Row label={tSync('نظام الأجر', lang)} value={
               d.salary_type === 'monthly' ? `راتب شهري: ${K(d.salary_monthly)} ر.س`
               : d.salary_type === 'hourly' ? `بالساعة: ${K(d.hourly_rate)} ر.س`
               : `عمولة (${d.commission_type})`
             } />
-            <Row label="رقم اللوحة" value={d.vehicle_plate || '—'} />
-            <Row label="الجوال" value={d.phone} onPress={() => Linking.openURL(`tel:${d.phone}`)} icon="call" />
+            <Row label={tSync('رقم اللوحة', lang)} value={d.vehicle_plate || '—'} />
+            <Row label={tSync('الجوال', lang)} value={d.phone} onPress={() => Linking.openURL(`tel:${d.phone}`)} icon="call" />
           </View>
 
           {d.assigned_branches?.length > 0 && (
             <>
-              <Section icon="business" title="الفروع المرتبطة" />
+              <Section icon="business" title={tSync('الفروع المرتبطة', lang)} />
               {d.assigned_branches.map((b: any) => (
                 <EntityPill key={b.id} image={b.image} name={b.name} subtitle={b.city} icon="business"
                   onPress={() => onOpenBranch && onOpenBranch(b.id)} />
@@ -157,7 +159,7 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
 
       {tab === 'reviews' && (
         <>
-          <Section icon="star" title="تقييم العملاء" />
+          <Section icon="star" title={tSync('تقييم العملاء', lang)} />
           <View style={st.infoBox}>
             <RatingBreakdown distribution={d.rating.distribution} total={d.rating.count} avg={d.rating.avg} />
           </View>
@@ -200,15 +202,15 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
 
       {tab === 'earnings' && (
         <>
-          <Section icon="cash" title="المدخولات" />
+          <Section icon="cash" title={tSync('المدخولات', lang)} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="today" label="اليوم" value={`${K(d.kpis.today_earnings)} ر.س`} color={LP.GOLD} />
-            <KpiCard icon="calendar" label="الأسبوع" value={`${K(d.kpis.week_earnings)} ر.س`} color={LP.INFO} />
-            <KpiCard icon="calendar-outline" label="الشهر" value={`${K(d.kpis.month_earnings)} ر.س`} color={LP.SUCCESS} />
-            <KpiCard icon="trending-up" label="السنة" value={`${K(d.kpis.year_earnings)} ر.س`} color={LP.MAGENTA} />
+            <KpiCard icon="today" label={tSync('اليوم', lang)} value={`${K(d.kpis.today_earnings)} ر.س`} color={LP.GOLD} />
+            <KpiCard icon="calendar" label={tSync('الأسبوع', lang)} value={`${K(d.kpis.week_earnings)} ر.س`} color={LP.INFO} />
+            <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={`${K(d.kpis.month_earnings)} ر.س`} color={LP.SUCCESS} />
+            <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={`${K(d.kpis.year_earnings)} ر.س`} color={LP.MAGENTA} />
           </View>
 
-          <Section icon="bar-chart" title="توزيع المدخول الشهري" />
+          <Section icon="bar-chart" title={tSync('توزيع المدخول الشهري', lang)} />
           <View style={st.chartBox}>
             <Sparkline data={d.month_series} color={LP.SUCCESS} height={80} />
           </View>
@@ -228,14 +230,14 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
     let alive = true;
     (async () => {
       try { const data = await apiCall(`/api/merchant/live-preview/branch/${branchId}`); if (alive) setB(data); }
-      catch (e: any) { Alert.alert('خطأ', e.message); }
+      catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; };
   }, [branchId]);
 
   if (loading || !b) return (
-    <SheetShell visible onClose={onClose} title="جاري التحميل..." icon="business">
+    <SheetShell visible onClose={onClose} title={tSync('جاري التحميل...', lang)} icon="business">
       <View style={{ alignItems: 'center', padding: 40 }}><ActivityIndicator color={LP.GOLD} /></View>
     </SheetShell>
   );
@@ -280,22 +282,22 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
 
       {tab === 'stats' && (
         <>
-          <Section icon="receipt" title="عدد الطلبات" />
+          <Section icon="receipt" title={tSync('عدد الطلبات', lang)} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="today" label="اليوم" value={K(b.orders.today)} color={LP.GOLD} sub="طلب" />
-            <KpiCard icon="calendar" label="الأمس" value={K(b.orders.yesterday)} color={LP.INFO} sub="طلب" />
-            <KpiCard icon="calendar-outline" label="آخر يومين" value={K(b.orders.two_days)} color={LP.MAGENTA} sub="طلب" />
-            <KpiCard icon="calendar-clear" label="الأسبوع" value={K(b.orders.week)} color={LP.WARN} sub="طلب" />
-            <KpiCard icon="stats-chart" label="الشهر" value={K(b.orders.month)} color={LP.SUCCESS} sub="طلب" />
-            <KpiCard icon="trending-up" label="السنة" value={KM(b.orders.year)} color={LP.DANGER} sub="طلب" />
+            <KpiCard icon="today" label={tSync('اليوم', lang)} value={K(b.orders.today)} color={LP.GOLD} sub="طلب" />
+            <KpiCard icon="calendar" label={tSync('الأمس', lang)} value={K(b.orders.yesterday)} color={LP.INFO} sub="طلب" />
+            <KpiCard icon="calendar-outline" label={tSync('آخر يومين', lang)} value={K(b.orders.two_days)} color={LP.MAGENTA} sub="طلب" />
+            <KpiCard icon="calendar-clear" label={tSync('الأسبوع', lang)} value={K(b.orders.week)} color={LP.WARN} sub="طلب" />
+            <KpiCard icon="stats-chart" label={tSync('الشهر', lang)} value={K(b.orders.month)} color={LP.SUCCESS} sub="طلب" />
+            <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={KM(b.orders.year)} color={LP.DANGER} sub="طلب" />
           </View>
 
-          <Section icon="cash" title="المدخولات" />
+          <Section icon="cash" title={tSync('المدخولات', lang)} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="today" label="اليوم" value={`${KM(b.revenue.today)} ر.س`} color={LP.GOLD} />
-            <KpiCard icon="cart" label="داخل الفرع" value={`${KM(b.revenue.in_store)} ر.س`} color={LP.INFO} />
-            <KpiCard icon="phone-portrait" label="من التطبيق" value={`${KM(b.revenue.app)} ر.س`} color={LP.SUCCESS} />
-            <KpiCard icon="calculator" label="إجمالي الشهر" value={`${KM(b.revenue.total_month)} ر.س`} color={LP.MAGENTA} />
+            <KpiCard icon="today" label={tSync('اليوم', lang)} value={`${KM(b.revenue.today)} ر.س`} color={LP.GOLD} />
+            <KpiCard icon="cart" label={tSync('داخل الفرع', lang)} value={`${KM(b.revenue.in_store)} ر.س`} color={LP.INFO} />
+            <KpiCard icon="phone-portrait" label={tSync('من التطبيق', lang)} value={`${KM(b.revenue.app)} ر.س`} color={LP.SUCCESS} />
+            <KpiCard icon="calculator" label={tSync('إجمالي الشهر', lang)} value={`${KM(b.revenue.total_month)} ر.س`} color={LP.MAGENTA} />
           </View>
 
           {b.revenue.monthly_target > 0 && (
@@ -315,19 +317,19 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
             </View>
           )}
 
-          <Section icon="pulse" title="نبض المبيعات (30 يوم)" />
+          <Section icon="pulse" title={tSync('نبض المبيعات (30 يوم)', lang)} />
           <View style={st.chartBox}>
             <Sparkline data={b.revenue_series} color={LP.SUCCESS} height={80} />
           </View>
 
-          <Section icon="location" title="معلومات الفرع" />
+          <Section icon="location" title={tSync('معلومات الفرع', lang)} />
           <View style={st.infoBox}>
-            <Row label="العنوان" value={b.address || '—'} />
-            <Row label="الحي" value={b.district || '—'} />
-            <Row label="ساعات العمل" value={b.open_hours} />
-            <Row label="أيام العمل" value={(b.working_days || []).join(', ') || '—'} />
-            <Row label="الجوال" value={b.phone} onPress={() => b.phone && Linking.openURL(`tel:${b.phone}`)} icon="call" />
-            <Row label="البريد" value={b.email || '—'} onPress={() => b.email && Linking.openURL(`mailto:${b.email}`)} icon="mail" />
+            <Row label={tSync('العنوان', lang)} value={b.address || '—'} />
+            <Row label={tSync('الحي', lang)} value={b.district || '—'} />
+            <Row label={tSync('ساعات العمل', lang)} value={b.open_hours} />
+            <Row label={tSync('أيام العمل', lang)} value={(b.working_days || []).join(', ') || '—'} />
+            <Row label={tSync('الجوال', lang)} value={b.phone} onPress={() => b.phone && Linking.openURL(`tel:${b.phone}`)} icon="call" />
+            <Row label={tSync('البريد', lang)} value={b.email || '—'} onPress={() => b.email && Linking.openURL(`mailto:${b.email}`)} icon="mail" />
           </View>
         </>
       )}
@@ -348,7 +350,7 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
 
       {tab === 'reviews' && (
         <>
-          <Section icon="star" title="تقييمات العملاء" />
+          <Section icon="star" title={tSync('تقييمات العملاء', lang)} />
           <View style={st.infoBox}>
             <RatingBreakdown distribution={b.rating.distribution} total={b.rating.count} avg={b.rating.avg} />
           </View>
@@ -378,14 +380,14 @@ export function MarketerDetailSheet({ marketerId, apiCall, onClose }: any) {
     let alive = true;
     (async () => {
       try { const data = await apiCall(`/api/merchant/live-preview/marketer/${marketerId}`); if (alive) setM(data); }
-      catch (e: any) { Alert.alert('خطأ', e.message); }
+      catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; };
   }, [marketerId]);
 
   if (loading || !m) return (
-    <SheetShell visible onClose={onClose} title="جاري التحميل..." icon="megaphone">
+    <SheetShell visible onClose={onClose} title={tSync('جاري التحميل...', lang)} icon="megaphone">
       <View style={{ alignItems: 'center', padding: 40 }}><ActivityIndicator color={LP.GOLD} /></View>
     </SheetShell>
   );
@@ -408,38 +410,38 @@ export function MarketerDetailSheet({ marketerId, apiCall, onClose }: any) {
         </View>
       </View>
 
-      <Section icon="cash" title="المدخولات" />
+      <Section icon="cash" title={tSync('المدخولات', lang)} />
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-        <KpiCard icon="today" label="اليوم" value={`${K(m.kpis.today_earnings)} ر.س`} color={LP.GOLD} />
-        <KpiCard icon="calendar" label="الأسبوع" value={`${K(m.kpis.week_earnings)} ر.س`} color={LP.INFO} />
-        <KpiCard icon="calendar-outline" label="الشهر" value={`${K(m.kpis.month_earnings)} ر.س`} color={LP.SUCCESS} />
-        <KpiCard icon="trending-up" label="السنة" value={`${KM(m.kpis.year_earnings)} ر.س`} color={LP.MAGENTA} />
+        <KpiCard icon="today" label={tSync('اليوم', lang)} value={`${K(m.kpis.today_earnings)} ر.س`} color={LP.GOLD} />
+        <KpiCard icon="calendar" label={tSync('الأسبوع', lang)} value={`${K(m.kpis.week_earnings)} ر.س`} color={LP.INFO} />
+        <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={`${K(m.kpis.month_earnings)} ر.س`} color={LP.SUCCESS} />
+        <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={`${KM(m.kpis.year_earnings)} ر.س`} color={LP.MAGENTA} />
       </View>
 
-      <Section icon="analytics" title="أرقام أساسية" />
+      <Section icon="analytics" title={tSync('أرقام أساسية', lang)} />
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-        <KpiCard icon="link" label="نقرات" value={KM(m.kpis.clicks)} color={LP.INFO} />
-        <KpiCard icon="person" label="نقرات فريدة" value={KM(m.kpis.unique_clicks)} color={LP.MAGENTA} />
-        <KpiCard icon="checkmark-circle" label="تحويلات" value={K(m.kpis.conversions)} color={LP.SUCCESS} />
-        <KpiCard icon="cart" label="إجمالي المبيعات" value={`${KM(m.kpis.sales_total)} ر.س`} color={LP.GOLD} />
+        <KpiCard icon="link" label={tSync('نقرات', lang)} value={KM(m.kpis.clicks)} color={LP.INFO} />
+        <KpiCard icon="person" label={tSync('نقرات فريدة', lang)} value={KM(m.kpis.unique_clicks)} color={LP.MAGENTA} />
+        <KpiCard icon="checkmark-circle" label={tSync('تحويلات', lang)} value={K(m.kpis.conversions)} color={LP.SUCCESS} />
+        <KpiCard icon="cart" label={tSync('إجمالي المبيعات', lang)} value={`${KM(m.kpis.sales_total)} ر.س`} color={LP.GOLD} />
       </View>
 
-      <Section icon="wallet" title="حالة العمولات" />
+      <Section icon="wallet" title={tSync('حالة العمولات', lang)} />
       <View style={st.infoBox}>
-        <Row label="المكتسبة" value={`${K(m.kpis.commission_earned)} ر.س`} valueColor={LP.SUCCESS} />
-        <Row label="قيد التسوية" value={`${K(m.kpis.commission_pending)} ر.س`} valueColor={LP.WARN} />
-        <Row label="تم دفعها" value={`${K(m.kpis.commission_paid)} ر.س`} valueColor={LP.INFO} />
-        <Row label="نسبة العمولة" value={`${m.commission_rate}%`} />
+        <Row label={tSync('المكتسبة', lang)} value={`${K(m.kpis.commission_earned)} ر.س`} valueColor={LP.SUCCESS} />
+        <Row label={tSync('قيد التسوية', lang)} value={`${K(m.kpis.commission_pending)} ر.س`} valueColor={LP.WARN} />
+        <Row label={tSync('تم دفعها', lang)} value={`${K(m.kpis.commission_paid)} ر.س`} valueColor={LP.INFO} />
+        <Row label={tSync('نسبة العمولة', lang)} value={`${m.commission_rate}%`} />
       </View>
 
-      <Section icon="pie-chart" title="أفضل قنوات النشر" />
+      <Section icon="pie-chart" title={tSync('أفضل قنوات النشر', lang)} />
       {platforms.map(([plat, stats]: any) => (
         <HBar key={plat} label={`${PLATFORM_LABEL[plat] || plat}`}
           value={stats.revenue || 0} max={maxRev} color={PLATFORM_COLORS[plat] || LP.GOLD}
           secondary={`${K(stats.clicks || 0)} نقرة · ${K(stats.conversions || 0)} تحويل`} />
       ))}
 
-      <Section icon="megaphone" title="أفضل المنشورات" />
+      <Section icon="megaphone" title={tSync('أفضل المنشورات', lang)} />
       {(m.top_posts || []).map((p: any, i: number) => (
         <View key={i} style={st.postCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -456,17 +458,17 @@ export function MarketerDetailSheet({ marketerId, apiCall, onClose }: any) {
         </View>
       ))}
 
-      <Section icon="pulse" title="نبض العمولات (30 يوم)" />
+      <Section icon="pulse" title={tSync('نبض العمولات (30 يوم)', lang)} />
       <View style={st.chartBox}>
         <Sparkline data={m.revenue_series} color={LP.WARN} height={80} />
       </View>
 
-      <Section icon="person" title="بيانات المسوّق" />
+      <Section icon="person" title={tSync('بيانات المسوّق', lang)} />
       <View style={st.infoBox}>
-        <Row label="الجوال" value={m.phone} onPress={() => m.phone && Linking.openURL(`tel:${m.phone}`)} icon="call" />
-        <Row label="رمز الإحالة" value={m.referral_code} valueColor={LP.GOLD} />
-        <Row label="عدد المشاركات" value={`${K(m.kpis.posts_shared)} منشور`} />
-        <Row label="تاريخ الانضمام" value={(m.joined_at || '').slice(0, 10)} />
+        <Row label={tSync('الجوال', lang)} value={m.phone} onPress={() => m.phone && Linking.openURL(`tel:${m.phone}`)} icon="call" />
+        <Row label={tSync('رمز الإحالة', lang)} value={m.referral_code} valueColor={LP.GOLD} />
+        <Row label={tSync('عدد المشاركات', lang)} value={`${K(m.kpis.posts_shared)} منشور`} />
+        <Row label={tSync('تاريخ الانضمام', lang)} value={(m.joined_at || '').slice(0, 10)} />
       </View>
     </SheetShell>
   );
@@ -485,14 +487,14 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
 
   const load = async () => {
     try { const data = await apiCall(`/api/merchant/live-preview/employee/${employeeId}`); setE(data); }
-    catch (err: any) { Alert.alert('خطأ', err.message); }
+    catch (err: any) { Alert.alert(tSync('خطأ', lang), err.message); }
     finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, [employeeId]);
 
   const submitNote = async () => {
-    if (!noteText.trim()) { Alert.alert('تنبيه', 'اكتب الملاحظة أولاً'); return; }
+    if (!noteText.trim()) { Alert.alert(tSync('تنبيه', lang), 'اكتب الملاحظة أولاً'); return; }
     setSaving(true);
     try {
       await apiCall(`/api/merchant/live-preview/employee/${employeeId}/note`, {
@@ -501,13 +503,13 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
       });
       setNoteText(''); setAddingNote(false); setNoteRating(5); setNoteType('positive');
       await load();
-      Alert.alert('تم', 'تم حفظ تقييم المشرف ✨');
-    } catch (err: any) { Alert.alert('خطأ', err.message); }
+      Alert.alert(tSync('تم', lang), 'تم حفظ تقييم المشرف ✨');
+    } catch (err: any) { Alert.alert(tSync('خطأ', lang), err.message); }
     finally { setSaving(false); }
   };
 
   if (loading || !e) return (
-    <SheetShell visible onClose={onClose} title="جاري التحميل..." icon="person">
+    <SheetShell visible onClose={onClose} title={tSync('جاري التحميل...', lang)} icon="person">
       <View style={{ alignItems: 'center', padding: 40 }}><ActivityIndicator color={LP.GOLD} /></View>
     </SheetShell>
   );
@@ -545,36 +547,36 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
 
       {tab === 'stats' && (
         <>
-          <Section icon="receipt" title="أداء الفواتير والطلبات" />
+          <Section icon="receipt" title={tSync('أداء الفواتير والطلبات', lang)} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="today" label="فواتير اليوم" value={K(e.kpis.today_invoices)} color={LP.GOLD} />
-            <KpiCard icon="calendar" label="الأسبوع" value={K(e.kpis.week_invoices)} color={LP.INFO} />
-            <KpiCard icon="calendar-outline" label="الشهر" value={K(e.kpis.month_invoices)} color={LP.SUCCESS} />
-            <KpiCard icon="calculator" label="إجمالي" value={K(e.kpis.invoices_count)} color={LP.MAGENTA} />
+            <KpiCard icon="today" label={tSync('فواتير اليوم', lang)} value={K(e.kpis.today_invoices)} color={LP.GOLD} />
+            <KpiCard icon="calendar" label={tSync('الأسبوع', lang)} value={K(e.kpis.week_invoices)} color={LP.INFO} />
+            <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={K(e.kpis.month_invoices)} color={LP.SUCCESS} />
+            <KpiCard icon="calculator" label={tSync('إجمالي', lang)} value={K(e.kpis.invoices_count)} color={LP.MAGENTA} />
           </View>
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-            <KpiCard icon="cart" label="طلبات مُنجزة" value={K(e.kpis.orders_handled)} color={LP.INFO} />
-            <KpiCard icon="cash" label="مبيعات إجمالية" value={`${KM(e.kpis.invoices_total)} ر.س`} color={LP.GOLD} />
-            <KpiCard icon="people" label="عملاء" value={K(e.kpis.customers_served)} color={LP.SUCCESS} />
-            <KpiCard icon="stats-chart" label="متوسط الفاتورة" value={`${K(e.kpis.avg_ticket)} ر.س`} color={LP.MAGENTA} />
+            <KpiCard icon="cart" label={tSync('طلبات مُنجزة', lang)} value={K(e.kpis.orders_handled)} color={LP.INFO} />
+            <KpiCard icon="cash" label={tSync('مبيعات إجمالية', lang)} value={`${KM(e.kpis.invoices_total)} ر.س`} color={LP.GOLD} />
+            <KpiCard icon="people" label={tSync('عملاء', lang)} value={K(e.kpis.customers_served)} color={LP.SUCCESS} />
+            <KpiCard icon="stats-chart" label={tSync('متوسط الفاتورة', lang)} value={`${K(e.kpis.avg_ticket)} ر.س`} color={LP.MAGENTA} />
           </View>
 
-          <Section icon="wallet" title="الأجر" />
+          <Section icon="wallet" title={tSync('الأجر', lang)} />
           <View style={st.infoBox}>
-            <Row label="النظام" value={e.salary_type === 'monthly' ? 'راتب شهري' : 'بالساعة'} />
+            <Row label={tSync('النظام', lang)} value={e.salary_type === 'monthly' ? 'راتب شهري' : 'بالساعة'} />
             {e.salary_type === 'monthly' ? (
-              <Row label="الراتب الشهري" value={`${K(e.salary_monthly)} ر.س`} valueColor={LP.GOLD} />
+              <Row label={tSync('الراتب الشهري', lang)} value={`${K(e.salary_monthly)} ر.س`} valueColor={LP.GOLD} />
             ) : (
-              <Row label="أجر الساعة" value={`${K(e.hourly_rate)} ر.س`} valueColor={LP.GOLD} />
+              <Row label={tSync('أجر الساعة', lang)} value={`${K(e.hourly_rate)} ر.س`} valueColor={LP.GOLD} />
             )}
-            <Row label="ساعات الدوام يومياً" value={`${e.shift_hours} ساعة`} />
-            <Row label="الدوام" value={`${e.shift_start} - ${e.shift_end}`} />
-            <Row label="تاريخ التوظيف" value={e.hire_date || '—'} />
+            <Row label={tSync('ساعات الدوام يومياً', lang)} value={`${e.shift_hours} ساعة`} />
+            <Row label={tSync('الدوام', lang)} value={`${e.shift_start} - ${e.shift_end}`} />
+            <Row label={tSync('تاريخ التوظيف', lang)} value={e.hire_date || '—'} />
           </View>
 
           {(e.bonuses?.length > 0 || e.deductions?.length > 0) && (
             <>
-              <Section icon="calculator" title="المكافآت والخصومات" />
+              <Section icon="calculator" title={tSync('المكافآت والخصومات', lang)} />
               <View style={st.infoBox}>
                 {e.bonuses.map((b: any, i: number) => (
                   <View key={`bonus-${i}`} style={st.dedRow}>
@@ -600,7 +602,7 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
 
           {e.branches?.length > 0 && (
             <>
-              <Section icon="business" title="الفروع" />
+              <Section icon="business" title={tSync('الفروع', lang)} />
               {e.branches.map((b: any) => (
                 <EntityPill key={b.id} image={b.image} name={b.name} subtitle={b.city} icon="business"
                   onPress={() => onOpenBranch && onOpenBranch(b.id)} />
@@ -612,14 +614,14 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
 
       {tab === 'attendance' && (
         <>
-          <Section icon="calendar" title="سجل الحضور (الشهر)" />
+          <Section icon="calendar" title={tSync('سجل الحضور (الشهر)', lang)} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="checkmark-circle" label="أيام حضور" value={K(e.attendance.present_days)} color={LP.SUCCESS} />
-            <KpiCard icon="close-circle" label="غياب" value={K(e.attendance.absent_days)} color={LP.DANGER} />
-            <KpiCard icon="alarm" label="تأخير" value={K(e.attendance.late_days)} color={LP.WARN} />
-            <KpiCard icon="airplane" label="إجازة" value={K(e.attendance.leave_days)} color={LP.INFO} />
+            <KpiCard icon="checkmark-circle" label={tSync('أيام حضور', lang)} value={K(e.attendance.present_days)} color={LP.SUCCESS} />
+            <KpiCard icon="close-circle" label={tSync('غياب', lang)} value={K(e.attendance.absent_days)} color={LP.DANGER} />
+            <KpiCard icon="alarm" label={tSync('تأخير', lang)} value={K(e.attendance.late_days)} color={LP.WARN} />
+            <KpiCard icon="airplane" label={tSync('إجازة', lang)} value={K(e.attendance.leave_days)} color={LP.INFO} />
           </View>
-          <Section icon="key" title="الصلاحيات" />
+          <Section icon="key" title={tSync('الصلاحيات', lang)} />
           <View style={st.infoBox}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {(e.permissions || []).map((p: string) => (

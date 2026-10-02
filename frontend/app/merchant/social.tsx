@@ -60,16 +60,16 @@ export default function MerchantSocial() {
     try {
       if (tab === 'posts') { const d = await apiCall('/api/social/posts'); setPosts(d); }
       else { const d = await apiCall('/api/merchant/social/comments'); setComments(d); }
-    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); setRefreshing(false); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); setRefreshing(false); }
   }, [tab]);
 
   useEffect(() => { setLoading(true); load(); }, [load]);
 
   const pickImage = async () => {
-    if (postType === 'post' && media.length >= 8) { Alert.alert('الحد', 'يمكن رفع 8 وسائط فقط'); return; }
+    if (postType === 'post' && media.length >= 8) { Alert.alert(tSync('الحد', lang), 'يمكن رفع 8 وسائط فقط'); return; }
     const r = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (r.status !== 'granted') {
-      Alert.alert('صلاحية الصور', 'يجب السماح للوصول إلى الصور لإرفاقها');
+      Alert.alert(tSync('صلاحية الصور', lang), 'يجب السماح للوصول إلى الصور لإرفاقها');
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -88,15 +88,15 @@ export default function MerchantSocial() {
       }
       if (postType === 'post') setMedia([...media, ...items].slice(0, 8));
       else setMedia([items[0]]);
-    } catch (e: any) { Alert.alert('خطأ الرفع', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ الرفع', lang), e.message); }
     finally { setUploading(false); }
   };
 
   const pickVideo = async () => {
-    if (postType !== 'post' && postType !== 'story') { Alert.alert('غير مسموح', 'الفيديو للمنشور أو الحالة فقط'); return; }
-    if (media.length >= 8) { Alert.alert('الحد', 'يمكن رفع 8 وسائط فقط'); return; }
+    if (postType !== 'post' && postType !== 'story') { Alert.alert(tSync('غير مسموح', lang), 'الفيديو للمنشور أو الحالة فقط'); return; }
+    if (media.length >= 8) { Alert.alert(tSync('الحد', lang), 'يمكن رفع 8 وسائط فقط'); return; }
     const r = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (r.status !== 'granted') { Alert.alert('صلاحية', 'يجب السماح للوصول إلى المكتبة'); return; }
+    if (r.status !== 'granted') { Alert.alert(tSync('صلاحية', lang), 'يجب السماح للوصول إلى المكتبة'); return; }
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['videos'] as any, quality: 0.85, videoMaxDuration: 60,
     });
@@ -108,14 +108,14 @@ export default function MerchantSocial() {
       const it: MediaItem = { kind: 'video', path: up.path };
       if (postType === 'post') setMedia([...media, it].slice(0, 8));
       else setMedia([it]);
-    } catch (e: any) { Alert.alert('خطأ الرفع', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ الرفع', lang), e.message); }
     finally { setUploading(false); }
   };
 
   const takePhoto = async () => {
     const r = await ImagePicker.requestCameraPermissionsAsync();
     if (r.status !== 'granted') {
-      Alert.alert('صلاحية الكاميرا', 'يجب السماح للوصول إلى الكاميرا');
+      Alert.alert(tSync('صلاحية الكاميرا', lang), 'يجب السماح للوصول إلى الكاميرا');
       return;
     }
     const res = await ImagePicker.launchCameraAsync({ quality: 0.85, mediaTypes: ['images'] as any });
@@ -127,7 +127,7 @@ export default function MerchantSocial() {
       const it: MediaItem = { kind: 'image', path: up.path };
       if (postType === 'post') setMedia([...media, it].slice(0, 8));
       else setMedia([it]);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setUploading(false); }
   };
 
@@ -140,17 +140,17 @@ export default function MerchantSocial() {
 
   const publish = async () => {
     // Validation per type
-    if (postType === 'post' && !text.trim() && media.length === 0) { Alert.alert('مطلوب', 'أضف نصاً أو وسائط'); return; }
-    if (postType === 'story' && media.length === 0) { Alert.alert('مطلوب', 'الحالة تحتاج صورة أو فيديو'); return; }
+    if (postType === 'post' && !text.trim() && media.length === 0) { Alert.alert(tSync('مطلوب', lang), 'أضف نصاً أو وسائط'); return; }
+    if (postType === 'story' && media.length === 0) { Alert.alert(tSync('مطلوب', lang), 'الحالة تحتاج صورة أو فيديو'); return; }
     if (postType === 'poll') {
-      if (!text.trim()) { Alert.alert('مطلوب', 'اكتب سؤال الاستطلاع'); return; }
+      if (!text.trim()) { Alert.alert(tSync('مطلوب', lang), 'اكتب سؤال الاستطلاع'); return; }
       const valid = pollOptions.filter(o => o.trim()).length;
-      if (valid < 2) { Alert.alert('مطلوب', 'الاستطلاع يحتاج خيارين على الأقل'); return; }
+      if (valid < 2) { Alert.alert(tSync('مطلوب', lang), 'الاستطلاع يحتاج خيارين على الأقل'); return; }
     }
-    if (postType === 'question' && !text.trim()) { Alert.alert('مطلوب', 'اكتب السؤال'); return; }
+    if (postType === 'question' && !text.trim()) { Alert.alert(tSync('مطلوب', lang), 'اكتب السؤال'); return; }
     if (postType === 'event') {
-      if (!text.trim()) { Alert.alert('مطلوب', 'اكتب اسم الفعالية'); return; }
-      if (!eventDate.trim()) { Alert.alert('مطلوب', 'حدد تاريخ الفعالية'); return; }
+      if (!text.trim()) { Alert.alert(tSync('مطلوب', lang), 'اكتب اسم الفعالية'); return; }
+      if (!eventDate.trim()) { Alert.alert(tSync('مطلوب', lang), 'حدد تاريخ الفعالية'); return; }
     }
 
     setPublishing(true);
@@ -175,12 +175,12 @@ export default function MerchantSocial() {
       setComposerOpen(false);
       load();
       Alert.alert('✅ تم النشر', postType === 'story' ? 'الحالة ستظهر لـ 24 ساعة' : 'تم نشر المحتوى');
-    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setPublishing(false); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setPublishing(false); }
   };
 
-  const delPost = (id: string) => Alert.alert('حذف المنشور؟', 'لا يمكن التراجع', [
+  const delPost = (id: string) => Alert.alert(tSync('حذف المنشور؟', lang), 'لا يمكن التراجع', [
     { text: 'إلغاء', style: 'cancel' },
-    { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/social/posts/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } }
+    { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/social/posts/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }
   ]);
 
   const openThread = async (postId: string) => {
@@ -194,16 +194,16 @@ export default function MerchantSocial() {
       setReplyText(''); setReplyParent(null);
       const d = await apiCall(`/api/social/posts/${replyPostId}/comments`); setPostComments(d);
       if (tab === 'comments') load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
-  const delComment = (cid: string) => Alert.alert('حذف التعليق؟', '', [
+  const delComment = (cid: string) => Alert.alert(tSync('حذف التعليق؟', lang), '', [
     { text: 'إلغاء', style: 'cancel' },
     { text: 'حذف', style: 'destructive', onPress: async () => {
       try {
         await apiCall(`/api/merchant/social/comments/${cid}`, { method: 'DELETE' });
         if (replyPostId) { const d = await apiCall(`/api/social/posts/${replyPostId}/comments`); setPostComments(d); }
         if (tab === 'comments') load();
-      } catch (e: any) { Alert.alert('خطأ', e.message); }
+      } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     } }
   ]);
 

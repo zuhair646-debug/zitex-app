@@ -44,33 +44,33 @@ export default function MerchantRoles() {
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/merchant/roles'); setRoles(Array.isArray(d) ? d : []); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
   const openNew = () => setEditing({ name: '', description: '', permissions: [], color: '#D4AF37' });
-  const openEdit = (r: any) => { if (r.is_preset) { Alert.alert('دور جاهز', 'الأدوار الجاهزة لا يمكن تعديلها. أنشئ دوراً مخصصاً بدلاً منها.'); return; } setEditing(r); };
+  const openEdit = (r: any) => { if (r.is_preset) { Alert.alert(tSync('دور جاهز', lang), 'الأدوار الجاهزة لا يمكن تعديلها. أنشئ دوراً مخصصاً بدلاً منها.'); return; } setEditing(r); };
   const togglePerm = (k: string) => setEditing((e: any) => ({ ...e, permissions: e.permissions.includes(k) ? e.permissions.filter((x: string) => x !== k) : [...e.permissions, k] }));
 
   const save = async () => {
-    if (!editing.name?.trim()) { Alert.alert('نقص', 'اسم الدور مطلوب'); return; }
-    if (editing.permissions.length === 0) { Alert.alert('نقص', 'اختر صلاحية واحدة على الأقل'); return; }
+    if (!editing.name?.trim()) { Alert.alert(tSync('نقص', lang), 'اسم الدور مطلوب'); return; }
+    if (editing.permissions.length === 0) { Alert.alert(tSync('نقص', lang), 'اختر صلاحية واحدة على الأقل'); return; }
     try {
       const payload = { name: editing.name, description: editing.description || '', permissions: editing.permissions, color: editing.color || '#D4AF37' };
       if (editing.id && !editing.is_preset) await apiCall(`/api/merchant/roles/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) });
       else await apiCall('/api/merchant/roles', { method: 'POST', body: JSON.stringify(payload) });
       setEditing(null); load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const remove = (r: any) => {
     if (r.is_preset) return;
-    Alert.alert('حذف الدور', `حذف "${r.name}"؟`, [
+    Alert.alert(tSync('حذف الدور', lang), `حذف "${r.name}"؟`, [
       { text: 'إلغاء', style: 'cancel' },
       { text: 'حذف', style: 'destructive', onPress: async () => {
         try { await apiCall(`/api/merchant/roles/${r.id}`, { method: 'DELETE' }); load(); }
-        catch (e: any) { Alert.alert('خطأ', e.message); }
+        catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       }}
     ]);
   };

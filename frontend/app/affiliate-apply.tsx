@@ -38,8 +38,8 @@ export default function AffiliateApply() {
   const requiredMissing = missing('full_name') || missing('phone');
 
   const submit = async () => {
-    if (!merchant_id) { Alert.alert('خطأ', 'لم يتم تحديد التاجر'); return; }
-    if (requiredMissing) { Alert.alert('حقول ناقصة', 'يرجى إكمال الاسم ورقم الجوال'); return; }
+    if (!merchant_id) { Alert.alert(tSync('خطأ', lang), 'لم يتم تحديد التاجر'); return; }
+    if (requiredMissing) { Alert.alert(tSync('حقول ناقصة', lang), 'يرجى إكمال الاسم ورقم الجوال'); return; }
     setSaving(true);
     try {
       await apiCall('/api/affiliate/apply', {
@@ -55,7 +55,7 @@ export default function AffiliateApply() {
       });
       Alert.alert('✅ تم إرسال الطلب', 'سيصلك إشعار عند موافقة التاجر.',
         [{ text: 'موافق', onPress: () => router.back() }]);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 

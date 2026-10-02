@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useT } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -37,6 +39,8 @@ const STATE_META: Record<string, { label: string; color: string; icon: string }>
 };
 
 export default function RMADetailScreen() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -49,7 +53,7 @@ export default function RMADetailScreen() {
       try {
         const d = await apiCall(`/api/my/rmas/${rmaId}`);
         setR(d);
-      } catch (e: any) { Alert.alert('خطأ', e?.message); }
+      } catch (e: any) { Alert.alert(tSync('خطأ', lang), e?.message); }
       finally { setLoading(false); }
     })();
   }, [rmaId]);

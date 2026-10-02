@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -25,6 +27,8 @@ const PLATFORM_COLORS: Record<string, string> = {
 };
 
 export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = '' }: { kind?: 'product' | 'service' | 'competition' | 'post'; id?: string } = {} as any) {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -110,7 +114,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
         const data = await apiCall(endpoint);
         setD(data);
       } catch (e: any) {
-        Alert.alert('خطأ', e?.message);
+        Alert.alert(tSync('خطأ', lang), e?.message);
       } finally { setLoading(false); }
     })();
   }, [pid, endpoint]);
@@ -248,20 +252,20 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
           </View>
           {kind === 'service' && (
             <View style={s.kpiRow}>
-              <KPI label="طلبات إرجاع" value={fmt(k.returns_count || 0)} icon="return-up-back" color={RED} sub={`${k.returns_pct || 0}% من الحجوزات`} />
-              <KPI label="الشكاوى" value={fmt(k.complaints_count || 0)} icon="alert-circle" color={AMBER} sub="بلاغات العملاء" />
+              <KPI label={tSync('طلبات إرجاع', lang)} value={fmt(k.returns_count || 0)} icon="return-up-back" color={RED} sub={`${k.returns_pct || 0}% من الحجوزات`} />
+              <KPI label={tSync('الشكاوى', lang)} value={fmt(k.complaints_count || 0)} icon="alert-circle" color={AMBER} sub="بلاغات العملاء" />
             </View>
           )}
           {kind === 'competition' && (
             <View style={s.kpiRow}>
-              <KPI label="الفائزون" value={fmt(k.winners_count || 0)} icon="trophy" color={GOLD} sub={`من ${fmt(k.prize_count || 0)} جائزة`} />
-              <KPI label="فيديوهات ترويجية" value={fmt(k.videos_count || 0)} icon="videocam" color={PURPLE} sub="محفوظة للأرشيف" />
+              <KPI label={tSync('الفائزون', lang)} value={fmt(k.winners_count || 0)} icon="trophy" color={GOLD} sub={`من ${fmt(k.prize_count || 0)} جائزة`} />
+              <KPI label={tSync('فيديوهات ترويجية', lang)} value={fmt(k.videos_count || 0)} icon="videocam" color={PURPLE} sub="محفوظة للأرشيف" />
             </View>
           )}
           {kind === 'post' && (
             <View style={s.kpiRow}>
-              <KPI label="التعليقات" value={fmt(k.comments_total || 0)} icon="chatbubbles" color={BLUE} sub="تفاعل نصي" />
-              <KPI label="معدل التفاعل" value={`${k.conversion_rate || 0}%`} icon="trending-up" color={OK} sub="مقارنة بالوصول" />
+              <KPI label={tSync('التعليقات', lang)} value={fmt(k.comments_total || 0)} icon="chatbubbles" color={BLUE} sub="تفاعل نصي" />
+              <KPI label={tSync('معدل التفاعل', lang)} value={`${k.conversion_rate || 0}%`} icon="trending-up" color={OK} sub="مقارنة بالوصول" />
             </View>
           )}
         </View>
@@ -301,7 +305,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
         <View style={{ padding: 12, paddingBottom: 40 }}>
           {tab === 'overview' && (
             <>
-              <SectionTitle icon="pie-chart" label="مصادر الزيارات" />
+              <SectionTitle icon="pie-chart" label={tSync('مصادر الزيارات', lang)} />
               <View style={s.card}>
                 {d.traffic_sources.map((t: any, i: number) => (
                   <View key={i} style={s.trafficRow}>
@@ -319,7 +323,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                 ))}
               </View>
 
-              <SectionTitle icon="trending-up" label="اتجاه المبيعات — آخر 12 شهر" />
+              <SectionTitle icon="trending-up" label={tSync('اتجاه المبيعات — آخر 12 شهر', lang)} />
               <View style={s.card}>
                 {d.monthly_series.length === 0 ? (
                   <TX style={{ color: MUTED, textAlign: 'center', padding: 20 }}>لا توجد بيانات مبيعات بعد</TX>
@@ -341,10 +345,10 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                 )}
               </View>
 
-              <SectionTitle icon="funnel" label="قمع التحويل" />
+              <SectionTitle icon="funnel" label={tSync('قمع التحويل', lang)} />
               <View style={s.card}>
-                <FunnelStage label="مشاهدات" value={k.total_views} pct={100} color={BLUE} />
-                <FunnelStage label="زوار فريدون" value={k.unique_visitors} pct={Math.round(k.unique_visitors * 100 / Math.max(k.total_views, 1))} color={PURPLE} />
+                <FunnelStage label={tSync('مشاهدات', lang)} value={k.total_views} pct={100} color={BLUE} />
+                <FunnelStage label={tSync('زوار فريدون', lang)} value={k.unique_visitors} pct={Math.round(k.unique_visitors * 100 / Math.max(k.total_views, 1))} color={PURPLE} />
                 <FunnelStage label={L.funnelCart} value={k.add_to_cart} pct={k.cart_conversion_rate} color={AMBER} />
                 <FunnelStage label={L.funnelCheckout} value={k.reached_checkout} pct={k.conversion_rate} color="#EC4899" />
                 <FunnelStage label={L.funnelOrder} value={k.total_orders} pct={k.purchase_conversion_rate} color={OK} />
@@ -421,7 +425,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
           {tab === 'shares' && (
             <>
-              <SectionTitle icon="share-social" label="المشاركات حسب المنصة" />
+              <SectionTitle icon="share-social" label={tSync('المشاركات حسب المنصة', lang)} />
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {d.shares_by_platform.map((sp: any) => (
                   <View key={sp.platform} style={[s.platCard, { borderColor: PLATFORM_COLORS[sp.platform] || GOLD }]}>

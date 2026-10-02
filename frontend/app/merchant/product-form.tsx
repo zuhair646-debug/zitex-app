@@ -90,15 +90,15 @@ export default function ProductForm() {
             return_conditions: p.return_conditions || 'المنتج بحالته الأصلية مع كافة الملحقات والعلبة الأصلية سليمة',
           });
         }
-      } catch (e: any) { Alert.alert('خطأ', e.message); }
+      } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     })();
   }, []);
 
   const pickImages = async () => {
-    if (data.images.length >= 8) { Alert.alert('الحد الأقصى', 'يمكن رفع 8 صور فقط'); return; }
+    if (data.images.length >= 8) { Alert.alert(tSync('الحد الأقصى', lang), 'يمكن رفع 8 صور فقط'); return; }
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert('صلاحية مطلوبة', 'يرجى منح إذن الوصول إلى الصور');
+      Alert.alert(tSync('صلاحية مطلوبة', lang), 'يرجى منح إذن الوصول إلى الصور');
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -116,14 +116,14 @@ export default function ProductForm() {
         uploaded.push(up.path);
       }
       setData((d: any) => ({ ...d, images: [...d.images, ...uploaded] }));
-    } catch (e: any) { Alert.alert('خطأ في الرفع', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ في الرفع', lang), e.message); }
     finally { setUploading(false); }
   };
 
   const takePhoto = async () => {
-    if (data.images.length >= 8) { Alert.alert('الحد الأقصى', 'يمكن رفع 8 صور فقط'); return; }
+    if (data.images.length >= 8) { Alert.alert(tSync('الحد الأقصى', lang), 'يمكن رفع 8 صور فقط'); return; }
     const perm = await ImagePicker.requestCameraPermissionsAsync();
-    if (!perm.granted) { Alert.alert('صلاحية مطلوبة', 'يرجى منح إذن الكاميرا'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية مطلوبة', lang), 'يرجى منح إذن الكاميرا'); return; }
     const res = await ImagePicker.launchCameraAsync({ quality: 0.85, mediaTypes: ['images'] as any });
     if (res.canceled) return;
     setUploading(true);
@@ -131,13 +131,13 @@ export default function ProductForm() {
       const a = res.assets[0];
       const up = await uploadMedia(a.uri, a.fileName || undefined, a.mimeType || undefined);
       setData((d: any) => ({ ...d, images: [...d.images, up.path] }));
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setUploading(false); }
   };
 
   const pickVideo = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('صلاحية مطلوبة', 'يرجى منح إذن المكتبة'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية مطلوبة', lang), 'يرجى منح إذن المكتبة'); return; }
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['videos'] as any, quality: 0.85, videoMaxDuration: 30,
     });
@@ -147,7 +147,7 @@ export default function ProductForm() {
       const a = res.assets[0];
       const up = await uploadMedia(a.uri, a.fileName || undefined, a.mimeType || undefined);
       setData((d: any) => ({ ...d, video: up.path }));
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setUploading(false); }
   };
 
@@ -176,7 +176,7 @@ export default function ProductForm() {
 
   const submit = async () => {
     if (!data.name_ar || !data.price) {
-      Alert.alert('حقول مطلوبة', 'الاسم بالعربية والسعر مطلوبان');
+      Alert.alert(tSync('حقول مطلوبة', lang), 'الاسم بالعربية والسعر مطلوبان');
       return;
     }
     setSaving(true);
@@ -200,7 +200,7 @@ export default function ProductForm() {
       else await apiCall('/api/merchant/products', { method: 'POST', body: JSON.stringify(body) });
       Alert.alert('✅ تم', id ? 'تم تحديث المنتج بنجاح' : 'تم إنشاء المنتج بنجاح',
         [{ text: 'موافق', onPress: () => router.back() }]);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 
@@ -446,7 +446,7 @@ export default function ProductForm() {
               <TextInput style={[s.input, { flex: 1 }]} value={newColorName} placeholderTextColor={colors.onSurfaceTertiary}
                 onChangeText={setNewColorName} placeholder={tSync("اسم اللون (مثال: أزرق سماوي)", lang)} />
               <TouchableOpacity onPress={() => {
-                if (!newColorName.trim()) { Alert.alert('اسم اللون مطلوب'); return; }
+                if (!newColorName.trim()) { Alert.alert(tSync('اسم اللون مطلوب', lang)); return; }
                 setData((d: any) => ({ ...d, colors: [...d.colors, { name: newColorName.trim(), hex: newColorHex }] }));
                 setNewColorName(''); setNewColorHex('#000000');
               }} style={{ padding: 8 }}>

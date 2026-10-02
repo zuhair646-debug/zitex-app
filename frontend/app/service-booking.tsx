@@ -29,7 +29,7 @@ export default function ServiceBooking() {
 
   const load = useCallback(async () => {
     try { const d = await apiCall(`/api/services/${service_id}`); setSvc(d); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, [service_id]);
   useEffect(() => { load(); }, [load]);
@@ -37,7 +37,7 @@ export default function ServiceBooking() {
   const useMyLocation = async () => {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
-      if (!perm.granted) { Alert.alert('صلاحية الموقع', 'مطلوب السماح بالموقع لحساب رسم الاستلام'); return; }
+      if (!perm.granted) { Alert.alert(tSync('صلاحية الموقع', lang), 'مطلوب السماح بالموقع لحساب رسم الاستلام'); return; }
       const loc = await Location.getCurrentPositionAsync({});
       const c = { lat: loc.coords.latitude, lng: loc.coords.longitude };
       setCoords(c);
@@ -48,15 +48,15 @@ export default function ServiceBooking() {
           method: 'POST', body: JSON.stringify({ dest_lat: c.lat, dest_lng: c.lng }),
         });
         setQuote(q);
-      } catch (e: any) { Alert.alert('خطأ', e.message); }
+      } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       finally { setFetchingQuote(false); }
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const submit = async () => {
-    if (!deviceModel || !issue || !phone) { Alert.alert('مطلوب', 'الجهاز، وصف المشكلة، ورقم الهاتف مطلوبة'); return; }
+    if (!deviceModel || !issue || !phone) { Alert.alert(tSync('مطلوب', lang), 'الجهاز، وصف المشكلة، ورقم الهاتف مطلوبة'); return; }
     if (deliveryType === 'home_pickup' && (!coords || !address)) {
-      Alert.alert('مطلوب', 'لاستلام من المنزل، حدّد موقعك والعنوان'); return;
+      Alert.alert(tSync('مطلوب', lang), 'لاستلام من المنزل، حدّد موقعك والعنوان'); return;
     }
     setSaving(true);
     try {
@@ -69,10 +69,10 @@ export default function ServiceBooking() {
           dest_lat: coords?.lat, dest_lng: coords?.lng,
         }),
       });
-      Alert.alert('تم الحجز', `الإجمالي: ${r.total_amount} ر.س`, [
+      Alert.alert(tSync('تم الحجز', lang), `الإجمالي: ${r.total_amount} ر.س`, [
         { text: 'متابعة', onPress: () => router.replace('/my-services') },
       ]);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 

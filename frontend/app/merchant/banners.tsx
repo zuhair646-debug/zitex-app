@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Image, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,6 +8,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 
 export default function MerchantBanners() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [banners, setBanners] = useState<any[]>([]);
@@ -15,17 +19,17 @@ export default function MerchantBanners() {
   const [form, setForm] = useState<any>({ title_ar: '', title_en: '', image: '', type: 'normal', published: true, order: 1 });
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/banners'); setBanners(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); setRefreshing(false); }
+    try { const d = await apiCall('/api/banners'); setBanners(d); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
   const save = async () => {
     if (!form.image) { Alert.alert('Required', 'Image URL required'); return; }
     try { await apiCall('/api/merchant/banners', { method: 'POST', body: JSON.stringify({ ...form, order: parseInt(form.order) || 1 }) }); setForm({ title_ar: '', title_en: '', image: '', type: 'normal', published: true, order: 1 }); setModalOpen(false); load(); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
-  const del = (id: string) => Alert.alert('حذف البانر؟', '', [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/banners/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } }]);
+  const del = (id: string) => Alert.alert(tSync('حذف البانر؟', lang), '', [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/banners/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
 
   return (
     <SafeAreaView style={s.safe}>

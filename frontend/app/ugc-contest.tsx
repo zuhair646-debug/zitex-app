@@ -36,14 +36,14 @@ export default function UGCContest() {
         apiCall(`/api/competitions/${id}/videos`),
       ]);
       setComp(c); setVideos(v);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); setRefreshing(false); }
   }, [id]);
   useEffect(() => { load(); const t = setInterval(load, 15000); return () => clearInterval(t); }, [load]);
 
   const pickVideo = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('صلاحية', 'السماح للوصول للفيديوهات'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'السماح للوصول للفيديوهات'); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'] as any, quality: 0.85, videoMaxDuration: 60 });
     if (res.canceled) return;
     setUploading(true);
@@ -51,12 +51,12 @@ export default function UGCContest() {
       const a = res.assets[0];
       const up = await uploadMedia(a.uri, a.fileName || 'contest.mp4', a.mimeType || 'video/mp4');
       setVideoPath(up.path);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setUploading(false); }
   };
 
   const submitVideo = async () => {
-    if (!videoPath) { Alert.alert('مطلوب', 'اختر فيديو أولاً'); return; }
+    if (!videoPath) { Alert.alert(tSync('مطلوب', lang), 'اختر فيديو أولاً'); return; }
     try {
       await apiCall(`/api/competitions/${id}/videos`, {
         method: 'POST',
@@ -68,14 +68,14 @@ export default function UGCContest() {
       setSubmitOpen(false); setVideoPath(''); setCaption(''); setHashtags('');
       load();
       Alert.alert('✅ نجاح', 'تم رفع فيديوك! شارك الرابط مع أصدقائك لجمع اللايكات.');
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const toggleLike = async (vid: string) => {
     // Optimistic UI
     setVideos(vs => vs.map(v => v.id === vid ? { ...v, liked_by_me: !v.liked_by_me, likes: v.likes + (v.liked_by_me ? -1 : 1) } : v).sort((a, b) => b.likes - a.likes).map((v, i) => ({ ...v, rank: i + 1 })));
     try { await apiCall(`/api/competitions/${id}/videos/${vid}/like`, { method: 'POST' }); }
-    catch (e: any) { Alert.alert('خطأ', e.message); load(); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); load(); }
   };
 
   const openComments = async (vid: string) => {
@@ -94,7 +94,7 @@ export default function UGCContest() {
       const c = await apiCall(`/api/competitions/${id}/videos/${commentsFor}/comments`);
       setComments(c);
       setVideos(vs => vs.map(v => v.id === commentsFor ? { ...v, comments: (v.comments || 0) + 1 } : v));
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const shareVideo = async (v: any) => {

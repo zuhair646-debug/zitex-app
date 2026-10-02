@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +9,8 @@ import { useAuth } from '../_layout';
 import TranslatableName from '../../src/components/TranslatableName';
 
 export default function MerchantCustomers() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [customers, setCustomers] = useState<any[]>([]);
@@ -14,7 +18,7 @@ export default function MerchantCustomers() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/merchant/customers'); setCustomers(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); setRefreshing(false); }
+    try { const d = await apiCall('/api/merchant/customers'); setCustomers(d); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 

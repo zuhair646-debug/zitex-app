@@ -52,7 +52,7 @@ export default function DeliverySettings() {
         scheduled_slots: d.scheduled_slots || [],
         zones: d.zones || [],
       });
-    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -72,8 +72,8 @@ export default function DeliverySettings() {
         zones: data.zones,
       };
       await apiCall('/api/merchant/delivery/settings', { method: 'PUT', body: JSON.stringify(body) });
-      Alert.alert('تم الحفظ', 'تم تحديث إعدادات التوصيل بنجاح');
-    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setSaving(false); }
+      Alert.alert(tSync('تم الحفظ', lang), 'تم تحديث إعدادات التوصيل بنجاح');
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setSaving(false); }
   };
 
   const addSlot = () => {
@@ -89,15 +89,15 @@ export default function DeliverySettings() {
   const saveZone = () => {
     if (!editingZone) return;
     const z = editingZone.zone;
-    if (!z.name) { Alert.alert('مطلوب', 'يرجى إدخال اسم المنطقة'); return; }
-    if ((!z.polygon || z.polygon.length < 3) && (!z.center_lat || !z.radius_km)) { Alert.alert('مطلوب', 'ارسم منطقة على الخريطة أو حدد دائرة'); return; }
+    if (!z.name) { Alert.alert(tSync('مطلوب', lang), 'يرجى إدخال اسم المنطقة'); return; }
+    if ((!z.polygon || z.polygon.length < 3) && (!z.center_lat || !z.radius_km)) { Alert.alert(tSync('مطلوب', lang), 'ارسم منطقة على الخريطة أو حدد دائرة'); return; }
     const zones = [...data.zones];
     if (editingZone.idx === -1) zones.push(z); else zones[editingZone.idx] = z;
     setData({ ...data, zones });
     setZoneModal(false);
   };
   const delZone = (i: number) => {
-    Alert.alert('حذف المنطقة', 'هل أنت متأكد؟', [
+    Alert.alert(tSync('حذف المنطقة', lang), 'هل أنت متأكد؟', [
       { text: 'إلغاء', style: 'cancel' },
       { text: 'حذف', style: 'destructive', onPress: () => setData({ ...data, zones: data.zones.filter((_: any, idx: number) => idx !== i) }) }
     ]);

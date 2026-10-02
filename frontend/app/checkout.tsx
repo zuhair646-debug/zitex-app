@@ -47,7 +47,7 @@ export default function CheckoutScreen() {
       if (status !== 'granted') {
         if (!canAskAgain) {
           Alert.alert(
-            'إذن الموقع',
+            tSync('إذن الموقع', lang),
             'الرجاء تفعيل صلاحية الموقع من إعدادات التطبيق لتحديد شركة الشحن الصحيحة تلقائياً',
             [
               { text: 'إلغاء', style: 'cancel' },
@@ -59,7 +59,7 @@ export default function CheckoutScreen() {
         const req = await Location.requestForegroundPermissionsAsync();
         status = req.status;
         if (status !== 'granted') {
-          Alert.alert('إذن الموقع', 'تم رفض الوصول للموقع — يمكنك تحديده يدوياً');
+          Alert.alert(tSync('إذن الموقع', lang), 'تم رفض الوصول للموقع — يمكنك تحديده يدوياً');
           return;
         }
       }
@@ -68,7 +68,7 @@ export default function CheckoutScreen() {
       setUserLng(pos.coords.longitude);
       setAutoDetectedOnce(true);
     } catch (e: any) {
-      Alert.alert('تعذّر تحديد الموقع', e?.message || 'حاول مرة أخرى');
+      Alert.alert(tSync('تعذّر تحديد الموقع', lang), e?.message || 'حاول مرة أخرى');
     } finally { setLocating(false); }
   }, []);
 
@@ -104,12 +104,12 @@ export default function CheckoutScreen() {
       if (deliveryType !== 'scheduled') setScheduledSlot(null);
       if (q.alternative_note) {
         Alert.alert(
-          'تنبيه: المنتجات في فرع بديل',
+          tSync('تنبيه: المنتجات في فرع بديل', lang),
           `${q.alternative_note.reason}\n${q.alternative_note.available_count}/${q.alternative_note.total_requested} متوفر في الفرع المختار`,
         );
       }
     } catch (e: any) {
-      Alert.alert('تعذّر حساب التوصيل', e.message || 'حاول مرة أخرى');
+      Alert.alert(tSync('تعذّر حساب التوصيل', lang), e.message || 'حاول مرة أخرى');
     }
   }, [userLat, userLng, deliveryType, cart]);
 
@@ -121,13 +121,13 @@ export default function CheckoutScreen() {
       const c = await apiCall(`/api/coupons/validate/${couponCode}`);
       const disc = c.discount_type === 'percent' ? Math.min(subtotal * c.discount_value / 100, c.max_discount) : Math.min(c.discount_value, c.max_discount);
       setCouponDiscount(disc); setCouponApplied(c.code);
-      Alert.alert('تم تطبيق الكوبون!', `وفّرت ${disc} ر.س`);
-    } catch { Alert.alert('غير صالح', 'رمز الكوبون غير صحيح'); }
+      Alert.alert(tSync('تم تطبيق الكوبون!', lang), `وفّرت ${disc} ر.س`);
+    } catch { Alert.alert(tSync('غير صالح', lang), 'رمز الكوبون غير صحيح'); }
   };
 
   const placeOrder = async () => {
-    if (addresses.length === 0) { Alert.alert('خطأ', 'يرجى إضافة عنوان أولاً'); return; }
-    if (deliveryType === 'scheduled' && !scheduledSlot) { Alert.alert('مطلوب', 'يرجى اختيار فترة التوصيل'); return; }
+    if (addresses.length === 0) { Alert.alert(tSync('خطأ', lang), 'يرجى إضافة عنوان أولاً'); return; }
+    if (deliveryType === 'scheduled' && !scheduledSlot) { Alert.alert(tSync('مطلوب', lang), 'يرجى اختيار فترة التوصيل'); return; }
     setOrdering(true);
     try {
       const addr = addresses[selectedAddr];
@@ -138,11 +138,11 @@ export default function CheckoutScreen() {
         branch_id: quote?.branch?.id, branch_lat: quote?.branch?.lat, branch_lng: quote?.branch?.lng,
         scheduled_slot: scheduledSlot,
       })});
-      Alert.alert('تم الطلب!', `رقم الطلب #${order.id?.slice(-8)}`, [
+      Alert.alert(tSync('تم الطلب!', lang), `رقم الطلب #${order.id?.slice(-8)}`, [
         { text: 'تتبع', onPress: () => { router.dismiss(); router.push(`/track-order/${order.id}` as any); } },
         { text: 'طلباتي', onPress: () => { router.dismiss(); router.push('/orders'); } }
       ]);
-    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setOrdering(false); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setOrdering(false); }
   };
 
   const subtotal = cart.reduce((a, i) => a + ((i.product?.discount_price || i.product?.price || 0) * i.quantity), 0);

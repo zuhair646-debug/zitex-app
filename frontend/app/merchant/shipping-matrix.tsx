@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Switch, Alert, ActivityIndicator, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -47,6 +49,8 @@ type Rule = {
 };
 
 export default function ShippingMatrixScreen() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [rules, setRules] = useState<Rule[]>([]);
@@ -67,7 +71,7 @@ export default function ShippingMatrixScreen() {
       setCities(m.cities || []);
       setBranches(b.branches || b || []);
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message || 'تعذّر تحميل البيانات');
+      Alert.alert(tSync('خطأ', lang), e?.message || 'تعذّر تحميل البيانات');
     } finally {
       setLoading(false);
     }
@@ -108,7 +112,7 @@ export default function ShippingMatrixScreen() {
       setEditing(null);
       await load();
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message || 'تعذّر الحفظ');
+      Alert.alert(tSync('خطأ', lang), e?.message || 'تعذّر الحفظ');
     } finally {
       setSaving(false);
     }
@@ -116,7 +120,7 @@ export default function ShippingMatrixScreen() {
 
   const removeRule = async (r: Rule) => {
     if (!r.id) return;
-    Alert.alert('حذف القاعدة', 'هل أنت متأكد من حذف هذه القاعدة؟', [
+    Alert.alert(tSync('حذف القاعدة', lang), 'هل أنت متأكد من حذف هذه القاعدة؟', [
       { text: 'إلغاء', style: 'cancel' },
       {
         text: 'حذف', style: 'destructive',
@@ -124,7 +128,7 @@ export default function ShippingMatrixScreen() {
           try {
             await apiCall(`/api/merchant/shipping/matrix/${r.id}`, { method: 'DELETE' });
             await load();
-          } catch (e: any) { Alert.alert('خطأ', e?.message); }
+          } catch (e: any) { Alert.alert(tSync('خطأ', lang), e?.message); }
         }
       },
     ]);

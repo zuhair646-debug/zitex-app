@@ -41,7 +41,7 @@ export default function POSTerminal() {
       setBranches(brs);
       const main = brs.find((b: any) => b.is_main) || brs[0];
       if (main) setBranchId(main.id);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -80,7 +80,7 @@ export default function POSTerminal() {
       setCart([]); setCheckoutOpen(false); setCustomerName(''); setCustomerPhone('');
       Alert.alert('✅ تم إنشاء الفاتورة', `رقم الفاتورة: ${r.invoice_number}\nالمجموع: ${r.total.toFixed(2)} ر.س`,
         [{ text: 'موافق' }, { text: 'عرض الفواتير', onPress: () => router.push('/merchant/invoices') }]);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 

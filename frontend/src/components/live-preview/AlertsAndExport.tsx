@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useT } from '../../i18n';
+import { tSync } from '../../useAutoT';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, ActivityIndicator, Linking, Alert as RNAlert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -24,6 +26,8 @@ const timeAgo = (iso?: string) => {
 
 /* ══════════════════════ ALERTS BELL ══════════════════════ */
 export function AlertsBell({ apiCall }: any) {
+  const { lang } = useT();
+
   const [open, setOpen] = useState(false);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [unread, setUnread] = useState(0);
@@ -51,7 +55,7 @@ export function AlertsBell({ apiCall }: any) {
       await apiCall(`/api/merchant/live-preview/alerts/${id}/ack`, { method: 'POST' });
       setAlerts(prev => prev.map(a => a.id === id ? { ...a, ack: true } : a));
       setUnread(prev => Math.max(0, prev - 1));
-    } catch (e: any) { RNAlert.alert('خطأ', e.message); }
+    } catch (e: any) { RNAlert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const ackAll = async () => {
@@ -59,7 +63,7 @@ export function AlertsBell({ apiCall }: any) {
       await apiCall('/api/merchant/live-preview/alerts/ack-all', { method: 'POST' });
       setAlerts(prev => prev.map(a => ({ ...a, ack: true })));
       setUnread(0);
-    } catch (e: any) { RNAlert.alert('خطأ', e.message); }
+    } catch (e: any) { RNAlert.alert(tSync('خطأ', lang), e.message); }
   };
 
   return (
@@ -145,9 +149,9 @@ export function ExportButton({ kind, entityId, apiCall, small }: any) {
       } else {
         const supported = await Linking.canOpenURL(url);
         if (supported) await Linking.openURL(url);
-        else RNAlert.alert('تعذّر فتح التقرير', 'تأكد من اتصالك بالإنترنت');
+        else RNAlert.alert(tSync('تعذّر فتح التقرير', lang), 'تأكد من اتصالك بالإنترنت');
       }
-    } catch (e: any) { RNAlert.alert('خطأ', e.message); }
+    } catch (e: any) { RNAlert.alert(tSync('خطأ', lang), e.message); }
   };
   return (
     <TouchableOpacity onPress={onPress} style={[s.exportBtn, small && { paddingHorizontal: 10, paddingVertical: 6 }]} activeOpacity={0.7}>

@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useT } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -29,6 +31,8 @@ const STATE_META: Record<string, { label: string; color: string; icon: string; d
 };
 
 export default function MyReturnsScreen() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [rmas, setRmas] = useState<any[]>([]);
@@ -39,7 +43,7 @@ export default function MyReturnsScreen() {
     try {
       const d = await apiCall('/api/my/rmas');
       setRmas(d.rmas || []);
-    } catch (e: any) { Alert.alert('خطأ', e?.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e?.message); }
     finally { setLoading(false); }
   }, [apiCall]);
 

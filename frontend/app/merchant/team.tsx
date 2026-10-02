@@ -21,7 +21,7 @@ export default function MerchantTeam() {
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/merchant/team/overview'); setTeam(Array.isArray(d) ? d : []); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => {

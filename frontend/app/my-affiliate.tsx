@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useT } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Share, Alert, StatusBar, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +13,8 @@ import { TX } from '../src/useAutoT';
 const APP_LINK_BASE = (process.env.EXPO_PUBLIC_BACKEND_URL || 'https://zitex.app').replace(/\/api\/?$/, '');
 
 export default function MyAffiliate() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -23,7 +27,7 @@ export default function MyAffiliate() {
       const a = await apiCall('/api/affiliate/dashboard');
       setAccounts(a);
       if (a.length && selected >= a.length) setSelected(0);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); setRefreshing(false); }
   }, [selected]);
   useEffect(() => { load(); }, []);
@@ -158,8 +162,8 @@ export default function MyAffiliate() {
               <Text style={s.walletValue}>{(cur.wallet_balance || 0).toFixed(2)} ر.س</Text>
               <TouchableOpacity style={s.withdrawBtn}
                 onPress={() => {
-                  if ((cur.wallet_balance || 0) < 50) Alert.alert('الحد الأدنى', 'يتم السحب من 50 ر.س');
-                  else Alert.alert('طلب السحب', 'سيتم التواصل معك خلال 3 أيام عمل');
+                  if ((cur.wallet_balance || 0) < 50) Alert.alert(tSync('الحد الأدنى', lang), 'يتم السحب من 50 ر.س');
+                  else Alert.alert(tSync('طلب السحب', lang), 'سيتم التواصل معك خلال 3 أيام عمل');
                 }}>
                 <TX style={s.withdrawText}>سحب</TX>
               </TouchableOpacity>

@@ -43,7 +43,7 @@ export default function CompetitionForm() {
 
   const pickPhoto = async (kind: 'cover' | 'prize') => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('صلاحية', 'السماح للوصول للمعرض'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'السماح للوصول للمعرض'); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, quality: 0.85 });
     if (res.canceled) return;
     setUploading(kind);
@@ -51,7 +51,7 @@ export default function CompetitionForm() {
       const a = res.assets[0];
       const up = await uploadMedia(a.uri, a.fileName || undefined, a.mimeType || undefined);
       setData((d: any) => ({ ...d, [kind === 'cover' ? 'cover_image' : 'prize_image']: up.path }));
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setUploading(null); }
   };
 
@@ -68,14 +68,14 @@ export default function CompetitionForm() {
       Alert.alert('Success', `Employee created. ID: ${r.id}`);
       setShowEmpModal(false); setNewEmp({ name: '', phone: '', password: '', email: '' });
       loadEmps();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const submit = async () => {
-    if (!data.title || !data.prize) { Alert.alert('مطلوب', 'العنوان والجائزة مطلوبان'); return; }
-    if (data.competition_type === 'qa' && (!data.question || !data.correct_answer)) { Alert.alert('مطلوب', 'السؤال والإجابة الصحيحة مطلوبان'); return; }
-    if (data.competition_type === 'ugc_video' && !data.end_date) { Alert.alert('مطلوب', 'تاريخ نهاية المسابقة مطلوب لفيديوهات UGC'); return; }
-    if (data.chamber_supervised && (!data.permit_number || !data.assigned_chamber_employee_id)) { Alert.alert('مطلوب', 'رقم التصريح وموظف الغرفة مطلوبان'); return; }
+    if (!data.title || !data.prize) { Alert.alert(tSync('مطلوب', lang), 'العنوان والجائزة مطلوبان'); return; }
+    if (data.competition_type === 'qa' && (!data.question || !data.correct_answer)) { Alert.alert(tSync('مطلوب', lang), 'السؤال والإجابة الصحيحة مطلوبان'); return; }
+    if (data.competition_type === 'ugc_video' && !data.end_date) { Alert.alert(tSync('مطلوب', lang), 'تاريخ نهاية المسابقة مطلوب لفيديوهات UGC'); return; }
+    if (data.chamber_supervised && (!data.permit_number || !data.assigned_chamber_employee_id)) { Alert.alert(tSync('مطلوب', lang), 'رقم التصريح وموظف الغرفة مطلوبان'); return; }
     setLoading(true);
     try {
       const body: any = {
@@ -87,8 +87,8 @@ export default function CompetitionForm() {
         options: (data.options || []).filter((o: string) => o.trim()),
       };
       await apiCall('/api/merchant/competitions', { method: 'POST', body: JSON.stringify(body) });
-      Alert.alert('نجاح', 'تم نشر المسابقة', [{ text: 'موافق', onPress: () => router.back() }]);
-    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); }
+      Alert.alert(tSync('نجاح', lang), 'تم نشر المسابقة', [{ text: 'موافق', onPress: () => router.back() }]);
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
   };
 
   return (

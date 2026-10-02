@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +10,8 @@ import { useAuth } from '../_layout';
 const APPROVAL_COLORS: any = { pending: '#F59E0B', approved: '#10B981', auto_approved: '#8833FF', rejected: '#EF4444' };
 
 export default function MerchantCompetitions() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [comps, setComps] = useState<any[]>([]);
@@ -15,11 +19,11 @@ export default function MerchantCompetitions() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/merchant/competitions'); setComps(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); setRefreshing(false); }
+    try { const d = await apiCall('/api/merchant/competitions'); setComps(d); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const del = (id: string) => Alert.alert('حذف المسابقة؟', 'لا يمكن التراجع', [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/competitions/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } }]);
+  const del = (id: string) => Alert.alert(tSync('حذف المسابقة؟', lang), 'لا يمكن التراجع', [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/competitions/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
 
   return (
     <SafeAreaView style={s.safe}>

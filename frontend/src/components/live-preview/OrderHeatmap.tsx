@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useT } from '../../i18n';
+import { tSync } from '../../useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LP, KM } from './theme';
@@ -8,6 +10,8 @@ const DAY_LABELS = ['اثنين', 'ثلاثاء', 'أربعاء', 'خميس', '�
 const HOUR_LABELS = ['12ص', '3', '6', '9', '12ظ', '3', '6', '9'];
 
 export default function OrderHeatmap({ apiCall }: any) {
+  const { lang } = useT();
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +21,7 @@ export default function OrderHeatmap({ apiCall }: any) {
       try {
         const d = await apiCall('/api/merchant/live-preview/heatmap');
         if (alive) setData(d);
-      } catch (e: any) { Alert.alert('خطأ', e.message); }
+      } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; };

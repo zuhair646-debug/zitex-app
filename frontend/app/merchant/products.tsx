@@ -9,6 +9,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { Chip, EmptyState, SkeletonBox, Badge } from '../../src/components/ui';
 import { useT } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
+import Translatable from '../../src/components/Translatable';
 
 export default function MerchantProducts() {
   const { t } = useT();
@@ -138,9 +139,8 @@ export default function MerchantProducts() {
                     style={s.img}
                   />
                   <View style={{ flex: 1, gap: 4 }}>
-                    <TranslatableName
-                      text={p.name_ar || p.name_en}
-                      sourceLang="ar"
+                    <Translatable
+                      value={{ ar: p.name_ar, en: p.name_en }}
                       style={s.pname}
                       numberOfLines={2}
                       iconSize={13}

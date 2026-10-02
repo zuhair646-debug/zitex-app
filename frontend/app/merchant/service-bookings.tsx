@@ -39,14 +39,14 @@ export default function MerchantServiceBookings() {
     try {
       const all = await apiCall('/api/merchant/bookings');
       setBookings(service_id ? all.filter((b: any) => b.service_id === service_id) : all);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, [service_id]);
   useEffect(() => { load(); }, [load]);
 
   const openBooking = async (b: any) => {
     try { const full = await apiCall(`/api/services/bookings/${b.id}`); setSelected(full); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const updateStatus = async (bid: string, status: string) => {
@@ -54,7 +54,7 @@ export default function MerchantServiceBookings() {
       await apiCall(`/api/merchant/bookings/${bid}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
       const full = await apiCall(`/api/services/bookings/${bid}`);
       setSelected(full); load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   if (loading) return <View style={s.load}><ActivityIndicator size="large" color={GOLD} /></View>;
@@ -116,19 +116,19 @@ function BookingDetailModal({ booking, onClose, onStatus, apiCall, onRefresh }: 
         </View>
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           <View style={s.infoBox}>
-            <Row label="العميل" value={booking.customer_name || '—'} />
-            <Row label="الهاتف" value={booking.customer_phone || booking.phone} />
-            <Row label="الجهاز" value={booking.device_model} />
-            <Row label="المشكلة" value={booking.issue_desc} />
+            <Row label={tSync('العميل', lang)} value={booking.customer_name || '—'} />
+            <Row label={tSync('الهاتف', lang)} value={booking.customer_phone || booking.phone} />
+            <Row label={tSync('الجهاز', lang)} value={booking.device_model} />
+            <Row label={tSync('المشكلة', lang)} value={booking.issue_desc} />
             {booking.delivery_type === 'home_pickup' && (
               <>
-                <Row label="نوع الاستلام" value="استلام من المنزل" />
-                <Row label="العنوان" value={booking.address} />
-                <Row label="المسافة" value={`${booking.distance_km || 0} كم`} />
-                <Row label="رسم الاستلام" value={`${booking.pickup_fee || 0} ر.س`} />
+                <Row label={tSync('نوع الاستلام', lang)} value="استلام من المنزل" />
+                <Row label={tSync('العنوان', lang)} value={booking.address} />
+                <Row label={tSync('المسافة', lang)} value={`${booking.distance_km || 0} كم`} />
+                <Row label={tSync('رسم الاستلام', lang)} value={`${booking.pickup_fee || 0} ر.س`} />
               </>
             )}
-            <Row label="الإجمالي" value={`${booking.total_amount || 0} ر.س`} bold />
+            <Row label={tSync('الإجمالي', lang)} value={`${booking.total_amount || 0} ر.س`} bold />
           </View>
 
           <TX style={s.sec}>الحالة الحالية</TX>
@@ -183,13 +183,13 @@ function UpdateCard({ update, apiCall, onChange }: any) {
       await apiCall(`/api/services/updates/${update.id}`, { method: 'PUT',
         body: JSON.stringify({ [key]: v }) });
       onChange && onChange();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
-  const del = () => Alert.alert('حذف', 'حذف هذا التحديث؟', [
+  const del = () => Alert.alert(tSync('حذف', lang), 'حذف هذا التحديث؟', [
     { text: 'إلغاء' },
     { text: 'حذف', style: 'destructive', onPress: async () => {
       try { await apiCall(`/api/services/updates/${update.id}`, { method: 'DELETE' }); onChange && onChange(); }
-      catch (e: any) { Alert.alert('خطأ', e.message); }
+      catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     }},
   ]);
   return (
@@ -233,7 +233,7 @@ function VideoComposer({ bookingId, apiCall, onDone, onCancel }: any) {
 
   const pickVideo = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('صلاحية', 'مطلوب السماح للمعرض'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'مطلوب السماح للمعرض'); return; }
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['videos'] as any, quality: 0.7, videoMaxDuration: 60,
     });
@@ -243,12 +243,12 @@ function VideoComposer({ bookingId, apiCall, onDone, onCancel }: any) {
       const a = res.assets[0];
       const up = await uploadMedia(a.uri, a.fileName || 'update.mp4', a.mimeType || 'video/mp4');
       setVideoUrl(up.path); setImageUrl('');
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setUploading(false); }
   };
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('صلاحية', 'مطلوب السماح للمعرض'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'مطلوب السماح للمعرض'); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, quality: 0.85 });
     if (res.canceled) return;
     setUploading(true);
@@ -256,19 +256,19 @@ function VideoComposer({ bookingId, apiCall, onDone, onCancel }: any) {
       const a = res.assets[0];
       const up = await uploadMedia(a.uri, a.fileName || undefined, a.mimeType || undefined);
       setImageUrl(up.path); setVideoUrl('');
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setUploading(false); }
   };
 
   const submit = async () => {
-    if (!videoUrl && !imageUrl) { Alert.alert('مطلوب', 'ارفع فيديو أو صورة'); return; }
+    if (!videoUrl && !imageUrl) { Alert.alert(tSync('مطلوب', lang), 'ارفع فيديو أو صورة'); return; }
     setSaving(true);
     try {
       await apiCall('/api/services/updates', { method: 'POST',
         body: JSON.stringify({ booking_id: bookingId, video_url: videoUrl, image_url: imageUrl,
           caption, is_public_experience: isPub, crosspost_to_social: isSocial }) });
       onDone && onDone();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 

@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback, useMemo} from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +26,8 @@ const SCOLOR: Record<string, string> = {
 };
 
 export default function MerchantBookings() {
+  const { lang } = useT();
+
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -36,20 +40,20 @@ export default function MerchantBookings() {
     try {
       const d = await apiCall('/api/merchant/bookings');
       setBookings(Array.isArray(d) ? d : []);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
   const updateStatus = (id: string, current: string) => {
-    Alert.alert('تحديث الحالة', 'اختر الحالة الجديدة', [
+    Alert.alert(tSync('تحديث الحالة', lang), 'اختر الحالة الجديدة', [
       ...Object.keys(STATUSES).filter(s => s !== current).map(s => ({
         text: STATUSES[s],
         onPress: async () => {
           try {
             await apiCall(`/api/merchant/bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: s }) });
             load();
-          } catch (e: any) { Alert.alert('خطأ', e.message); }
+          } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
         }
       })),
       { text: 'إلغاء', style: 'cancel' as const },

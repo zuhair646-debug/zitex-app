@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo} from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +12,8 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { TX } from '../../src/useAutoT';
 
 export default function MarketerStats() {
+  const { lang } = useT();
+
   const s = useSStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -19,7 +23,7 @@ export default function MarketerStats() {
 
   const load = useCallback(async () => {
     try { const d = await apiCall(`/api/affiliate/${id}/stats`); setData(d); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, [id]);
   useEffect(() => { load(); }, [load]);
@@ -65,10 +69,10 @@ export default function MarketerStats() {
 
         {/* KPIs */}
         <View style={s.kpiRow}>
-          <Kpi icon="hand-left" label="النقرات" value={a.total_clicks || 0} />
-          <Kpi icon="repeat" label="التحويلات" value={a.total_conversions || 0} />
-          <Kpi icon="cart" label="المبيعات" value={`${(a.total_sales || 0).toFixed(0)} ر.س`} highlight />
-          <Kpi icon="cash" label="العمولات" value={`${(a.total_earnings || 0).toFixed(0)} ر.س`} highlight />
+          <Kpi icon="hand-left" label={tSync('النقرات', lang)} value={a.total_clicks || 0} />
+          <Kpi icon="repeat" label={tSync('التحويلات', lang)} value={a.total_conversions || 0} />
+          <Kpi icon="cart" label={tSync('المبيعات', lang)} value={`${(a.total_sales || 0).toFixed(0)} ر.س`} highlight />
+          <Kpi icon="cash" label={tSync('العمولات', lang)} value={`${(a.total_earnings || 0).toFixed(0)} ر.س`} highlight />
         </View>
 
         {/* Rates */}

@@ -44,7 +44,7 @@ export default function MerchantBranches() {
         try { stats[b.id] = await apiCall(`/api/merchant/branches/${b.id}/stats`); } catch {}
       }));
       setStatsCache(stats);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
 
@@ -60,7 +60,7 @@ export default function MerchantBranches() {
 
   const save = async () => {
     if (!editing?.name?.trim() || !editing?.address?.trim()) {
-      Alert.alert('نقص', 'اسم الفرع والعنوان مطلوبان'); return;
+      Alert.alert(tSync('نقص', lang), 'اسم الفرع والعنوان مطلوبان'); return;
     }
     const payload = {
       name: editing.name, address: editing.address, city: editing.city || '',
@@ -76,14 +76,14 @@ export default function MerchantBranches() {
       if (editing.id) await apiCall(`/api/merchant/branches/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) });
       else await apiCall('/api/merchant/branches', { method: 'POST', body: JSON.stringify(payload) });
       setEditing(null); load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
-  const remove = (b: Branch) => Alert.alert('حذف الفرع', `حذف "${b.name}"؟`, [
+  const remove = (b: Branch) => Alert.alert(tSync('حذف الفرع', lang), `حذف "${b.name}"؟`, [
     { text: 'إلغاء', style: 'cancel' },
     { text: 'حذف', style: 'destructive', onPress: async () => {
       try { await apiCall(`/api/merchant/branches/${b.id}`, { method: 'DELETE' }); load(); }
-      catch (e: any) { Alert.alert('خطأ', e.message); }
+      catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     }},
   ]);
 
@@ -201,20 +201,20 @@ export default function MerchantBranches() {
               rightIcon="checkmark" onRight={save}
             />
             <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40, gap: spacing.md }}>
-              <Field label="اسم الفرع *" value={editing?.name || ''} onChange={v => setEditing({ ...editing, name: v })} placeholder={tSync("مثال: فرع الرياض - العليا", lang)} />
-              <Field label="الرمز الداخلي" value={editing?.branch_code || ''} onChange={v => setEditing({ ...editing, branch_code: v })} placeholder={tSync("تلقائي: BR-001", lang)} />
-              <Field label="العنوان *" value={editing?.address || ''} onChange={v => setEditing({ ...editing, address: v })} placeholder={tSync("شارع، حي، مبنى", lang)} multiline />
+              <Field label={tSync('اسم الفرع *', lang)} value={editing?.name || ''} onChange={v => setEditing({ ...editing, name: v })} placeholder={tSync("مثال: فرع الرياض - العليا", lang)} />
+              <Field label={tSync('الرمز الداخلي', lang)} value={editing?.branch_code || ''} onChange={v => setEditing({ ...editing, branch_code: v })} placeholder={tSync("تلقائي: BR-001", lang)} />
+              <Field label={tSync('العنوان *', lang)} value={editing?.address || ''} onChange={v => setEditing({ ...editing, address: v })} placeholder={tSync("شارع، حي، مبنى", lang)} multiline />
               <View style={{ flexDirection: 'row', gap: spacing.md }}>
-                <View style={{ flex: 1 }}><Field label="المدينة" value={editing?.city || ''} onChange={v => setEditing({ ...editing, city: v })} placeholder={tSync("الرياض", lang)} /></View>
-                <View style={{ flex: 1 }}><Field label="الحي" value={editing?.district || ''} onChange={v => setEditing({ ...editing, district: v })} placeholder={tSync("العليا", lang)} /></View>
+                <View style={{ flex: 1 }}><Field label={tSync('المدينة', lang)} value={editing?.city || ''} onChange={v => setEditing({ ...editing, city: v })} placeholder={tSync("الرياض", lang)} /></View>
+                <View style={{ flex: 1 }}><Field label={tSync('الحي', lang)} value={editing?.district || ''} onChange={v => setEditing({ ...editing, district: v })} placeholder={tSync("العليا", lang)} /></View>
               </View>
-              <Field label="رقم الهاتف" value={editing?.phone || ''} onChange={v => setEditing({ ...editing, phone: v })} placeholder="+966 5X XXX XXXX" keyboardType="phone-pad" />
-              <Field label="البريد الإلكتروني" value={editing?.email || ''} onChange={v => setEditing({ ...editing, email: v })} placeholder="branch@zitex.sa" keyboardType="email-address" />
-              <Field label="ساعات العمل" value={editing?.open_hours || ''} onChange={v => setEditing({ ...editing, open_hours: v })} placeholder="9:00 AM - 11:00 PM" />
+              <Field label={tSync('رقم الهاتف', lang)} value={editing?.phone || ''} onChange={v => setEditing({ ...editing, phone: v })} placeholder="+966 5X XXX XXXX" keyboardType="phone-pad" />
+              <Field label={tSync('البريد الإلكتروني', lang)} value={editing?.email || ''} onChange={v => setEditing({ ...editing, email: v })} placeholder="branch@zitex.sa" keyboardType="email-address" />
+              <Field label={tSync('ساعات العمل', lang)} value={editing?.open_hours || ''} onChange={v => setEditing({ ...editing, open_hours: v })} placeholder="9:00 AM - 11:00 PM" />
 
               <View style={{ flexDirection: 'row', gap: spacing.md }}>
-                <View style={{ flex: 1 }}><Field label="خط العرض (Lat)" value={String(editing?.lat ?? '')} onChange={v => setEditing({ ...editing, lat: parseFloat(v) || 0 })} keyboardType="numeric" /></View>
-                <View style={{ flex: 1 }}><Field label="خط الطول (Lng)" value={String(editing?.lng ?? '')} onChange={v => setEditing({ ...editing, lng: parseFloat(v) || 0 })} keyboardType="numeric" /></View>
+                <View style={{ flex: 1 }}><Field label={tSync('خط العرض (Lat)', lang)} value={String(editing?.lat ?? '')} onChange={v => setEditing({ ...editing, lat: parseFloat(v) || 0 })} keyboardType="numeric" /></View>
+                <View style={{ flex: 1 }}><Field label={tSync('خط الطول (Lng)', lang)} value={String(editing?.lng ?? '')} onChange={v => setEditing({ ...editing, lng: parseFloat(v) || 0 })} keyboardType="numeric" /></View>
               </View>
 
               <View>

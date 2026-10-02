@@ -50,7 +50,7 @@ export default function LoyaltyRedeemPicker({
   const redeem = async () => {
     if (!selected) return;
     const p = parseInt(points, 10);
-    if (!p || p <= 0) { Alert.alert('تنبيه', 'أدخل عدد النقاط'); return; }
+    if (!p || p <= 0) { Alert.alert(tSync('تنبيه', lang), 'أدخل عدد النقاط'); return; }
     setRedeeming(true);
     try {
       const r = await apiCall(`/api/loyalty/programs/${selected.code}/redeem`, {
@@ -62,7 +62,7 @@ export default function LoyaltyRedeemPicker({
       setModalOpen(false);
       Alert.alert('✅ تم الاستبدال', r.message || `تم تطبيق خصم ${disc} ر.س`);
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message || 'تعذّر الاستبدال');
+      Alert.alert(tSync('خطأ', lang), e?.message || 'تعذّر الاستبدال');
     } finally { setRedeeming(false); }
   };
 

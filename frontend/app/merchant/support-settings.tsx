@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +22,8 @@ const FIELDS: { key: string; label: string; placeholder: string; icon: any; colo
 ];
 
 export default function SupportSettings() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [data, setData] = useState<any>(null);
@@ -28,7 +32,7 @@ export default function SupportSettings() {
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/store/support'); setData(d); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -37,8 +41,8 @@ export default function SupportSettings() {
     setSaving(true);
     try {
       await apiCall('/api/merchant/store/support', { method: 'PUT', body: JSON.stringify(data) });
-      Alert.alert('تم الحفظ', 'تم تحديث معلومات الدعم');
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+      Alert.alert(tSync('تم الحفظ', lang), 'تم تحديث معلومات الدعم');
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 

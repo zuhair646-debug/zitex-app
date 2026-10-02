@@ -65,7 +65,7 @@ export default function MerchantInventory() {
       const d = await apiCall('/api/merchant/inventory');
       setData(d);
     } catch (e: any) {
-      Alert.alert('خطأ', e.message || 'تعذّر تحميل المخزون');
+      Alert.alert(tSync('خطأ', lang), e.message || 'تعذّر تحميل المخزون');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -96,7 +96,7 @@ export default function MerchantInventory() {
         body: JSON.stringify({ delta, channel, reason: 'تعديل يدوي سريع' }),
       });
       load();
-    } catch (e: any) { Alert.alert('خطأ', e.message || 'فشل التعديل'); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message || 'فشل التعديل'); }
   };
 
   return (
@@ -212,7 +212,7 @@ export default function MerchantInventory() {
                   {item.inventory_mode === 'separate' ? (
                     <>
                       <StockRow
-                        label="مخزون المتجر (POS)"
+                        label={tSync('مخزون المتجر (POS)', lang)}
                         icon="storefront"
                         value={item.stock_store}
                         threshold={item.min_alert}
@@ -220,7 +220,7 @@ export default function MerchantInventory() {
                         onPlus={() => quickAdjust(item, 'store', 1)}
                       />
                       <StockRow
-                        label="مخزون التطبيق"
+                        label={tSync('مخزون التطبيق', lang)}
                         icon="phone-portrait"
                         value={item.stock_app}
                         threshold={item.min_alert}
@@ -230,7 +230,7 @@ export default function MerchantInventory() {
                     </>
                   ) : (
                     <StockRow
-                      label="المخزون الموحّد"
+                      label={tSync('المخزون الموحّد', lang)}
                       icon="cube"
                       value={item.quantity}
                       threshold={item.min_alert}
@@ -328,7 +328,7 @@ function EditModal({ item, onClose, onSaved, apiCall }: { item: Item; onClose: (
       });
       onSaved();
     } catch (e: any) {
-      Alert.alert('خطأ', e.message || 'فشل الحفظ');
+      Alert.alert(tSync('خطأ', lang), e.message || 'فشل الحفظ');
     } finally { setSaving(false); }
   };
 

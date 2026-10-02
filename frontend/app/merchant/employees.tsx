@@ -38,7 +38,7 @@ export default function MerchantEmployees() {
         apiCall('/api/merchant/branches').catch(() => []),
       ]);
       setItems(list); setPerms(permsData); setBranchesAll(Array.isArray(brs) ? brs : []);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -63,8 +63,8 @@ export default function MerchantEmployees() {
   const pickDept = (dept: any) => setForm(f => ({ ...f, department: dept.id, permissions: dept.defaultPerms.length ? dept.defaultPerms : f.permissions }));
 
   const save = async () => {
-    if (!form.name || !form.phone) { Alert.alert('مطلوب', 'الاسم ورقم الجوال مطلوبان'); return; }
-    if (!editing && !form.password) { Alert.alert('مطلوب', 'كلمة المرور مطلوبة للموظف الجديد'); return; }
+    if (!form.name || !form.phone) { Alert.alert(tSync('مطلوب', lang), 'الاسم ورقم الجوال مطلوبان'); return; }
+    if (!editing && !form.password) { Alert.alert(tSync('مطلوب', lang), 'كلمة المرور مطلوبة للموظف الجديد'); return; }
     setSaving(true);
     try {
       const body: any = { name: form.name, department: form.department, permissions: form.permissions, salary_monthly: parseFloat(form.salary_monthly) || 0, active: form.active, branch_ids: form.branch_ids, job_title: form.job_title };
@@ -75,13 +75,13 @@ export default function MerchantEmployees() {
         await apiCall('/api/merchant/employees', { method: 'POST', body: JSON.stringify({ ...body, phone: form.phone, password: form.password }) });
       }
       setModalOpen(false); load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 
-  const del = (e: any) => Alert.alert('حذف الموظف؟', e.name, [
+  const del = (e: any) => Alert.alert(tSync('حذف الموظف؟', lang), e.name, [
     { text: 'إلغاء', style: 'cancel' },
-    { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/employees/${e.id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } }
+    { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/employees/${e.id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }
   ]);
 
   if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;

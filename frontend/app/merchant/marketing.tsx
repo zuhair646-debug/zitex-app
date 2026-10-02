@@ -65,7 +65,7 @@ export default function MarketingPanel() {
         apiCall('/api/merchant/affiliate/list').catch(() => []),
       ]);
       setAds(a); setApps(p); setAffiliates(f);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -86,7 +86,7 @@ export default function MarketingPanel() {
 
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('صلاحية', 'السماح للوصول للمعرض'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'السماح للوصول للمعرض'); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, quality: 0.85 });
     if (res.canceled) return;
     setUploading(true);
@@ -94,7 +94,7 @@ export default function MarketingPanel() {
       const a = res.assets[0];
       const up = await uploadMedia(a.uri, a.fileName || undefined, a.mimeType || undefined);
       setForm((f: any) => ({ ...f, image: up.path }));
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setUploading(false); }
   };
 
@@ -104,9 +104,9 @@ export default function MarketingPanel() {
     setForm((f: any) => ({ ...f, target_interest_tags: f.target_interest_tags.includes(t) ? f.target_interest_tags.filter((x: string) => x !== t) : [...f.target_interest_tags, t] }));
 
   const submit = async () => {
-    if (!form.title.trim()) { Alert.alert('مطلوب', 'اكتب عنوان الحملة'); return; }
+    if (!form.title.trim()) { Alert.alert(tSync('مطلوب', lang), 'اكتب عنوان الحملة'); return; }
     if (campaignType === 'affiliate' && (!form.commission_percent || parseFloat(form.commission_percent) <= 0)) {
-      Alert.alert('مطلوب', 'حدد نسبة العمولة'); return;
+      Alert.alert(tSync('مطلوب', lang), 'حدد نسبة العمولة'); return;
     }
     setSaving(true);
     try {
@@ -131,35 +131,35 @@ export default function MarketingPanel() {
       setFormOpen(false);
       load();
       Alert.alert('✅ تم', campaignType === 'affiliate' ? 'تم نشر برنامج المسوقين' : 'تم نشر الإعلان');
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 
-  const deleteAd = (id: string) => Alert.alert('حذف الحملة؟', '', [
+  const deleteAd = (id: string) => Alert.alert(tSync('حذف الحملة؟', lang), '', [
     { text: 'إلغاء', style: 'cancel' },
     { text: 'حذف', style: 'destructive', onPress: async () => {
       try { await apiCall(`/api/merchant/marketing/ads/${id}`, { method: 'DELETE' }); load(); }
-      catch (e: any) { Alert.alert('خطأ', e.message); }
+      catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     } },
   ]);
 
   const approveApp = (id: string, name: string) => {
-    Alert.alert('الموافقة على المسوق', `الموافقة على ${name}؟`, [
+    Alert.alert(tSync('الموافقة على المسوق', lang), `الموافقة على ${name}؟`, [
       { text: 'إلغاء', style: 'cancel' },
       { text: 'موافقة', onPress: async () => {
         try {
           const r = await apiCall(`/api/merchant/affiliate/applications/${id}/approve`, { method: 'POST' });
           Alert.alert('✅ تمت الموافقة', `كود الإحالة: ${r.referral_code}\nالعمولة: ${r.commission_percent}%`);
           load();
-        } catch (e: any) { Alert.alert('خطأ', e.message); }
+        } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       } },
     ]);
   };
-  const rejectApp = (id: string) => Alert.alert('رفض الطلب؟', '', [
+  const rejectApp = (id: string) => Alert.alert(tSync('رفض الطلب؟', lang), '', [
     { text: 'إلغاء', style: 'cancel' },
     { text: 'رفض', style: 'destructive', onPress: async () => {
       try { await apiCall(`/api/merchant/affiliate/applications/${id}/reject`, { method: 'POST' }); load(); }
-      catch (e: any) { Alert.alert('خطأ', e.message); }
+      catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     } },
   ]);
 

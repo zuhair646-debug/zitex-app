@@ -31,14 +31,14 @@ export default function MyServices() {
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/services/bookings/my'); setBookings(d); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
   const openBooking = async (b: any) => {
     try { const full = await apiCall(`/api/services/bookings/${b.id}`); setSelected(full); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const currentStep = (status: string) => STEPS.findIndex(x => x.key === status);
@@ -110,11 +110,11 @@ function BookingDetail({ booking, onClose, apiCall }: any) {
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           <View style={s.infoBox}>
             <TX style={s.infoTitle}>معلومات الحجز</TX>
-            <Row label="الجهاز" value={booking.device_model} />
-            <Row label="المشكلة" value={booking.issue_desc} />
-            <Row label="الحالة" value={STEPS.find(x => x.key === booking.status)?.label || booking.status} />
-            {booking.pickup_fee > 0 && <Row label="رسم الاستلام" value={`${booking.pickup_fee} ر.س`} />}
-            <Row label="الإجمالي" value={`${booking.total_amount || 0} ر.س`} bold />
+            <Row label={tSync('الجهاز', lang)} value={booking.device_model} />
+            <Row label={tSync('المشكلة', lang)} value={booking.issue_desc} />
+            <Row label={tSync('الحالة', lang)} value={STEPS.find(x => x.key === booking.status)?.label || booking.status} />
+            {booking.pickup_fee > 0 && <Row label={tSync('رسم الاستلام', lang)} value={`${booking.pickup_fee} ر.س`} />}
+            <Row label={tSync('الإجمالي', lang)} value={`${booking.total_amount || 0} ر.س`} bold />
           </View>
 
           <TX style={s.sec}>🎥 تحديثات الفني</TX>
@@ -151,13 +151,13 @@ function UpdateItem({ update, bookingId, apiCall }: any) {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const submit = async () => {
-    if (stars < 1) { Alert.alert('التقييم مطلوب'); return; }
+    if (stars < 1) { Alert.alert(tSync('التقييم مطلوب', lang)); return; }
     setSaving(true);
     try {
       await apiCall('/api/services/reviews', { method: 'POST',
         body: JSON.stringify({ booking_id: bookingId, update_id: update.id, stars, comment }) });
       setSubmitted(true);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
   return (
@@ -196,13 +196,13 @@ function FinalRating({ bookingId, apiCall, existing }: any) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(!!existing);
   const submit = async () => {
-    if (stars < 1) { Alert.alert('التقييم مطلوب'); return; }
+    if (stars < 1) { Alert.alert(tSync('التقييم مطلوب', lang)); return; }
     setSaving(true);
     try {
       await apiCall('/api/services/reviews', { method: 'POST',
         body: JSON.stringify({ booking_id: bookingId, update_id: '', stars, comment }) });
       setSaved(true);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
   return (

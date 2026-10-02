@@ -43,13 +43,13 @@ export default function LivePreview() {
   const [compareData, setCompareData] = useState<any[] | null>(null);
 
   const openCompare = async () => {
-    if (selectedIds.length < 2) { Alert.alert('اختر منتجين على الأقل'); return; }
+    if (selectedIds.length < 2) { Alert.alert(tSync('اختر منتجين على الأقل', lang)); return; }
     try {
       const data = await apiCall('/api/merchant/products/compare', {
         method: 'POST', body: JSON.stringify({ product_ids: selectedIds }),
       });
       setCompareData(data);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   return (
@@ -156,7 +156,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
       setFeatured(Array.isArray(featured) ? featured : (featured.products || []));
       setTop((tp?.top) || []);
       setOverview(ov);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, [apiCall]);
   useEffect(() => { load(); const iv = setInterval(load, 20000); return () => clearInterval(iv); }, [load]);
@@ -344,7 +344,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
       try { data = await apiCall('/api/merchant/services/live-summary'); }
       catch { data = await apiCall('/api/services'); }
       setItems(Array.isArray(data) ? data : (data?.services || []));
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, [apiCall]);
   useEffect(() => { load(); const iv = setInterval(load, 20000); return () => clearInterval(iv); }, [load]);
@@ -355,9 +355,9 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
       await apiCall(`/api/services/reviews/${replyTo.reviewId}/reply`, {
         method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
       });
-      Alert.alert('تم', 'تم إرسال ردك ✨');
+      Alert.alert(tSync('تم', lang), 'تم إرسال ردك ✨');
       setReplyTo(null); setReplyText(''); load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
@@ -647,14 +647,14 @@ function SocialSection({ apiCall, onOpenPost }: any) {
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/social/posts'); setPosts(Array.isArray(d) ? d : (d.posts || [])); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, [apiCall]);
   useEffect(() => { load(); const iv = setInterval(load, 15000); return () => clearInterval(iv); }, [load]);
 
   const likePost = async (pid: string) => {
     try { await apiCall(`/api/social/posts/${pid}/like`, { method: 'POST' }); load(); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const sendReply = async () => {
@@ -663,9 +663,9 @@ function SocialSection({ apiCall, onOpenPost }: any) {
       await apiCall(`/api/social/posts/${replying.postId}/comments/${replying.commentId}/store-reply`, {
         method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
       });
-      Alert.alert('تم', 'تم إرسال ردك باسم المتجر ✨');
+      Alert.alert(tSync('تم', lang), 'تم إرسال ردك باسم المتجر ✨');
       setReplying(null); setReplyText(''); load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const displayed = useMemo(() => {
@@ -861,7 +861,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
   const [data, setData] = useState<any>(null);
   useEffect(() => {
     apiCall(`/api/merchant/products/${product.id}/analytics`)
-      .then(setData).catch((e: any) => Alert.alert('خطأ', e.message));
+      .then(setData).catch((e: any) => Alert.alert(tSync('خطأ', lang), e.message));
   }, [product.id, apiCall]);
 
   const sendOffer = async (uid: string, uname: string) => {
@@ -870,8 +870,8 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
         method: 'POST',
         body: JSON.stringify({ discount_percent: 15, product_name: product.name_ar || product.name }),
       });
-      Alert.alert('تم', `أُرسل خصم 15% إلى ${uname}`);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+      Alert.alert(tSync('تم', lang), `أُرسل خصم 15% إلى ${uname}`);
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   if (!data) return (
@@ -892,12 +892,12 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
           </View>
           <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }}>
             <View style={s.kpiGrid}>
-              <Kpi icon="eye" label="مشاهدات" value={data.kpis.total_views} />
-              <Kpi icon="people" label="زوار فريدون" value={data.kpis.unique_users} />
-              <Kpi icon="cart" label="أضيف للسلة" value={data.kpis.add_to_cart} />
-              <Kpi icon="bag-check" label="وصل الدفع" value={data.kpis.reached_checkout} />
-              <Kpi icon="alert-circle" label="ترك السلة" value={data.kpis.abandoned_count} danger />
-              <Kpi icon="trending-up" label="التحويل" value={`${data.kpis.conversion_rate}%`} highlight />
+              <Kpi icon="eye" label={tSync('مشاهدات', lang)} value={data.kpis.total_views} />
+              <Kpi icon="people" label={tSync('زوار فريدون', lang)} value={data.kpis.unique_users} />
+              <Kpi icon="cart" label={tSync('أضيف للسلة', lang)} value={data.kpis.add_to_cart} />
+              <Kpi icon="bag-check" label={tSync('وصل الدفع', lang)} value={data.kpis.reached_checkout} />
+              <Kpi icon="alert-circle" label={tSync('ترك السلة', lang)} value={data.kpis.abandoned_count} danger />
+              <Kpi icon="trending-up" label={tSync('التحويل', lang)} value={`${data.kpis.conversion_rate}%`} highlight />
             </View>
 
             <TX style={s.sec}>📈 اتجاه المبيعات (12 شهر)</TX>
@@ -1071,7 +1071,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
   useEffect(() => {
     apiCall(`/api/merchant/services/${service.id}/analytics`)
       .then(setData)
-      .catch((e: any) => Alert.alert('خطأ', e.message))
+      .catch((e: any) => Alert.alert(tSync('خطأ', lang), e.message))
       .finally(() => setLoading(false));
   }, [service.id]);
 
@@ -1183,7 +1183,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
   useEffect(() => {
     apiCall(`/api/merchant/competitions/${competition.id}/analytics`)
       .then(setData)
-      .catch((e: any) => Alert.alert('خطأ', e.message))
+      .catch((e: any) => Alert.alert(tSync('خطأ', lang), e.message))
       .finally(() => setLoading(false));
   }, [competition.id]);
 
@@ -1305,14 +1305,14 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
     setLoading(true);
     apiCall(`/api/merchant/social/posts/${post.id}/detail`)
       .then(setData)
-      .catch((e: any) => Alert.alert('خطأ', e.message))
+      .catch((e: any) => Alert.alert(tSync('خطأ', lang), e.message))
       .finally(() => setLoading(false));
   }, [post.id]);
   useEffect(() => { load(); }, [load]);
 
   const likeAsStore = async () => {
     try { await apiCall(`/api/merchant/social/posts/${post.id}/like-as-store`, { method: 'POST' }); load(); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
   const sendThreadedReply = async () => {
     if (!replyTo || !replyText.trim()) return;
@@ -1321,7 +1321,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
         method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
       });
       setReplyTo(null); setReplyText(''); load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   return (
@@ -1659,7 +1659,7 @@ function OverviewSection({ apiCall }: any) {
   const load = useCallback(async (isRefresh?: boolean) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
     try { setData(await apiCall('/api/merchant/live-preview/overview')); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); setRefreshing(false); }
   }, [apiCall]);
   useEffect(() => { load(); const iv = setInterval(() => load(true), 25000); return () => clearInterval(iv); }, [load]);

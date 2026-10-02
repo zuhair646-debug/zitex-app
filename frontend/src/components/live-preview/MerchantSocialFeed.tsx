@@ -109,7 +109,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
       await apiCall(`/api/social/posts/${replying.postId}/comments/${replying.commentId}/store-reply`, {
         method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
       });
-      Alert.alert('تم', 'تم إرسال ردك باسم المتجر ✨');
+      Alert.alert(tSync('تم', lang), 'تم إرسال ردك باسم المتجر ✨');
       // Optimistic update: inject reply into current post
       const rt = replyText.trim();
       const rid = replying.commentId;
@@ -123,7 +123,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
         comments: (prev.comments || []).map((c: any) => c.id === rid ? { ...c, store_reply: rt } : c),
       } : prev);
       setReplying(null); setReplyText(''); load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   if (loading) return <ActivityIndicator size="large" color={LP.GOLD} style={{ marginTop: 40 }} />;
@@ -358,10 +358,10 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
                         {!!insightsPost.text && <Text style={{ color: LP.TEXT, fontSize: 13, textAlign: 'right' }} numberOfLines={3}>{insightsPost.text}</Text>}
                       </View>
                       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-                        <StatMini icon="eye" label="مشاهدات" value={KM(insightsDetail?.kpis?.views ?? insightsPost.views ?? 0)} color={LP.INFO} onPress={null} />
-                        <StatMini icon="heart" label="إعجابات" value={KM(insightsDetail?.kpis?.likes ?? insightsPost.likes ?? 0)} color="#EF4444" onPress={() => setInsightsTab('likers')} />
-                        <StatMini icon="chatbubble" label="تعليقات" value={KM(insightsDetail?.kpis?.comment_count ?? (insightsPost.comments || []).length)} color={LP.WARN} onPress={() => setInsightsTab('comments')} />
-                        <StatMini icon="share-social" label="مشاركات" value={KM(insightsDetail?.kpis?.shares ?? insightsPost.shares ?? 0)} color={LP.SUCCESS} onPress={() => setInsightsTab('sharers')} />
+                        <StatMini icon="eye" label={tSync('مشاهدات', lang)} value={KM(insightsDetail?.kpis?.views ?? insightsPost.views ?? 0)} color={LP.INFO} onPress={null} />
+                        <StatMini icon="heart" label={tSync('إعجابات', lang)} value={KM(insightsDetail?.kpis?.likes ?? insightsPost.likes ?? 0)} color="#EF4444" onPress={() => setInsightsTab('likers')} />
+                        <StatMini icon="chatbubble" label={tSync('تعليقات', lang)} value={KM(insightsDetail?.kpis?.comment_count ?? (insightsPost.comments || []).length)} color={LP.WARN} onPress={() => setInsightsTab('comments')} />
+                        <StatMini icon="share-social" label={tSync('مشاركات', lang)} value={KM(insightsDetail?.kpis?.shares ?? insightsPost.shares ?? 0)} color={LP.SUCCESS} onPress={() => setInsightsTab('sharers')} />
                       </View>
                     </>
                   )}

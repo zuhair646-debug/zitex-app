@@ -61,7 +61,7 @@ export default function CreateRMAScreen() {
           if (found) setSelectedItem(found);
         }
       } catch (e: any) {
-        Alert.alert('خطأ', e?.message);
+        Alert.alert(tSync('خطأ', lang), e?.message);
       } finally { setLoading(false); }
     })();
   }, [orderId, preselectPid]);
@@ -71,7 +71,7 @@ export default function CreateRMAScreen() {
   const pickMedia = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert('صلاحية الصور', 'يرجى منح صلاحية الوصول للصور');
+      Alert.alert(tSync('صلاحية الصور', lang), 'يرجى منح صلاحية الوصول للصور');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -94,17 +94,17 @@ export default function CreateRMAScreen() {
       if (!resp.ok) throw new Error(data.detail || 'فشل الرفع');
       setMedia([...media, data.url]);
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message);
+      Alert.alert(tSync('خطأ', lang), e?.message);
     } finally { setUploading(false); }
   };
 
   const submit = async () => {
     if (!selectedItem || !reasonCode) {
-      Alert.alert('تنبيه', 'اختر المنتج والسبب');
+      Alert.alert(tSync('تنبيه', lang), 'اختر المنتج والسبب');
       return;
     }
     if (currentReason?.requires_media && media.length === 0) {
-      Alert.alert('تنبيه', 'يجب رفع صور أو فيديو للمنتج');
+      Alert.alert(tSync('تنبيه', lang), 'يجب رفع صور أو فيديو للمنتج');
       return;
     }
     setSaving(true);
@@ -125,11 +125,11 @@ export default function CreateRMAScreen() {
           imei_or_serial: imei,
         }),
       });
-      Alert.alert('تم', r.message || 'تم رفع طلبك', [
+      Alert.alert(tSync('تم', lang), r.message || 'تم رفع طلبك', [
         { text: 'حسناً', onPress: () => router.replace('/my-returns') },
       ]);
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message);
+      Alert.alert(tSync('خطأ', lang), e?.message);
     } finally { setSaving(false); }
   };
 

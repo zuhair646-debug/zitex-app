@@ -80,7 +80,7 @@ export default function SocialScreen() {
       opts[optionIndex] = { ...opts[optionIndex], votes: (opts[optionIndex].votes || 0) + 1 };
       return { ...p, poll_options: opts };
     }));
-    try { await apiCall(`/api/social/posts/${postId}/vote`, { method: 'POST', body: JSON.stringify({ option_index: optionIndex }) }); } catch (e: any) { Alert.alert('خطأ', e.message); }
+    try { await apiCall(`/api/social/posts/${postId}/vote`, { method: 'POST', body: JSON.stringify({ option_index: optionIndex }) }); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const openThread = async (postId: string) => {
@@ -91,7 +91,7 @@ export default function SocialScreen() {
   const openContact = async (type: 'whatsapp' | 'phone' | 'email' | 'instagram' | 'tiktok' | 'snapchat' | 'twitter' | 'telegram') => {
     if (!storeInfo) return;
     const v = storeInfo[type];
-    if (!v) { Alert.alert('غير متوفر', `لم يضف المتجر ${type} بعد`); return; }
+    if (!v) { Alert.alert(tSync('غير متوفر', lang), `لم يضف المتجر ${type} بعد`); return; }
     let url = '';
     switch (type) {
       case 'whatsapp': url = `https://wa.me/${String(v).replace(/[^0-9]/g, '')}`; break;
@@ -103,7 +103,7 @@ export default function SocialScreen() {
       case 'twitter':  url = `https://twitter.com/${String(v).replace('@','')}`; break;
       case 'telegram': url = `https://t.me/${String(v).replace('@','')}`; break;
     }
-    try { await Linking.openURL(url); } catch { Alert.alert('خطأ', 'تعذر فتح الرابط'); }
+    try { await Linking.openURL(url); } catch { Alert.alert(tSync('خطأ', lang), 'تعذر فتح الرابط'); }
   };
   const sendComment = async () => {
     if (!threadText.trim() || !threadPostId) return;
@@ -113,7 +113,7 @@ export default function SocialScreen() {
       const d = await apiCall(`/api/social/posts/${threadPostId}/comments`); setThreadComments(d);
       // update count
       setPosts(posts.map(p => p.id === threadPostId ? { ...p, comments: (p.comments || 0) + 1 } : p));
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   return (

@@ -24,7 +24,7 @@ export default function SetupLocation() {
     setLoading(true);
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
-      if (perm.status !== 'granted') { Alert.alert('صلاحية الموقع', 'نحتاج إذنك للوصول إلى موقعك لحساب رسوم التوصيل بدقة'); setLoading(false); return; }
+      if (perm.status !== 'granted') { Alert.alert(tSync('صلاحية الموقع', lang), 'نحتاج إذنك للوصول إلى موقعك لحساب رسوم التوصيل بدقة'); setLoading(false); return; }
       const loc = await Location.getCurrentPositionAsync({});
       setLat(loc.coords.latitude);
       setLng(loc.coords.longitude);
@@ -34,7 +34,7 @@ export default function SetupLocation() {
         if (r[0]) setAddress([r[0].name, r[0].street, r[0].district, r[0].city, r[0].region].filter(Boolean).join(', '));
       } catch {}
       try { const nb = await apiCall(`/api/branches/nearest?lat=${loc.coords.latitude}&lng=${loc.coords.longitude}`); setNearest(nb); } catch {}
-    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
   };
 
   const onMapTap = useCallback(async (newLat: number, newLng: number) => {
@@ -47,11 +47,11 @@ export default function SetupLocation() {
   }, []);
 
   const save = async () => {
-    if (!hasLocation) { Alert.alert('مطلوب', 'يرجى تحديد موقعك على الخريطة أولاً'); return; }
+    if (!hasLocation) { Alert.alert(tSync('مطلوب', lang), 'يرجى تحديد موقعك على الخريطة أولاً'); return; }
     try {
       await apiCall('/api/users/me/location', { method: 'PUT', body: JSON.stringify({ lat, lng, address }) });
-      Alert.alert('تم الحفظ', 'تم حفظ موقعك بنجاح', [{ text: 'ممتاز', onPress: () => router.replace('/(tabs)') }]);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+      Alert.alert(tSync('تم الحفظ', lang), 'تم حفظ موقعك بنجاح', [{ text: 'ممتاز', onPress: () => router.replace('/(tabs)') }]);
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   return (

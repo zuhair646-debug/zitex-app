@@ -53,7 +53,7 @@ export default function MerchantServices() {
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/merchant/services'); setServices(d); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -75,7 +75,7 @@ export default function MerchantServices() {
 
   const pickImages = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('صلاحية', 'السماح للوصول للمعرض مطلوب'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'السماح للوصول للمعرض مطلوب'); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, allowsMultipleSelection: true, selectionLimit: 5, quality: 0.85 });
     if (res.canceled) return;
     setUploading(true);
@@ -86,7 +86,7 @@ export default function MerchantServices() {
         uploaded.push(up.path);
       }
       setForm((f: any) => ({ ...f, images: [...(f.images || []), ...uploaded] }));
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setUploading(false); }
   };
 
@@ -96,17 +96,17 @@ export default function MerchantServices() {
   const captureShopLocation = async () => {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
-      if (!perm.granted) { Alert.alert('صلاحية الموقع', 'مطلوب السماح بالموقع لتحديد إحداثيات المحل'); return; }
+      if (!perm.granted) { Alert.alert(tSync('صلاحية الموقع', lang), 'مطلوب السماح بالموقع لتحديد إحداثيات المحل'); return; }
       const loc = await Location.getCurrentPositionAsync({});
       setForm((f: any) => ({ ...f, shop_lat: loc.coords.latitude, shop_lng: loc.coords.longitude }));
-      Alert.alert('تم', `تم حفظ الإحداثيات:\n${loc.coords.latitude.toFixed(5)}, ${loc.coords.longitude.toFixed(5)}`);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+      Alert.alert(tSync('تم', lang), `تم حفظ الإحداثيات:\n${loc.coords.latitude.toFixed(5)}, ${loc.coords.longitude.toFixed(5)}`);
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const save = async () => {
-    if (!form.name || !form.price) { Alert.alert('مطلوب', 'الاسم والسعر مطلوبان'); return; }
+    if (!form.name || !form.price) { Alert.alert(tSync('مطلوب', lang), 'الاسم والسعر مطلوبان'); return; }
     if (form.home_pickup && (form.shop_lat == null || form.shop_lng == null)) {
-      Alert.alert('موقع المحل مطلوب', 'لدعم استلام المنزل، حدّد إحداثيات المحل أولاً'); return;
+      Alert.alert(tSync('موقع المحل مطلوب', lang), 'لدعم استلام المنزل، حدّد إحداثيات المحل أولاً'); return;
     }
     setSaving(true);
     try {
@@ -121,16 +121,16 @@ export default function MerchantServices() {
       if (editing) await apiCall(`/api/merchant/services/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiCall('/api/merchant/services', { method: 'POST', body: JSON.stringify(body) });
       setModalOpen(false); await load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 
   const del = (id: string, name: string) => {
-    Alert.alert('حذف', `حذف "${name}"؟`, [
+    Alert.alert(tSync('حذف', lang), `حذف "${name}"؟`, [
       { text: 'إلغاء', style: 'cancel' },
       { text: 'حذف', style: 'destructive', onPress: async () => {
         try { await apiCall(`/api/merchant/services/${id}`, { method: 'DELETE' }); load(); }
-        catch (e: any) { Alert.alert('خطأ', e.message); }
+        catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       }},
     ]);
   };

@@ -20,7 +20,7 @@ export default function Invoices() {
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/pos/invoices'); setInvs(Array.isArray(d) ? d : []); }
-    catch (e: any) { Alert.alert('خطأ', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -31,10 +31,10 @@ export default function Invoices() {
   const totalRevenue = invs.reduce((a, i) => a + (i.total || 0), 0);
 
   const sendWhatsapp = (inv: any) => {
-    if (!inv.customer_phone) { Alert.alert('لا يوجد رقم', 'العميل بدون رقم جوال'); return; }
+    if (!inv.customer_phone) { Alert.alert(tSync('لا يوجد رقم', lang), 'العميل بدون رقم جوال'); return; }
     const phone = String(inv.customer_phone).replace(/[^0-9]/g, '');
     const msg = `مرحباً ${inv.customer_name || ''}%0A%0Aفاتورتك من Zenrex Store:%0A${inv.invoice_number}%0Aالمجموع: ${inv.total?.toFixed(2)} ر.س%0A%0Aشكراً لك 🌟`;
-    Linking.openURL(`https://wa.me/${phone}?text=${msg}`).catch(() => Alert.alert('خطأ', 'تعذّر فتح واتساب'));
+    Linking.openURL(`https://wa.me/${phone}?text=${msg}`).catch(() => Alert.alert(tSync('خطأ', lang), 'تعذّر فتح واتساب'));
   };
 
   const method = (m: string) => ({ cash: '💵 كاش', card: '💳 بطاقة', stc_pay: '📱 STC Pay', bank_transfer: '🏦 تحويل' } as any)[m] || m;

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useT } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +9,8 @@ import { useAuth } from './_layout';
 import TranslatableName from '../src/components/TranslatableName';
 
 export default function CartScreen() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [items, setItems] = useState<any[]>([]);
@@ -30,14 +34,14 @@ export default function CartScreen() {
         await apiCall(`/api/cart/${itemId}?quantity=${qty}`, { method: 'PUT' });
       }
       await loadCart();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const removeItem = async (itemId: string) => {
     try {
       await apiCall(`/api/cart/${itemId}`, { method: 'DELETE' });
       await loadCart();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const placeOrder = async () => {
@@ -56,7 +60,7 @@ export default function CartScreen() {
         { text: 'OK', onPress: () => { router.back(); } }
       ]);
       setItems([]);
-    } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setOrdering(false); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setOrdering(false); }
   };
 
   const subtotal = items.reduce((acc, i) => {

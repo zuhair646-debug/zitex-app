@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +9,8 @@ import { useAuth } from '../_layout';
 import { TX } from '../../src/useAutoT';
 
 export default function MerchantDrivers() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [drivers, setDrivers] = useState<any[]>([]);
@@ -15,7 +19,7 @@ export default function MerchantDrivers() {
   const [form, setForm] = useState<any>({ name: '', phone: '', password: 'driver1234', vehicle_info: '', payment_model: 'commission', salary_monthly: '0', bonus_threshold_orders: '20', bonus_per_extra_order: '2', commission_type: 'fixed', merchant_commission_value: '5' });
 
   const load = useCallback(async () => {
-    try { const d = await apiCall('/api/merchant/drivers'); setDrivers(d); } catch (e: any) { Alert.alert('خطأ', e.message); } finally { setLoading(false); }
+    try { const d = await apiCall('/api/merchant/drivers'); setDrivers(d); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -26,9 +30,9 @@ export default function MerchantDrivers() {
       await apiCall('/api/merchant/drivers', { method: 'POST', body: JSON.stringify(body) });
       Alert.alert('Created', `Driver login: ${form.phone} / ${form.password}`);
       setModal(false); load();
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
-  const del = (id: string, n: string) => Alert.alert('حذف؟', `حذف "${n}"؟`, [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/drivers/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert('خطأ', e.message); } } }]);
+  const del = (id: string, n: string) => Alert.alert(tSync('حذف؟', lang), `حذف "${n}"؟`, [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/drivers/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
 
   return (
     <SafeAreaView style={s.safe}>

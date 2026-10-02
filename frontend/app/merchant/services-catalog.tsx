@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, StatusBar, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -25,6 +27,8 @@ const CAT_META: Record<string, { label: string; color: string; icon: string }> =
 };
 
 export default function ServicesCatalogScreen() {
+  const { lang } = useT();
+
   const router = useRouter();
   const { apiCall } = useAuth();
   const [grouped, setGrouped] = useState<any[]>([]);
@@ -35,7 +39,7 @@ export default function ServicesCatalogScreen() {
     try {
       const d = await apiCall('/api/merchant/modules');
       setGrouped(d.grouped || []);
-    } catch (e: any) { Alert.alert('خطأ', e?.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e?.message); }
     finally { setLoading(false); }
   }, [apiCall]);
 
@@ -52,7 +56,7 @@ export default function ServicesCatalogScreen() {
         method: 'PUT', body: JSON.stringify({ enabled }),
       });
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message);
+      Alert.alert(tSync('خطأ', lang), e?.message);
       await load();
     }
   };

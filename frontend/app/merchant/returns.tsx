@@ -52,7 +52,7 @@ export default function MerchantReturnsScreen() {
       setRmas(d.rmas || []);
       setCounts(d.counts || {});
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message || 'تعذّر التحميل');
+      Alert.alert(tSync('خطأ', lang), e?.message || 'تعذّر التحميل');
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,7 @@ export default function MerchantReturnsScreen() {
       setDecision(null); setDecisionNote(''); setRefundAmount(''); setSelected(null);
       await load();
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message);
+      Alert.alert(tSync('خطأ', lang), e?.message);
     } finally { setSaving(false); }
   };
 
@@ -96,7 +96,7 @@ export default function MerchantReturnsScreen() {
       setInspectMode(null); setInspectNote(''); setRefundAmount(''); setSelected(null);
       await load();
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message);
+      Alert.alert(tSync('خطأ', lang), e?.message);
     } finally { setSaving(false); }
   };
 
@@ -192,16 +192,16 @@ export default function MerchantReturnsScreen() {
                   </View>
 
                   <View style={s.detailBox}>
-                    <DetailRow icon="person" label="العميل" value={`${selected.customer_name} · ${selected.customer_phone}`} />
-                    <DetailRow icon="cube" label="المنتج" value={selected.product_name} />
-                    <DetailRow icon="alert-circle" label="السبب" value={selected.reason_label_ar} />
-                    <DetailRow icon="chatbubbles" label="تفاصيل العميل" value={selected.reason_text || '—'} />
-                    <DetailRow icon="cash" label="المبلغ" value={`${(selected.unit_price * selected.qty).toFixed(2)} ر.س`} />
-                    <DetailRow icon="card" label="طريقة الاسترداد" value={
+                    <DetailRow icon="person" label={tSync('العميل', lang)} value={`${selected.customer_name} · ${selected.customer_phone}`} />
+                    <DetailRow icon="cube" label={tSync('المنتج', lang)} value={selected.product_name} />
+                    <DetailRow icon="alert-circle" label={tSync('السبب', lang)} value={selected.reason_label_ar} />
+                    <DetailRow icon="chatbubbles" label={tSync('تفاصيل العميل', lang)} value={selected.reason_text || '—'} />
+                    <DetailRow icon="cash" label={tSync('المبلغ', lang)} value={`${(selected.unit_price * selected.qty).toFixed(2)} ر.س`} />
+                    <DetailRow icon="card" label={tSync('طريقة الاسترداد', lang)} value={
                       selected.refund_route === 'original_payment_method' ? 'إعادة إلى نفس طريقة الدفع' :
                       selected.refund_route === 'wallet' ? 'رصيد في المحفظة' : 'المحفظة أو التحويل البنكي'
                     } />
-                    {selected.imei_or_serial && <DetailRow icon="barcode" label="IMEI/الرقم التسلسلي" value={selected.imei_or_serial} />}
+                    {selected.imei_or_serial && <DetailRow icon="barcode" label={tSync('IMEI/الرقم التسلسلي', lang)} value={selected.imei_or_serial} />}
                     {selected.media?.length > 0 && (
                       <View style={{ marginTop: 10 }}>
                         <TX style={s.label}>الصور/الفيديو المرفقة</TX>

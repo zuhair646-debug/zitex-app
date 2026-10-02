@@ -34,7 +34,7 @@ export default function LoyaltyProgramsScreen() {
       const d = await apiCall('/api/merchant/loyalty/programs');
       setPrograms(d.programs || []);
     } catch (e: any) {
-      Alert.alert('خطأ', e?.message);
+      Alert.alert(tSync('خطأ', lang), e?.message);
     } finally { setLoading(false); }
   }, [apiCall]);
 
@@ -54,7 +54,7 @@ export default function LoyaltyProgramsScreen() {
         body: JSON.stringify({ enabled, credentials: p.credentials || {}, legal_docs: p.legal_docs || [], conversion_rate: p.conversion_rate, merchant_note: p.merchant_note || '' }),
       });
       await load();
-    } catch (e: any) { Alert.alert('خطأ', e?.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e?.message); }
   };
 
   const saveConfig = async () => {
@@ -73,7 +73,7 @@ export default function LoyaltyProgramsScreen() {
       });
       setEditing(null);
       await load();
-    } catch (e: any) { Alert.alert('خطأ', e?.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e?.message); }
     finally { setSaving(false); }
   };
 

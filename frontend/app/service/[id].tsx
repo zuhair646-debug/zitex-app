@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -16,6 +18,8 @@ const { width } = Dimensions.get('window');
 type Tab = 'about' | 'experiences' | 'reviews';
 
 export default function ServiceDetail() {
+  const { lang } = useT();
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -34,7 +38,7 @@ export default function ServiceDetail() {
         apiCall(`/api/services/${id}/reviews`).catch(() => []),
       ]);
       setSvc(d); setExperiences(exp); setReviews(revs);
-    } catch (e: any) { Alert.alert('خطأ', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setLoading(false); }
   }, [id]);
   useEffect(() => { load(); }, [load]);
@@ -119,11 +123,11 @@ export default function ServiceDetail() {
               </View>
             )}
             <View style={s.featureGrid}>
-              <Feature icon="time-outline" title="مدة الإنجاز" value={svc.turnaround} />
-              {svc.warranty_available && <Feature icon="shield-checkmark-outline" title="الضمان" value={`${svc.warranty_days} يوم`} />}
-              {svc.home_pickup && <Feature icon="car-outline" title="استلام منزلي" value={`من ${svc.pickup_base_fee || 10} ر.س`} />}
-              {svc.delivery_available && <Feature icon="paper-plane-outline" title="توصيل" value="متاح" />}
-              {svc.inspection_price > 0 && <Feature icon="search-outline" title="رسم الفحص" value={`${svc.inspection_price} ر.س`} />}
+              <Feature icon="time-outline" title={tSync('مدة الإنجاز', lang)} value={svc.turnaround} />
+              {svc.warranty_available && <Feature icon="shield-checkmark-outline" title={tSync('الضمان', lang)} value={`${svc.warranty_days} يوم`} />}
+              {svc.home_pickup && <Feature icon="car-outline" title={tSync('استلام منزلي', lang)} value={`من ${svc.pickup_base_fee || 10} ر.س`} />}
+              {svc.delivery_available && <Feature icon="paper-plane-outline" title={tSync('توصيل', lang)} value="متاح" />}
+              {svc.inspection_price > 0 && <Feature icon="search-outline" title={tSync('رسم الفحص', lang)} value={`${svc.inspection_price} ر.س`} />}
             </View>
             {!!svc.warranty_terms && (
               <View style={s.warrantyCard}>
