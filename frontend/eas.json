@@ -6,7 +6,7 @@
     "production": {
       "ios": {
         "buildConfiguration": "Release",
-        "image": "latest"
+        "image": "macos-sequoia-15.6-xcode-26.0"
       },
       "android": {
         "buildType": "app-bundle",
