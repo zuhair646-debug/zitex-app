@@ -15,7 +15,7 @@ import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { useT, curLang } from '../../src/i18n';
 
 type Variant = { name: string; value: string };
 type BranchStock = { branch_id: string; branch_name: string; quantity: number };
@@ -87,7 +87,7 @@ export default function ProductForm() {
             allow_return: p.allow_return !== false,
             return_days: p.return_days != null ? String(p.return_days) : '15',
             manufacturing_defect_days: p.manufacturing_defect_days != null ? String(p.manufacturing_defect_days) : '365',
-            return_conditions: p.return_conditions || 'المنتج بحالته الأصلية مع كافة الملحقات والعلبة الأصلية سليمة',
+            return_conditions: p.return_conditions || tSync('المنتج بحالته الأصلية مع كافة الملحقات والعلبة الأصلية سليمة', curLang()),
           });
         }
       } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
@@ -95,10 +95,10 @@ export default function ProductForm() {
   }, []);
 
   const pickImages = async () => {
-    if (data.images.length >= 8) { Alert.alert(tSync('الحد الأقصى', lang), 'يمكن رفع 8 صور فقط'); return; }
+    if (data.images.length >= 8) { Alert.alert(tSync('الحد الأقصى', lang), tSync('يمكن رفع 8 صور فقط', curLang())); return; }
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(tSync('صلاحية مطلوبة', lang), 'يرجى منح إذن الوصول إلى الصور');
+      Alert.alert(tSync('صلاحية مطلوبة', lang), tSync('يرجى منح إذن الوصول إلى الصور', curLang()));
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -121,9 +121,9 @@ export default function ProductForm() {
   };
 
   const takePhoto = async () => {
-    if (data.images.length >= 8) { Alert.alert(tSync('الحد الأقصى', lang), 'يمكن رفع 8 صور فقط'); return; }
+    if (data.images.length >= 8) { Alert.alert(tSync('الحد الأقصى', lang), tSync('يمكن رفع 8 صور فقط', curLang())); return; }
     const perm = await ImagePicker.requestCameraPermissionsAsync();
-    if (!perm.granted) { Alert.alert(tSync('صلاحية مطلوبة', lang), 'يرجى منح إذن الكاميرا'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية مطلوبة', lang), tSync('يرجى منح إذن الكاميرا', curLang())); return; }
     const res = await ImagePicker.launchCameraAsync({ quality: 0.85, mediaTypes: ['images'] as any });
     if (res.canceled) return;
     setUploading(true);
@@ -137,7 +137,7 @@ export default function ProductForm() {
 
   const pickVideo = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert(tSync('صلاحية مطلوبة', lang), 'يرجى منح إذن المكتبة'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية مطلوبة', lang), tSync('يرجى منح إذن المكتبة', curLang())); return; }
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['videos'] as any, quality: 0.85, videoMaxDuration: 30,
     });
@@ -176,7 +176,7 @@ export default function ProductForm() {
 
   const submit = async () => {
     if (!data.name_ar || !data.price) {
-      Alert.alert(tSync('حقول مطلوبة', lang), 'الاسم بالعربية والسعر مطلوبان');
+      Alert.alert(tSync('حقول مطلوبة', lang), tSync('الاسم بالعربية والسعر مطلوبان', curLang()));
       return;
     }
     setSaving(true);
@@ -198,8 +198,8 @@ export default function ProductForm() {
       };
       if (id) await apiCall(`/api/merchant/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiCall('/api/merchant/products', { method: 'POST', body: JSON.stringify(body) });
-      Alert.alert('✅ تم', id ? 'تم تحديث المنتج بنجاح' : 'تم إنشاء المنتج بنجاح',
-        [{ text: 'موافق', onPress: () => router.back() }]);
+      Alert.alert(tSync('✅ تم', curLang()), id ? tSync('تم تحديث المنتج بنجاح', curLang()) : tSync('تم إنشاء المنتج بنجاح', curLang()),
+        [{ text: tSync('موافق', curLang()), onPress: () => router.back() }]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
@@ -213,7 +213,7 @@ export default function ProductForm() {
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
             <Ionicons name="arrow-back" size={22} color={colors.brand} />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>{id ? 'تعديل المنتج' : 'منتج جديد'}</Text>
+          <Text style={s.headerTitle}>{id ? tSync('تعديل المنتج', curLang()) : tSync('منتج جديد', curLang())}</Text>
           <View style={s.iconBtn} />
         </View>
 
@@ -246,7 +246,7 @@ export default function ProductForm() {
             <View style={s.cardHeader}>
               <View style={s.iconBadge}><Ionicons name="images" size={16} color={colors.brand} /></View>
               <TX style={s.cardTitle}>الوسائط</TX>
-              <Text style={s.cardHelper}>{data.images.length}/8 صور</Text>
+              <Text style={s.cardHelper}>{data.images.length}{tSync('/8 صور', lang)}</Text>
             </View>
 
             <View style={s.mediaGrid}>
@@ -333,7 +333,7 @@ export default function ProductForm() {
                 const active = data.category_id === c.id;
                 return (
                   <TouchableOpacity key={c.id} onPress={() => setData({ ...data, category_id: c.id })} style={[s.chip, active && s.chipActive]}>
-                    <Text style={[s.chipText, active && s.chipTextActive]}>{c.name_ar || c.name_en}</Text>
+                    <Text style={[s.chipText, active && s.chipTextActive]}>{curLang() === 'ar' ? (c.name_ar || c.name_en) : (c.name_en || tSync(c.name_ar || '', curLang()))}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -344,7 +344,7 @@ export default function ProductForm() {
                 const active = data.brand_id === b.id;
                 return (
                   <TouchableOpacity key={b.id} onPress={() => setData({ ...data, brand_id: b.id })} style={[s.chip, active && s.chipActive]}>
-                    <Text style={[s.chipText, active && s.chipTextActive]}>{b.name_ar || b.name_en}</Text>
+                    <Text style={[s.chipText, active && s.chipTextActive]}>{curLang() === 'ar' ? (b.name_ar || b.name_en) : (b.name_en || tSync(b.name_ar || '', curLang()))}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -359,7 +359,7 @@ export default function ProductForm() {
                 const active = data.condition === opt.k;
                 return (
                   <TouchableOpacity key={opt.k} onPress={() => setData({ ...data, condition: opt.k })} style={[s.condPill, active && s.condPillActive]}>
-                    <Text style={[s.condPillText, active && s.condPillTextActive]}>{opt.l}</Text>
+                    <Text style={[s.condPillText, active && s.condPillTextActive]}>{tSync(opt.l, curLang())}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -471,7 +471,7 @@ export default function ProductForm() {
                 <TouchableOpacity key={t.id} onPress={() => setData({ ...data, warranty_type: t.id })}
                   style={[s.warrTypeBtn, data.warranty_type === t.id && s.warrTypeBtnActive]}>
                   <Ionicons name={t.icon as any} size={14} color={data.warranty_type === t.id ? 'white' : colors.brand} />
-                  <Text style={[s.warrTypeText, data.warranty_type === t.id && { color: 'white' }]}>{t.label}</Text>
+                  <Text style={[s.warrTypeText, data.warranty_type === t.id && { color: 'white' }]}>{tSync(t.label || '', curLang())}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -602,7 +602,7 @@ export default function ProductForm() {
               {saving ? <ActivityIndicator color={colors.onBrandPrimary} /> : (
                 <>
                   <Ionicons name={id ? 'save' : 'checkmark-circle'} size={18} color={colors.onBrandPrimary} />
-                  <Text style={s.submitText}>{id ? 'حفظ التعديلات' : 'نشر المنتج'}</Text>
+                  <Text style={s.submitText}>{id ? tSync('حفظ التعديلات', curLang()) : tSync('نشر المنتج', curLang())}</Text>
                 </>
               )}
             </LinearGradient>

@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useT } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { tSync, tf, TX } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
-import { TX } from '../../src/useAutoT';
 
 export default function MerchantDrivers() {
   const { lang } = useT();
@@ -24,21 +23,21 @@ export default function MerchantDrivers() {
   useEffect(() => { load(); }, [load]);
 
   const save = async () => {
-    if (!form.name || !form.phone) { Alert.alert('Required', 'Name and phone required'); return; }
+    if (!form.name || !form.phone) { Alert.alert(tSync('مطلوب', curLang()), tSync('الاسم ورقم الجوال مطلوبان', curLang())); return; }
     try {
       const body = { ...form, salary_monthly: parseFloat(form.salary_monthly) || 0, bonus_threshold_orders: parseInt(form.bonus_threshold_orders) || 0, bonus_per_extra_order: parseFloat(form.bonus_per_extra_order) || 0, merchant_commission_value: parseFloat(form.merchant_commission_value) || 0 };
       await apiCall('/api/merchant/drivers', { method: 'POST', body: JSON.stringify(body) });
-      Alert.alert('Created', `Driver login: ${form.phone} / ${form.password}`);
+      Alert.alert(tSync('تم الإنشاء', curLang()), tf('بيانات دخول المندوب: {0} / {1}', curLang(), [form.phone, form.password]));
       setModal(false); load();
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
-  const del = (id: string, n: string) => Alert.alert(tSync('حذف؟', lang), `حذف "${n}"؟`, [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/drivers/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
+  const del = (id: string, n: string) => Alert.alert(tSync('حذف؟', lang), tf('حذف "{0}"؟', lang, [n]), [{ text: tSync('إلغاء', curLang()), style: 'cancel' }, { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/drivers/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>السائقون ({drivers.length})</Text>
+        <Text style={s.title}>{tSync('السائقون (', lang)}{drivers.length})</Text>
         <TouchableOpacity onPress={() => setModal(true)} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
@@ -49,9 +48,9 @@ export default function MerchantDrivers() {
               <View style={[s.statusDot, { backgroundColor: d.online ? '#10B981' : '#9CA3AF' }]} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={s.name}>{d.name}</Text>
-                <Text style={s.phone}>{d.phone} • {d.vehicle_info || 'لا توجد مركبة'}</Text>
-                <Text style={s.payment}>{d.payment_model === 'salary' ? `راتب ${d.salary_monthly} ر.س / شهرياً` : `عمولة: ${d.commission_type === 'percentage' ? d.merchant_commission_value + '%' : d.merchant_commission_value + ' ر.س'} لكل طلب`}</Text>
-                <Text style={s.stats}>الإجمالي: {d.total_deliveries || 0} • اليوم: {d.today_deliveries || 0} • المحفظة: {(d.wallet_balance || 0).toFixed(0)} ر.س</Text>
+                <Text style={s.phone}>{d.phone} • {d.vehicle_info || tSync('لا توجد مركبة', curLang())}</Text>
+                <Text style={s.payment}>{d.payment_model === 'salary' ? tf('راتب {0} ر.س / شهرياً', lang, [d.salary_monthly]) : tf('عمولة: {0} لكل طلب', lang, [d.commission_type === 'percentage' ? d.merchant_commission_value + '%' : d.merchant_commission_value + ' ' + tSync('ر.س', lang)])}</Text>
+                <Text style={s.stats}>{tSync('الإجمالي:', lang)} {d.total_deliveries || 0} {tSync('• اليوم:', lang)} {d.today_deliveries || 0} {tSync('• المحفظة:', lang)} {(d.wallet_balance || 0).toFixed(0)} {tSync('ر.س', lang)}</Text>
               </View>
               <TouchableOpacity onPress={() => del(d.id, d.name)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
             </View>
@@ -80,7 +79,7 @@ export default function MerchantDrivers() {
                 <TouchableOpacity style={[s.opt, form.commission_type === 'fixed' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'fixed' })}><TX style={[s.optText, form.commission_type === 'fixed' && s.optTextActive]}>مبلغ ثابت</TX></TouchableOpacity>
                 <TouchableOpacity style={[s.opt, form.commission_type === 'percentage' && s.optActive]} onPress={() => setForm({ ...form, commission_type: 'percentage' })}><TX style={[s.optText, form.commission_type === 'percentage' && s.optTextActive]}>نسبة مئوية</TX></TouchableOpacity>
               </View>
-              <Text style={s.label}>حصة التاجر ({form.commission_type === 'percentage' ? '%' : 'ر.س'} لكل طلب)</Text>
+              <Text style={s.label}>{tSync('حصة التاجر (', lang)}{form.commission_type === 'percentage' ? '%' : tSync('ر.س', lang)} {tSync('لكل طلب)', lang)}</Text>
               <TextInput style={s.input} keyboardType="numeric" value={form.merchant_commission_value} onChangeText={t => setForm({ ...form, merchant_commission_value: t })} />
               <TX style={s.hint}>الباقي يذهب لمحفظة السائق</TX>
             </>)}

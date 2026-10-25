@@ -1,0 +1,64 @@
+{
+  "summary": "Final frontend retest of the translation items left open in iteration_34. Tested on the mobile web preview at 375x667 in ar/en/de/zh/he, with the autoT cache cleared, plus code and dictionary checks. FIXED: competition/[id] shows '10000 participants / Teilnehmer / 名参与者', and the last quiz button reads 'Submit answers' / 'Antworten absenden'. LoyaltyRedeemPicker program names are translated at runtime (de 'Store-Punkte (intern)', zh '店铺积分（内部）'), the sheet title is translated, and its labels use textAlign 'auto' (start in LTR). PaymentAndLoyalty uses textAlign 'auto'. 'My addresses' is correct in en/de/zh. 'Customer address' and 'Pickup type' are correct. The loyalty card shows 'Redeem' / 'Einlösen'. Plurals '(2 questions)', '(2 Fragen)' and '0 employees' are correct. The zh shipping-matrix carrier shows 沙特邮政. tSync with trimmed keys works: de 'Keine Reservierungen Mit Status \"Bestätigt\"' and live-preview '(5 Preise)'. The merchant bookings back arrow points left in en/de. The create-return, marketing, product-analytics, warranty, social post-type and services-catalog category labels are wrapped. STILL OPEN or NEW: customer social commenting is broken. Every POST /api/social/posts/{id}/comments returns 500, because all 56 posts store comments as an array and the backend runs $inc on it. The comment is saved, but the user gets an error alert and the count never updates. Other remaining strings: competition-form type names are raw Arabic and 'Type *', 'Name *', 'Phone *', 'Password *' are hardcoded English. 5 EmptyState description/actionLabel props are unwrapped (team, pos, branches). services-catalog module names and loyalty-programs catalog show raw name_ar. live-preview has the raw competition_type 'general', 'Subscriber' for participants, and raw platform labels. product-form condition pills are raw Arabic. 7 more back buttons use a hardcoded chevron-forward (pointing right in LTR). There are several wrong dictionary entries. Regression: about 120 page loads (customer zh/he, merchant he/en, chamber and driver in all 5 languages) gave 0 pageerrors and 0 red screens. Deprecated Expo packages: none found.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/social/posts/{post_id}/comments", "issue": "Returns 500 for every post. pymongo WriteError: 'Cannot apply $inc to a value of non-numeric type' because all 56 social_posts have comments as an array (server.py:1215). The comment row is inserted before the crash, so the frontend shows an error Alert, setPosts never runs and the count does not update. The same mixed int/array type also causes TypeErrors in deep_analytics.py:366 and server.py:5890/5902/5945/5957 (backend.err.log).", "priority": "HIGH"},
+      {"endpoint": "POST /api/competitions/{id}/draw", "issue": "STILL PRESENT (out of scope, re-listed): it has no auth. An unauthenticated curl returned 200 and actually ran the draw on 6ab6206a71b6ad54069c12be during this test.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "CORS", "issue": "STILL PRESENT (re-listed): it reflects any Origin (https://evil.example) together with allow-credentials: true."},
+      {"endpoint": "translations_cache (Mongo)", "issue": "There is a stale wrong zh entry for 'البريد السعودي (سبل)': '中国邮政（沙特邮政）' (hash 1f37638cad4c..., created 2026-10-25 13:09). The static dict overrides it in tSync, but any /api/translate caller still gets the wrong value. Delete it or overwrite it with '沙特邮政 (SPL)'."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Customer social comment", "issue": "Posting a comment shows an error Alert and the count stays the same (for example 10 -> 10), because of the backend 500 above. The frontend array fix at (tabs)/social.tsx:115 is correct but never runs.", "testID": "post-comments-btn-*, comment-input, comment-send-btn", "priority": "HIGH"},
+      {"component": "Checkout LoyaltyRedeemPicker layout", "issue": "STILL PRESENT (out of scope, re-listed): the picker and PaymentMethodsRibbon sit under the absolute bottomBar (checkout.tsx). The tile is only reachable through a synthetic click.", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Back arrows pointing right in LTR", "issue": "Hardcoded 'chevron-forward' on router.back() buttons, visible in en/zh: merchant/returns.tsx:117, merchant/loyalty-programs.tsx:85, merchant/inventory.tsx:109, merchant/product-analytics.tsx:126,148, merchant/services-catalog.tsx:71, merchant/shipping-matrix.tsx:141, loyalty-history.tsx:49. Use isRTL ? 'chevron-forward' : 'chevron-back', the same fix as bookings.tsx:75.", "testID": "n/a", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Untranslated or wrong strings (screen / lang / file:line)", "issues": [
+        "merchant/competition-form en/de/zh/he: type names 'سحب عام / سؤال وجواب / شراء بمبلغ / فيديو تسويقي / تسجيل جديد' are raw. Line 106 {t.name} is not wrapped (line 107 desc is wrapped).",
+        "merchant/competition-form, all languages including ar: hardcoded English 'Type *' (line 101), 'Name *', 'Phone *', 'Password *' (lines 313, 315, 317).",
+        "merchant/team en/de/he: EmptyState description 'أضف موظفين لبدء مراقبة الفريق' and actionLabel 'إضافة موظف' are raw (team.tsx:69-70). The same issue is in pos.tsx:113 and branches.tsx:119-120. The dict keys exist; wrap them with tSync.",
+        "merchant/services-catalog en/de/zh: module rows render raw m.name_ar / m.description_ar (services-catalog.tsx:114-115), for example 'أرامكس', 'إدارة الموظفين', 'البريد السعودي (سبل)'.",
+        "merchant/loyalty-programs en: raw p.name_ar / description_ar / category ('قطاف', 'اتصالات', 'بنك', 'طيران') at loyalty-programs.tsx:112,124,165-166. name_en exists.",
+        "LoyaltyRedeemPicker sheet subtitle: raw selected.description_ar ('نقاط ولاء داخلية للمتجر — لا تحتاج شراكة خارجية') in de/zh/en (LoyaltyRedeemPicker.tsx:119).",
+        "merchant/live-preview Contests en/de: raw competition_type code 'general' (live-preview.tsx:611). '2456 Abonnent' / 'Subscriber' from tSync('مشترك') should be '{0} participants' (live-preview.tsx:592). Platform labels {meta.label} 'واتساب / تويتر …' are not wrapped (live-preview.tsx:1477).",
+        "merchant/product-form en: condition pills '🆕 جديد / ♻️ مستعمل / 🔧 مجدَّد' are not wrapped (product-form.tsx:355-362). Category and brand chips show name_ar even when name_en exists (lines 336, 347).",
+        "Dict: 'لا حالات' is 'No cases' / 'Keine Fälle' / '无案例'. It is the empty stories label on customer Social ((tabs)/social.tsx:147) and should be 'No stories' / 'Keine Storys' / '暂无动态'.",
+        "Dict: 'نقطة للمستوى التالي' is en 'Point to next level' and de 'Punkt bis zur…'. The screen shows '500 Point to next level' (PaymentAndLoyalty.tsx:164). It should be 'points to next level' / 'Punkte bis zur nächsten Stufe'.",
+        "Dict: 'استلام من المنزل' is en 'Home delivery'. It should be 'Home pickup' (merchant/service-bookings.tsx:126).",
+        "Dict: 'اختر فترة التوصيل ←' keeps '←' in LTR languages (checkout.tsx:217). Use '→', or drop the arrow, for en/de/zh.",
+        "Dict, minor: 'منتهية' en 'Expired' vs 'Ended' elsewhere. 'قريباً' en 'Soon' (should be 'Coming soon'). In de bookings the empty text 'Keine Reservierungen Mit Status' has a capital 'Mit', and 'Reservierungen' does not match the 'Buchungen' header (keys 'لا توجد حجوزات' and 'بحالة \"{0}\"')."
+      ]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/i18n_static_check.py", "/app/backend/tests/i18n_unwrapped_scan.py"],
+  "action_items": [
+    "HIGH: server.py:1215 add_comment. Handle array comments: use $push, or count social_comments and $set the count, or migrate all social_posts.comments to int consistently and fix deep_analytics.py:366 and server.py:5890-5957. Then make sure the frontend count updates.",
+    "HIGH (re-listed, out of scope this round): auth plus role check on POST /api/competitions/{id}/draw. The checkout LoyaltyRedeemPicker is hidden under the bottomBar. CORS reflects any origin with credentials.",
+    "competition-form.tsx:106 wrap {t.name} with tSync. Lines 101, 313, 315, 317 replace the English literals with tSync('النوع *' / 'الاسم *' / 'الجوال *' / 'كلمة المرور *').",
+    "Wrap the EmptyState description/actionLabel props in team.tsx:69-70, pos.tsx:113 and branches.tsx:119-120.",
+    "services-catalog.tsx:114-115 and loyalty-programs.tsx:112,124,165-166: use name_en/description_en for non-ar, or tSync. LoyaltyRedeemPicker.tsx:119: tSync(description_ar).",
+    "live-preview.tsx:611 map competition_type to a translated label. Line 592 use tf('{0} مشارك'). Line 1477 tSync(meta.label). product-form.tsx:362 tSync(opt.l), and lines 336/347 use name_en for non-ar.",
+    "Use a direction-aware back icon in merchant/returns:117, loyalty-programs:85, inventory:109, product-analytics:126,148, services-catalog:71, shipping-matrix:141 and loyalty-history:49.",
+    "Dict fixes: 'لا حالات' (No stories), 'نقطة للمستوى التالي' (points / Punkte), 'استلام من المنزل' en (Home pickup), 'اختر فترة التوصيل ←' (arrow), 'منتهية' / 'قريباً' en, de 'Mit Status' casing.",
+    "Delete the stale translations_cache zh entry '中国邮政（沙特邮政）'.",
+    "Optional: the i18n_static_check.py tool reports leading/trailing-space keys (' بعد', ' بحالة \"{0}\"', ' ({0} جوائز)') as missing. Make it trim keys the same way tSync now does."
+  ],
+  "critical_code_review_comments": [
+    "The social_posts.comments field has a mixed type (array in seed data, int expected by the increment code). This is the root cause of both the earlier merchant social crash and the current 500.",
+    "Many screens render backend catalog fields (name_ar/description_ar) directly. Catalog data that ships with the code (shipping providers, modules, loyalty programs) should use name_en, or a language map, for non-ar.",
+    "live-preview.tsx is well over 1500 lines and should be split."
+  ],
+  "updated_files": ["/app/frontend/app/(tabs)/social.tsx (added testIDs post-comments-btn-{id}, comment-input, comment-send-btn only)"],
+  "success_rate": {"backend": "n/a (frontend only)", "frontend": "~80% of the targeted iteration_34 translation items fixed. The comment-count fix is blocked by a backend 500."},
+  "seed_data_creation": "None. 2 TEST_comment rows created by the test were deleted. NOTE: an unauthenticated POST /api/competitions/6ab6206a71b6ad54069c12be/draw returned 200 and may have changed the draw state of that chamber competition.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Log in via fetch /api/auth/login (response .token), then set localStorage token and app_lang and remove '@zenrex_autot_cache_v2'. Order for create-return: 6ab6b9e418e06142f28b4fb6. Customer social now has testIDs post-comments-btn-{postId}, comment-input and comment-send-btn. Watch POST /comments for a 500. In the checkout picker the tile is under the bottomBar, so use dispatch_event('click') on the program name. Other IDs are as in iteration_34. Scan for unwrapped Arabic JSX props with a regex on description=/actionLabel=/title= string literals.",
+  "rca_of_issue": "Social comment: seed data stores social_posts.comments as a list of comment objects, but add_comment runs $inc {comments: 1}, which raises a Mongo WriteError (code 14) and returns 500 after the insert. The frontend catch shows an Alert and skips setPosts. Repro: log in as the customer, open /social, tap a comment bubble, type text and send. The Network tab shows POST 500. Mitigation: use $push, or store a separate comments_count field."
+}

@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useT } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { tSync, TX } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
-import { TX } from '../../src/useAutoT';
 
 const FIELDS: { key: string; label: string; placeholder: string; icon: any; color: string; sub?: string }[] = [
   { key: 'whatsapp', label: 'WhatsApp (مع كود الدولة)', placeholder: '966500000000', icon: 'logo-whatsapp', color: '#25D366', sub: 'بدون + أو 00' },
@@ -17,7 +16,7 @@ const FIELDS: { key: string; label: string; placeholder: string; icon: any; colo
   { key: 'tiktok', label: 'TikTok', placeholder: 'zitex_official', icon: 'logo-tiktok', color: '#000' },
   { key: 'snapchat', label: 'Snapchat', placeholder: 'zitex_official', icon: 'logo-snapchat', color: '#FFC000' },
   { key: 'telegram', label: 'Telegram', placeholder: 'zitex_official', icon: 'paper-plane', color: '#0088CC' },
-  { key: 'address', label: 'العنوان', placeholder: 'الرياض، حي العليا', icon: 'location', color: '#10B981' },
+  { key: 'address', label: 'عنوان المتجر', placeholder: 'الرياض، حي العليا', icon: 'location', color: '#10B981' },
   { key: 'working_hours', label: 'ساعات العمل', placeholder: 'السبت - الخميس: 9 ص - 11 م', icon: 'time', color: '#F59E0B' },
 ];
 
@@ -41,7 +40,7 @@ export default function SupportSettings() {
     setSaving(true);
     try {
       await apiCall('/api/merchant/store/support', { method: 'PUT', body: JSON.stringify(data) });
-      Alert.alert(tSync('تم الحفظ', lang), 'تم تحديث معلومات الدعم');
+      Alert.alert(tSync('تم الحفظ', lang), tSync('تم تحديث معلومات الدعم', curLang()));
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
@@ -68,10 +67,10 @@ export default function SupportSettings() {
           <View key={f.key} style={s.field}>
             <View style={s.fieldHeader}>
               <View style={[s.fIcon, { backgroundColor: f.color + '20' }]}><Ionicons name={f.icon} size={16} color={f.color} /></View>
-              <Text style={s.fLabel}>{f.label}</Text>
+              <Text style={s.fLabel}>{tSync(f.label, curLang())}</Text>
             </View>
-            <TextInput style={s.input} value={String(data[f.key] || '')} onChangeText={t => setData({ ...data, [f.key]: t })} placeholder={f.placeholder} autoCapitalize="none" />
-            {!!f.sub && <Text style={s.sub}>{f.sub}</Text>}
+            <TextInput style={s.input} value={String(data[f.key] || '')} onChangeText={t => setData({ ...data, [f.key]: t })} placeholder={tSync(f.placeholder || '', curLang())} autoCapitalize="none" />
+            {!!f.sub && <Text style={s.sub}>{tSync(f.sub, curLang())}</Text>}
           </View>
         ))}
       </ScrollView>

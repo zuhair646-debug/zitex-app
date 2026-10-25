@@ -1,3 +1,5 @@
+import { useT, curLang } from '../src/i18n';
+import { tSync, tf } from '../src/useAutoT';
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -6,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 
 export default function WarrantiesScreen() {
+  useT(); // re-render when language or on-demand translations change
   const router = useRouter();
   const { apiCall } = useAuth();
   const [items, setItems] = useState<any[]>([]);
@@ -21,28 +24,28 @@ export default function WarrantiesScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity testID="warr-back" style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Warranties</Text>
+        <Text style={s.title}>{tSync('الضمانات', curLang())}</Text>
       </View>
       {items.length === 0 ? (
-        <View style={s.empty}><Ionicons name="shield-checkmark-outline" size={48} color="#A1A1AA" /><Text style={s.emptyText}>No active warranties</Text></View>
+        <View style={s.empty}><Ionicons name="shield-checkmark-outline" size={48} color="#A1A1AA" /><Text style={s.emptyText}>{tSync('ما في ضمانات نشطة', curLang())}</Text></View>
       ) : (
         <ScrollView contentContainerStyle={s.list}>
           {items.map(w => (
             <View key={w.id} style={s.card}>
               <View style={s.cardTop}>
-                <View style={[s.statusBadge, { backgroundColor: w.status === 'active' ? '#DCFCE7' : '#FEF2F2' }]}>
-                  <Ionicons name={w.status === 'active' ? 'shield-checkmark' : 'shield'} size={14} color={w.status === 'active' ? '#10B981' : '#EF4444'} />
-                  <Text style={[s.statusText, { color: w.status === 'active' ? '#10B981' : '#EF4444' }]}>{w.status === 'active' ? 'Active' : 'Expired'}</Text>
+                <View style={[s.statusBadge, { backgroundColor: (w.status === 'active' && daysLeft(w.end_date) > 0) ? '#DCFCE7' : '#FEF2F2' }]}>
+                  <Ionicons name={(w.status === 'active' && daysLeft(w.end_date) > 0) ? 'shield-checkmark' : 'shield'} size={14} color={(w.status === 'active' && daysLeft(w.end_date) > 0) ? '#10B981' : '#EF4444'} />
+                  <Text style={[s.statusText, { color: (w.status === 'active' && daysLeft(w.end_date) > 0) ? '#10B981' : '#EF4444' }]}>{tSync((w.status === 'active' && daysLeft(w.end_date) > 0) ? 'ساري' : 'منتهي', curLang())}</Text>
                 </View>
-                <Text style={s.daysLeft}>{daysLeft(w.end_date)} days left</Text>
+                {daysLeft(w.end_date) > 0 && <Text style={s.daysLeft}>{tf('متبقي {0} يوم', curLang(), [daysLeft(w.end_date)])}</Text>}
               </View>
               <Text style={s.productName}>{w.product_name}</Text>
               <Text style={s.serviceName}>{w.service_name}</Text>
-              <View style={s.infoRow}><Text style={s.infoLabel}>Warranty Period</Text><Text style={s.infoVal}>{w.warranty_days} days</Text></View>
-              <View style={s.infoRow}><Text style={s.infoLabel}>Start Date</Text><Text style={s.infoVal}>{w.start_date}</Text></View>
-              <View style={s.infoRow}><Text style={s.infoLabel}>End Date</Text><Text style={s.infoVal}>{w.end_date}</Text></View>
+              <View style={s.infoRow}><Text style={s.infoLabel}>{tSync('مدة الضمان', curLang())}</Text><Text style={s.infoVal}>{tf('{0} يوم', curLang(), [w.warranty_days])}</Text></View>
+              <View style={s.infoRow}><Text style={s.infoLabel}>{tSync('تاريخ البداية', curLang())}</Text><Text style={s.infoVal}>{w.start_date}</Text></View>
+              <View style={s.infoRow}><Text style={s.infoLabel}>{tSync('تاريخ الانتهاء', curLang())}</Text><Text style={s.infoVal}>{w.end_date}</Text></View>
               <View style={s.progressWrap}>
-                <View style={s.progressBar}><View style={[s.progressFill, { width: `${Math.max(0, 100 - (daysLeft(w.end_date) / w.warranty_days * 100))}%` }]} /></View>
+                <View style={s.progressBar}><View style={[s.progressFill, daysLeft(w.end_date) <= 0 && { backgroundColor: '#6B7280' }, { width: `${Math.max(0, 100 - (daysLeft(w.end_date) / w.warranty_days * 100))}%` }]} /></View>
               </View>
             </View>
           ))}

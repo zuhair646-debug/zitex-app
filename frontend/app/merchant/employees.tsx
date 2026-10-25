@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { useT, curLang } from '../../src/i18n';
 
 const DEPARTMENTS = [
   { id: 'marketing', label: 'تسويق / سوشال ميديا', icon: 'megaphone', color: '#EC4899', defaultPerms: ['social', 'banners'] },
@@ -63,8 +63,8 @@ export default function MerchantEmployees() {
   const pickDept = (dept: any) => setForm(f => ({ ...f, department: dept.id, permissions: dept.defaultPerms.length ? dept.defaultPerms : f.permissions }));
 
   const save = async () => {
-    if (!form.name || !form.phone) { Alert.alert(tSync('مطلوب', lang), 'الاسم ورقم الجوال مطلوبان'); return; }
-    if (!editing && !form.password) { Alert.alert(tSync('مطلوب', lang), 'كلمة المرور مطلوبة للموظف الجديد'); return; }
+    if (!form.name || !form.phone) { Alert.alert(tSync('مطلوب', lang), tSync('الاسم ورقم الجوال مطلوبان', curLang())); return; }
+    if (!editing && !form.password) { Alert.alert(tSync('مطلوب', lang), tSync('كلمة المرور مطلوبة للموظف الجديد', curLang())); return; }
     setSaving(true);
     try {
       const body: any = { name: form.name, department: form.department, permissions: form.permissions, salary_monthly: parseFloat(form.salary_monthly) || 0, active: form.active, branch_ids: form.branch_ids, job_title: form.job_title };
@@ -80,8 +80,8 @@ export default function MerchantEmployees() {
   };
 
   const del = (e: any) => Alert.alert(tSync('حذف الموظف؟', lang), e.name, [
-    { text: 'إلغاء', style: 'cancel' },
-    { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/employees/${e.id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }
+    { text: tSync('إلغاء', curLang()), style: 'cancel' },
+    { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/employees/${e.id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }
   ]);
 
   if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
@@ -90,7 +90,7 @@ export default function MerchantEmployees() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>👨‍💼 الموظفون ({items.length})</Text>
+        <Text style={s.title}>{tSync('👨‍💼 الموظفون (', lang)}{items.length})</Text>
         <TouchableOpacity onPress={openNew} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={{ padding: 14 }}>
@@ -102,9 +102,9 @@ export default function MerchantEmployees() {
               <View style={[s.empIcon, { backgroundColor: dept.color + '20' }]}><Ionicons name={dept.icon as any} size={22} color={dept.color} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={s.empName}>{e.name} {!e.active && <TX style={s.inactive}>(معطّل)</TX>}</Text>
-                <Text style={s.empMeta}>{e.phone} • {dept.label}</Text>
+                <Text style={s.empMeta}>{e.phone} • {tSync(dept.label, lang)}</Text>
                 <View style={s.permRow}>
-                  {(e.permissions || []).slice(0, 4).map((p: string) => <View key={p} style={s.permTag}><Text style={s.permTagText}>{perms.labels[p] || p}</Text></View>)}
+                  {(e.permissions || []).slice(0, 4).map((p: string) => <View key={p} style={s.permTag}><Text style={s.permTagText}>{tSync(perms.labels[p] || p, lang)}</Text></View>)}
                   {(e.permissions || []).length > 4 && <Text style={s.morePerms}>+{e.permissions.length - 4}</Text>}
                 </View>
               </View>
@@ -121,7 +121,7 @@ export default function MerchantEmployees() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <Text style={s.title}>{editing ? 'تعديل الموظف' : 'موظف جديد'}</Text>
+            <Text style={s.title}>{editing ? tSync('تعديل الموظف', curLang()) : tSync('موظف جديد', curLang())}</Text>
             <TouchableOpacity onPress={save} disabled={saving}>{saving ? <ActivityIndicator size="small" color="#8833FF" /> : <TX style={{ color: '#8833FF', fontWeight: '800' }}>حفظ</TX>}</TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={{ padding: 14 }}>
@@ -129,7 +129,7 @@ export default function MerchantEmployees() {
             <TextInput style={s.input} value={form.name} onChangeText={t => setForm(f => ({ ...f, name: t }))} placeholder={tSync("محمد أحمد", lang)} />
             <TX style={s.lbl}>رقم الجوال *</TX>
             <TextInput style={s.input} value={form.phone} onChangeText={t => setForm(f => ({ ...f, phone: t }))} placeholder="05xxxxxxxx" keyboardType="phone-pad" editable={!editing} />
-            <Text style={s.lbl}>كلمة المرور {editing && '(اتركها فارغة للإبقاء على الحالية)'}</Text>
+            <Text style={s.lbl}>{tSync('كلمة المرور', lang)} {editing && '(اتركها فارغة للإبقاء على الحالية)'}</Text>
             <TextInput style={s.input} value={form.password} onChangeText={t => setForm(f => ({ ...f, password: t }))} placeholder="********" secureTextEntry />
             <TX style={s.lbl}>المسمى الوظيفي</TX>
             <TextInput style={s.input} value={form.job_title} onChangeText={t => setForm(f => ({ ...f, job_title: t }))} placeholder={tSync("مثال: كاشير، مسؤول تسويق", lang)} />
@@ -159,7 +159,7 @@ export default function MerchantEmployees() {
               {DEPARTMENTS.map(d => (
                 <TouchableOpacity key={d.id} style={[s.deptCard, form.department === d.id && { borderColor: d.color, backgroundColor: d.color + '15' }]} onPress={() => pickDept(d)}>
                   <Ionicons name={d.icon as any} size={18} color={d.color} />
-                  <Text style={s.deptText}>{d.label}</Text>
+                  <Text style={s.deptText}>{tSync(d.label, lang)}</Text>
                 </TouchableOpacity>
               ))}
             </View>

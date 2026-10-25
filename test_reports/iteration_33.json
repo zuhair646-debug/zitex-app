@@ -1,0 +1,57 @@
+{
+  "summary": "Frontend-only retest of the 14 iteration_32 i18n issues, run on the mobile web preview at 375x667 with the autoT cache cleared before each check. FIXED: track-order header and all 6 steps (en/de/zh); merchant bookings tabs and badges; delivery-settings tabs; affiliate-apply hero; points date locale (de 25.9.2026); warranties expired card (no days-left text, grey bar); driver alerts wrapped in tSync; create-return LTR (en: left-aligned, chevron-back); checkout carriers use name_en and a translated city; chamber status, draws, participants, prizes and Winners; draw screen in de/zh. PARTIAL or NOT FIXED: service-bookings list badge still Arabic; drivers 'ر.س' still Arabic; support-settings 'بدون + أو 00' sub still Arabic and en 'العنوان' = 'Title'; chamber detail 'All Participants (n)' is hardcoded English (also shown in ar); loyalty-history shows the raw key 'external_program'. The en dictionary entries are NOT corrected: 'نافذة السحب' = 'Withdrawal Window', 'تاريخ السحب' = 'Withdrawal date', 'ساعات اليوم' = 'Hours of the day', 'ربحت {0} ر.س' = 'You won'. The de/zh entries are corrected. zh role names are NOT re-translated: the backend Mongo translation cache still returns stale values. NEW: competition/[id].tsx has many hardcoded English strings on a customer screen. Regression: 0 pageerrors and no blank pages across about 90 page loads (customer/merchant/chamber/driver in ar/en/de/zh/he). No deprecated Expo packages were found.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/translate (translation_cache in Mongo)", "issue": "Stale zh cache entries are served with cached:true: 'المخزون فقط' returns '库存仅有' (should be 仅库存), 'مدير فرع' returns '经理' (should be 分店经理), 'إدارة فرع كاملة' returns '完整的分支管理' (should be 完整的分店管理). The preset role names and descriptions come from backend/server.py:1355-1359 and are not in i18n-generated.json, so /merchant/roles in zh still shows the wrong text."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Wrong en dictionary entries", "issue": "In i18n-generated.json only de/zh were fixed. en still has 'نافذة السحب' = 'Withdrawal Window' (draw.tsx:116, shows WITHDRAWAL WINDOW), 'تاريخ السحب' = 'Withdrawal date' (competition/[id].tsx:94, chamber.tsx:163), 'ساعات اليوم' = 'Hours of the day' (merchant/team.tsx:61) and 'ربحت {0} ر.س' = 'You won {0} SAR' (driver/index.tsx:66). It should be Draw window / Draw date / Hours today / You earned {0} SAR.", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Competition detail (customer) hardcoded English", "issue": "Shown in every language, including zh/ar: 'Still open'/'Ended'/'Coming soon' (competition/[id].tsx:85), '{n} user' (:95), 'Answer 70% of the questions to join the draw' (:107), 'Answer Questions (n Q)' (:110), 'Participants (n)' (:116), 'Answer 70% of the questions to join' (:166), 'Next'/'Submit' (:178), and Alerts 'Congratulations!'/'Sorry!'/'You scored...'/'Error' (:47-49,59).", "testID": "start-quiz-btn", "priority": "HIGH"},
+      {"component": "Merchant service-bookings list badge", "issue": "The list status pill renders STATUS_FLOW label raw, so en/de show 'مكتمل', 'قيد الإصلاح', 'قيد الاستلام'. Only the modal buttons (:140) were wrapped. Reference: app/merchant/service-bookings.tsx:81", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Chamber detail modal", "issue": "'All Participants ({n})' is hardcoded English and shows in ar too. Reference: app/chamber.tsx:212", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant drivers commission", "issue": "In en/de the page still reads 'Commission: 5 ر.س per order', because the literal ' ر.س' is concatenated into the tf arg. Reference: app/merchant/drivers.tsx:52. Alerts at :26 and :30 ('Required', 'Name and phone required', 'Created') are hardcoded English.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant support-settings", "issue": "f.sub is rendered raw ('بدون + أو 00' in en/de); the dict already has 'Without + or 00'. Reference: app/merchant/support-settings.tsx:73. Dict 'العنوان' en is 'Title' (should be 'Address'; de is already Adresse) and zh is '标题' (should be 地址).", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Loyalty history", "issue": "Source 'external_program' is not in SOURCE_LABEL, so the raw key 'external_program' is shown. Dict 'استبدال' = Replacement/Ersatz/替换 (should be Redemption/Einlösung/兑换). 'تقييم' en is 'reviews' (lowercase plural). Reference: app/loyalty-history.tsx:23-27,87", "testID": "n/a", "priority": "LOW"},
+      {"component": "Chamber dashboard dictionary", "issue": "The stat 'المشاركات' (participations) is translated as Posts / Beiträge / 帖子. zh 'عرض التفاصيل والسحب' is '查看详情与提现' (提现 = cash withdrawal; should be 查看详情与抽奖). en '{0} مشارك' gives '26 Participant' (should be plural). Reference: app/chamber.tsx:112,129", "testID": "n/a", "priority": "LOW"},
+      {"component": "Driver order card", "issue": "'To: {address}' is hardcoded English. Reference: app/driver/index.tsx:112", "testID": "n/a", "priority": "LOW"},
+      {"component": "Merchant team", "issue": "en '{0} موظف' gives '5 employee' (should be plural).", "testID": "n/a", "priority": "LOW"},
+      {"component": "Checkout payment widget", "issue": "In de/zh, 'Bank Transfer', 'Cash on Delivery' and 'Internal Store Points' stay English (ar is correct).", "testID": "n/a", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Checkout delivery fee", "issue": "Observation: Regular delivery showed 25 SAR in en/ar but 10 SAR in de/zh for the same cart and address on consecutive loads. Possibly a location or fee-calculation race. Not i18n-related; verify.", "affected_testIDs": []}
+    ],
+    "design_issues": [
+      {"screen": "Checkout in LTR languages", "issues": ["ShippingOptionsPicker still hardcodes textAlign 'right' on emptyText (:136), title 'External shipping options' (:139) and price (:145).", "checkout.tsx hardcodes textAlign 'right' on sectionTitle (:334), notesInput (:365, 'Order notes (optional)' is right-aligned), locText (:367) and summaryTitle (:369, 'Order summary' is right-aligned in en)."]},
+      {"screen": "Other hardcoded strings (not in the original 14)", "issues": ["Raw Arabic Alert messages: checkout.tsx:129, service-booking.tsx:40,57,59, ugc-contest.tsx:46,59, setup-location.tsx:27,50, (tabs)/social.tsx:106, support.tsx:22", "Hardcoded English Alerts: cart.tsx:59, addresses.tsx:20, product/[id].tsx:49, merchant/competition-form.tsx:65,68, merchant/banners.tsx:27", "Hardcoded English labels: merchant/banners.tsx:61-65, merchant/competition-form.tsx:101,227,313-317, merchant/competitions.tsx:33,53"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": [".screenshots/cr_en.jpg", ".screenshots/chamber_en.jpg", ".screenshots/draw_de.jpg", ".screenshots/sb_en.jpg", ".screenshots/checkout_en.jpg", ".screenshots/warr_de.jpg", ".screenshots/chamber_modal_ar.jpg"],
+  "action_items": [
+    "Fix the en values in i18n-generated.json: 'نافذة السحب' -> 'Draw window', 'تاريخ السحب' -> 'Draw date', 'ساعات اليوم' -> 'Hours today', 'ربحت {0} ر.س' -> 'You earned {0} SAR'; 'العنوان' en -> 'Address', zh -> '地址'; 'المشاركات' -> Entries/Teilnahmen/参与次数; zh 'عرض التفاصيل والسحب' -> '查看详情与抽奖'; 'استبدال' -> Redemption/Einlösung/兑换",
+    "Add static dict entries for the preset roles ('المخزون فقط', 'مدير فرع', 'إدارة فرع كاملة' and the other preset names/descriptions), or purge the stale zh rows from the backend translation cache",
+    "Wrap service-bookings.tsx:81 status label with tSync",
+    "Translate chamber.tsx:212 'All Participants' using the existing 'المشاركون ({0})' key",
+    "drivers.tsx:52: translate the ر.س suffix (tSync('ر.س')); translate the Alerts at :26 and :30",
+    "support-settings.tsx:73: wrap f.sub with tSync",
+    "loyalty-history.tsx: add 'external_program' to SOURCE_LABEL",
+    "competition/[id].tsx: replace all hardcoded English (lines 47-49, 59, 85, 95, 107, 110, 116, 166, 178) with tSync/tf",
+    "driver/index.tsx:112: translate 'To:'",
+    "Checkout/ShippingOptionsPicker: use textAlign 'auto' or isRTL-based alignment instead of 'right'",
+    "Wrap the remaining raw Arabic/English Alert messages listed in design_issues"
+  ],
+  "critical_code_review_comments": [
+    "The static dictionary takes precedence over /api/translate, but strings missing from it (e.g. DB preset role names) fall back to a persistent Mongo cache that never invalidates, so bad LLM translations stick forever. Consider an admin purge or a version bump.",
+    "tf() args containing literal Arabic units (drivers.tsx:52) bypass translation; units should be translated separately."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only)", "frontend": "~65% of the iteration_32 items fully fixed (9 fixed, 4 partial, 2 not fixed; en dictionary and zh roles not fixed); regression 100% (0 crashes)"},
+  "seed_data_creation": "None. The customer cart already had 1 item and 2 addresses.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login via fetch /api/auth/login, set localStorage token/app_lang, remove '@zenrex_autot_cache_v2', then page.goto and wait 5-7s. Regex-scan innerText for Arabic runs on en/de/zh pages (exclude DB names/titles/addresses). Check dictionary values directly with python json on frontend/src/i18n-generated.json. Check backend cache with POST /api/translate {text,target_lang:'zh',source_lang:'ar'} and look for cached:true. IDs: order 6ab6b8cbdfe07c92e87b8bce, competition 6ab6206a71b6ad54069c12bc, chamber comp 6ab6206a71b6ad54069c12be (/draw?id=). create-return has no returnable products for the customer, so the item chevron is unverified.",
+  "rca_of_issue": "en dictionary: the fix was applied only to the de/zh keys of the affected entries; the en values were left untouched. zh roles: role names/descriptions are Arabic DB strings missing from the static dict, so they hit /api/translate, whose Mongo cache (translate.py _cache_get) returns the earlier bad LLM output; 're-translated on demand' never happens because the cache is hit first."
+}

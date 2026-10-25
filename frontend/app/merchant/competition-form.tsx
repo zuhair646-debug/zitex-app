@@ -8,8 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 const TYPES = [
   { id: 'general', name: 'سحب عام', icon: 'people', desc: 'أي مستخدم مسجّل يمكنه الانضمام' },
@@ -43,7 +43,7 @@ export default function CompetitionForm() {
 
   const pickPhoto = async (kind: 'cover' | 'prize') => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'السماح للوصول للمعرض'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), tSync('السماح للوصول للمعرض', curLang())); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, quality: 0.85 });
     if (res.canceled) return;
     setUploading(kind);
@@ -62,20 +62,20 @@ export default function CompetitionForm() {
   useEffect(() => { loadEmps(); }, []);
 
   const createEmp = async () => {
-    if (!newEmp.name || !newEmp.phone || !newEmp.password) { Alert.alert('Required', 'Name, phone, password required'); return; }
+    if (!newEmp.name || !newEmp.phone || !newEmp.password) { Alert.alert(tSync('مطلوب', curLang()), tSync('الاسم والجوال وكلمة المرور مطلوبة', curLang())); return; }
     try {
       const r = await apiCall('/api/merchant/chamber-employees', { method: 'POST', body: JSON.stringify(newEmp) });
-      Alert.alert('Success', `Employee created. ID: ${r.id}`);
+      Alert.alert(tSync('تم بنجاح', curLang()), tf('تم إنشاء الموظف. المعرّف: {0}', curLang(), [r.id]));
       setShowEmpModal(false); setNewEmp({ name: '', phone: '', password: '', email: '' });
       loadEmps();
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const submit = async () => {
-    if (!data.title || !data.prize) { Alert.alert(tSync('مطلوب', lang), 'العنوان والجائزة مطلوبان'); return; }
-    if (data.competition_type === 'qa' && (!data.question || !data.correct_answer)) { Alert.alert(tSync('مطلوب', lang), 'السؤال والإجابة الصحيحة مطلوبان'); return; }
-    if (data.competition_type === 'ugc_video' && !data.end_date) { Alert.alert(tSync('مطلوب', lang), 'تاريخ نهاية المسابقة مطلوب لفيديوهات UGC'); return; }
-    if (data.chamber_supervised && (!data.permit_number || !data.assigned_chamber_employee_id)) { Alert.alert(tSync('مطلوب', lang), 'رقم التصريح وموظف الغرفة مطلوبان'); return; }
+    if (!data.title || !data.prize) { Alert.alert(tSync('مطلوب', lang), tSync('العنوان والجائزة مطلوبان', curLang())); return; }
+    if (data.competition_type === 'qa' && (!data.question || !data.correct_answer)) { Alert.alert(tSync('مطلوب', lang), tSync('السؤال والإجابة الصحيحة مطلوبان', curLang())); return; }
+    if (data.competition_type === 'ugc_video' && !data.end_date) { Alert.alert(tSync('مطلوب', lang), tSync('تاريخ نهاية المسابقة مطلوب لفيديوهات UGC', curLang())); return; }
+    if (data.chamber_supervised && (!data.permit_number || !data.assigned_chamber_employee_id)) { Alert.alert(tSync('مطلوب', lang), tSync('رقم التصريح وموظف الغرفة مطلوبان', curLang())); return; }
     setLoading(true);
     try {
       const body: any = {
@@ -87,7 +87,7 @@ export default function CompetitionForm() {
         options: (data.options || []).filter((o: string) => o.trim()),
       };
       await apiCall('/api/merchant/competitions', { method: 'POST', body: JSON.stringify(body) });
-      Alert.alert(tSync('نجاح', lang), 'تم نشر المسابقة', [{ text: 'موافق', onPress: () => router.back() }]);
+      Alert.alert(tSync('نجاح', lang), tSync('تم نشر المسابقة', curLang()), [{ text: tSync('موافق', curLang()), onPress: () => router.back() }]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
   };
 
@@ -95,16 +95,16 @@ export default function CompetitionForm() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>New Competition</Text>
+        <Text style={s.title}>{tSync('مسابقة جديدة', lang)}</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={s.sectionTitle}>Type *</Text>
+        <Text style={s.sectionTitle}>{tSync('النوع *', curLang())}</Text>
         <View style={s.typeGrid}>
           {TYPES.map(t => (
             <TouchableOpacity key={t.id} onPress={() => setData({ ...data, competition_type: t.id })} style={[s.typeCard, data.competition_type === t.id && s.typeCardActive]}>
               <Ionicons name={t.icon as any} size={22} color={data.competition_type === t.id ? 'white' : '#8833FF'} />
-              <Text style={[s.typeName, data.competition_type === t.id && { color: 'white' }]}>{t.name}</Text>
-              <Text style={[s.typeDesc, data.competition_type === t.id && { color: 'white' }]}>{t.desc}</Text>
+              <Text style={[s.typeName, data.competition_type === t.id && { color: 'white' }]}>{tSync(t.name || '', curLang())}</Text>
+              <Text style={[s.typeDesc, data.competition_type === t.id && { color: 'white' }]}>{tSync(t.desc || '', curLang())}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -168,7 +168,7 @@ export default function CompetitionForm() {
                 <TouchableOpacity onPress={() => { if (data.options[i]?.trim()) setData({ ...data, correct_answer: data.options[i] }); }} style={s.starBtn} testID={`comp-star-${i}`}>
                   <Ionicons name={data.correct_answer && data.correct_answer === data.options[i] && data.options[i] ? 'star' : 'star-outline'} size={22} color="#F5C518" />
                 </TouchableOpacity>
-                <TextInput style={[s.input, { flex: 1, marginTop: 0 }]} value={data.options[i]} onChangeText={t => setOpt(i, t)} placeholder={`الخيار ${i + 1}`} testID={`comp-option-${i}`} />
+                <TextInput style={[s.input, { flex: 1, marginTop: 0 }]} value={data.options[i]} onChangeText={t => setOpt(i, t)} placeholder={tf('الخيار {0}', lang, [i + 1])} testID={`comp-option-${i}`} />
               </View>
             ))}
             <TX style={s.hint}>💡 اكتب الخيارات ثم اضغط ⭐ بجانب الإجابة الصحيحة</TX>
@@ -255,15 +255,15 @@ export default function CompetitionForm() {
             <ScrollView contentContainerStyle={{ padding: 16 }}>
               {!!data.cover_image && <Image source={{ uri: mediaUrlSync(data.cover_image) }} style={s.prevCover} contentFit="cover" />}
               <View style={s.prevCard}>
-                <View style={s.prevBadge}><Text style={s.prevBadgeText}>{TYPES.find(t => t.id === data.competition_type)?.name || 'مسابقة'}</Text></View>
-                <Text style={s.prevH1}>{data.title || 'عنوان المسابقة'}</Text>
+                <View style={s.prevBadge}><Text style={s.prevBadgeText}>{tSync(TYPES.find(t => t.id === data.competition_type)?.name || 'مسابقة', curLang())}</Text></View>
+                <Text style={s.prevH1}>{data.title || tSync('عنوان المسابقة', curLang())}</Text>
                 {!!data.description && <Text style={s.prevDesc}>{data.description}</Text>}
                 <LinearGradient colors={['#F5C518', '#D4A017']} style={s.prevPrize} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
                   {!!data.prize_image && <Image source={{ uri: mediaUrlSync(data.prize_image) }} style={s.prevPrizeImg} contentFit="cover" />}
                   <View style={{ flex: 1 }}>
                     <TX style={s.prevPrizeLbl}>🏆 الجائزة</TX>
                     <Text style={s.prevPrizeName}>{data.prize || '—'}</Text>
-                    <Text style={s.prevPrizeSub}>عدد الفائزين: {data.prize_count || 1}</Text>
+                    <Text style={s.prevPrizeSub}>{tSync('عدد الفائزين:', lang)} {data.prize_count || 1}</Text>
                   </View>
                 </LinearGradient>
                 {data.competition_type === 'qa' && !!data.question && (
@@ -281,20 +281,20 @@ export default function CompetitionForm() {
                   <View style={s.prevInfoBox}>
                     <Ionicons name="cart" size={18} color="#F5C518" />
                     <Text style={s.prevInfoTxt}>
-                      اشترِ بـ {data.spend_requirement || 0} ر.س {data.purchase_mode === 'accumulated' ? 'تراكمياً' : 'في فاتورة واحدة'}
+                      {tSync('اشترِ بـ', lang)} {data.spend_requirement || 0} {tSync('ر.س', lang)} {data.purchase_mode === 'accumulated' ? tSync('تراكمياً', curLang()) : tSync('في فاتورة واحدة', curLang())}
                     </Text>
                   </View>
                 )}
                 {data.competition_type === 'ugc_video' && (
                   <View style={s.prevInfoBox}>
                     <Ionicons name="videocam" size={18} color="#F5C518" />
-                    <Text style={s.prevInfoTxt}>ارفع فيديو تسويقي — الأكثر لايكات يفوز {data.ugc_hashtag ? `• #${data.ugc_hashtag}` : ''}</Text>
+                    <Text style={s.prevInfoTxt}>{tSync('ارفع فيديو تسويقي — الأكثر لايكات يفوز', lang)} {data.ugc_hashtag ? `• #${data.ugc_hashtag}` : ''}</Text>
                   </View>
                 )}
                 {data.chamber_supervised && (
                   <View style={s.prevChamber}>
                     <Ionicons name="shield-checkmark" size={16} color="#10B981" />
-                    <Text style={s.prevChamberTxt}>معتمدة من الغرفة التجارية • تصريح {data.permit_number}</Text>
+                    <Text style={s.prevChamberTxt}>{tSync('معتمدة من الغرفة التجارية • تصريح', lang)} {data.permit_number}</Text>
                   </View>
                 )}
               </View>
@@ -307,18 +307,18 @@ export default function CompetitionForm() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setShowEmpModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <Text style={s.title}>New Chamber Employee</Text>
+            <Text style={s.title}>{tSync('موظف غرفة جديد', lang)}</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            <Text style={s.label}>Name *</Text>
+            <Text style={s.label}>{tSync('الاسم *', curLang())}</Text>
             <TextInput style={s.input} value={newEmp.name} onChangeText={t => setNewEmp({ ...newEmp, name: t })} />
-            <Text style={s.label}>Phone *</Text>
+            <Text style={s.label}>{tSync('رقم الجوال *', curLang())}</Text>
             <TextInput style={s.input} value={newEmp.phone} onChangeText={t => setNewEmp({ ...newEmp, phone: t })} keyboardType="phone-pad" />
-            <Text style={s.label}>Password *</Text>
+            <Text style={s.label}>{tSync('كلمة المرور *', curLang())}</Text>
             <TextInput style={s.input} value={newEmp.password} onChangeText={t => setNewEmp({ ...newEmp, password: t })} secureTextEntry />
-            <Text style={s.label}>Email</Text>
+            <Text style={s.label}>{tSync('البريد الإلكتروني', lang)}</Text>
             <TextInput style={s.input} value={newEmp.email} onChangeText={t => setNewEmp({ ...newEmp, email: t })} keyboardType="email-address" autoCapitalize="none" />
-            <TouchableOpacity style={s.submitBtn} onPress={createEmp}><Text style={s.submitText}>Create Employee</Text></TouchableOpacity>
+            <TouchableOpacity style={s.submitBtn} onPress={createEmp}><Text style={s.submitText}>{tSync('إضافة موظف', lang)}</Text></TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
       </Modal>

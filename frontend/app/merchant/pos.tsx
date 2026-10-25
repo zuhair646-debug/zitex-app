@@ -7,8 +7,8 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, Badge, Chip } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
 
 type CartItem = { product_id: string; name: string; price: number; quantity: number };
@@ -78,8 +78,8 @@ export default function POSTerminal() {
         body: JSON.stringify({ items, customer_name: customerName, customer_phone: customerPhone, payment_method: paymentMethod, branch_id: branchId, vat_percent: 15 }),
       });
       setCart([]); setCheckoutOpen(false); setCustomerName(''); setCustomerPhone('');
-      Alert.alert('✅ تم إنشاء الفاتورة', `رقم الفاتورة: ${r.invoice_number}\nالمجموع: ${r.total.toFixed(2)} ر.س`,
-        [{ text: 'موافق' }, { text: 'عرض الفواتير', onPress: () => router.push('/merchant/invoices') }]);
+      Alert.alert(tSync('✅ تم إنشاء الفاتورة', curLang()), tf('رقم الفاتورة: {0}\nالمجموع: {1} ر.س', lang, [r.invoice_number, r.total.toFixed(2)]),
+        [{ text: tSync('موافق', curLang()) }, { text: tSync('عرض الفواتير', curLang()), onPress: () => router.push('/merchant/invoices') }]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
@@ -88,7 +88,7 @@ export default function POSTerminal() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title={tSync("نقاط البيع POS", lang)} onBack={() => router.back()} rightIcon="receipt" onRight={() => router.push('/merchant/invoices')} subtitle={`${cart.length} في السلة`} />
+        <ScreenHeader title={tSync("نقاط البيع POS", lang)} onBack={() => router.back()} rightIcon="receipt" onRight={() => router.push('/merchant/invoices')} subtitle={tf('{0} في السلة', lang, [cart.length])} />
 
         {branches.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.sm, paddingBottom: spacing.sm }}>
@@ -110,7 +110,7 @@ export default function POSTerminal() {
             data={filtered}
             keyExtractor={(p: any) => p.id}
             contentContainerStyle={{ padding: spacing.lg, paddingBottom: cart.length > 0 ? 200 : 140, gap: spacing.sm }}
-            ListEmptyComponent={<EmptyState icon="cube-outline" title={tSync("لا يوجد منتجات", lang)} description="أضف منتجات من قسم المنتجات أولاً" />}
+            ListEmptyComponent={<EmptyState icon="cube-outline" title={tSync("لا يوجد منتجات", lang)} description={tSync('أضف منتجات من قسم المنتجات أولاً', lang)} />}
             renderItem={({ item: p }: any) => {
               const cartItem = cart.find(x => x.product_id === p.id);
               const price = p.discount_price || p.price;
@@ -125,7 +125,7 @@ export default function POSTerminal() {
                       numberOfLines={1}
                       iconSize={11}
                     />
-                    <Text style={s.pprice}>{price} ر.س</Text>
+                    <Text style={s.pprice}>{price} {tSync('ر.س', lang)}</Text>
                   </View>
                   {cartItem ? (
                     <View style={s.qtyRow}>
@@ -145,7 +145,7 @@ export default function POSTerminal() {
         {cart.length > 0 && (
           <View style={s.cartBar}>
             <View style={{ flex: 1 }}>
-              <Text style={s.cartLbl}>{cart.reduce((a, x) => a + x.quantity, 0)} قطعة</Text>
+              <Text style={s.cartLbl}>{cart.reduce((a, x) => a + x.quantity, 0)} {tSync('قطعة', lang)}</Text>
               <Text style={s.cartTotal}>{total.toFixed(2)} <TX style={s.cartCur}>ر.س</TX></Text>
             </View>
             <PrimaryButton label={tSync("إنهاء البيع", lang)} icon="checkmark-circle" onPress={() => setCheckoutOpen(true)} fullWidth={false} />
@@ -167,9 +167,9 @@ export default function POSTerminal() {
                 </View>
               ))}
               <View style={s.divider} />
-              <View style={s.totalRow}><TX style={s.totalLbl}>المجموع الفرعي</TX><Text style={s.totalVal}>{subtotal.toFixed(2)} ر.س</Text></View>
-              <View style={s.totalRow}><TX style={s.totalLbl}>ضريبة 15%</TX><Text style={s.totalVal}>{vat.toFixed(2)} ر.س</Text></View>
-              <View style={s.totalRow}><TX style={[s.totalLbl, { fontWeight: '900', fontSize: 16 }]}>الإجمالي</TX><Text style={[s.totalVal, { color: colors.brand, fontSize: 18 }]}>{total.toFixed(2)} ر.س</Text></View>
+              <View style={s.totalRow}><TX style={s.totalLbl}>المجموع الفرعي</TX><Text style={s.totalVal}>{subtotal.toFixed(2)} {tSync('ر.س', lang)}</Text></View>
+              <View style={s.totalRow}><TX style={s.totalLbl}>ضريبة 15%</TX><Text style={s.totalVal}>{vat.toFixed(2)} {tSync('ر.س', lang)}</Text></View>
+              <View style={s.totalRow}><TX style={[s.totalLbl, { fontWeight: '900', fontSize: 16 }]}>الإجمالي</TX><Text style={[s.totalVal, { color: colors.brand, fontSize: 18 }]}>{total.toFixed(2)} {tSync('ر.س', lang)}</Text></View>
 
               <TX style={s.sec}>👤 بيانات العميل (اختياري)</TX>
               <TextInput style={s.input} placeholder={tSync("اسم العميل", lang)} placeholderTextColor={colors.onSurfaceTertiary} value={customerName} onChangeText={setCustomerName} />
@@ -183,7 +183,7 @@ export default function POSTerminal() {
               </View>
 
               <View style={{ marginTop: spacing.lg }}>
-                <PrimaryButton label={saving ? 'جارٍ الإصدار...' : 'إصدار الفاتورة'} icon="checkmark-done" onPress={checkout} loading={saving} disabled={saving} />
+                <PrimaryButton label={saving ? tSync('جارٍ الإصدار...', curLang()) : tSync('إصدار الفاتورة', curLang())} icon="checkmark-done" onPress={checkout} loading={saving} disabled={saving} />
               </View>
             </ScrollView>
           </SafeAreaView>

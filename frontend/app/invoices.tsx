@@ -1,3 +1,5 @@
+import { useT } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -6,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 
 export default function InvoicesScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -17,20 +20,20 @@ export default function InvoicesScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity testID="inv-back" style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Invoices</Text>
+        <Text style={s.title}>{tSync('الفواتير', lang)}</Text>
       </View>
       {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> :
         invoices.length === 0 ? (
-          <View style={s.empty}><Ionicons name="receipt-outline" size={48} color="#A1A1AA" /><Text style={s.emptyText}>No invoices yet</Text></View>
+          <View style={s.empty}><Ionicons name="receipt-outline" size={48} color="#A1A1AA" /><Text style={s.emptyText}>{tSync('ما في فواتير لحد الآن', lang)}</Text></View>
         ) : (
           <ScrollView contentContainerStyle={s.list}>
             {invoices.map(inv => (
               <View key={inv.id} style={s.card}>
                 <View style={s.cardTop}><Text style={s.invNo}>{inv.invoice_no}</Text><View style={[s.statusBadge, { backgroundColor: inv.status === 'completed' ? '#DCFCE7' : '#FEF3C7' }]}><Text style={[s.statusText, { color: inv.status === 'completed' ? '#10B981' : '#F59E0B' }]}>{inv.status}</Text></View></View>
                 <Text style={s.date}>{inv.date?.split('T')[0]}</Text>
-                <View style={s.row}><Text style={s.label}>Subtotal</Text><Text style={s.val}>{inv.subtotal} SAR</Text></View>
-                <View style={s.row}><Text style={s.label}>Tax (15%)</Text><Text style={s.val}>{inv.tax} SAR</Text></View>
-                <View style={[s.row, s.totalRow]}><Text style={s.totalLabel}>TOTAL</Text><Text style={s.totalVal}>{inv.total} SAR</Text></View>
+                <View style={s.row}><Text style={s.label}>{tSync('المجموع الجزئي', lang)}</Text><Text style={s.val}>{inv.subtotal} {tSync('ر.س', lang)}</Text></View>
+                <View style={s.row}><Text style={s.label}>{tSync('الضريبة (15%)', lang)}</Text><Text style={s.val}>{inv.tax} {tSync('ر.س', lang)}</Text></View>
+                <View style={[s.row, s.totalRow]}><Text style={s.totalLabel}>{tSync('الإجمالي', lang)}</Text><Text style={s.totalVal}>{inv.total} {tSync('ر.س', lang)}</Text></View>
                 <Text style={s.itemsTitle}>{inv.items?.length || 0} items</Text>
               </View>
             ))}

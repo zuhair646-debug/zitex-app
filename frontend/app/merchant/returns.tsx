@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { useT, curLang } from '../../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -52,7 +52,7 @@ export default function MerchantReturnsScreen() {
       setRmas(d.rmas || []);
       setCounts(d.counts || {});
     } catch (e: any) {
-      Alert.alert(tSync('خطأ', lang), e?.message || 'تعذّر التحميل');
+      Alert.alert(tSync('خطأ', lang), e?.message || tSync('تعذّر التحميل', curLang()));
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,7 @@ export default function MerchantReturnsScreen() {
       <StatusBar barStyle="light-content" />
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.back}>
-          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+          <Ionicons name={curLang() === 'ar' || curLang() === 'fa' || curLang() === 'ur' || curLang() === 'he' ? "chevron-forward" : "chevron-back"} size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <TX style={s.title}>الإرجاع والضمان</TX>
@@ -127,7 +127,7 @@ export default function MerchantReturnsScreen() {
           <TouchableOpacity key={t.code || 'all'}
             onPress={() => setFilter(t.code)}
             style={[s.tab, filter === t.code && s.tabActive]}>
-            <Text style={[s.tabText, filter === t.code && { color: BG }]}>{t.label}</Text>
+            <Text style={[s.tabText, filter === t.code && { color: BG }]}>{tSync(t.label, lang)}</Text>
             <View style={[s.tabBadge, filter === t.code && { backgroundColor: BG + '30' }]}>
               <Text style={[s.tabBadgeText, filter === t.code && { color: BG }]}>{t.count}</Text>
             </View>
@@ -162,13 +162,13 @@ export default function MerchantReturnsScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                       <View style={[s.pill, { backgroundColor: meta.color + '25', borderColor: meta.color }]}>
                         <Ionicons name={meta.icon as any} size={10} color={meta.color} />
-                        <Text style={[s.pillText, { color: meta.color }]}>{meta.label}</Text>
+                        <Text style={[s.pillText, { color: meta.color }]}>{tSync(meta.label, lang)}</Text>
                       </View>
                       <View style={[s.pill, { backgroundColor: CARD, borderColor: BORDER }]}>
-                        <Text style={[s.pillText, { color: TEXT }]}>{r.type === 'warranty' ? 'ضمان' : r.type === 'exchange' ? 'استبدال' : 'إرجاع'}</Text>
+                        <Text style={[s.pillText, { color: TEXT }]}>{r.type === 'warranty' ? 'ضمان' : r.type === 'exchange' ? tSync('استبدال', curLang()) : tSync('إرجاع', curLang())}</Text>
                       </View>
                     </View>
-                    <Text style={s.reasonText} numberOfLines={2}>{r.reason_label_ar} — {r.reason_text}</Text>
+                    <Text style={s.reasonText} numberOfLines={2}>{tSync(r.reason_label_ar || '', lang)} — {r.reason_text}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -186,7 +186,7 @@ export default function MerchantReturnsScreen() {
                 <>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
                     <Text style={{ color: GOLD, fontSize: 16, fontWeight: '900', flex: 1, textAlign: 'right' }}>
-                      تفاصيل الطلب #{selected.id.slice(-6)}
+                      {tSync('تفاصيل الطلب #', lang)}{selected.id.slice(-6)}
                     </Text>
                     <TouchableOpacity onPress={() => setSelected(null)}><Ionicons name="close" size={22} color={TEXT} /></TouchableOpacity>
                   </View>
@@ -194,12 +194,12 @@ export default function MerchantReturnsScreen() {
                   <View style={s.detailBox}>
                     <DetailRow icon="person" label={tSync('العميل', lang)} value={`${selected.customer_name} · ${selected.customer_phone}`} />
                     <DetailRow icon="cube" label={tSync('المنتج', lang)} value={selected.product_name} />
-                    <DetailRow icon="alert-circle" label={tSync('السبب', lang)} value={selected.reason_label_ar} />
+                    <DetailRow icon="alert-circle" label={tSync('السبب', lang)} value={tSync(selected.reason_label_ar || '', lang)} />
                     <DetailRow icon="chatbubbles" label={tSync('تفاصيل العميل', lang)} value={selected.reason_text || '—'} />
                     <DetailRow icon="cash" label={tSync('المبلغ', lang)} value={`${(selected.unit_price * selected.qty).toFixed(2)} ر.س`} />
                     <DetailRow icon="card" label={tSync('طريقة الاسترداد', lang)} value={
                       selected.refund_route === 'original_payment_method' ? 'إعادة إلى نفس طريقة الدفع' :
-                      selected.refund_route === 'wallet' ? 'رصيد في المحفظة' : 'المحفظة أو التحويل البنكي'
+                      selected.refund_route === 'wallet' ? tSync('رصيد في المحفظة', curLang()) : tSync('المحفظة أو التحويل البنكي', curLang())
                     } />
                     {selected.imei_or_serial && <DetailRow icon="barcode" label={tSync('IMEI/الرقم التسلسلي', lang)} value={selected.imei_or_serial} />}
                     {selected.media?.length > 0 && (
@@ -280,7 +280,7 @@ export default function MerchantReturnsScreen() {
         <View style={s.overlay}>
           <View style={s.confirmBox}>
             <Text style={{ color: GOLD, fontSize: 14, fontWeight: '900', textAlign: 'right' }}>
-              {decision === 'approve' ? 'موافقة على الطلب' : decision === 'reject' ? 'رفض الطلب' : 'طلب معلومات إضافية'}
+              {decision === 'approve' ? 'موافقة على الطلب' : decision === 'reject' ? tSync('رفض الطلب', curLang()) : tSync('طلب معلومات إضافية', curLang())}
             </Text>
             {decision === 'approve' && (
               <>

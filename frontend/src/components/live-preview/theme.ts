@@ -1,3 +1,4 @@
+import { curLang } from '../../i18n';
 // Luxe Dark palette for the Merchant Live Preview
 export const LP = {
   GOLD: '#F5C518',
@@ -44,7 +45,7 @@ export const PLATFORM_ICON: Record<string, string> = {
   telegram:  'paper-plane',
 };
 
-export const K = (v: any) => Number(v || 0).toLocaleString('ar-SA');
+export const K = (v: any) => Number(v || 0).toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US');
 export const KM = (v: any) => {
   const n = Number(v || 0);
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}م`;

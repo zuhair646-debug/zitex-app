@@ -10,8 +10,8 @@ import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 type Tab = 'posts' | 'comments';
 type PostType = 'post' | 'story' | 'poll' | 'question' | 'event';
@@ -66,10 +66,10 @@ export default function MerchantSocial() {
   useEffect(() => { setLoading(true); load(); }, [load]);
 
   const pickImage = async () => {
-    if (postType === 'post' && media.length >= 8) { Alert.alert(tSync('الحد', lang), 'يمكن رفع 8 وسائط فقط'); return; }
+    if (postType === 'post' && media.length >= 8) { Alert.alert(tSync('الحد', lang), tSync('يمكن رفع 8 وسائط فقط', curLang())); return; }
     const r = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (r.status !== 'granted') {
-      Alert.alert(tSync('صلاحية الصور', lang), 'يجب السماح للوصول إلى الصور لإرفاقها');
+      Alert.alert(tSync('صلاحية الصور', lang), tSync('يجب السماح للوصول إلى الصور لإرفاقها', curLang()));
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -93,10 +93,10 @@ export default function MerchantSocial() {
   };
 
   const pickVideo = async () => {
-    if (postType !== 'post' && postType !== 'story') { Alert.alert(tSync('غير مسموح', lang), 'الفيديو للمنشور أو الحالة فقط'); return; }
-    if (media.length >= 8) { Alert.alert(tSync('الحد', lang), 'يمكن رفع 8 وسائط فقط'); return; }
+    if (postType !== 'post' && postType !== 'story') { Alert.alert(tSync('غير مسموح', lang), tSync('الفيديو للمنشور أو الحالة فقط', curLang())); return; }
+    if (media.length >= 8) { Alert.alert(tSync('الحد', lang), tSync('يمكن رفع 8 وسائط فقط', curLang())); return; }
     const r = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (r.status !== 'granted') { Alert.alert(tSync('صلاحية', lang), 'يجب السماح للوصول إلى المكتبة'); return; }
+    if (r.status !== 'granted') { Alert.alert(tSync('صلاحية', lang), tSync('يجب السماح للوصول إلى المكتبة', curLang())); return; }
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['videos'] as any, quality: 0.85, videoMaxDuration: 60,
     });
@@ -115,7 +115,7 @@ export default function MerchantSocial() {
   const takePhoto = async () => {
     const r = await ImagePicker.requestCameraPermissionsAsync();
     if (r.status !== 'granted') {
-      Alert.alert(tSync('صلاحية الكاميرا', lang), 'يجب السماح للوصول إلى الكاميرا');
+      Alert.alert(tSync('صلاحية الكاميرا', lang), tSync('يجب السماح للوصول إلى الكاميرا', curLang()));
       return;
     }
     const res = await ImagePicker.launchCameraAsync({ quality: 0.85, mediaTypes: ['images'] as any });
@@ -140,17 +140,17 @@ export default function MerchantSocial() {
 
   const publish = async () => {
     // Validation per type
-    if (postType === 'post' && !text.trim() && media.length === 0) { Alert.alert(tSync('مطلوب', lang), 'أضف نصاً أو وسائط'); return; }
-    if (postType === 'story' && media.length === 0) { Alert.alert(tSync('مطلوب', lang), 'الحالة تحتاج صورة أو فيديو'); return; }
+    if (postType === 'post' && !text.trim() && media.length === 0) { Alert.alert(tSync('مطلوب', lang), tSync('أضف نصاً أو وسائط', curLang())); return; }
+    if (postType === 'story' && media.length === 0) { Alert.alert(tSync('مطلوب', lang), tSync('الحالة تحتاج صورة أو فيديو', curLang())); return; }
     if (postType === 'poll') {
-      if (!text.trim()) { Alert.alert(tSync('مطلوب', lang), 'اكتب سؤال الاستطلاع'); return; }
+      if (!text.trim()) { Alert.alert(tSync('مطلوب', lang), tSync('اكتب سؤال الاستطلاع', curLang())); return; }
       const valid = pollOptions.filter(o => o.trim()).length;
-      if (valid < 2) { Alert.alert(tSync('مطلوب', lang), 'الاستطلاع يحتاج خيارين على الأقل'); return; }
+      if (valid < 2) { Alert.alert(tSync('مطلوب', lang), tSync('الاستطلاع يحتاج خيارين على الأقل', curLang())); return; }
     }
-    if (postType === 'question' && !text.trim()) { Alert.alert(tSync('مطلوب', lang), 'اكتب السؤال'); return; }
+    if (postType === 'question' && !text.trim()) { Alert.alert(tSync('مطلوب', lang), tSync('اكتب السؤال', curLang())); return; }
     if (postType === 'event') {
-      if (!text.trim()) { Alert.alert(tSync('مطلوب', lang), 'اكتب اسم الفعالية'); return; }
-      if (!eventDate.trim()) { Alert.alert(tSync('مطلوب', lang), 'حدد تاريخ الفعالية'); return; }
+      if (!text.trim()) { Alert.alert(tSync('مطلوب', lang), tSync('اكتب اسم الفعالية', curLang())); return; }
+      if (!eventDate.trim()) { Alert.alert(tSync('مطلوب', lang), tSync('حدد تاريخ الفعالية', curLang())); return; }
     }
 
     setPublishing(true);
@@ -174,13 +174,13 @@ export default function MerchantSocial() {
       resetComposer();
       setComposerOpen(false);
       load();
-      Alert.alert('✅ تم النشر', postType === 'story' ? 'الحالة ستظهر لـ 24 ساعة' : 'تم نشر المحتوى');
+      Alert.alert(tSync('✅ تم النشر', curLang()), postType === 'story' ? tSync('الحالة ستظهر لـ 24 ساعة', curLang()) : tSync('تم نشر المحتوى', curLang()));
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setPublishing(false); }
   };
 
-  const delPost = (id: string) => Alert.alert(tSync('حذف المنشور؟', lang), 'لا يمكن التراجع', [
-    { text: 'إلغاء', style: 'cancel' },
-    { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/social/posts/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }
+  const delPost = (id: string) => Alert.alert(tSync('حذف المنشور؟', lang), tSync('لا يمكن التراجع', curLang()), [
+    { text: tSync('إلغاء', curLang()), style: 'cancel' },
+    { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/social/posts/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }
   ]);
 
   const openThread = async (postId: string) => {
@@ -197,8 +197,8 @@ export default function MerchantSocial() {
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
   const delComment = (cid: string) => Alert.alert(tSync('حذف التعليق؟', lang), '', [
-    { text: 'إلغاء', style: 'cancel' },
-    { text: 'حذف', style: 'destructive', onPress: async () => {
+    { text: tSync('إلغاء', curLang()), style: 'cancel' },
+    { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => {
       try {
         await apiCall(`/api/merchant/social/comments/${cid}`, { method: 'DELETE' });
         if (replyPostId) { const d = await apiCall(`/api/social/posts/${replyPostId}/comments`); setPostComments(d); }
@@ -222,10 +222,10 @@ export default function MerchantSocial() {
 
       <View style={s.tabs}>
         <TouchableOpacity style={[s.tab, tab === 'posts' && s.tabActive]} onPress={() => setTab('posts')}>
-          <Text style={[s.tabText, tab === 'posts' && s.tabTextActive]}>📝 المحتوى ({posts.length})</Text>
+          <Text style={[s.tabText, tab === 'posts' && s.tabTextActive]}>{tSync('📝 المحتوى (', lang)}{posts.length})</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[s.tab, tab === 'comments' && s.tabActive]} onPress={() => setTab('comments')}>
-          <Text style={[s.tabText, tab === 'comments' && s.tabTextActive]}>💬 التعليقات ({comments.length})</Text>
+          <Text style={[s.tabText, tab === 'comments' && s.tabTextActive]}>{tSync('💬 التعليقات (', lang)}{comments.length})</Text>
         </TouchableOpacity>
       </View>
 
@@ -243,7 +243,7 @@ export default function MerchantSocial() {
                   <View style={s.cardHeader}>
                     <View style={[s.typePill, { backgroundColor: ti.color + '20' }]}>
                       <Ionicons name={ti.name as any} size={13} color={ti.color} />
-                      <Text style={[s.typePillText, { color: ti.color }]}>{ti.label}</Text>
+                      <Text style={[s.typePillText, { color: ti.color }]}>{tSync(ti.label || '', curLang())}</Text>
                     </View>
                     <Text style={s.author}>{p.author || 'Zenrex Store'}</Text>
                     <TouchableOpacity onPress={() => delPost(p.id || p._id)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
@@ -273,13 +273,13 @@ export default function MerchantSocial() {
                       <Text style={s.eventText}>{p.event_date} • {p.event_location || ''}</Text>
                     </View>
                   )}
-                  {isStory && !!p.expires_at && <Text style={s.expiry}>⏱ تنتهي: {new Date(p.expires_at).toLocaleString('ar')}</Text>}
+                  {isStory && !!p.expires_at && <Text style={s.expiry}>{tSync('⏱ تنتهي:', lang)} {new Date(p.expires_at).toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US')}</Text>}
 
                   <View style={s.statsRow}>
                     <View style={s.stat}><Ionicons name="heart" size={13} color="#EF4444" /><Text style={s.statText}> {p.likes || 0}</Text></View>
                     <TouchableOpacity style={s.commentsBtn} onPress={() => openThread(p.id || p._id)}>
                       <Ionicons name="chatbubble" size={13} color="#3B82F6" />
-                      <Text style={s.commentsBtnText}>التعليقات ({p.comments || 0})</Text>
+                      <Text style={s.commentsBtnText}>{tSync('التعليقات (', lang)}{Array.isArray(p.comments) ? p.comments.length : (p.comments || 0)})</Text>
                     </TouchableOpacity>
                     <View style={s.stat}><Ionicons name="eye" size={13} color="#6B7280" /><Text style={s.statText}> {p.views || 0}</Text></View>
                   </View>
@@ -299,7 +299,7 @@ export default function MerchantSocial() {
                     {!c.is_merchant_reply && <TouchableOpacity onPress={(e) => { e.stopPropagation(); delComment(c.id); }}><Ionicons name="trash-outline" size={16} color="#EF4444" /></TouchableOpacity>}
                   </View>
                   <Text style={s.cmtText} numberOfLines={3}>{c.text}</Text>
-                  <Text style={s.cmtPost}>↳ على: {(c.post?.content || c.post?.text || '').slice(0, 60)}</Text>
+                  <Text style={s.cmtPost}>{tSync('↳ على:', lang)} {(c.post?.content || c.post?.text || '').slice(0, 60)}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -334,8 +334,8 @@ export default function MerchantSocial() {
                       <View style={[s.typeIconBoxGold, active && { backgroundColor: colors.brand }]}>
                         <Ionicons name={t.icon} size={20} color={active ? colors.onBrandPrimary : colors.brand} />
                       </View>
-                      <Text style={[s.typeLabelGold, active && { color: colors.brand }]}>{t.label}</Text>
-                      <Text style={s.typeDescGold}>{t.desc}</Text>
+                      <Text style={[s.typeLabelGold, active && { color: colors.brand }]}>{tSync(t.label || '', curLang())}</Text>
+                      <Text style={s.typeDescGold}>{tSync(t.desc || '', curLang())}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -344,14 +344,14 @@ export default function MerchantSocial() {
               {/* Text input */}
               {postType !== 'story' && (
                 <>
-                  <Text style={s.goldLabel}>{postType === 'poll' ? 'سؤال الاستطلاع' : postType === 'question' ? 'السؤال' : postType === 'event' ? 'اسم الفعالية' : 'نص المنشور'} *</Text>
+                  <Text style={s.goldLabel}>{postType === 'poll' ? 'سؤال الاستطلاع' : postType === 'question' ? 'السؤال' : postType === 'event' ? tSync('اسم الفعالية', curLang()) : tSync('نص المنشور', curLang())} *</Text>
                   <TextInput
                     style={[s.goldInput, { height: postType === 'poll' || postType === 'question' ? 72 : 128, textAlignVertical: 'top' }]}
                     multiline
                     value={text}
                     onChangeText={setText}
                     placeholderTextColor={colors.onSurfaceTertiary}
-                    placeholder={postType === 'poll' ? 'ما هو أفضل هاتف لعام 2026؟' : postType === 'question' ? 'ما رأيكم في...؟' : postType === 'event' ? 'افتتاح فرع جديد' : 'ماذا تريد أن تشارك؟'}
+                    placeholder={postType === 'poll' ? 'ما هو أفضل هاتف لعام 2026؟' : postType === 'question' ? 'ما رأيكم في...؟' : postType === 'event' ? tSync('افتتاح فرع جديد', curLang()) : tSync('ماذا تريد أن تشارك؟', curLang())}
                   />
                 </>
               )}
@@ -360,7 +360,7 @@ export default function MerchantSocial() {
               {(postType === 'post' || postType === 'story') && (
                 <>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md }}>
-                    <Text style={[s.goldLabel, { marginTop: 0, flex: 1 }]}>{postType === 'story' ? 'وسائط الحالة *' : 'الوسائط (صور + فيديو، حتى 8)'}</Text>
+                    <Text style={[s.goldLabel, { marginTop: 0, flex: 1 }]}>{postType === 'story' ? tSync('وسائط الحالة *', curLang()) : tSync('الوسائط (صور + فيديو، حتى 8)', curLang())}</Text>
                     <Text style={s.helperCount}>{media.length}/{postType === 'story' ? 1 : 8}</Text>
                   </View>
                   <View style={s.mediaGridGold}>
@@ -412,7 +412,7 @@ export default function MerchantSocial() {
                   {pollOptions.map((opt, i) => (
                     <View key={i} style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm, alignItems: 'center' }}>
                       <TextInput style={[s.goldInput, { flex: 1 }]} value={opt} onChangeText={v => updatePollOption(i, v)}
-                        placeholderTextColor={colors.onSurfaceTertiary} placeholder={`الخيار ${i + 1}`} />
+                        placeholderTextColor={colors.onSurfaceTertiary} placeholder={tf('الخيار {0}', lang, [i + 1])} />
                       {pollOptions.length > 2 && <TouchableOpacity onPress={() => removePollOption(i)} style={s.removeOptBtnGold}><Ionicons name="close" size={20} color={colors.error} /></TouchableOpacity>}
                     </View>
                   ))}
@@ -490,7 +490,7 @@ export default function MerchantSocial() {
           <View style={s.replyBar}>
             {replyParent && (
               <View style={s.replyTo}>
-                <Text style={s.replyToText}>الرد على: {replyParent.user_name}</Text>
+                <Text style={s.replyToText}>{tSync('الرد على:', lang)} {replyParent.user_name}</Text>
                 <TouchableOpacity onPress={() => setReplyParent(null)}><Ionicons name="close" size={16} color="#6B7280" /></TouchableOpacity>
               </View>
             )}

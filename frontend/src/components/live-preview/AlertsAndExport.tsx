@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useT } from '../../i18n';
-import { tSync } from '../../useAutoT';
+import { useT, curLang } from '../../i18n';
+import { tSync, tf, TX } from '../../useAutoT';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, ActivityIndicator, Linking, Alert as RNAlert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import Constants from 'expo-constants';
 import { LP } from './theme';
-import { TX } from '../../useAutoT';
 
 const SEVERITY_COLORS: any = {
   info: LP.INFO,
@@ -18,10 +17,10 @@ const SEVERITY_COLORS: any = {
 const timeAgo = (iso?: string) => {
   if (!iso) return '';
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return 'الآن';
-  if (diff < 3600) return `${Math.floor(diff / 60)}د`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}س`;
-  return `${Math.floor(diff / 86400)}ي`;
+  if (diff < 60) return tSync('الآن', curLang());
+  if (diff < 3600) return tf('{0}د', curLang(), [Math.floor(diff / 60)]);
+  if (diff < 86400) return tf('{0}س', curLang(), [Math.floor(diff / 3600)]);
+  return tf('{0}ي', curLang(), [Math.floor(diff / 86400)]);
 };
 
 /* ══════════════════════ ALERTS BELL ══════════════════════ */
@@ -83,7 +82,7 @@ export function AlertsBell({ apiCall }: any) {
             <View style={s.handle} />
             <View style={s.sheetHead}>
               <TouchableOpacity onPress={() => setOpen(false)}><Ionicons name="close" size={22} color={LP.TEXT} /></TouchableOpacity>
-              <Text style={s.sheetTitle}>التنبيهات ({unread} جديد)</Text>
+              <Text style={s.sheetTitle}>{tSync('التنبيهات (', lang)}{unread} {tSync('جديد)', lang)}</Text>
               <TouchableOpacity
                 onPress={async () => { try { await apiCall('/api/merchant/live-preview/alerts/test', { method: 'POST' }); await load(); } catch {} }}
                 style={s.testBtn}>
@@ -149,9 +148,9 @@ export function ExportButton({ kind, entityId, apiCall, small }: any) {
       } else {
         const supported = await Linking.canOpenURL(url);
         if (supported) await Linking.openURL(url);
-        else RNAlert.alert(tSync('تعذّر فتح التقرير', lang), 'تأكد من اتصالك بالإنترنت');
+        else RNAlert.alert(tSync('تعذّر فتح التقرير', curLang()), tSync('تأكد من اتصالك بالإنترنت', curLang()));
       }
-    } catch (e: any) { RNAlert.alert(tSync('خطأ', lang), e.message); }
+    } catch (e: any) { RNAlert.alert(tSync('خطأ', curLang()), e.message); }
   };
   return (
     <TouchableOpacity onPress={onPress} style={[s.exportBtn, small && { paddingHorizontal: 10, paddingVertical: 6 }]} activeOpacity={0.7}>

@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from './_layout';
 import { TX, tSync } from '../src/useAutoT';
-import { useT } from '../src/i18n';
+import { useT, curLang } from '../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -26,7 +26,7 @@ const RESOLUTIONS = [
 ];
 
 export default function CreateRMAScreen() {
-  const { lang } = useT();
+  const { lang, isRTL } = useT();
   const router = useRouter();
   const { apiCall, token } = useAuth();
   const params = useLocalSearchParams<{ order_id?: string; product_id?: string }>();
@@ -71,7 +71,7 @@ export default function CreateRMAScreen() {
   const pickMedia = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(tSync('صلاحية الصور', lang), 'يرجى منح صلاحية الوصول للصور');
+      Alert.alert(tSync('صلاحية الصور', lang), tSync('يرجى منح صلاحية الوصول للصور', curLang()));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -91,7 +91,7 @@ export default function CreateRMAScreen() {
         method: 'POST', body: form, headers: { Authorization: `Bearer ${token}` },
       });
       const data = await resp.json();
-      if (!resp.ok) throw new Error(data.detail || 'فشل الرفع');
+      if (!resp.ok) throw new Error(data.detail || tSync('فشل الرفع', curLang()));
       setMedia([...media, data.url]);
     } catch (e: any) {
       Alert.alert(tSync('خطأ', lang), e?.message);
@@ -100,11 +100,11 @@ export default function CreateRMAScreen() {
 
   const submit = async () => {
     if (!selectedItem || !reasonCode) {
-      Alert.alert(tSync('تنبيه', lang), 'اختر المنتج والسبب');
+      Alert.alert(tSync('تنبيه', lang), tSync('اختر المنتج والسبب', curLang()));
       return;
     }
     if (currentReason?.requires_media && media.length === 0) {
-      Alert.alert(tSync('تنبيه', lang), 'يجب رفع صور أو فيديو للمنتج');
+      Alert.alert(tSync('تنبيه', lang), tSync('يجب رفع صور أو فيديو للمنتج', curLang()));
       return;
     }
     setSaving(true);
@@ -125,8 +125,8 @@ export default function CreateRMAScreen() {
           imei_or_serial: imei,
         }),
       });
-      Alert.alert(tSync('تم', lang), r.message || 'تم رفع طلبك', [
-        { text: 'حسناً', onPress: () => router.replace('/my-returns') },
+      Alert.alert(tSync('تم', lang), r.message || tSync('تم رفع طلبك', curLang()), [
+        { text: tSync('حسناً', curLang()), onPress: () => router.replace('/my-returns') },
       ]);
     } catch (e: any) {
       Alert.alert(tSync('خطأ', lang), e?.message);
@@ -138,11 +138,11 @@ export default function CreateRMAScreen() {
       <StatusBar barStyle="light-content" />
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.back}>
-          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+          <Ionicons name={isRTL ? "chevron-forward" : "chevron-back"} size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <TX style={s.title}>طلب إرجاع / ضمان</TX>
-          <Text style={s.sub}>{step === 'pick' ? 'اختر المنتج' : 'أكمل تفاصيل الطلب'}</Text>
+          <Text style={s.sub}>{step === 'pick' ? tSync('اختر المنتج', curLang()) : tSync('أكمل تفاصيل الطلب', curLang())}</Text>
         </View>
       </View>
 
@@ -166,16 +166,16 @@ export default function CreateRMAScreen() {
                 )}
                 <View style={{ flex: 1, marginHorizontal: 10 }}>
                   <Text style={s.itemTitle} numberOfLines={1}>{it.product_name}</Text>
-                  <Text style={s.itemSub}>{it.qty} × {it.unit_price.toFixed(2)} ر.س</Text>
+                  <Text style={s.itemSub}>{it.qty} × {it.unit_price.toFixed(2)} {tSync('ر.س', lang)}</Text>
                   <View style={{ flexDirection: 'row', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                     {it.allow_return && it.days_left > 0 && (
                       <View style={[s.badge, { backgroundColor: OK + '20', borderColor: OK }]}>
-                        <Text style={[s.badgeText, { color: OK }]}>يمكن إرجاعه · {it.days_left} يوم متبقي</Text>
+                        <Text style={[s.badgeText, { color: OK }]}>{tSync('يمكن إرجاعه ·', lang)} {it.days_left} {tSync('يوم متبقي', lang)}</Text>
                       </View>
                     )}
                     {it.warranty_days > 0 && (
                       <View style={[s.badge, { backgroundColor: '#8B5CF620', borderColor: '#8B5CF6' }]}>
-                        <Text style={[s.badgeText, { color: '#A78BFA' }]}>ضمان {it.warranty_days} يوم</Text>
+                        <Text style={[s.badgeText, { color: '#A78BFA' }]}>{tSync('ضمان', lang)} {it.warranty_days} {tSync('يوم', lang)}</Text>
                       </View>
                     )}
                     {it.has_active_rma && (
@@ -191,7 +191,7 @@ export default function CreateRMAScreen() {
                   </View>
                 </View>
                 {(it.allow_return || it.warranty_days > 0) && (
-                  <Ionicons name="chevron-back" size={16} color={MUTED} />
+                  <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={MUTED} />
                 )}
               </View>
             </TouchableOpacity>
@@ -214,7 +214,7 @@ export default function CreateRMAScreen() {
                 )}
                 <View style={{ flex: 1, marginHorizontal: 10 }}>
                   <Text style={s.itemTitle}>{selectedItem.product_name}</Text>
-                  <Text style={s.itemSub}>{selectedItem.qty} × {selectedItem.unit_price?.toFixed(2)} ر.س</Text>
+                  <Text style={s.itemSub}>{selectedItem.qty} × {selectedItem.unit_price?.toFixed(2)} {tSync('ر.س', lang)}</Text>
                 </View>
               </View>
             </View>
@@ -243,7 +243,7 @@ export default function CreateRMAScreen() {
                 onPress={() => setResolution(r.code)}
                 style={[s.resCard, resolution === r.code && { borderColor: GOLD, backgroundColor: GOLD + '15' }]}>
                 <Ionicons name={r.icon as any} size={16} color={resolution === r.code ? GOLD : TEXT} />
-                <Text style={[s.resText, resolution === r.code && { color: GOLD }]}>{r.label}</Text>
+                <Text style={[s.resText, resolution === r.code && { color: GOLD }]}>{tSync(r.label || '', curLang())}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -259,7 +259,7 @@ export default function CreateRMAScreen() {
             placeholder={tSync("مثال: 351234567890123", lang)} placeholderTextColor={MUTED} />
 
           <Text style={s.label}>
-            صور/فيديو للمنتج {currentReason?.requires_media ? '(مطلوب)' : '(اختياري)'}
+            {tSync('صور/فيديو للمنتج', lang)} {currentReason?.requires_media ? tSync('(مطلوب)', curLang()) : tSync('(اختياري)', curLang())}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
             {media.map((m, i) => (
@@ -293,21 +293,21 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
   back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
-  title: { color: GOLD, fontSize: 15, fontWeight: '900', textAlign: 'right', marginHorizontal: 10 },
-  sub: { color: MUTED, fontSize: 10, textAlign: 'right', marginHorizontal: 10 },
-  hint: { color: MUTED, fontSize: 11, textAlign: 'right', marginBottom: 10 },
+  title: { color: GOLD, fontSize: 15, fontWeight: '900', textAlign: 'auto', marginHorizontal: 10 },
+  sub: { color: MUTED, fontSize: 10, textAlign: 'auto', marginHorizontal: 10 },
+  hint: { color: MUTED, fontSize: 11, textAlign: 'auto', marginBottom: 10 },
   itemCard: { backgroundColor: CARD, borderRadius: 14, borderWidth: 1, borderColor: BORDER, padding: 12, marginBottom: 8 },
   thumb: { width: 58, height: 58, borderRadius: 10, backgroundColor: BG, borderWidth: 1, borderColor: BORDER },
-  itemTitle: { color: TEXT, fontSize: 13, fontWeight: '900', textAlign: 'right' },
-  itemSub: { color: GOLD, fontSize: 11, textAlign: 'right', marginTop: 2 },
+  itemTitle: { color: TEXT, fontSize: 13, fontWeight: '900', textAlign: 'auto' },
+  itemSub: { color: GOLD, fontSize: 11, textAlign: 'auto', marginTop: 2 },
   badge: { borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
   badgeText: { fontSize: 9, fontWeight: '900' },
-  label: { color: MUTED, fontSize: 11, textAlign: 'right', marginTop: 14, marginBottom: 6 },
-  input: { backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, borderRadius: 10, padding: 10, color: TEXT, textAlign: 'right' },
+  label: { color: MUTED, fontSize: 11, textAlign: 'auto', marginTop: 14, marginBottom: 6 },
+  input: { backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, borderRadius: 10, padding: 10, color: TEXT, textAlign: 'auto' },
   reasonRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, padding: 10, borderRadius: 10, marginBottom: 6 },
   reasonIcon: { width: 30, height: 30, borderRadius: 15, backgroundColor: BG, borderWidth: 1, borderColor: BORDER, alignItems: 'center', justifyContent: 'center' },
-  reasonLabel: { color: TEXT, fontSize: 12, fontWeight: '700', textAlign: 'right' },
-  reasonHint: { color: AMBER, fontSize: 9, textAlign: 'right', marginTop: 2 },
+  reasonLabel: { color: TEXT, fontSize: 12, fontWeight: '700', textAlign: 'auto' },
+  reasonHint: { color: AMBER, fontSize: 9, textAlign: 'auto', marginTop: 2 },
   resCard: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: BORDER, backgroundColor: CARD, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
   resText: { color: TEXT, fontSize: 11, fontWeight: '700' },
   mediaThumb: { width: 68, height: 68, borderRadius: 10 },

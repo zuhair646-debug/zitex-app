@@ -1,3 +1,5 @@
+import { useT } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -7,6 +9,7 @@ import { useAuth } from './_layout';
 import { LoyaltyWidget } from '../src/components/PaymentAndLoyalty';
 
 export default function WalletScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall, user } = useAuth();
   const [wallet, setWallet] = useState<any>(null);
@@ -24,28 +27,28 @@ export default function WalletScreen() {
         <TouchableOpacity testID="wallet-back" style={s.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
         </TouchableOpacity>
-        <Text style={s.title}>Wallet</Text>
+        <Text style={s.title}>{tSync('المحفظة', lang)}</Text>
       </View>
       <View style={s.cards}>
         <View style={s.balanceCard}>
           <Ionicons name="wallet" size={28} color="#FFF" />
-          <Text style={s.balanceLabel}>Balance</Text>
-          <Text style={s.balanceVal}>{wallet?.balance || 0} SAR</Text>
-          <TouchableOpacity testID="topup-btn" style={s.topupBtn}><Text style={s.topupText}>Top up</Text></TouchableOpacity>
+          <Text style={s.balanceLabel}>{tSync('الرصيد', lang)}</Text>
+          <Text style={s.balanceVal}>{wallet?.balance || 0} {tSync('ر.س', lang)}</Text>
+          <TouchableOpacity testID="topup-btn" style={s.topupBtn}><Text style={s.topupText}>{tSync('شحن الرصيد', lang)}</Text></TouchableOpacity>
         </View>
         <View style={s.pointsCard}>
           <Ionicons name="diamond" size={28} color="#F59E0B" />
-          <Text style={s.pointsLabel}>Points</Text>
+          <Text style={s.pointsLabel}>{tSync('النقاط', lang)}</Text>
           <Text style={s.pointsVal}>{wallet?.points || 0}</Text>
         </View>
       </View>
       <View style={{ paddingHorizontal: 16 }}>
         <LoyaltyWidget apiCall={apiCall} onOpenHistory={() => router.push('/loyalty-history' as any)} />
       </View>
-      <Text style={s.sectionTitle}>Transaction History</Text>
+      <Text style={s.sectionTitle}>{tSync('سجل المعاملات', lang)}</Text>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.list}>
         {(wallet?.transactions || []).length === 0 ? (
-          <View style={s.empty}><Text style={s.emptyText}>No transactions yet</Text></View>
+          <View style={s.empty}><Text style={s.emptyText}>{tSync('ما في معاملات لحد الآن', lang)}</Text></View>
         ) : (wallet?.transactions || []).map((t: any) => (
           <View key={t.id} style={s.txnRow}>
             <View style={[s.txnIcon, { backgroundColor: t.type === 'credit' ? '#DCFCE7' : '#FFF7DA' }]}>

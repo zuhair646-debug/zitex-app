@@ -1,0 +1,53 @@
+{
+  "summary": "Retest of the i18n items still broken in iteration_29, using the mobile web preview at 375x667. Customer screens were checked in ar/en/de/zh/he/ru, merchant screens in en/de, and the driver dashboard in en/de/ar. The backend /api/translate smoke test passed 22/22. VERIFIED FIXED: checkout summary shows SAR, the Tax (15%) label and the translated location line in en/de/zh; return status descriptions are translated in en/de/zh; return reasons are translated in de/zh and on merchant/returns in en/de; the Arabic UI now shows 'خصم 75%', 'أضف إلى السلة - 3499 ر.س', the Arabic search placeholder, and cart 'الضريبة (15%)' with ر.س; product condition shows New/Neu/新品 and the description is description_ar in ar; Live Preview Best sellers are English in en/de; shipping-matrix and invoices are fully translated in en/de; delivered orders appear under Completed with a check icon; wallet loyalty digits are Western and the zh tier shows 青铜会员; de cart shows 'N Artikel'; ru search shows '40 результатов'; warranty shows '90 days'/'90 Tage'. STILL BROKEN: (1) My Returns in en still shows the reasons 'منتج غير مطابق للطلب'/'عيب مصنعي'/'غيّرت رأيي' in Arabic after 3 reloads, and the de/zh checkout SAMA ribbon is still Arabic. The cause is in the useAutoT runtime cache (see rca). (2) Service page tab 'تجارب ({0})' shows 'Trials'/'Versuche'. (3) Driver dashboard has hardcoded English 'ONLINE/OFFLINE', 'Active (N)', 'Available (N)', 'No active orders' and 'SAR', which show in ar/de. (4) Roles: header '{0} دور' is translated as '5 round'/'5 Runde(n)', and preset role names and descriptions stay Arabic. (5) Support 'واتساب' label is hardcoded. (6) Warranties 'N days left' is hardcoded English. (7) Home 'N SOLD' is hardcoded English in the Arabic UI. (8) LoyaltyRedeemPicker shows a hardcoded '1 نقطة ='. CRASH FOUND AND FIXED: /merchant/inventory threw 'ReferenceError: styles is not defined' in all 5 languages. The StatCard, StockRow and EditModal subcomponents used a hook-scoped 'styles'. No other crashes or pageerrors across 16 customer routes in ar/he/zh and 14 merchant routes in ar/en/de/zh/he. No deprecated Expo packages detected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/merchant/inventory", "issue": "Returns items:[] and all totals 0 for merchant 0509999999, even though the merchant has 40 products. The inventory screen is empty."},
+      {"endpoint": "auth/test credentials", "issue": "The review request lists driver 0540000001/driver1234, which returns 401. The working driver is 0540001111/driver1234, as in test_credentials.md."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "MerchantInventory StatCard/StockRow/EditModal", "issue": "CRASH (red screen) 'styles is not defined'. Pre-existing since the theme refactor; FIXED by tester by adding const styles = useSStyles() in each subcomponent. Reference: app/merchant/inventory.tsx:260,281,304", "testID": "n/a", "priority": "CRITICAL (fixed)"},
+      {"component": "useAutoT runtime translations (TX/tSync)", "issue": "Strings missing from i18n-generated.json never render translated, even after reloads. Seen on My Returns in en ('منتج غير مطابق للطلب', 'عيب مصنعي', 'غيّرت رأيي') and on the checkout SAMA ribbon in de/zh, although POST /api/translate returns cached translations for them. The /api/translate calls are re-sent on every visit. Reference: src/useAutoT.tsx:26,40,60,137", "testID": "n/a", "priority": "HIGH"},
+      {"component": "PaymentAndLoyalty SAMA ribbon", "issue": "Code key '🛡 مرخّص من مؤسسة النقد (SAMA) · ' has a trailing space, but the dictionary key has none, so the static lookup misses. In en the result renders as 'SAMA) ·3 payment option' (no space before the number, singular 'option'). Reference: src/components/PaymentAndLoyalty.tsx:72-73", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Driver dashboard", "issue": "Hardcoded English: 'ONLINE'/'OFFLINE' (:95), 'SAR' (:100,:101), 'Active ({n})' (:104), 'Available ({n})' (:105), and 'No active orders'. These show in ar/de. The tabs have no testIDs. Reference: app/driver/index.tsx:95-106", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Service detail tab", "issue": "Dictionary entry 'تجارب ({0})' gives en 'Trials ({0})' and de 'Versuche ({0})'. It should be Experiences/Erlebnisse. Only the bare key 'تجارب' was fixed. Reference: app/service/[id].tsx:106", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant roles", "issue": "Header '{0} دور' gives '5 round'/'5 Runde(n)'; it should be '5 roles'/'5 Rollen'. Preset role names and descriptions ('موظف سوشال ميديا', 'منشورات فقط', 'كاشير', 'مدير فرع'...) stay Arabic in en/de. The Alert bodies at :53 and :57 are hardcoded Arabic. Reference: app/merchant/roles.tsx:53,57,82", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Support screen", "issue": "Channel label 'واتساب' is hardcoded Arabic in de/zh/he, and the Alert 'تعذر فتح الرابط' is hardcoded. The working hours ('السبت - الخميس: 9 ص - 11 م') and address ('الرياض، المملكة العربية السعودية') come from the server and stay Arabic. Reference: app/support.tsx:22,28", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Warranties", "issue": "'{n} days left' is hardcoded English and shows in ar/de. Reference: app/warranties.tsx:39", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Home product card", "issue": "'{sold_count} SOLD' is hardcoded English in the Arabic UI. Reference: app/(tabs)/index.tsx:128", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "LoyaltyRedeemPicker", "issue": "'1 نقطة = 0.01 SAR' is hardcoded Arabic on checkout in en/de/zh. Reference: src/components/LoyaltyRedeemPicker.tsx:98", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant inventory tabs", "issue": "TABS labels 'الكل/المتجر/التطبيق/تنبيهات' are rendered raw ({t.label}), so they are Arabic in de. Reference: app/merchant/inventory.tsx:45-48,155", "testID": "n/a", "priority": "LOW"},
+      {"component": "My Returns header count", "issue": "'{n} طلب' renders as '5 Order'/'5 Bestellung'; it should be 'requests'. Wording issues in zh: 'عيب مصنعي' → '缺陷制造商' (should be 制造缺陷) and Refunded → '已恢复' (should be 已退款). Reference: app/my-returns.tsx:60", "testID": "n/a", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Checkout (all langs)", "issues": ["The payment ribbon BlurView renders as a grey translucent band over the scroll content. Its legal text is grey on grey (low contrast)."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_i18n_translate.py", "/app/test_reports/pytest/pytest_i18n_iter30.xml"],
+  "action_items": [
+    "Fix src/useAutoT.tsx: (a) translate() must await loadCacheOnce() before writing and persistCache must merge, because tSync currently overwrites the stored cache (cache size dropped 281→155 between visits); (b) change the inflight Set into a Map<key, Promise<string>> so concurrent or StrictMode-double callers await the same result instead of getting the Arabic source; (c) let tSync consumers re-render when a background translation lands (global version counter or event).",
+    "Regenerate i18n-generated.json (scripts/bulk_translate.py) so it includes the RMA reason labels ('غيّرت رأيي', 'عيب مصنعي', 'منتج غير مطابق للطلب'), and trim the SAMA key (or remove the trailing space in PaymentAndLoyalty.tsx:72) so the separator keeps its spacing. Use plural '{0} payment options'.",
+    "Driver app/driver/index.tsx:95-106: wrap ONLINE/OFFLINE, SAR, Active, Available and 'No active orders' with tSync/tf. Add testIDs to the tabs.",
+    "Fix dictionary entries: 'تجارب ({0})' → Experiences/Erlebnisse; '{0} دور' → '{0} roles'/'{0} Rollen'; zh 'عيب مصنعي' → 制造缺陷; zh refunded → 已退款.",
+    "Wrap the hardcoded strings: support.tsx:22,28; warranties.tsx:39; (tabs)/index.tsx:128 'SOLD'; LoyaltyRedeemPicker.tsx:98 '1 نقطة ='; roles.tsx:53,57 Alert bodies; inventory.tsx TABS labels at :155.",
+    "Preset role names and descriptions in roles.tsx: translate them with tSync or add name_en from the backend.",
+    "Investigate why GET /api/merchant/inventory returns an empty list for the seeded merchant."
+  ],
+  "critical_code_review_comments": [
+    "useAutoT: tSync never triggers a re-render, and translate() can persist memoryCache before the stored cache is loaded. Runtime-only strings therefore stay Arabic.",
+    "inventory.tsx used a hook-scoped 'styles' in module-level subcomponents, which crashed the screen. Other files using the useStyles hook pattern were scanned and none showed the same issue.",
+    "driver/index.tsx uses curLang() instead of the reactive lang from useT, so it will not re-render when the language changes in-session."
+  ],
+  "updated_files": ["/app/frontend/app/merchant/inventory.tsx"],
+  "success_rate": {"backend": "100% (22/22 smoke)", "frontend": "~70% of the retest items fully fixed (9 of 13 groups); 1 crash found and fixed"},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login via fetch to /api/auth/login, then localStorage.setItem('token', d.token) and set 'app_lang' before page.goto. Driver is 0540001111/driver1234 (0540000001 fails). The runtime translation cache is localStorage '@zenrex_autot_cache_v2'. Product with description_ar≠description_en: 6ab6de22e0ac8916314aa31a. Service id: 6ab6206a71b6ad54069c12cc. RMA id: 6ab6b9e61a5375c94172a3c2. Orders filter testIDs: filter-all/processing/completed/cancelled.",
+  "rca_of_issue": "Runtime (non-dictionary) translations: on /my-returns (en), POST /api/translate is sent for the 3 reasons on every visit and returns cached translations, yet the UI keeps the Arabic. The localStorage cache length swings between 134 and 281 chars on my-returns and 155 on checkout, which shows it is being overwritten. Root causes: (1) translate() persists memoryCache without loadCacheOnce(), and it is called from tSync during render; (2) the inflight dedupe returns the source to the second caller and never updates it; (3) tSync has no re-render path. Mitigation: see the first action item, or put all the strings into the static dictionary."
+}

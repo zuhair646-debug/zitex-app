@@ -1,8 +1,9 @@
+import { useT, curLang } from '../i18n';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { TX } from '../useAutoT';
+import { TX, tSync, tf } from '../useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -17,6 +18,7 @@ const MUTED = '#9CA3AF';
  * Shows Saudi payment methods (Mada, Tabby, Tamara, Apple Pay, STC Pay, etc.)
  */
 export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
+  const { lang } = useT();
   const [payments, setPayments] = useState<any[]>([]);
   const [shipping, setShipping] = useState<any[]>([]);
   const [loyalty, setLoyalty] = useState<any>(null);
@@ -52,7 +54,7 @@ export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
             <TouchableOpacity key={p.code} onPress={() => setSelected(p)}
               style={[s.tile, { borderColor: p.brand_color }]}>
               <Text style={{ fontSize: 16 }}>{p.logo}</Text>
-              <Text style={[s.tileName, { color: p.brand_color }]} numberOfLines={1}>{p.name_ar}</Text>
+              <Text style={[s.tileName, { color: p.brand_color }]} numberOfLines={1}>{lang === 'ar' ? p.name_ar : lang === 'en' ? (p.name_en || p.name_ar) : tSync(p.name_ar, lang)}</Text>
               {p.sama_licensed && (
                 <View style={s.samaBadge}>
                   <Ionicons name="shield-checkmark" size={8} color="#FFF" />
@@ -67,8 +69,8 @@ export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
           ))}
         </ScrollView>
         <Text style={s.legalText}>
-          {payments.some((p: any) => p.sama_licensed) && '🛡 مرخّص من مؤسسة النقد (SAMA) · '}
-          {payments.length} خيار للدفع
+          {payments.some((p: any) => p.sama_licensed) && tSync('🛡 مرخّص من مؤسسة النقد (SAMA) ·', lang) + ' '}
+          {tf('{0} خيار للدفع', lang, [payments.length])}
         </Text>
       </BlurView>
 
@@ -84,8 +86,8 @@ export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
                     <Text style={{ fontSize: 28 }}>{selected.logo}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: TEXT, fontSize: 18, fontWeight: '900', textAlign: 'right' }}>{selected.name_ar}</Text>
-                    <Text style={{ color: MUTED, fontSize: 11, textAlign: 'right' }}>{selected.name_en}</Text>
+                    <Text style={{ color: TEXT, fontSize: 18, fontWeight: '900', textAlign: 'auto' }}>{lang === 'ar' ? selected.name_ar : lang === 'en' ? (selected.name_en || selected.name_ar) : tSync(selected.name_ar, lang)}</Text>
+                    <Text style={{ color: MUTED, fontSize: 11, textAlign: 'auto' }}>{selected.name_en}</Text>
                   </View>
                   <TouchableOpacity onPress={() => setSelected(null)}><Ionicons name="close" size={22} color={TEXT} /></TouchableOpacity>
                 </View>
@@ -97,7 +99,7 @@ export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
                   {selected.is_bnpl && (
                     <View style={s.infoChip}>
                       <Ionicons name="calendar" size={14} color={GOLD} />
-                      <Text style={s.infoText}>تقسيط على {selected.installments || 4} دفعات{selected.max_amount ? ` حتى ${Number(selected.max_amount).toLocaleString('ar-SA')} ر.س` : ''}</Text>
+                      <Text style={s.infoText}>{tSync('تقسيط على', lang)} {selected.installments || 4} {tSync('دفعات', lang)}{selected.max_amount ? tf(' حتى {0} ر.س', lang, [Number(selected.max_amount).toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US')]) : ''}</Text>
                     </View>
                   )}
                   {selected.cod && (
@@ -124,6 +126,7 @@ export default function PaymentMethodsRibbon({ apiCall, mode = 'full' }: any) {
  * LoyaltyWidget — beautiful loyalty balance widget for user profile
  */
 export function LoyaltyWidget({ apiCall, onOpenHistory }: any) {
+  const { lang } = useT();
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
@@ -151,14 +154,14 @@ export function LoyaltyWidget({ apiCall, onOpenHistory }: any) {
           <Ionicons name={meta.icon} size={22} color={meta.color} />
         </View>
         <View style={{ flex: 1 }}>
-          <TX style={{ color: MUTED, fontSize: 11, textAlign: 'right' }}>رصيد نقاط الولاء</TX>
-          <Text style={{ color: TEXT, fontSize: 22, fontWeight: '900', textAlign: 'right' }}>{Number(data.balance).toLocaleString('ar-SA')} <TX style={{ color: meta.color, fontSize: 12 }}>نقطة</TX></Text>
+          <TX style={{ color: MUTED, fontSize: 11, textAlign: 'auto' }}>رصيد نقاط الولاء</TX>
+          <Text style={{ color: TEXT, fontSize: 22, fontWeight: '900', textAlign: 'auto' }}>{Number(data.balance).toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US')} <TX style={{ color: meta.color, fontSize: 12 }}>نقطة</TX></Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
             <View style={[s.miniPill, { backgroundColor: meta.color + '25', borderColor: meta.color }]}>
-              <Text style={[s.miniPillText, { color: meta.color }]}>{meta.label}</Text>
+              <Text style={[s.miniPillText, { color: meta.color }]}>{tSync(meta.label, lang)}</Text>
             </View>
             {data.next_tier && (
-              <Text style={{ color: MUTED, fontSize: 10 }}>{data.points_to_next} نقطة للمستوى التالي</Text>
+              <Text style={{ color: MUTED, fontSize: 10 }}>{data.points_to_next} {tSync('نقطة للمستوى التالي', lang)}</Text>
             )}
           </View>
           {data.next_tier && (
@@ -198,7 +201,7 @@ const s = StyleSheet.create({
   handle: { width: 46, height: 4, borderRadius: 2, backgroundColor: '#3A3D48', alignSelf: 'center', marginTop: 8 },
   bigIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
   infoChip: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, padding: 10, borderRadius: 12 },
-  infoText: { color: TEXT, fontSize: 12, flex: 1, textAlign: 'right', lineHeight: 18 },
+  infoText: { color: TEXT, fontSize: 12, flex: 1, textAlign: 'auto', lineHeight: 18 },
   legalFooter: { color: MUTED, fontSize: 10, textAlign: 'center', marginTop: 16, lineHeight: 14 },
 
   loyaltyCard: { backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, borderRadius: 16, padding: 14, marginVertical: 6 },

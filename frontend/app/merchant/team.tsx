@@ -7,8 +7,8 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, StatCard, EmptyState, SkeletonBox, Badge, PrimaryButton } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 export default function MerchantTeam() {
   const { lang } = useT();
@@ -36,17 +36,17 @@ export default function MerchantTeam() {
   const fmtMin = (m: number) => {
     if (!m) return '—';
     const h = Math.floor(m / 60); const mm = m % 60;
-    return h > 0 ? `${h}س ${mm}د` : `${mm}د`;
+    return h > 0 ? tf('{0}س {1}د', lang, [h, mm]) : tf('{0}د', lang, [mm]);
   };
 
   const timeSince = (iso: string) => {
     if (!iso) return '—';
     try {
       const diff = (Date.now() - new Date(iso).getTime()) / 60000;
-      if (diff < 1) return 'الآن';
-      if (diff < 60) return `منذ ${Math.round(diff)} د`;
-      if (diff < 1440) return `منذ ${Math.round(diff / 60)} س`;
-      return `منذ ${Math.round(diff / 1440)} يوم`;
+      if (diff < 1) return tSync('الآن', curLang());
+      if (diff < 60) return tf('منذ {0} د', lang, [Math.round(diff)]);
+      if (diff < 1440) return tf('منذ {0} س', lang, [Math.round(diff / 60)]);
+      return tf('منذ {0} يوم', lang, [Math.round(diff / 1440)]);
     } catch { return '—'; }
   };
 
@@ -54,7 +54,7 @@ export default function MerchantTeam() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title={tSync("الفريق", lang)} onBack={() => router.back()} rightIcon="refresh" onRight={load} subtitle={`${online} متصل الآن • ${team.length} موظف`} />
+        <ScreenHeader title={tSync("الفريق", lang)} onBack={() => router.back()} rightIcon="refresh" onRight={load} subtitle={tf('{0} متصل الآن • {1} موظف', lang, [online, team.length])} />
 
         <View style={s.summaryRow}>
           <StatCard icon="radio-button-on" label={tSync("متصل الآن", lang)} value={online} tone={online > 0 ? 'success' : 'default'} />
@@ -66,8 +66,8 @@ export default function MerchantTeam() {
             <SkeletonBox height={110} /><SkeletonBox height={110} /><SkeletonBox height={110} />
           </View>
         ) : team.length === 0 ? (
-          <EmptyState icon="people-outline" title={tSync("لا يوجد موظفون", lang)} description="أضف موظفين لبدء مراقبة الفريق"
-            actionLabel="إضافة موظف" onAction={() => router.push('/merchant/employees')} />
+          <EmptyState icon="people-outline" title={tSync("لا يوجد موظفون", lang)} description={tSync('أضف موظفين لبدء مراقبة الفريق', lang)}
+            actionLabel={tSync('إضافة موظف', lang)} onAction={() => router.push('/merchant/employees')} />
         ) : (
           <ScrollView
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brand} />}
@@ -85,7 +85,7 @@ export default function MerchantTeam() {
                       <Text style={s.name}>{e.name}</Text>
                       {e.online ? <Badge label={tSync("🟢 متصل", lang)} tone="success" /> : <Badge label={tSync("غير متصل", lang)} tone="default" />}
                     </View>
-                    <Text style={s.meta}>{e.job_title || e.department || 'موظف'} • {e.phone}</Text>
+                    <Text style={s.meta}>{e.job_title || e.department || tSync('موظف', curLang())} • {e.phone}</Text>
                   </View>
                 </View>
 

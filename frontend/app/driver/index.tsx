@@ -1,3 +1,5 @@
+import { useT, curLang } from '../../src/i18n';
+import { tSync, tf } from '../../src/useAutoT';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Alert, Switch, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -7,6 +9,7 @@ import * as Location from 'expo-location';
 import { useAuth } from '../_layout';
 
 export default function DriverDashboard() {
+  useT(); // re-render when language or on-demand translations change
   const router = useRouter();
   const { user, apiCall, logout } = useAuth();
   const [profile, setProfile] = useState<any>(null);
@@ -27,7 +30,7 @@ export default function DriverDashboard() {
         apiCall('/api/driver/history'),
       ]);
       setProfile(p); setAvailable(av); setActive(ac); setHistory(hi);
-    } catch (e: any) { Alert.alert('Error', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -35,7 +38,7 @@ export default function DriverDashboard() {
   // Push location every 15s when online
   const startLocationBeacon = async () => {
     const perm = await Location.requestForegroundPermissionsAsync();
-    if (perm.status !== 'granted') { Alert.alert('Permission', 'Location access needed for delivery tracking'); return false; }
+    if (perm.status !== 'granted') { Alert.alert(tSync('الإذن مطلوب', curLang()), tSync('نحتاج الوصول إلى موقعك لتتبع التوصيل', curLang())); return false; }
     const sendLoc = async () => {
       try { const loc = await Location.getCurrentPositionAsync({}); await apiCall('/api/driver/location', { method: 'POST', body: JSON.stringify({ lat: loc.coords.latitude, lng: loc.coords.longitude }) }); } catch {}
     };
@@ -52,15 +55,15 @@ export default function DriverDashboard() {
       else stopLocationBeacon();
       await apiCall('/api/driver/online', { method: 'POST', body: JSON.stringify({ online: v }) });
       setProfile({ ...profile, online: v });
-    } catch (e: any) { Alert.alert('Error', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
   };
 
-  const accept = async (oid: string) => { try { await apiCall(`/api/driver/orders/${oid}/accept`, { method: 'POST' }); load(); } catch (e: any) { Alert.alert('Error', e.message); } };
-  const pickup = async (oid: string) => { try { await apiCall(`/api/driver/orders/${oid}/pickup`, { method: 'POST' }); load(); } catch (e: any) { Alert.alert('Error', e.message); } };
+  const accept = async (oid: string) => { try { await apiCall(`/api/driver/orders/${oid}/accept`, { method: 'POST' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); } };
+  const pickup = async (oid: string) => { try { await apiCall(`/api/driver/orders/${oid}/pickup`, { method: 'POST' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); } };
   const deliver = async (oid: string) => {
-    Alert.alert('Confirm Delivery', 'Mark this order as delivered?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delivered', onPress: async () => { try { const r = await apiCall(`/api/driver/orders/${oid}/deliver`, { method: 'POST' }); Alert.alert('Done', `Earned ${r.earnings?.toFixed(2) || 0} SAR`); load(); } catch (e: any) { Alert.alert('Error', e.message); } } }
+    Alert.alert(tSync('تأكيد التسليم', curLang()), tSync('هل تم تسليم هذا الطلب؟', curLang()), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
+      { text: tSync('تم التسليم', curLang()), onPress: async () => { try { const r = await apiCall(`/api/driver/orders/${oid}/deliver`, { method: 'POST' }); Alert.alert(tSync('تم', curLang()), tf('ربحت {0} ر.س', curLang(), [r.earnings?.toFixed(2) || 0])); load(); } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); } } }
     ]);
   };
   const navigate = (lat?: number, lng?: number, addr?: string) => {
@@ -77,7 +80,7 @@ export default function DriverDashboard() {
       <View style={s.header}>
         <View>
           <Text style={s.welcome}>{user?.name}</Text>
-          <Text style={s.role}>Driver Dashboard</Text>
+          <Text style={s.role}>{tSync('لوحة تحكم السائق', curLang())}</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
           <TouchableOpacity onPress={() => router.push('/appearance' as any)}>
@@ -90,35 +93,35 @@ export default function DriverDashboard() {
       </View>
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
         <View style={[s.statusCard, { backgroundColor: profile?.online ? '#10B981' : '#6B7280' }]}>
-          <View><Text style={s.statusLbl}>Status</Text><Text style={s.statusVal}>{profile?.online ? 'ONLINE' : 'OFFLINE'}</Text></View>
+          <View><Text style={s.statusLbl}>{tSync('الحالة', curLang())}</Text><Text style={s.statusVal}>{tSync(profile?.online ? 'متصل' : 'غير متصل', curLang())}</Text></View>
           <Switch value={!!profile?.online} onValueChange={toggleOnline} trackColor={{ true: '#fff', false: '#9CA3AF' }} thumbColor={profile?.online ? '#10B981' : '#fff'} />
         </View>
         <View style={s.statsRow}>
-          <View style={s.statCard}><Text style={s.statLbl}>Today</Text><Text style={s.statVal}>{profile?.today_deliveries || 0}</Text><Text style={s.statSub}>deliveries</Text></View>
-          <View style={s.statCard}><Text style={s.statLbl}>Earnings Today</Text><Text style={s.statVal}>{(profile?.today_earnings || 0).toFixed(0)}</Text><Text style={s.statSub}>SAR</Text></View>
-          <View style={s.statCard}><Text style={s.statLbl}>Wallet</Text><Text style={s.statVal}>{(profile?.wallet_balance || 0).toFixed(0)}</Text><Text style={s.statSub}>SAR</Text></View>
+          <View style={s.statCard}><Text style={s.statLbl}>{tSync('اليوم', curLang())}</Text><Text style={s.statVal}>{profile?.today_deliveries || 0}</Text><Text style={s.statSub}>{tSync('التوصيلات', curLang())}</Text></View>
+          <View style={s.statCard}><Text style={s.statLbl}>{tSync('أرباح اليوم', curLang())}</Text><Text style={s.statVal}>{(profile?.today_earnings || 0).toFixed(0)}</Text><Text style={s.statSub}>{tSync('ر.س', curLang())}</Text></View>
+          <View style={s.statCard}><Text style={s.statLbl}>{tSync('المحفظة', curLang())}</Text><Text style={s.statVal}>{(profile?.wallet_balance || 0).toFixed(0)}</Text><Text style={s.statSub}>{tSync('ر.س', curLang())}</Text></View>
         </View>
         <View style={s.tabs}>
-          <TouchableOpacity style={[s.tab, tab === 'active' && s.tabActive]} onPress={() => setTab('active')}><Text style={[s.tabText, tab === 'active' && s.tabTextActive]}>Active ({active.length})</Text></TouchableOpacity>
-          <TouchableOpacity style={[s.tab, tab === 'available' && s.tabActive]} onPress={() => setTab('available')}><Text style={[s.tabText, tab === 'available' && s.tabTextActive]}>Available ({available.length})</Text></TouchableOpacity>
-          <TouchableOpacity style={[s.tab, tab === 'history' && s.tabActive]} onPress={() => setTab('history')}><Text style={[s.tabText, tab === 'history' && s.tabTextActive]}>History</Text></TouchableOpacity>
+          <TouchableOpacity style={[s.tab, tab === 'active' && s.tabActive]} onPress={() => setTab('active')}><Text style={[s.tabText, tab === 'active' && s.tabTextActive]}>{tf('نشطة ({0})', curLang(), [active.length])}</Text></TouchableOpacity>
+          <TouchableOpacity style={[s.tab, tab === 'available' && s.tabActive]} onPress={() => setTab('available')}><Text style={[s.tabText, tab === 'available' && s.tabTextActive]}>{tf('متاحة ({0})', curLang(), [available.length])}</Text></TouchableOpacity>
+          <TouchableOpacity style={[s.tab, tab === 'history' && s.tabActive]} onPress={() => setTab('history')}><Text style={[s.tabText, tab === 'history' && s.tabTextActive]}>{tSync('السجل', curLang())}</Text></TouchableOpacity>
         </View>
-        {list.length === 0 ? <Text style={s.empty}>No {tab} orders</Text> : list.map((o: any) => (
+        {list.length === 0 ? <Text style={s.empty}>{tSync(tab === 'active' ? 'لا توجد طلبات نشطة' : tab === 'available' ? 'لا توجد طلبات متاحة' : 'لا يوجد سجل طلبات', curLang())}</Text> : list.map((o: any) => (
           <View key={o.id} style={s.orderCard}>
             <View style={s.row}><Text style={s.orderNo}>#{o.id?.slice(-6).toUpperCase()}</Text><Text style={[s.orderStatus, { color: o.status === 'delivered' ? '#10B981' : o.status === 'picked_up' ? '#3B82F6' : o.status === 'assigned' ? '#F5C518' : '#F59E0B' }]}>{o.status}</Text></View>
-            <Text style={s.customer}>To: {o.address || '-'}</Text>
-            <View style={s.row}><Text style={s.items}>{(o.items || []).length} items • {o.total?.toFixed(0)} SAR</Text><Text style={s.fee}>Fee: {(o.delivery_fee || 0).toFixed(2)} SAR</Text></View>
+            <Text style={s.customer}>{tSync('إلى:', curLang())} {o.address || '-'}</Text>
+            <View style={s.row}><Text style={s.items}>{(o.items || []).length} {tSync('منتج', curLang())} • {o.total?.toFixed(0)} {tSync('ر.س', curLang())}</Text><Text style={s.fee}>{tSync('رسوم التوصيل:', curLang())} {(o.delivery_fee || 0).toFixed(2)} {tSync('ر.س', curLang())}</Text></View>
             {tab === 'available' && (
-              <TouchableOpacity style={[s.actionBtn, { backgroundColor: '#F5C518' }]} onPress={() => accept(o.id)}><Text style={s.actionText}>Accept Order</Text></TouchableOpacity>
+              <TouchableOpacity style={[s.actionBtn, { backgroundColor: '#F5C518' }]} onPress={() => accept(o.id)}><Text style={s.actionText}>{tSync('قبول الطلب', curLang())}</Text></TouchableOpacity>
             )}
             {tab === 'active' && (
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                <TouchableOpacity style={[s.smBtn, { backgroundColor: '#3B82F6' }]} onPress={() => navigate(o.address_lat, o.address_lng, o.address)}><Ionicons name="navigate" size={14} color="white" /><Text style={s.smBtnText}>Navigate</Text></TouchableOpacity>
-                {o.status === 'assigned' && <TouchableOpacity style={[s.smBtn, { backgroundColor: '#F59E0B' }]} onPress={() => pickup(o.id)}><Text style={s.smBtnText}>Picked Up</Text></TouchableOpacity>}
-                {o.status === 'picked_up' && <TouchableOpacity style={[s.smBtn, { backgroundColor: '#10B981' }]} onPress={() => deliver(o.id)}><Text style={s.smBtnText}>Delivered</Text></TouchableOpacity>}
+                <TouchableOpacity style={[s.smBtn, { backgroundColor: '#3B82F6' }]} onPress={() => navigate(o.address_lat, o.address_lng, o.address)}><Ionicons name="navigate" size={14} color="white" /><Text style={s.smBtnText}>{tSync('ابدأ الملاحة', curLang())}</Text></TouchableOpacity>
+                {o.status === 'assigned' && <TouchableOpacity style={[s.smBtn, { backgroundColor: '#F59E0B' }]} onPress={() => pickup(o.id)}><Text style={s.smBtnText}>{tSync('تم الاستلام', curLang())}</Text></TouchableOpacity>}
+                {o.status === 'picked_up' && <TouchableOpacity style={[s.smBtn, { backgroundColor: '#10B981' }]} onPress={() => deliver(o.id)}><Text style={s.smBtnText}>{tSync('تم التوصيل', curLang())}</Text></TouchableOpacity>}
               </View>
             )}
-            {tab === 'history' && <Text style={s.earned}>Earned: {(o.driver_earnings || 0).toFixed(2)} SAR</Text>}
+            {tab === 'history' && <Text style={s.earned}>{tSync('الأرباح:', curLang())} {(o.driver_earnings || 0).toFixed(2)} {tSync('ر.س', curLang())}</Text>}
           </View>
         ))}
       </ScrollView>

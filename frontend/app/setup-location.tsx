@@ -7,7 +7,7 @@ import * as Location from 'expo-location';
 import { useAuth } from './_layout';
 import ZitexMap from '../src/components/MapView';
 import { TX, tSync } from '../src/useAutoT';
-import { useT } from '../src/i18n';
+import { useT, curLang } from '../src/i18n';
 
 export default function SetupLocation() {
   const { lang } = useT();
@@ -24,7 +24,7 @@ export default function SetupLocation() {
     setLoading(true);
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
-      if (perm.status !== 'granted') { Alert.alert(tSync('صلاحية الموقع', lang), 'نحتاج إذنك للوصول إلى موقعك لحساب رسوم التوصيل بدقة'); setLoading(false); return; }
+      if (perm.status !== 'granted') { Alert.alert(tSync('صلاحية الموقع', lang), tSync('نحتاج إذنك للوصول إلى موقعك لحساب رسوم التوصيل بدقة', curLang())); setLoading(false); return; }
       const loc = await Location.getCurrentPositionAsync({});
       setLat(loc.coords.latitude);
       setLng(loc.coords.longitude);
@@ -47,10 +47,10 @@ export default function SetupLocation() {
   }, []);
 
   const save = async () => {
-    if (!hasLocation) { Alert.alert(tSync('مطلوب', lang), 'يرجى تحديد موقعك على الخريطة أولاً'); return; }
+    if (!hasLocation) { Alert.alert(tSync('مطلوب', lang), tSync('يرجى تحديد موقعك على الخريطة أولاً', curLang())); return; }
     try {
       await apiCall('/api/users/me/location', { method: 'PUT', body: JSON.stringify({ lat, lng, address }) });
-      Alert.alert(tSync('تم الحفظ', lang), 'تم حفظ موقعك بنجاح', [{ text: 'ممتاز', onPress: () => router.replace('/(tabs)') }]);
+      Alert.alert(tSync('تم الحفظ', lang), tSync('تم حفظ موقعك بنجاح', curLang()), [{ text: tSync('ممتاز', curLang()), onPress: () => router.replace('/(tabs)') }]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
@@ -98,8 +98,8 @@ export default function SetupLocation() {
             <View style={s.branchInfo}>
               <Ionicons name="storefront" size={20} color="#10B981" />
               <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={s.branchName}>أقرب فرع: {nearest.branch.name}</Text>
-                <Text style={s.branchDist}>على بعد {nearest.distance_km} كم</Text>
+                <Text style={s.branchName}>{tSync('أقرب فرع:', lang)} {nearest.branch.name}</Text>
+                <Text style={s.branchDist}>{tSync('على بعد', lang)} {nearest.distance_km} {tSync('كم', lang)}</Text>
               </View>
             </View>
           )}

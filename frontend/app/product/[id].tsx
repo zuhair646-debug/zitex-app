@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useT } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { tSync, TX, tf } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Dimensions, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
-import { TX } from '../../src/useAutoT';
 import TranslatableName from '../../src/components/TranslatableName';
 import Translatable from '../../src/components/Translatable';
 
@@ -47,9 +46,9 @@ export default function ProductDetailScreen() {
           storage: product.storage_options?.[selectedStorage] || null,
         })
       });
-      Alert.alert('Added', 'Product added to cart', [
-        { text: 'Continue Shopping' },
-        { text: 'Go to Cart', onPress: () => router.push('/cart') },
+      Alert.alert(tSync('تمت الإضافة', curLang()), tSync('تمت إضافة المنتج إلى السلة', curLang()), [
+        { text: tSync('متابعة التسوق', curLang()) },
+        { text: tSync('الذهاب إلى السلة', curLang()), onPress: () => router.push('/cart') },
       ]);
     } catch (e: any) {
       Alert.alert(tSync('خطأ', lang), e.message);
@@ -95,19 +94,19 @@ export default function ProductDetailScreen() {
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={16} color="#FACC15" />
             <Text style={styles.ratingVal}>{product.rating}</Text>
-            <Text style={styles.reviewCount}>({product.review_count} reviews)</Text>
+            <Text style={styles.reviewCount}>({product.review_count} {tSync('تقييم', lang)})</Text>
             <View style={styles.soldBadge}>
-              <Text style={styles.soldText}>{product.sold_count} sold</Text>
+              <Text style={styles.soldText}>{product.sold_count} {tSync('مُباع', lang)}</Text>
             </View>
           </View>
 
           {/* Price */}
           <View style={styles.priceSection}>
-            <Text style={styles.price}>{price} ر.س</Text>
-            {!!product.discount_price && <Text style={styles.oldPrice}>{product.price} ر.س</Text>}
+            <Text style={styles.price}>{price} {tSync('ر.س', lang)}</Text>
+            {!!product.discount_price && <Text style={styles.oldPrice}>{product.price} {tSync('ر.س', lang)}</Text>}
             {!!product.discount_price && (
               <View style={styles.saveBadge}>
-                <Text style={styles.saveText}>Save {product.price - product.discount_price} SAR</Text>
+                <Text style={styles.saveText}>{tSync('وفّر', lang)} {product.price - product.discount_price} {tSync('ر.س', lang)}</Text>
               </View>
             )}
           </View>
@@ -143,7 +142,7 @@ export default function ProductDetailScreen() {
           {/* Storage */}
           {product.storage_options?.length > 0 && (
             <View style={styles.optionSection}>
-              <Text style={styles.optionTitle}>Storage</Text>
+              <Text style={styles.optionTitle}>{tSync('التخزين', lang)}</Text>
               <View style={styles.optionRow}>
                 {product.storage_options.map((s: string, i: number) => (
                   <TouchableOpacity testID={`storage-option-${i}`} key={i} style={[styles.storageBtn, selectedStorage === i && styles.storageSelected]}
@@ -157,14 +156,14 @@ export default function ProductDetailScreen() {
 
           {/* Description */}
           <View style={styles.descSection}>
-            <Text style={styles.optionTitle}>Description</Text>
-            <Text style={styles.descText}>{product.description_en}</Text>
+            <Text style={styles.optionTitle}>{tSync('الوصف', lang)}</Text>
+            <Text style={styles.descText}>{lang === 'ar' ? (product.description_ar || product.description_en) : (product.description_en || product.description_ar)}</Text>
           </View>
 
           {/* Specs */}
           {Object.keys(specs).length > 0 && (
             <View style={styles.specsSection}>
-              <Text style={styles.optionTitle}>Specifications</Text>
+              <Text style={styles.optionTitle}>{tSync('المواصفات', lang)}</Text>
               {Object.entries(specs).map(([key, val]) => (
                 <View key={key} style={styles.specRow}>
                   <Text style={styles.specKey}>{key}</Text>
@@ -180,12 +179,12 @@ export default function ProductDetailScreen() {
 
             <View style={styles.availItem}>
               <Ionicons name={product.in_stock ? 'checkmark-circle' : 'close-circle'} size={20} color={product.in_stock ? '#10B981' : '#EF4444'} />
-              <Text style={styles.availText}>{product.in_stock ? 'متوفر في المخزون' : 'غير متوفر'}</Text>
+              <Text style={styles.availText}>{product.in_stock ? tSync('متوفر في المخزون', curLang()) : tSync('غير متوفر', curLang())}</Text>
             </View>
 
             <View style={styles.availItem}>
               <Ionicons name={product.condition && product.condition !== 'new' ? 'refresh-circle' : 'sparkles'} size={20} color={product.condition && product.condition !== 'new' ? '#F59E0B' : '#10B981'} />
-              <Text style={styles.availText}>الحالة: {product.condition === 'new' || !product.condition ? 'جديد (New)' : product.condition === 'used_3months' ? 'مستعمل - 3 أشهر' : product.condition === 'used_6months' ? 'مستعمل - 6 أشهر' : 'مستعمل (Used)'}</Text>
+              <Text style={styles.availText}>{tSync('الحالة:', lang)} {tSync(product.condition === 'new' || !product.condition ? 'جديد' : product.condition === 'used_3months' ? 'مستعمل - 3 أشهر' : product.condition === 'used_6months' ? tSync('مستعمل - 6 أشهر', curLang()) : tSync('مستعمل (Used)', curLang()), lang)}</Text>
             </View>
 
             {product.warranty_type && product.warranty_type !== 'none' ? (
@@ -198,7 +197,7 @@ export default function ProductDetailScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <TX style={styles.warrTitle}>ضمان المحل</TX>
-                        <Text style={styles.warrSub}>{product.shop_warranty_days} يوم</Text>
+                        <Text style={styles.warrSub}>{product.shop_warranty_days} {tSync('يوم', lang)}</Text>
                       </View>
                       <View style={styles.warrChip}><TX style={styles.warrChipText}>مضمون</TX></View>
                     </View>
@@ -212,8 +211,8 @@ export default function ProductDetailScreen() {
                         <Ionicons name="business" size={16} color="#1E40AF" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.warrTitle}>ضمان {product.manufacturer_name}</Text>
-                        <Text style={styles.warrSub}>{product.manufacturer_days || 365} يوم (شركة)</Text>
+                        <Text style={styles.warrTitle}>{tSync('ضمان', lang)} {product.manufacturer_name}</Text>
+                        <Text style={styles.warrSub}>{product.manufacturer_days || 365} {tSync('يوم (شركة)', lang)}</Text>
                       </View>
                     </View>
                     {!!product.manufacturer_terms && <Text style={styles.warrTerms}>{product.manufacturer_terms}</Text>}
@@ -237,7 +236,7 @@ export default function ProductDetailScreen() {
             ) : product.warranty_days > 0 || product.warranty ? (
               <View style={styles.availItem}>
                 <Ionicons name="shield-checkmark" size={20} color="#10B981" />
-                <Text style={styles.availText}>ضمان {product.warranty_days || 365} يوم{product.warranty_type ? ` - ${product.warranty_type}` : ''}</Text>
+                <Text style={styles.availText}>{tSync('ضمان', lang)} {product.warranty_days || 365} {tSync('يوم', lang)}{product.warranty_type ? ` - ${product.warranty_type}` : ''}</Text>
               </View>
             ) : (
               <View style={styles.availItem}>
@@ -282,7 +281,7 @@ export default function ProductDetailScreen() {
           {adding ? <ActivityIndicator color="#FFF" /> : (
             <>
               <Ionicons name="cart" size={22} color="#FFF" />
-              <Text style={styles.addToCartText}>Add to Cart - {price} SAR</Text>
+              <Text style={styles.addToCartText}>{tf('أضف إلى السلة - {0} ر.س', lang, [price])}</Text>
             </>
           )}
         </TouchableOpacity>

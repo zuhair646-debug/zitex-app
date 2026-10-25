@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo} from 'react';
-import { useT } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { tSync, tf, TX } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,7 +9,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius } from '../../src/theme';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { TX } from '../../src/useAutoT';
 
 export default function MarketerStats() {
   const { lang } = useT();
@@ -44,14 +43,14 @@ export default function MarketerStats() {
   const maxSales = Math.max(1, ...daily.map((d: any) => d.sales || 0));
 
   const shareCode = async () => {
-    try { await Share.share({ message: `استخدم رمز الإحالة ${a.referral_code} عند الطلب من Zenrex Store واحصل على منتجاتك المفضلة!` }); } catch {}
+    try { await Share.share({ message: tf('استخدم رمز الإحالة {0} عند الطلب من Zenrex Store واحصل على منتجاتك المفضلة!', lang, [a.referral_code]) }); } catch {}
   };
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.brand} /></TouchableOpacity>
-        <Text style={s.title}>{a.name || 'المسوّق'}</Text>
+        <Text style={s.title}>{a.name || tSync('المسوّق', curLang())}</Text>
         <TouchableOpacity onPress={shareCode}><Ionicons name="share-social" size={22} color={colors.brand} /></TouchableOpacity>
       </View>
 
@@ -60,10 +59,10 @@ export default function MarketerStats() {
         <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
           <TX style={s.heroLbl}>رمز الإحالة</TX>
           <Text style={s.heroCode}>{a.referral_code || '—'}</Text>
-          <Text style={s.heroCommission}>عمولة {a.commission_percent || 0}%</Text>
+          <Text style={s.heroCommission}>{tSync('عمولة', lang)} {a.commission_percent || 0}%</Text>
           <View style={s.heroStatus}>
             <Ionicons name={a.active ? 'checkmark-circle' : 'pause-circle'} size={14} color="#0A0A0A" />
-            <Text style={s.heroStatusText}>{a.active ? 'نشط' : 'موقوف'}</Text>
+            <Text style={s.heroStatusText}>{a.active ? tSync('نشط', curLang()) : tSync('موقوف', curLang())}</Text>
           </View>
         </LinearGradient>
 
@@ -71,8 +70,8 @@ export default function MarketerStats() {
         <View style={s.kpiRow}>
           <Kpi icon="hand-left" label={tSync('النقرات', lang)} value={a.total_clicks || 0} />
           <Kpi icon="repeat" label={tSync('التحويلات', lang)} value={a.total_conversions || 0} />
-          <Kpi icon="cart" label={tSync('المبيعات', lang)} value={`${(a.total_sales || 0).toFixed(0)} ر.س`} highlight />
-          <Kpi icon="cash" label={tSync('العمولات', lang)} value={`${(a.total_earnings || 0).toFixed(0)} ر.س`} highlight />
+          <Kpi icon="cart" label={tSync('المبيعات', lang)} value={tf('{0} ر.س', lang, [(a.total_sales || 0).toFixed(0)])} highlight />
+          <Kpi icon="cash" label={tSync('العمولات', lang)} value={tf('{0} ر.س', lang, [(a.total_earnings || 0).toFixed(0)])} highlight />
         </View>
 
         {/* Rates */}
@@ -83,7 +82,7 @@ export default function MarketerStats() {
           </View>
           <View style={s.metaCard}>
             <TX style={s.metaLbl}>متوسط الطلب</TX>
-            <Text style={s.metaVal}>{data.avg_order_value} ر.س</Text>
+            <Text style={s.metaVal}>{data.avg_order_value} {tSync('ر.س', lang)}</Text>
           </View>
         </View>
 
@@ -105,7 +104,7 @@ export default function MarketerStats() {
         )}
 
         {/* Timeline */}
-        <Text style={s.sec}>📋 آخر التحويلات ({convs.length})</Text>
+        <Text style={s.sec}>{tSync('📋 آخر التحويلات (', lang)}{convs.length})</Text>
         {convs.length === 0 ? (
           <View style={s.empty}><TX style={s.emptyText}>لا يوجد نشاط بعد</TX></View>
         ) : (
@@ -113,12 +112,12 @@ export default function MarketerStats() {
             <View key={c.id} style={s.conv}>
               <View style={s.convIcon}><Ionicons name="cart" size={16} color="#0A0A0A" /></View>
               <View style={{ flex: 1 }}>
-                <Text style={s.convName}>{c.customer_name || 'عميل'}</Text>
+                <Text style={s.convName}>{c.customer_name || tSync('عميل', curLang())}</Text>
                 <Text style={s.convDate}>{(c.created_at || '').slice(0, 10)}</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={s.convAmt}>+{(c.earning || 0).toFixed(2)} ر.س</Text>
-                <Text style={s.convSub}>من طلب {(c.order_subtotal || 0).toFixed(0)} ر.س</Text>
+                <Text style={s.convAmt}>+{(c.earning || 0).toFixed(2)} {tSync('ر.س', lang)}</Text>
+                <Text style={s.convSub}>{tSync('من طلب', lang)} {(c.order_subtotal || 0).toFixed(0)} {tSync('ر.س', lang)}</Text>
               </View>
             </View>
           ))

@@ -31,6 +31,7 @@ import {
   DEFAULT_CUSTOM,
 } from '../src/theme/ThemeContext';
 import { useT } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 
 // Curated color swatches for the picker (16 harmonized options)
 const COLOR_SWATCHES = [
@@ -50,9 +51,8 @@ const TEXT_SWATCHES = [
 
 export default function AppearanceScreen() {
   const router = useRouter();
-  const { lang } = useT();
+  const { lang, isRTL } = useT();
   const { mode, colors, custom, fontFamily, setMode, setCustom, setFontFamily } = useTheme();
-  const isAr = lang === 'ar';
 
   const [showColorPicker, setShowColorPicker] = useState<null | keyof CustomAppearance>(null);
   const [draftCustom, setDraftCustom] = useState<CustomAppearance>(custom);
@@ -78,12 +78,12 @@ export default function AppearanceScreen() {
 
   const handleReset = useCallback(async () => {
     Alert.alert(
-      isAr ? 'إعادة التعيين' : 'Reset',
-      isAr ? 'هل تريد إعادة تعيين المظهر إلى الافتراضي؟' : 'Reset appearance to default?',
+      tSync('إعادة التعيين', lang),
+      tSync('هل تريد إعادة تعيين المظهر إلى الافتراضي؟', lang),
       [
-        { text: isAr ? 'إلغاء' : 'Cancel', style: 'cancel' },
+        { text: tSync('إلغاء', lang), style: 'cancel' },
         {
-          text: isAr ? 'إعادة' : 'Reset',
+          text: tSync('إعادة', lang),
           style: 'destructive',
           onPress: async () => {
             setDraftCustom(DEFAULT_CUSTOM);
@@ -94,7 +94,7 @@ export default function AppearanceScreen() {
         },
       ]
     );
-  }, [isAr, setCustom, setMode, setFontFamily]);
+  }, [lang, setCustom, setMode, setFontFamily]);
 
   const openColorPicker = (key: keyof CustomAppearance) => {
     setShowColorPicker(key);
@@ -114,9 +114,9 @@ export default function AppearanceScreen() {
       <SafeAreaView edges={['top']} style={{ backgroundColor: colors.header }}>
         <View style={S.header}>
           <TouchableOpacity onPress={() => router.back()} style={S.backBtn}>
-            <Ionicons name={isAr ? 'chevron-forward' : 'chevron-back'} size={26} color={colors.text} />
+            <Ionicons name={isRTL ? 'chevron-forward' : 'chevron-back'} size={26} color={colors.text} />
           </TouchableOpacity>
-          <Text style={S.headerTitle}>{isAr ? 'المظهر والخطوط' : 'Appearance & Fonts'}</Text>
+          <Text style={S.headerTitle}>{tSync('المظهر والخطوط', lang)}</Text>
           <TouchableOpacity onPress={handleReset} style={S.resetBtn}>
             <Ionicons name="refresh" size={20} color={colors.gold} />
           </TouchableOpacity>
@@ -125,11 +125,11 @@ export default function AppearanceScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         {/* ── Mode selector ── */}
-        <Text style={S.sectionTitle}>{isAr ? 'وضع العرض' : 'Display Mode'}</Text>
+        <Text style={S.sectionTitle}>{tSync('وضع العرض', lang)}</Text>
         <View style={S.modeRow}>
           <ModeCard
             icon="moon"
-            label={isAr ? 'ليلي' : 'Dark'}
+            label={tSync('ليلي', lang)}
             selected={mode === 'dark'}
             onPress={() => handlePickMode('dark')}
             colors={colors}
@@ -137,7 +137,7 @@ export default function AppearanceScreen() {
           />
           <ModeCard
             icon="sunny"
-            label={isAr ? 'نهاري' : 'Light'}
+            label={tSync('نهاري', lang)}
             selected={mode === 'light'}
             onPress={() => handlePickMode('light')}
             colors={colors}
@@ -145,7 +145,7 @@ export default function AppearanceScreen() {
           />
           <ModeCard
             icon="color-palette"
-            label={isAr ? 'مخصص' : 'Custom'}
+            label={tSync('مخصص', lang)}
             selected={mode === 'custom'}
             onPress={() => handlePickMode('custom')}
             colors={colors}
@@ -154,7 +154,7 @@ export default function AppearanceScreen() {
         </View>
 
         {/* ── Font family selector ── */}
-        <Text style={S.sectionTitle}>{isAr ? 'الخط' : 'Font Family'}</Text>
+        <Text style={S.sectionTitle}>{tSync('الخط', lang)}</Text>
         <View style={S.fontList}>
           {FONT_OPTIONS.map(opt => {
             const selected = fontFamily === opt.id;
@@ -170,13 +170,13 @@ export default function AppearanceScreen() {
                     S.fontLabel,
                     { fontFamily: opt.regular },
                   ]}>
-                    {isAr ? opt.labelAr : opt.label}
+                    {tSync(opt.labelAr, lang)}
                   </Text>
                   <Text style={[
                     S.fontSample,
                     { fontFamily: opt.regular },
                   ]}>
-                    {isAr ? 'مرحبا بك في زنركس • Zenrex Store' : 'The quick brown fox • أهلا زنركس'}
+                    {tSync('مرحبا بك في زنركس • Zenrex Store', lang)}
                   </Text>
                 </View>
                 <View style={[S.radio, selected && S.radioSelected]}>
@@ -191,7 +191,7 @@ export default function AppearanceScreen() {
         {mode === 'custom' && (
           <>
             {/* Presets */}
-            <Text style={S.sectionTitle}>{isAr ? 'قوالب جاهزة' : 'Ready Presets'}</Text>
+            <Text style={S.sectionTitle}>{tSync('قوالب جاهزة', lang)}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
               {CUSTOM_PRESETS.map(p => (
                 <TouchableOpacity
@@ -211,13 +211,13 @@ export default function AppearanceScreen() {
                       <View style={[S.presetSampleDot, { backgroundColor: p.appearance.gold }]} />
                     </View>
                   </LinearGradient>
-                  <Text style={S.presetLabel}>{isAr ? p.labelAr : p.label}</Text>
+                  <Text style={S.presetLabel}>{tSync(p.labelAr, lang)}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
 
             {/* Base picker */}
-            <Text style={S.sectionTitle}>{isAr ? 'الأساس' : 'Base Palette'}</Text>
+            <Text style={S.sectionTitle}>{tSync('الأساس', lang)}</Text>
             <View style={S.baseRow}>
               <TouchableOpacity
                 style={[S.baseChip, custom.base === 'dark' && S.baseChipActive]}
@@ -225,7 +225,7 @@ export default function AppearanceScreen() {
               >
                 <Ionicons name="moon" size={16} color={custom.base === 'dark' ? colors.gold : colors.textSecondary} />
                 <Text style={[S.baseChipText, custom.base === 'dark' && { color: colors.gold }]}>
-                  {isAr ? 'داكن' : 'Dark'}
+                  {tSync('داكن', lang)}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -234,13 +234,13 @@ export default function AppearanceScreen() {
               >
                 <Ionicons name="sunny" size={16} color={custom.base === 'light' ? colors.gold : colors.textSecondary} />
                 <Text style={[S.baseChipText, custom.base === 'light' && { color: colors.gold }]}>
-                  {isAr ? 'فاتح' : 'Light'}
+                  {tSync('فاتح', lang)}
                 </Text>
               </TouchableOpacity>
             </View>
 
             {/* Individual color pickers */}
-            <Text style={S.sectionTitle}>{isAr ? 'الألوان' : 'Colors'}</Text>
+            <Text style={S.sectionTitle}>{tSync('الألوان', lang)}</Text>
             <View style={S.colorList}>
               <ColorRow
                 labelAr="لون الخلفية" label="Background" value={custom.bg}
@@ -282,29 +282,27 @@ export default function AppearanceScreen() {
         )}
 
         {/* Live Preview Card */}
-        <Text style={S.sectionTitle}>{isAr ? 'المعاينة المباشرة' : 'Live Preview'}</Text>
+        <Text style={S.sectionTitle}>{tSync('المعاينة المباشرة', lang)}</Text>
         <View style={S.previewCard}>
           <View style={S.previewHeaderBar}>
             <View style={[S.previewDot, { backgroundColor: colors.gold }]} />
-            <Text style={S.previewTitle}>{isAr ? 'زنركس ستور' : 'Zenrex Store'}</Text>
+            <Text style={S.previewTitle}>Zenrex Store</Text>
           </View>
           <Text style={S.previewBody}>
-            {isAr
-              ? 'هذا نص تجريبي يوضح كيف ستبدو الكتابة والألوان في التطبيق. مرحباً بك في تجربتك الفاخرة.'
-              : 'This is a sample preview showing how text and colors will appear across the app. Welcome to your luxe experience.'}
+            {tSync('هذا نص تجريبي يوضح كيف ستبدو الكتابة والألوان في التطبيق. مرحباً بك في تجربتك الفاخرة.', lang)}
           </Text>
           <View style={S.previewRow}>
             <View style={S.previewChip}>
-              <Text style={S.previewChipText}>{isAr ? 'منتج' : 'Product'}</Text>
+              <Text style={S.previewChipText}>{tSync('منتج', lang)}</Text>
             </View>
             <View style={[S.previewChip, { backgroundColor: colors.goldSoft }]}>
               <Text style={[S.previewChipText, { color: colors.gold }]}>
-                {isAr ? 'خصم 20%' : '20% off'}
+                {tSync('خصم 20%', lang)}
               </Text>
             </View>
           </View>
           <TouchableOpacity style={S.previewButton}>
-            <Text style={S.previewButtonText}>{isAr ? 'زر التمييز' : 'Accent Button'}</Text>
+            <Text style={S.previewButtonText}>{tSync('زر التمييز', lang)}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -314,7 +312,7 @@ export default function AppearanceScreen() {
         <Pressable style={S.modalBackdrop} onPress={() => setShowColorPicker(null)}>
           <Pressable style={S.modalSheet} onPress={e => e.stopPropagation()}>
             <View style={S.modalHandle} />
-            <Text style={S.modalTitle}>{isAr ? 'اختر لون' : 'Pick a color'}</Text>
+            <Text style={S.modalTitle}>{tSync('اختر لون', lang)}</Text>
             <View style={S.swatchGrid}>
               {(showColorPicker === 'text' || showColorPicker === 'textSecondary' ? TEXT_SWATCHES : COLOR_SWATCHES).map(sw => (
                 <TouchableOpacity
@@ -329,17 +327,16 @@ export default function AppearanceScreen() {
               ))}
             </View>
 
-            <Text style={S.modalHint}>{isAr ? 'أو أدخل كود HEX' : 'Or enter HEX code'}</Text>
+            <Text style={S.modalHint}>{tSync('أو أدخل كود HEX', lang)}</Text>
             <HexInput
               initial={showColorPicker ? draftCustom[showColorPicker] as string : '#000000'}
               onSubmit={(hex) => pickColor(hex)}
               colors={colors}
               fontFamily={fontFamily}
-              isAr={isAr}
             />
 
             <TouchableOpacity style={S.modalClose} onPress={() => setShowColorPicker(null)}>
-              <Text style={S.modalCloseText}>{isAr ? 'إغلاق' : 'Close'}</Text>
+              <Text style={S.modalCloseText}>{tSync('إغلاق', lang)}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -367,12 +364,13 @@ function ModeCard({ icon, label, selected, onPress, colors, fontFamily }: any) {
 }
 
 function ColorRow({ labelAr, label, value, onPress, colors, fontFamily }: any) {
+  const { lang } = useT();
   const S = createStyles(colors, fontFamily);
   return (
     <TouchableOpacity style={S.colorRow} onPress={onPress} activeOpacity={0.7}>
       <View style={[S.colorSwatch, { backgroundColor: value, borderColor: colors.border }]} />
       <View style={{ flex: 1 }}>
-        <Text style={S.colorRowLabel}>{labelAr}</Text>
+        <Text style={S.colorRowLabel}>{tSync(labelAr, lang)}</Text>
         <Text style={S.colorRowHex}>{value.toUpperCase()}</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
@@ -380,7 +378,8 @@ function ColorRow({ labelAr, label, value, onPress, colors, fontFamily }: any) {
   );
 }
 
-function HexInput({ initial, onSubmit, colors, fontFamily, isAr }: any) {
+function HexInput({ initial, onSubmit, colors, fontFamily }: any) {
+  const { lang } = useT();
   const [text, setText] = useState(initial);
   const valid = /^#([0-9A-Fa-f]{6})$/.test(text);
   const S = createStyles(colors, fontFamily);
@@ -400,7 +399,7 @@ function HexInput({ initial, onSubmit, colors, fontFamily, isAr }: any) {
         disabled={!valid}
         onPress={() => onSubmit(text)}
       >
-        <Text style={S.hexApplyText}>{isAr ? 'تطبيق' : 'Apply'}</Text>
+        <Text style={S.hexApplyText}>{tSync('تطبيق', lang)}</Text>
       </TouchableOpacity>
     </View>
   );

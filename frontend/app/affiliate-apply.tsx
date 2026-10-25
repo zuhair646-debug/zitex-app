@@ -5,8 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from './_layout';
-import { TX, tSync } from '../src/useAutoT';
-import { useT } from '../src/i18n';
+import { TX, tSync, tf } from '../src/useAutoT';
+import { useT, curLang } from '../src/i18n';
 
 export default function AffiliateApply() {
   const { lang } = useT();
@@ -38,8 +38,8 @@ export default function AffiliateApply() {
   const requiredMissing = missing('full_name') || missing('phone');
 
   const submit = async () => {
-    if (!merchant_id) { Alert.alert(tSync('خطأ', lang), 'لم يتم تحديد التاجر'); return; }
-    if (requiredMissing) { Alert.alert(tSync('حقول ناقصة', lang), 'يرجى إكمال الاسم ورقم الجوال'); return; }
+    if (!merchant_id) { Alert.alert(tSync('خطأ', lang), tSync('لم يتم تحديد التاجر', curLang())); return; }
+    if (requiredMissing) { Alert.alert(tSync('حقول ناقصة', lang), tSync('يرجى إكمال الاسم ورقم الجوال', curLang())); return; }
     setSaving(true);
     try {
       await apiCall('/api/affiliate/apply', {
@@ -53,8 +53,8 @@ export default function AffiliateApply() {
           note: form.note,
         }),
       });
-      Alert.alert('✅ تم إرسال الطلب', 'سيصلك إشعار عند موافقة التاجر.',
-        [{ text: 'موافق', onPress: () => router.back() }]);
+      Alert.alert(tSync('✅ تم إرسال الطلب', curLang()), tSync('سيصلك إشعار عند موافقة التاجر.', curLang()),
+        [{ text: tSync('موافق', curLang()), onPress: () => router.back() }]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
@@ -79,16 +79,16 @@ export default function AffiliateApply() {
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
           {myAccounts.length > 0 && (
             <View style={s.myCard}>
-              <Text style={s.myTitle}>🏆 حسابات المسوق النشطة ({myAccounts.length})</Text>
+              <Text style={s.myTitle}>{tSync('🏆 حسابات المسوق النشطة (', lang)}{myAccounts.length})</Text>
               {myAccounts.map(a => (
                 <View key={a.id} style={s.myRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.myName}>{a.merchant_name || 'مسوّق لدى تاجر'}</Text>
+                    <Text style={s.myName}>{a.merchant_name || tSync('مسوّق لدى تاجر', curLang())}</Text>
                     <View style={s.codeBox}><Text style={s.codeBoxText}>{a.referral_code}</Text></View>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={s.myEarn}>{(a.total_earnings || 0).toFixed(0)} ر.س</Text>
-                    <Text style={s.myConv}>{a.commission_percent}% • {a.total_conversions || 0} تحويل</Text>
+                    <Text style={s.myEarn}>{(a.total_earnings || 0).toFixed(0)} {tSync('ر.س', lang)}</Text>
+                    <Text style={s.myConv}>{a.commission_percent}% • {a.total_conversions || 0} {tSync('تحويل', lang)}</Text>
                   </View>
                 </View>
               ))}
@@ -100,14 +100,14 @@ export default function AffiliateApply() {
 
           <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
             <Ionicons name="megaphone" size={40} color="#0A0A0A" />
-            <Text style={s.heroTitle}>{commission ? `اربح ${commission}% عمولة` : 'كن مسوّق Zenrex Store'}</Text>
+            <Text style={s.heroTitle}>{commission ? tf('اربح {0}% عمولة', lang, [commission]) : tSync('كن مسوّق Zenrex Store', lang)}</Text>
             <TX style={s.heroSubtitle}>من كل عملية شراء تتم عبر رابطك الفريد</TX>
           </LinearGradient>
 
           {!!merchant_name && (
             <View style={s.targetBox}>
               <Ionicons name="business" size={18} color="#F5C518" />
-              <Text style={s.targetText}>التقديم لـ: <Text style={{ fontWeight: '800' }}>{merchant_name}</Text></Text>
+              <Text style={s.targetText}>{tSync('التقديم لـ:', lang)} <Text style={{ fontWeight: '800' }}>{merchant_name}</Text></Text>
             </View>
           )}
 

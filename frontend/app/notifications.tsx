@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
-import { useT } from '../src/i18n';
-import { TX } from '../src/useAutoT';
+import { useT, curLang } from '../src/i18n';
+import { TX, tf, tSync } from '../src/useAutoT';
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -40,10 +40,10 @@ export default function NotificationsScreen() {
   const timeAgo = (iso?: string) => {
     if (!iso) return '';
     const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-    if (diff < 60) return 'الآن';
-    if (diff < 3600) return `${Math.floor(diff / 60)} د`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} س`;
-    return `${Math.floor(diff / 86400)} ي`;
+    if (diff < 60) return tSync('الآن', curLang());
+    if (diff < 3600) return tf('{0} د', curLang(), [Math.floor(diff / 60)]);
+    if (diff < 86400) return tf('{0} س', curLang(), [Math.floor(diff / 3600)]);
+    return tf('{0} ي', curLang(), [Math.floor(diff / 86400)]);
   };
 
   const unread = items.filter((i: any) => !i.read).length;

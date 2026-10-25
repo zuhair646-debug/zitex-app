@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useT } from '../../i18n';
-import { tSync } from '../../useAutoT';
+import { useT, curLang } from '../../i18n';
+import { tSync, TX } from '../../useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LP, KM } from './theme';
-import { TX } from '../../useAutoT';
 
 const DAY_LABELS = ['اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت', 'أحد'];
 const HOUR_LABELS = ['12ص', '3', '6', '9', '12ظ', '3', '6', '9'];
@@ -30,9 +29,9 @@ export default function OrderHeatmap({ apiCall }: any) {
   if (loading) return <View style={{ padding: 20 }}><ActivityIndicator color={LP.GOLD} /></View>;
   if (!data) return null;
 
-  const peakDayLabel = DAY_LABELS[data.peak_day_of_week] || '—';
+  const peakDayLabel = tSync(DAY_LABELS[data.peak_day_of_week] || '', curLang()) || '—';
   const peakHour = data.peak_hour;
-  const peakHourLabel = `${peakHour === 0 ? 12 : peakHour > 12 ? peakHour - 12 : peakHour}${peakHour < 12 ? ' ص' : ' م'}`;
+  const peakHourLabel = `${peakHour === 0 ? 12 : peakHour > 12 ? peakHour - 12 : peakHour}${peakHour < 12 ? tSync(' ص', curLang()) : tSync(' م', curLang())}`;
 
   return (
     <View style={s.card}>
@@ -62,14 +61,14 @@ export default function OrderHeatmap({ apiCall }: any) {
             <View style={s.dayLabel} />
             {[0, 3, 6, 9, 12, 15, 18, 21].map((h, i) => (
               <View key={h} style={[s.hourLabelCell, { width: 3 * 15 }]}>
-                <Text style={s.hourLabel}>{HOUR_LABELS[i]}</Text>
+                <Text style={s.hourLabel}>{tSync(HOUR_LABELS[i], curLang())}</Text>
               </View>
             ))}
           </View>
           {data.grid.map((row: any[], dowIdx: number) => (
             <View key={dowIdx} style={s.row}>
               <View style={s.dayLabel}>
-                <Text style={s.dayLabelText}>{DAY_LABELS[dowIdx]}</Text>
+                <Text style={s.dayLabelText}>{tSync(DAY_LABELS[dowIdx], curLang())}</Text>
               </View>
               {row.map((cell: any) => (
                 <View key={cell.hour}
@@ -97,7 +96,7 @@ export default function OrderHeatmap({ apiCall }: any) {
         ))}
         <TX style={s.legendLabel}>أعلى</TX>
         <View style={{ flex: 1 }} />
-        <Text style={s.legendLabel}>الذروة: {KM(data.max_value)} طلب</Text>
+        <Text style={s.legendLabel}>{tSync('الذروة:', lang)} {KM(data.max_value)} {tSync('طلب', lang)}</Text>
       </View>
     </View>
   );

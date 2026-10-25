@@ -1,0 +1,72 @@
+{
+  "summary": "i18n fix verification (v1.17.x translation audit fixes). NO crashes: 0 pageerrors / no red screen across 15 customer routes x 9 languages (ar,en,de,fr,zh,ja,hi,he,ru,th,ur) and 10 merchant routes (en+ar) incl. /merchant/live-preview. Verified FIXED: product/category names Arabic in ar on Home/Search/Cart/Favorites; Services tab service names Arabic in ar; Orders + Appearance screens fully translated in de/fr/zh/hi/he/ru/th/ur; no literal \\n in services promo (all langs); Profile balance = Guthaben(de)/Solde(fr)/余额(zh)/יתרה(he); currency shows SAR in all non-Arabic langs; generated dict has 0 'ر.س' and 0 Arabic left in non-Arabic-script langs; days/time fixed (أحد→Sun/So./Вс, 12ص→12 AM). Language picker in Profile works end-to-end (ar→en→de→ar, persisted). Static audit: node scripts/audit_i18n.js → 0 missing and 0 \\n in all 20 langs. Backend /api/translate + /bulk: 14/15 pytest pass (zh returned stale English cached value). REMAINING issues: many hardcoded strings still untranslated (Arabic literals rendered raw in checkout, returns, my-returns, rma-detail, my-services, service detail, shipping-matrix, roles/employees; hardcoded English in search/cart/favorites/product/home that shows in Arabic UI), raw payment_method codes on Orders, a few clear mistranslations ('الخط' (font)→'Line' in ALL 19 langs, 'طلب'→'Request', 'حديث تقني'→'Technical conversation'), and merchant Live Preview still shows Arabic product names in English mode. No deprecated Expo packages detected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/translate", "issue": "Stale bad cache: 'فرع جدة - التحلية' → zh returns 'Jeddah Branch - Al Thaliah' (English, cached:true). ROOT CAUSE: translate.py:_clean_ok() only rejects FOREIGN scripts; it never requires the TARGET script, so pure-Latin output is accepted & cached for zh/ja/ko/ru/he/hi/bn/th. DB translations_cache has 76 such rows (zh 2, he 10, ru 19, ja 16, ko 10, bn 5, th 14; most are brand names like WhatsApp which are OK, but some are real misses). Also cache hits are returned without re-validation."},
+      {"endpoint": "POST /api/translate", "issue": "If the retry also fails _clean_ok, the dirty first translation is still cached (translate.py:200-206). Should not cache / should return source."},
+      {"endpoint": "POST /api/translate/bulk", "issue": "Works (de: الرصيد→'Das Guthaben' — article included, minor; '99 ر.س'→'99 SAR'). es branch 'التحلية' → 'Al-Tihama' (wrong name, LLM quality)."},
+      {"endpoint": "auth (playbook)", "issue": "Pre-existing, not in scope: CORS returns access-control-allow-origin '*' together with allow-credentials true; no brute-force lockout (6 wrong pw → still 401 and correct pw then 200); auth is token-based (no httpOnly auth cookie). bcrypt hash format $2b$ OK."},
+      {"endpoint": "notifications / wallet / loyalty-history / points (backend-generated text)", "issue": "Server writes Arabic-only text: 'تم توصيل طلبك', 'طلب #.. - الحالة: delivered' (raw status), 'استرداد طلب إرجاع ...', 'استبدال نقاط بخصم 5.0 ر.س'. Shown in Arabic for all languages."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Orders payment value", "issue": "Raw codes 'cod' / 'cash_on_delivery' shown as Payment value in EVERY language incl. Arabic. Reference: app/orders.tsx:57 ({o.payment_method || ...}). Needs a code→label map (cod, cash_on_delivery, apple_pay, mada, tabby, tamara, wallet).", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Checkout delivery & payment options", "issue": "Labels rendered raw, Arabic in all languages: 'عادي','٢-٣ أيام','نفس اليوم ⚡','خلال ٩٠ دقيقة','مجدول','اختر الموعد','الدفع عند الاستلام','بطاقة ائتمان/مدى','تمارا (تقسيط)','قريباً', and 'اختر فترة التوصيل ←'. Reference: app/checkout.tsx:157-167 rendered at :208,:217,:226 without tSync.", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Returns status/desc maps", "issue": "Status labels/descriptions rendered raw (Arabic in en/ja verified): app/my-returns.tsx:97,101; app/rma-detail.tsx:88,101; app/my-services.tsx:72,82,116; app/merchant/returns.tsx:130 (tabs 'الكل','بانتظار المراجعة','مقبولة','قيد الفحص','مكتملة','مرفوضة'),165. Return reasons also raw ('غيّرت رأيي','عيب مصنعي','منتج غير مطابق للطلب').", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Hardcoded English shown in Arabic (default) UI", "issue": "app/search.tsx:78 'All', :88 '{total} results'; app/cart.tsx:85,149 '{n} items'; app/favorites.tsx:33 '{n} items'; app/product/[id].tsx:97 '(n reviews)', :99 'n sold', :109 'Save X SAR'; app/(tabs)/index.tsx:110 'New', :243 '75% OFF', :245 'Get like new devices in low price'. Not translated in any language.", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Service detail", "issue": "Tab 'نبذة' (app/service/[id].tsx:105) and Feature value=\"متاح\" (:128) not wrapped → Arabic in all langs (verified de). Service description and duration ('1-2 Days') from DB shown English even in Arabic.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant Live Preview product names", "issue": "Always name_ar → Arabic names in English UI (verified). Reference: app/merchant/live-preview.tsx:254,300,890,1028. Also K() uses toLocaleString('ar-SA') at :1556 → Arabic-Indic digits in every language; merchant/invoices.tsx:78 date toLocaleString('ar').", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant shipping-matrix / roles / employees", "issue": "In English: 'كل المدن · كل الفروع', '25ر.س + 5ر.س/كجم · 1-3 أيام · أولوية 3' (app/merchant/shipping-matrix.tsx:171,186), permission/group labels in app/merchant/roles.tsx:14+ and employees ('الطلبات','العملاء','السوشال ميديا', '• عام') rendered raw.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Loyalty tier / points", "issue": "Tier labels 'برونزي'/'فضي' raw (src/components/PaymentAndLoyalty.tsx:140 map) and points count shows Arabic-Indic '٠ Point' / '٠ ポイント' on /wallet and /loyalty-history in en/ja.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Orders status icon", "issue": "'delivered' orders show green bar with clock icon (only 'completed' gets checkmark). app/orders.tsx:53.", "testID": "n/a", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "DB content translation (known audit #8, still open)", "issue": "Competition titles/descriptions (Arabic only) show Arabic in all langs incl. home banner '🏆 دعوة صديق واربح 🎁'; branch names Arabic only (checkout 'Filiale: الفرع الرئيسي - الرياض العليا', merchant branches); service names/descriptions English in all non-ar langs (zh/hi/he/ur show 'Screen Repair'); product page specs/color ('تيتانيوم طبيعي','الشاشة','36 ساعة','Status: جديد (New)') and product title Arabic in de; social posts Arabic.", "affected_testIDs": []}
+    ],
+    "design_issues": [
+      {"screen": "Orders (/orders)", "issues": ["Filter pills row is not horizontally scrollable — 4th pill ('Storniert'/'Annulé') clipped off-screen in de/fr at 390px."]},
+      {"screen": "Arabic-script text (ar/ur/fa) across app", "issues": ["Letters rendered visibly spaced/disconnected (e.g. 'ا ل ف ئ ا ت', Urdu services screen) — likely letterSpacing applied to Arabic-script text from theme tokens (src/theme/tokens.ts); letterSpacing breaks Arabic cursive joining."]},
+      {"screen": "Language picker", "issues": ["Hebrew row shows 🌐 instead of 🇮🇱 flag."]}
+    ],
+    "react_native_issues": []
+  },
+  "translation_errors_found": [
+    {"key": "الخط (Appearance section 'Font')", "issue": "Translated as LINE in all 19 langs: en 'The line', de 'Linie', fr 'Ligne', zh '线条', ru 'Линия', hi 'लाइन', he 'הקו', th 'เส้น' ... Should be Font/Schriftart/Police/字体/Шрифт.", "screen": "/appearance"},
+    {"key": "حديث تقني (font preset label, src/theme/ThemeContext.tsx:140)", "issue": "Translated as 'Technical conversation': de 'Technisches Gespräch', fr 'Discussion technique', zh '技术讨论'. Should be 'Modern Tech/Mono'.", "screen": "/appearance"},
+    {"key": "طلب (Orders card 'Order #')", "issue": "en 'Request', fr 'Demande', hi 'अनुरोध', th 'คำขอ' → should be Order/Commande/ऑर्डर/คำสั่งซื้อ.", "screen": "/orders"},
+    {"key": "طلباتي (Orders title)", "issue": "he 'בקשותיי' (my requests) while Profile uses 'ההזמנות שלי'.", "screen": "/orders"},
+    {"key": "مخصص (Appearance 'Custom')", "issue": "ru 'Выделенный' (highlighted) → 'Пользовательский'.", "screen": "/appearance"},
+    {"key": "ليلي / نهاري", "issue": "en 'Nightly'/'Daytime' (should be Dark/Light or Night/Day), he 'ליליי' (not a word), fa 'روز من' (= 'my day').", "screen": "/appearance"},
+    {"key": "cs.serviceCount", "issue": "de '{n}-Dienstleistungen' renders '12-Dienstleistungen' (stray hyphen); ru '{n} услуг(и)' awkward plural.", "screen": "Services tab"},
+    {"key": "زائر مباشر الآن", "issue": "en '0 Direct visitor now' → 'live visitors now'.", "screen": "/merchant/live-preview"}
+  ],
+  "test_report_links": ["/app/backend/tests/test_i18n_translate.py", "/app/test_reports/pytest/pytest_i18n.xml"],
+  "action_items": [
+    "Map payment_method codes to translated labels in app/orders.tsx:57.",
+    "Wrap checkout deliveryOpts/payMethods labels/times/tags with tSync at render (checkout.tsx:208,217,226).",
+    "Wrap status/desc/reason maps with tSync at render: my-returns.tsx:97,101; rma-detail.tsx:88,101; my-services.tsx:72,82,116; merchant/returns.tsx:130,165; PaymentAndLoyalty tier labels; shipping-matrix.tsx:171,186; roles/employees permission labels.",
+    "Replace hardcoded English with t()/tSync: search.tsx:78,88; cart.tsx:85,149; favorites.tsx:33; product/[id].tsx:97,99,109; (tabs)/index.tsx:110,243,245.",
+    "service/[id].tsx:105 'نبذة' and :128 'متاح' → tSync.",
+    "merchant/live-preview.tsx:254,300,890,1028 use lang-aware name (name_en when lang!=='ar'); stop forcing 'ar-SA' digits (K() :1556) and invoices.tsx:78 toLocaleString('ar').",
+    "Fix dictionary entries: 'الخط' → Font (all 19 langs), 'حديث تقني', 'طلب' (en/fr/hi/th), he 'طلباتي', ru 'مخصص', en/he/fa 'ليلي'/'نهاري', de cs.serviceCount hyphen.",
+    "translate.py: make _clean_ok require at least one char of the target script for non-Latin targets (zh/ja/ko/ru/he/hi/bn/th, allowing brand-only strings), don't cache when retry fails, and purge bad rows (e.g. zh 'فرع جدة - التحلية').",
+    "orders.tsx:40,59 double tSync (tSync(tSync(x, curLang()), lang)) sends already-translated text back to /api/translate as source 'ar' — remove inner tSync.",
+    "Make Orders filter row a horizontal ScrollView; fix 'delivered' icon.",
+    "Translate backend-generated notification/wallet/loyalty texts (or store keys) — currently Arabic for all languages."
+  ],
+  "critical_code_review_comments": [
+    "useAutoT.tsx tSync fires background /api/translate for every cache miss including non-Arabic input (e.g. from nested tSync) — wasteful LLM calls.",
+    "translate.py cache lookup ignores source_lang; same Arabic text from different sources share cache (fine), but stale invalid entries are never revalidated.",
+    "~200 Arabic literals still sit in object props (label/title/name/time) across 30+ files (top: merchant/live-preview 34, roles 19, returns 14, rma-detail 13, MerchantSocialFeed 9, shipping-matrix 9, product-form 9) — many rendered without tSync.",
+    "Pre-existing 70 tsc errors unchanged; none are 'lang'/'curLang' related."
+  ],
+  "updated_files": ["/app/frontend/app/(tabs)/settings.tsx (added testIDs: lang-modal-close, lang-search-input, lang-option-{code})", "/app/backend/tests/test_i18n_translate.py (new)"],
+  "success_rate": {"backend": "93% (14/15)", "frontend": "Crash-free 100%; requested fixes verified ~90%; residual untranslated strings remain on secondary screens"},
+  "seed_data_creation": "None. Translation API tests added a few rows to translations_cache (de/fr/es/ja/ru/he/hi/th/zh) for test strings.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Switch language fast via localStorage.setItem('app_lang','de') then page.goto(route). Login testIDs: login-phone-input/login-password-input/login-submit-button. Language picker modal rows now have testID lang-option-{code}; modal slides in — wait ~1.2s and use dispatch_event('click'). Customer 0500000000/test1234, Merchant 0509999999/merchant2025. Run: export EXPO_PUBLIC_BACKEND_URL=...; pytest /app/backend/tests/test_i18n_translate.py. Useful sweep: collect body lines matching [\\u0600-\\u06FF] in non-Arabic langs.",
+  "rca_of_issue": "zh stale English: translate.py _clean_ok() checks only forbidden scripts → Latin-only output accepted for non-Latin targets and cached in Mongo translations_cache; subsequent requests return cached:true. Raw strings: label maps defined as plain Arabic constants and rendered via {x.label} without tSync — the auto-wrap pass only wrapped JSX text, not object-literal props."
+}

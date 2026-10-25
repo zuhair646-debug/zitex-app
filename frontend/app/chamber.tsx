@@ -1,11 +1,15 @@
+import { useT, curLang } from '../src/i18n';
+import { tSync, tf } from '../src/useAutoT';
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import TranslatableName from '../src/components/TranslatableName';
 import { useAuth } from './_layout';
 
 export default function ChamberScreen() {
+  useT(); // re-render when language or on-demand translations change
   const router = useRouter();
   const { apiCall, user, logout } = useAuth();
   const [comps, setComps] = useState<any[]>([]);
@@ -23,7 +27,7 @@ export default function ChamberScreen() {
       const myComps = d.filter((c: any) => !c.chamber_supervised || c.assigned_chamber_employee_id === user?.id);
       setComps(myComps);
     }
-    catch (e: any) { Alert.alert('Error', e.message); }
+    catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
     finally { setLoading(false); }
   };
   useEffect(() => { loadComps(); }, []);
@@ -35,14 +39,14 @@ export default function ChamberScreen() {
       setSelectedComp(full);
       setShowDetail(true);
       setDrawResult(null);
-    } catch (e: any) { Alert.alert('Error', e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
   };
 
   const performDraw = async () => {
     if (!selectedComp) return;
-    Alert.alert('Confirm Draw', `Are you sure you want to perform draw #${(selectedComp.draw_history?.length || 0) + 1} for "${selectedComp.title}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Draw Now', onPress: async () => {
+    Alert.alert(tSync('تأكيد السحب', curLang()), tf('هل أنت متأكد من إجراء السحب رقم {0} لمسابقة "{1}"؟', curLang(), [(selectedComp.draw_history?.length || 0) + 1, selectedComp.title]), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
+      { text: tSync('اسحب الآن', curLang()), onPress: async () => {
         setDrawing(true);
         try {
           const result = await apiCall(`/api/chamber/competitions/${selectedComp.id}/draw`, { method: 'POST' });
@@ -50,35 +54,35 @@ export default function ChamberScreen() {
           const updated = await apiCall(`/api/chamber/competitions/${selectedComp.id}/full`);
           setSelectedComp(updated);
           loadComps();
-        } catch (e: any) { Alert.alert('Error', e.message); }
+        } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
         finally { setDrawing(false); }
       }}
     ]);
   };
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: async () => { await logout(); router.replace('/login'); } }
+    Alert.alert(tSync('تسجيل الخروج', curLang()), tSync('هل أنت متأكد؟', curLang()), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
+      { text: tSync('تسجيل الخروج', curLang()), style: 'destructive', onPress: async () => { await logout(); router.replace('/login'); } }
     ]);
   };
 
   const decideApproval = (compId: string, title: string, decision: 'approve' | 'reject') => {
-    Alert.alert(decision === 'approve' ? 'Approve Competition' : 'Reject Competition', `Competition: "${title}"`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: decision === 'approve' ? 'Approve' : 'Reject', style: decision === 'reject' ? 'destructive' : 'default', onPress: async () => {
+    Alert.alert(tSync(decision === 'approve' ? tSync('اعتماد المسابقة', curLang()) : tSync('رفض المسابقة', curLang()), curLang()), tf('المسابقة: "{0}"', curLang(), [title]), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
+      { text: tSync(decision === 'approve' ? tSync('اعتماد', curLang()) : tSync('رفض', curLang()), curLang()), style: decision === 'reject' ? 'destructive' : 'default', onPress: async () => {
         try {
           await apiCall(`/api/chamber/competitions/${compId}/decision`, {
             method: 'POST',
             body: JSON.stringify({ decision, note: decision === 'reject' ? 'Rejected by chamber' : 'Approved by chamber' }),
           });
           loadComps();
-        } catch (e: any) { Alert.alert('Error', e.message); }
+        } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
       }},
     ]);
   };
 
-  const statusLabel = (s: string) => s === 'open' ? 'Active' : s === 'ended' ? 'Ended' : 'Coming Soon';
+  const statusLabel = (s: string) => tSync(s === 'open' ? 'نشطة' : s === 'ended' ? 'منتهية' : 'قريباً', curLang());
   const statusColor = (s: string) => s === 'open' ? '#10B981' : s === 'ended' ? '#6B7280' : '#3B82F6';
 
   if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#1E3A5F" /></View>;
@@ -88,8 +92,8 @@ export default function ChamberScreen() {
       <View style={s.header}>
         <View style={s.headerLogo}><Ionicons name="shield-checkmark" size={24} color="#FFF" /></View>
         <View style={s.headerInfo}>
-          <Text style={s.headerTitle}>Chamber of Commerce</Text>
-          <Text style={s.headerSub}>Competition Control Room</Text>
+          <Text style={s.headerTitle}>{tSync('الغرفة التجارية', curLang())}</Text>
+          <Text style={s.headerSub}>{tSync('غرفة تحكم المسابقات', curLang())}</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <TouchableOpacity onPress={() => router.push('/appearance' as any)} style={[s.logoutBtn, { backgroundColor: 'rgba(212,175,55,0.15)' }]}>
@@ -102,15 +106,15 @@ export default function ChamberScreen() {
       </View>
 
       <View style={s.statsRow}>
-        <View style={s.statCard}><Text style={s.statNum}>{comps.length}</Text><Text style={s.statLabel}>Total</Text></View>
-        <View style={s.statCard}><Text style={s.statNum}>{comps.filter(c => c.status === 'open').length}</Text><Text style={s.statLabel}>Active</Text></View>
-        <View style={s.statCard}><Text style={s.statNum}>{comps.filter(c => c.status === 'ended').length}</Text><Text style={s.statLabel}>Ended</Text></View>
-        <View style={s.statCard}><Text style={s.statNum}>{comps.reduce((a: number, c: any) => a + (c.total_participants || 0), 0)}</Text><Text style={s.statLabel}>Entries</Text></View>
+        <View style={s.statCard}><Text style={s.statNum}>{comps.length}</Text><Text style={s.statLabel}>{tSync('الإجمالي', curLang())}</Text></View>
+        <View style={s.statCard}><Text style={s.statNum}>{comps.filter(c => c.status === 'open').length}</Text><Text style={s.statLabel}>{tSync('نشط', curLang())}</Text></View>
+        <View style={s.statCard}><Text style={s.statNum}>{comps.filter(c => c.status === 'ended').length}</Text><Text style={s.statLabel}>{tSync('انتهت', curLang())}</Text></View>
+        <View style={s.statCard}><Text style={s.statNum}>{comps.reduce((a: number, c: any) => a + (c.total_participants || 0), 0)}</Text><Text style={s.statLabel}>{tSync('عدد المشاركين', curLang())}</Text></View>
       </View>
 
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E3A5F" />}
         showsVerticalScrollIndicator={false} contentContainerStyle={s.list}>
-        <Text style={s.sectionTitle}>My Assigned Competitions</Text>
+        <Text style={s.sectionTitle}>{tSync('المسابقات المسندة لي', curLang())}</Text>
         {comps.map((c: any) => (
           <TouchableOpacity testID={`chamber-comp-${c.id}`} key={c.id} style={s.compCard} onPress={() => openComp(c.id)}>
             <View style={s.compHeader}>
@@ -118,20 +122,20 @@ export default function ChamberScreen() {
                 <View style={[s.statusDot, { backgroundColor: statusColor(c.status) }]} />
                 <Text style={[s.statusText, { color: statusColor(c.status) }]}>{statusLabel(c.status)}</Text>
               </View>
-              <Text style={s.drawCount}>{c.draw_history?.length || 0} draws</Text>
+              <Text style={s.drawCount}>{tf('{0} سحوبات', curLang(), [c.draw_history?.length || 0])}</Text>
             </View>
-            <Text style={s.compTitle}>{c.title}</Text>
+            <TranslatableName text={c.title} style={s.compTitle} />
             <View style={s.compMeta}>
-              <View style={s.metaItem}><Ionicons name="people" size={14} color="#52525B" /><Text style={s.metaText}>{c.total_participants || c.joined_count} participants</Text></View>
-              <View style={s.metaItem}><Ionicons name="trophy" size={14} color="#F59E0B" /><Text style={s.metaText}>{c.prize_count} prizes</Text></View>
+              <View style={s.metaItem}><Ionicons name="people" size={14} color="#52525B" /><Text style={s.metaText}>{tf('{0} مشارك', curLang(), [c.total_participants || c.joined_count || 0])}</Text></View>
+              <View style={s.metaItem}><Ionicons name="trophy" size={14} color="#F59E0B" /><Text style={s.metaText}>{tf('{0} جوائز', curLang(), [c.prize_count || 0])}</Text></View>
             </View>
             {c.winners?.length > 0 && (
               <View style={s.winnersPreview}>
-                <Text style={s.winnersLabel}>Winners: </Text>
+                <Text style={s.winnersLabel}>{tSync('الفائزون:', curLang())} </Text>
                 <Text style={s.winnersNames}>{c.winners.map((w: any) => w.user_name).join(', ')}</Text>
               </View>
             )}
-            <View style={s.viewMore}><Text style={s.viewMoreText}>View Details & Draw</Text><Ionicons name="chevron-forward" size={16} color="#1E3A5F" /></View>
+            <View style={s.viewMore}><Text style={s.viewMoreText}>{tSync('عرض التفاصيل وإجراء السحب', curLang())}</Text><Ionicons name="chevron-forward" size={16} color="#1E3A5F" /></View>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -153,18 +157,18 @@ export default function ChamberScreen() {
             </View>
 
             <View style={s.detailGrid}>
-              <View style={s.detailItem}><Text style={s.detailLabel}>Prize</Text><Text style={s.detailVal}>{selectedComp?.prize}</Text></View>
-              <View style={s.detailItem}><Text style={s.detailLabel}>Prizes Count</Text><Text style={s.detailVal}>{selectedComp?.prize_count}</Text></View>
-              <View style={s.detailItem}><Text style={s.detailLabel}>Start Date</Text><Text style={s.detailVal}>{selectedComp?.start_date}</Text></View>
-              <View style={s.detailItem}><Text style={s.detailLabel}>Draw Date</Text><Text style={s.detailVal}>{selectedComp?.draw_date}</Text></View>
-              <View style={s.detailItem}><Text style={s.detailLabel}>Max Participants</Text><Text style={s.detailVal}>{selectedComp?.max_participants}</Text></View>
-              <View style={s.detailItem}><Text style={s.detailLabel}>Joined</Text><Text style={s.detailVal}>{selectedComp?.participants?.length || 0}</Text></View>
+              <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('الجائزة', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.prize}</Text></View>
+              <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('عدد الجوائز', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.prize_count}</Text></View>
+              <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('تاريخ البداية', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.start_date}</Text></View>
+              <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('تاريخ السحب', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.draw_date}</Text></View>
+              <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('الحد الأقصى للمشاركين', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.max_participants}</Text></View>
+              <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('منضم', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.participants?.length || 0}</Text></View>
             </View>
 
             {/* Draw Button */}
             <TouchableOpacity testID="chamber-draw-btn" style={s.drawBtn} onPress={performDraw} disabled={drawing}>
               {drawing ? <ActivityIndicator color="#FFF" /> : (
-                <><Ionicons name="dice" size={24} color="#FFF" /><Text style={s.drawBtnText}>Perform Draw #{(selectedComp?.draw_history?.length || 0) + 1}</Text></>
+                <><Ionicons name="dice" size={24} color="#FFF" /><Text style={s.drawBtnText}>{tf('إجراء السحب رقم {0}', curLang(), [(selectedComp?.draw_history?.length || 0) + 1])}</Text></>
               )}
             </TouchableOpacity>
 
@@ -172,8 +176,8 @@ export default function ChamberScreen() {
             {drawResult && (
               <View style={s.resultCard}>
                 <Ionicons name="trophy" size={28} color="#F59E0B" />
-                <Text style={s.resultTitle}>Draw #{drawResult.draw_number} Winners</Text>
-                <Text style={s.resultBy}>Drawn by: {drawResult.drawn_by}</Text>
+                <Text style={s.resultTitle}>{tf('الفائزون في السحب رقم {0}', curLang(), [drawResult.draw_number])}</Text>
+                <Text style={s.resultBy}>{tSync('أجرى السحب:', curLang())} {drawResult.drawn_by}</Text>
                 {drawResult.winners?.map((w: any, i: number) => (
                   <View key={i} style={s.resultWinner}>
                     <View style={s.resultRank}><Text style={s.rankNum}>#{i + 1}</Text></View>
@@ -187,14 +191,14 @@ export default function ChamberScreen() {
             {/* Draw History */}
             {selectedComp?.draw_history?.length > 0 && (
               <View style={s.historySection}>
-                <Text style={s.histTitle}>Draw History</Text>
+                <Text style={s.histTitle}>{tSync('سجل السحوبات', curLang())}</Text>
                 {selectedComp.draw_history.map((dh: any, i: number) => (
                   <View key={i} style={s.histCard}>
                     <View style={s.histHeader}>
-                      <Text style={s.histNum}>Draw #{dh.draw_number}</Text>
+                      <Text style={s.histNum}>{tf('السحب رقم {0}', curLang(), [dh.draw_number])}</Text>
                       <Text style={s.histDate}>{dh.drawn_at?.split('T')[0]}</Text>
                     </View>
-                    <Text style={s.histBy}>By: {dh.drawn_by} ({dh.drawn_by_role || 'system'})</Text>
+                    <Text style={s.histBy}>{tSync('بواسطة:', curLang())} {dh.drawn_by} ({dh.drawn_by_role || tSync('النظام', curLang())})</Text>
                     {dh.winners?.map((w: any, j: number) => (
                       <Text key={j} style={s.histWinner}>#{j + 1} {w.user_name} - {w.user_phone}</Text>
                     ))}
@@ -205,7 +209,7 @@ export default function ChamberScreen() {
 
             {/* Participants */}
             <View style={s.participantsSection}>
-              <Text style={s.histTitle}>All Participants ({selectedComp?.participants?.length || 0})</Text>
+              <Text style={s.histTitle}>{tf('كل المشاركين ({0})', curLang(), [selectedComp?.participants?.length || 0])}</Text>
               {selectedComp?.participants?.map((p: any, i: number) => (
                 <View key={i} style={s.participantRow}>
                   <Text style={s.pNum}>{i + 1}</Text>

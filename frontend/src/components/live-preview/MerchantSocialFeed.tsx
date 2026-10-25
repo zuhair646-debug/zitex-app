@@ -6,17 +6,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { LP, K, KM } from './theme';
 import MediaCarousel from '../MediaCarousel';
 import TranslateButton from '../TranslateButton';
-import { TX, tSync } from '../../useAutoT';
-import { useT } from '../../i18n';
+import { TX, tSync, tf } from '../../useAutoT';
+import { useT, curLang } from '../../i18n';
 
 const { width } = Dimensions.get('window');
 const timeAgo = (iso?: string) => {
   if (!iso) return '';
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return 'الآن';
-  if (diff < 3600) return `${Math.floor(diff / 60)} د`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} س`;
-  return `${Math.floor(diff / 86400)} ي`;
+  if (diff < 60) return tSync('الآن', curLang());
+  if (diff < 3600) return tf('{0} د', curLang(), [Math.floor(diff / 60)]);
+  if (diff < 86400) return tf('{0} س', curLang(), [Math.floor(diff / 3600)]);
+  return tf('{0} ي', curLang(), [Math.floor(diff / 86400)]);
 };
 
 /**
@@ -109,7 +109,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
       await apiCall(`/api/social/posts/${replying.postId}/comments/${replying.commentId}/store-reply`, {
         method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
       });
-      Alert.alert(tSync('تم', lang), 'تم إرسال ردك باسم المتجر ✨');
+      Alert.alert(tSync('تم', lang), tSync('تم إرسال ردك باسم المتجر ✨', curLang()));
       // Optimistic update: inject reply into current post
       const rt = replyText.trim();
       const rid = replying.commentId;
@@ -146,7 +146,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
           <TouchableOpacity key={f.k} onPress={() => setFilter(f.k)}
             style={[s.filterChip, filter === f.k && s.filterChipActive]}>
             <Ionicons name={f.icon} size={12} color={filter === f.k ? LP.BG : LP.GOLD} />
-            <Text style={[s.filterChipText, filter === f.k && { color: LP.BG }]}>{f.label}</Text>
+            <Text style={[s.filterChipText, filter === f.k && { color: LP.BG }]}>{tSync(f.label || '', curLang())}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -202,7 +202,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
               {unansweredCount > 0 && (
                 <View style={s.replyBadge}>
                   <Ionicons name="chatbubble-ellipses" size={11} color="#FFF" />
-                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>{unansweredCount} يحتاج رد</Text>
+                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>{unansweredCount} {tSync('يحتاج رد', lang)}</Text>
                 </View>
               )}
 
@@ -272,7 +272,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
                   </TouchableOpacity>
                 );
               })}
-              {isPoll && <Text style={s.totalVotesText}>{totalVotes} صوت</Text>}
+              {isPoll && <Text style={s.totalVotesText}>{totalVotes} {tSync('صوت', lang)}</Text>}
 
               <View style={s.postActions}>
                 <TouchableOpacity style={s.actionItem} onPress={() => openInsights(post, 'likers')}>
@@ -393,7 +393,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
           <View style={[s.sheet, { maxHeight: '70%' }]}>
             <View style={s.sheetHandle} />
             <View style={{ padding: 16 }}>
-              <Text style={s.sheetTitle}>رد على {replying?.userName || 'التعليق'} باسم المتجر ✨</Text>
+              <Text style={s.sheetTitle}>{tSync('رد على', lang)} {replying?.userName || tSync('التعليق', curLang())} {tSync('باسم المتجر ✨', lang)}</Text>
               {replying && (
                 <View style={s.commentPreview}>
                   <TX style={{ color: LP.MUTED, fontSize: 11, textAlign: 'right' }}>تعليق العميل:</TX>
@@ -439,6 +439,7 @@ function StatMini({ icon, label, value, color, onPress }: any) {
 }
 
 function LikersView({ likers, totalLikes }: any) {
+  const { lang } = useT();
   const showing = likers?.length || 0;
   if (showing === 0) {
     return (
@@ -452,7 +453,7 @@ function LikersView({ likers, totalLikes }: any) {
     <>
       <View style={s.headerNote}>
         <Ionicons name="heart" size={14} color="#EF4444" />
-        <Text style={s.headerNoteText}>{totalLikes.toLocaleString('ar-SA')} إعجاب — عرض {showing} مستخدم</Text>
+        <Text style={s.headerNoteText}>{totalLikes.toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US')} {tSync('إعجاب — عرض', lang)} {showing} {tSync('مستخدم', lang)}</Text>
       </View>
       {likers.map((u: any, i: number) => (
         <View key={u.user_id || i} style={s.userRow}>
@@ -461,7 +462,7 @@ function LikersView({ likers, totalLikes }: any) {
               <Text style={{ color: '#EF4444', fontWeight: '900', fontSize: 14 }}>{(u.user_name || '?')[0]}</Text>}
           </View>
           <View style={{ flex: 1, marginHorizontal: 10 }}>
-            <Text style={s.userName}>{u.user_name || 'مستخدم'}</Text>
+            <Text style={s.userName}>{u.user_name || tSync('مستخدم', curLang())}</Text>
             <Text style={s.userMeta}>❤️ {timeAgo(u.created_at)}</Text>
           </View>
           <Ionicons name="heart" size={16} color="#EF4444" />
@@ -481,6 +482,7 @@ const PLATFORM_META: any = {
 };
 
 function SharersView({ sharers, totalShares }: any) {
+  const { lang } = useT();
   if (!sharers || sharers.length === 0) {
     return (
       <View style={{ alignItems: 'center', padding: 40 }}>
@@ -501,7 +503,7 @@ function SharersView({ sharers, totalShares }: any) {
     <>
       <View style={s.headerNote}>
         <Ionicons name="share-social" size={14} color={LP.SUCCESS} />
-        <Text style={s.headerNoteText}>{totalShares.toLocaleString('ar-SA')} مشاركة إجمالية — عرض {sharers.length} مستخدم</Text>
+        <Text style={s.headerNoteText}>{totalShares.toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US')} {tSync('مشاركة إجمالية — عرض', lang)} {sharers.length} {tSync('مستخدم', lang)}</Text>
       </View>
       {/* Platform summary chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 6, marginBottom: 8 }}>
@@ -510,7 +512,7 @@ function SharersView({ sharers, totalShares }: any) {
           return (
             <View key={plat} style={[s.platformChip, { borderColor: meta.color, backgroundColor: meta.color + '15' }]}>
               <Ionicons name={meta.icon} size={12} color={meta.color} />
-              <Text style={[s.platformChipText, { color: meta.color }]}>{meta.label}</Text>
+              <Text style={[s.platformChipText, { color: meta.color }]}>{tSync(meta.label || '', curLang())}</Text>
               <View style={[s.platformCount, { backgroundColor: meta.color }]}>
                 <Text style={{ color: '#0B0C10', fontSize: 10, fontWeight: '900' }}>{list.length}</Text>
               </View>
@@ -535,8 +537,8 @@ function SharersView({ sharers, totalShares }: any) {
                   <Text style={{ color: meta.color, fontWeight: '900', fontSize: 14 }}>{(sh.user_name || '?')[0]}</Text>
                 </View>
                 <View style={{ flex: 1, marginHorizontal: 10 }}>
-                  <Text style={s.userName}>{sh.user_name || 'مستخدم'}</Text>
-                  <Text style={s.userMeta}>شارك عبر {meta.label} · {timeAgo(sh.created_at)}</Text>
+                  <Text style={s.userName}>{sh.user_name || tSync('مستخدم', curLang())}</Text>
+                  <Text style={s.userMeta}>{tSync('شارك عبر', lang)} {meta.label} · {timeAgo(sh.created_at)}</Text>
                 </View>
                 <Ionicons name={meta.icon} size={16} color={meta.color} />
               </View>
@@ -549,6 +551,7 @@ function SharersView({ sharers, totalShares }: any) {
 }
 
 function CommentsView({ comments, onReply }: any) {
+  const { lang } = useT();
   if (!comments || comments.length === 0) {
     return (
       <View style={{ alignItems: 'center', padding: 40 }}>
@@ -562,7 +565,7 @@ function CommentsView({ comments, onReply }: any) {
     <>
       <View style={s.headerNote}>
         <Ionicons name="chatbubbles" size={14} color={LP.WARN} />
-        <Text style={s.headerNoteText}>{comments.length} تعليق — {unread} يحتاج رد</Text>
+        <Text style={s.headerNoteText}>{comments.length} {tSync('تعليق —', lang)} {unread} {tSync('يحتاج رد', lang)}</Text>
       </View>
       {comments.map((c: any) => (
         <View key={c.id} style={s.commentCard}>
@@ -578,7 +581,7 @@ function CommentsView({ comments, onReply }: any) {
             {!!c.store_reply && (
               <View style={s.storeReply}>
                 <Ionicons name="checkmark-circle" size={11} color={LP.GOLD} />
-                <Text style={{ color: LP.GOLD, fontSize: 11, fontWeight: '700', flex: 1, textAlign: 'right', marginHorizontal: 4 }}>ردّ المتجر: {c.store_reply}</Text>
+                <Text style={{ color: LP.GOLD, fontSize: 11, fontWeight: '700', flex: 1, textAlign: 'right', marginHorizontal: 4 }}>{tSync('ردّ المتجر:', lang)} {c.store_reply}</Text>
               </View>
             )}
             {!c.store_reply && (

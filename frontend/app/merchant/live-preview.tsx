@@ -15,8 +15,8 @@ import OrderHeatmap from '../../src/components/live-preview/OrderHeatmap';
 import { AlertsBell } from '../../src/components/live-preview/AlertsAndExport';
 import CompetitionDetailSheet from '../../src/components/live-preview/CompetitionDetailSheet';
 import LiveToastNotifications from '../../src/components/live-preview/LiveToastNotifications';
-import { useT } from '../../src/i18n';
-import { TX, tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -211,7 +211,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
               <TouchableOpacity key={t.product_id} onPress={() => onAnalytics({ id: t.product_id, name_ar: t.name, images: t.image ? [t.image] : [] })} style={s.topCard}>
                 <View style={s.topRank}><Text style={s.topRankText}>{idx + 1}</Text></View>
                 {!!t.image && <Image source={{ uri: mediaUrlSync(t.image) }} style={s.topImg} contentFit="cover" />}
-                <Text style={s.topName} numberOfLines={1}>{t.name}</Text>
+                <TX style={s.topName} numberOfLines={1}>{t.name || ''}</TX>
                 <Text style={s.topRev}>{Math.round(t.revenue).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                 <View style={s.topSplit}>
                   <Text style={s.topSplitPos}>POS {t.pos_orders}</Text>
@@ -251,7 +251,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                       style={{ marginRight: 10, width: 130, backgroundColor: CARD, borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: BORDER }}>
                       {!!f.images?.[0] && <Image source={{ uri: mediaUrlSync(f.images[0]) }} style={{ width: 130, height: 100 }} contentFit="cover" />}
                       <View style={{ padding: 6 }}>
-                        <Text numberOfLines={1} style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800', textAlign: 'right' }}>{f.name_ar}</Text>
+                        <Text numberOfLines={1} style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800', textAlign: 'right' }}>{lang === 'ar' ? f.name_ar : (f.name_en || f.name_ar)}</Text>
                         <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900', marginTop: 2 }}>{f.price} {tSync(" ر.س", lang)}</Text>
                       </View>
                     </TouchableOpacity>
@@ -297,7 +297,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                 </View>
               )}
               <View style={{ padding: 10 }}>
-                <Text style={s.pName} numberOfLines={2}>{item.name_ar || item.name}</Text>
+                <Text style={s.pName} numberOfLines={2}>{lang === 'ar' ? (item.name_ar || item.name) : (item.name_en || item.name || item.name_ar)}</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
                   <Text style={s.pPrice}>{item.price} {tSync(" ر.س", lang)}</Text>
                   {(item.rating || 0) > 0 && (
@@ -355,7 +355,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
       await apiCall(`/api/services/reviews/${replyTo.reviewId}/reply`, {
         method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
       });
-      Alert.alert(tSync('تم', lang), 'تم إرسال ردك ✨');
+      Alert.alert(tSync('تم', lang), tSync('تم إرسال ردك ✨', curLang()));
       setReplyTo(null); setReplyText(''); load();
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
@@ -393,7 +393,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
               {!!item.warranty_available && (
                 <View style={s.svcWarrantyPill}>
                   <Ionicons name="shield-checkmark" size={11} color="#10B981" />
-                  <Text style={s.svcWarrantyText}>ضمان {item.warranty_days || 0} يوم</Text>
+                  <Text style={s.svcWarrantyText}>{tSync('ضمان', lang)} {item.warranty_days || 0} {tSync('يوم', lang)}</Text>
                 </View>
               )}
               {/* Details hint — bottom-left */}
@@ -418,13 +418,13 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                 {(item.review_count || 0) > 0 && (
                   <View style={s.svcMetaChip}>
                     <Ionicons name="chatbubbles" size={11} color={GOLD} />
-                    <Text style={s.svcMetaText}>{item.review_count} تقييم</Text>
+                    <Text style={s.svcMetaText}>{item.review_count} {tSync('تقييم', lang)}</Text>
                   </View>
                 )}
                 {(item.booking_count || 0) > 0 && (
                   <View style={s.svcMetaChip}>
                     <Ionicons name="calendar" size={11} color={GOLD} />
-                    <Text style={s.svcMetaText}>{item.booking_count} حجز</Text>
+                    <Text style={s.svcMetaText}>{item.booking_count} {tSync('حجز', lang)}</Text>
                   </View>
                 )}
               </View>
@@ -455,7 +455,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                       {!!r.merchant_reply && (
                         <View style={s.replyBadge}>
                           <Ionicons name="checkmark-circle" size={11} color={GOLD} />
-                          <Text style={s.replyBadgeText}>ردّ المتجر: {r.merchant_reply}</Text>
+                          <Text style={s.replyBadgeText}>{tSync('ردّ المتجر:', lang)} {r.merchant_reply}</Text>
                         </View>
                       )}
                     </View>
@@ -473,7 +473,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
           <View style={s.sheetBackdrop}>
             <View style={s.replySheet}>
               <View style={s.sheetHandle} />
-              <Text style={s.sheetTitle}>رد على تقييم {replyTo.userName} ✨</Text>
+              <Text style={s.sheetTitle}>{tSync('رد على تقييم', lang)} {replyTo.userName} ✨</Text>
               {!!replyTo.commentText && (
                 <View style={s.commentPreview}>
                   <Text style={s.commentText}>💬 {replyTo.commentText}</Text>
@@ -527,10 +527,10 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
     const days = Math.floor(ms / (24 * 3600 * 1000));
     const hours = Math.floor((ms % (24 * 3600 * 1000)) / (3600 * 1000));
     const mins = Math.floor((ms % (3600 * 1000)) / (60 * 1000));
-    if (days > 0) return `${days}ي ${hours}س`;
-    if (hours > 0) return `${hours}س ${mins}د`;
-    if (mins > 0) return `${mins} دقيقة`;
-    return 'ينتهي الآن';
+    if (days > 0) return tf('{0}ي {1}س', lang, [days, hours]);
+    if (hours > 0) return tf('{0}س {1}د', lang, [hours, mins]);
+    if (mins > 0) return tf('{0} دقيقة', lang, [mins]);
+    return tSync('ينتهي الآن', curLang());
   };
 
   if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
@@ -548,7 +548,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
         ].map((f: any) => (
           <TouchableOpacity key={f.k} onPress={() => setFilter(f.k)}
             style={[s.cmpBtn, filter === f.k && { backgroundColor: GOLD }]}>
-            <Text style={[s.cmpText, filter === f.k && { color: BG }]}>{f.label}</Text>
+            <Text style={[s.cmpText, filter === f.k && { color: BG }]}>{tSync(f.label || '', curLang())}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -581,7 +581,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
                     {isLive && <View style={s.liveTag}><View style={s.livePulse} /><TX style={s.liveTagText}>مباشرة</TX></View>}
                     {isEnded && <View style={[s.liveTag, { backgroundColor: '#3B82F6' }]}><TX style={[s.liveTagText, { color: '#FFF' }]}>انتهت</TX></View>}
                   </View>
-                  <Text style={s.compPrize}>🎁 {item.prize}{item.prize_count > 1 ? ` (${item.prize_count} جوائز)` : ''}</Text>
+                  <Text style={s.compPrize}>🎁 {item.prize}{item.prize_count > 1 ? tf(' ({0} جوائز)', lang, [item.prize_count]) : ''}</Text>
                 </View>
               </View>
 
@@ -589,26 +589,26 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
               <View style={s.compMetaRow}>
                 <View style={s.compMetaChip}>
                   <Ionicons name="people" size={12} color={GOLD} />
-                  <Text style={s.compMetaText}>{item.joined_count || 0} مشترك</Text>
+                  <Text style={s.compMetaText}>{item.joined_count || 0} {tSync('مشارك', lang)}</Text>
                 </View>
                 {!!item.starts_at && (
                   <View style={s.compMetaChip}>
                     <Ionicons name="play" size={12} color={GOLD} />
-                    <Text style={s.compMetaText}>بدأت {String(item.starts_at).slice(0, 10)}</Text>
+                    <Text style={s.compMetaText}>{tSync('بدأت', lang)} {String(item.starts_at).slice(0, 10)}</Text>
                   </View>
                 )}
                 {!!item.ends_at && (
                   <View style={s.compMetaChip}>
                     <Ionicons name="hourglass" size={12} color={GOLD} />
                     <Text style={s.compMetaText}>
-                      {isLive && item.remaining_ms != null ? `متبقٍ: ${fmtRemaining(item.remaining_ms)}` : `تنتهي ${String(item.ends_at).slice(0, 10)}`}
+                      {isLive && item.remaining_ms != null ? tf('متبقٍ: {0}', lang, [fmtRemaining(item.remaining_ms)]) : tf('تنتهي {0}', lang, [String(item.ends_at).slice(0, 10)])}
                     </Text>
                   </View>
                 )}
                 {!!item.competition_type && (
                   <View style={s.compMetaChip}>
                     <Ionicons name="pricetag" size={12} color={GOLD} />
-                    <Text style={s.compMetaText}>{item.competition_type}</Text>
+                    <Text style={s.compMetaText}>{tSync(({ general: 'عامة', quiz: 'أسئلة', ugc: 'محتوى المستخدمين', referral: 'دعوة الأصدقاء', purchase: 'شراء' } as Record<string, string>)[item.competition_type] || item.competition_type || '', lang)}</Text>
                   </View>
                 )}
               </View>
@@ -630,7 +630,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
             </TouchableOpacity>
           );
         }}
-        ListEmptyComponent={<Text style={s.empty}>{filter === 'ended' ? 'لا مسابقات منتهية' : 'لا مسابقات نشطة'}</Text>}
+        ListEmptyComponent={<Text style={s.empty}>{filter === 'ended' ? tSync('لا مسابقات منتهية', curLang()) : tSync('لا مسابقات نشطة', curLang())}</Text>}
       />
     </>
   );
@@ -663,7 +663,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
       await apiCall(`/api/social/posts/${replying.postId}/comments/${replying.commentId}/store-reply`, {
         method: 'POST', body: JSON.stringify({ text: replyText.trim() }),
       });
-      Alert.alert(tSync('تم', lang), 'تم إرسال ردك باسم المتجر ✨');
+      Alert.alert(tSync('تم', lang), tSync('تم إرسال ردك باسم المتجر ✨', curLang()));
       setReplying(null); setReplyText(''); load();
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
@@ -691,7 +691,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
         ].map((f: any) => (
           <TouchableOpacity key={f.k} onPress={() => setFilter(f.k)}
             style={[s.cmpBtn, filter === f.k && { backgroundColor: GOLD }]}>
-            <Text style={[s.cmpText, filter === f.k && { color: BG }]}>{f.label}</Text>
+            <Text style={[s.cmpText, filter === f.k && { color: BG }]}>{tSync(f.label || '', curLang())}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -704,7 +704,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
           return (
           <View style={s.postCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <View style={s.avatar}><Text style={{ color: BG, fontWeight: '900' }}>{(item.author_name || 'ز')[0]}</Text></View>
+              <View style={s.avatar}><Text style={{ color: BG, fontWeight: '900' }}>{(item.author_name || tSync('ز', curLang()))[0]}</Text></View>
               <View style={{ flex: 1 }}>
                 <Text style={s.postAuthor}>{item.author_name}</Text>
                 <Text style={s.postDate}>{(item.created_at || '').slice(0, 10)}</Text>
@@ -754,7 +754,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
                   {!!c.store_reply && (
                     <View style={s.replyBadge}>
                       <Ionicons name="checkmark-circle" size={11} color={GOLD} />
-                      <Text style={s.replyBadgeText}>ردّ المتجر: {c.store_reply}</Text>
+                      <Text style={s.replyBadgeText}>{tSync('ردّ المتجر:', lang)} {c.store_reply}</Text>
                     </View>
                   )}
                 </View>
@@ -770,7 +770,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
             {allComments.length > 3 && (
               <TouchableOpacity onPress={() => setExpandedComments(x => ({ ...x, [item.id]: !x[item.id] }))} style={{ paddingVertical: 6, alignItems: 'center' }}>
                 <Text style={{ color: GOLD, fontSize: 11, fontWeight: '800' }}>
-                  {expanded ? '↑ إخفاء التعليقات' : `↓ عرض جميع التعليقات (${allComments.length})`}
+                  {expanded ? '↑ إخفاء التعليقات' : tf('↓ عرض جميع التعليقات ({0})', lang, [allComments.length])}
                 </Text>
               </TouchableOpacity>
             )}
@@ -870,7 +870,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
         method: 'POST',
         body: JSON.stringify({ discount_percent: 15, product_name: product.name_ar || product.name }),
       });
-      Alert.alert(tSync('تم', lang), `أُرسل خصم 15% إلى ${uname}`);
+      Alert.alert(tSync('تم', lang), tf('أُرسل خصم 15% إلى {0}', lang, [uname]));
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
@@ -887,7 +887,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
           <View style={s.sheetHandle} />
           <View style={s.sheetHead}>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={GOLD} /></TouchableOpacity>
-            <Text style={s.sheetTitle} numberOfLines={1}>📊 {data.product.name_ar}</Text>
+            <Text style={s.sheetTitle} numberOfLines={1}>📊 {lang === 'ar' ? data.product.name_ar : (data.product.name_en || data.product.name_ar)}</Text>
             <View style={{ width: 24 }} />
           </View>
           <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }}>
@@ -910,7 +910,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
               <View style={s.empty2}><TX style={{ color: MUTED }}>لا زوار بعد</TX></View>
             ) : data.visitors.map((v: any, i: number) => (
               <View key={i} style={s.visitor}>
-                <View style={s.visitorAvatar}><Text style={{ color: BG, fontWeight: '900' }}>{(v.user_name || 'ز')[0]}</Text></View>
+                <View style={s.visitorAvatar}><Text style={{ color: BG, fontWeight: '900' }}>{(v.user_name || tSync('ز', curLang()))[0]}</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.visitorName}>{v.user_name}</Text>
                   <Text style={s.visitorMeta}>⏱ {v.duration_seconds || 0}{tSync('ث', lang)} • {v.added_to_cart ? `🛒 ${tSync('أضاف للسلة', lang)} ` : ''}{v.reached_checkout ? `✅ ${tSync('وصل الدفع', lang)}` : ''}</Text>
@@ -921,7 +921,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
 
             {(data.abandoned_cart_users || []).length > 0 && (
               <>
-                <Text style={s.sec}>💔 عملاء تركوا السلة ({data.abandoned_cart_users.length})</Text>
+                <Text style={s.sec}>{tSync('💔 عملاء تركوا السلة (', lang)}{data.abandoned_cart_users.length})</Text>
                 <TX style={s.hint}>اضغط لإرسال خصم 15% وتذكير</TX>
                 {data.abandoned_cart_users.map((a: any) => (
                   <View key={a.user_id} style={s.abandoned}>
@@ -942,7 +942,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
             {/* Buyers list */}
             {(data.buyers || []).length > 0 && (
               <>
-                <Text style={s.sec}>🛒 المشترون ({data.buyers.length})</Text>
+                <Text style={s.sec}>{tSync('🛒 المشترون (', lang)}{data.buyers.length})</Text>
                 {data.buyers.slice(0, 15).map((b: any, i: number) => (
                   <View key={i} style={s.visitor}>
                     <View style={[s.visitorAvatar, { backgroundColor: b.source === 'pos' ? '#F5C518' : '#60A5FA' }]}>
@@ -1025,7 +1025,7 @@ function CompareSheet({ items, onClose }: any) {
             {items.map((it: any) => (
               <View key={it.id} style={s.cmpCard}>
                 {!!it.image && <Image source={{ uri: mediaUrlSync(it.image) }} style={s.cmpImg} contentFit="cover" />}
-                <Text style={s.cmpName} numberOfLines={2}>{it.name_ar}</Text>
+                <Text style={s.cmpName} numberOfLines={2}>{lang === 'ar' ? it.name_ar : (it.name_en || it.name_ar)}</Text>
                 <Text style={s.cmpPrice}>{it.price} {tSync(" ر.س", lang)}</Text>
                 <View style={s.cmpRow}><TX style={s.cmpLbl}>مشاهدات</TX><Text style={s.cmpVal}>{it.views_count}</Text></View>
                 <View style={s.cmpRow}><TX style={s.cmpLbl}>أضيف للسلة</TX><Text style={s.cmpVal}>{it.cart_count}</Text></View>
@@ -1101,7 +1101,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
                   <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#0F1116', padding: 8, borderRadius: 8 }}>
                     <Ionicons name="timer" size={14} color={GOLD} />
                     <TX style={{ color: '#FFF', fontSize: 12, flex: 1, textAlign: 'right' }}>متوسط وقت الإنجاز</TX>
-                    <Text style={{ color: GOLD, fontSize: 13, fontWeight: '900' }}>{data.kpis.avg_duration_hours} ساعة</Text>
+                    <Text style={{ color: GOLD, fontSize: 13, fontWeight: '900' }}>{data.kpis.avg_duration_hours} {tSync('ساعة', lang)}</Text>
                   </View>
                 )}
               </View>
@@ -1117,8 +1117,8 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
                       <View style={{ flex: 1 }}>
                         <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800', textAlign: 'right' }}>{t.name}</Text>
                         <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
-                          <Text style={{ color: '#A1A1AA', fontSize: 10 }}>✅ {t.completed}/{t.count} حجز</Text>
-                          {t.avg_duration_hours > 0 && <Text style={{ color: '#A1A1AA', fontSize: 10 }}>⏱ {t.avg_duration_hours}س</Text>}
+                          <Text style={{ color: '#A1A1AA', fontSize: 10 }}>✅ {t.completed}/{t.count} {tSync('حجز', lang)}</Text>
+                          {t.avg_duration_hours > 0 && <Text style={{ color: '#A1A1AA', fontSize: 10 }}>⏱ {t.avg_duration_hours}{tSync('س', lang)}</Text>}
                           {t.avg_rating > 0 && <Text style={{ color: GOLD, fontSize: 10 }}>⭐ {t.avg_rating}</Text>}
                         </View>
                       </View>
@@ -1214,12 +1214,12 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: GOLD + '20', borderWidth: 1, borderColor: GOLD + '55', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 }}>
                       <Ionicons name="flame" size={12} color={GOLD} />
                       <Text style={{ color: GOLD, fontSize: 11, fontWeight: '900' }}>
-                        ذروة الساعة: {data.peak_hour === 0 ? 12 : data.peak_hour > 12 ? data.peak_hour - 12 : data.peak_hour}{data.peak_hour < 12 ? 'ص' : 'م'}
+                        {tSync('ذروة الساعة:', lang)} {data.peak_hour === 0 ? 12 : data.peak_hour > 12 ? data.peak_hour - 12 : data.peak_hour}{data.peak_hour < 12 ? tSync('ص', curLang()) : tSync('م', curLang())}
                       </Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#60A5FA20', borderWidth: 1, borderColor: '#60A5FA55', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 }}>
                       <Ionicons name="trending-up" size={12} color="#60A5FA" />
-                      <Text style={{ color: '#60A5FA', fontSize: 11, fontWeight: '900' }}>معدل المشاركة: {data.kpis.engagement_rate}%</Text>
+                      <Text style={{ color: '#60A5FA', fontSize: 11, fontWeight: '900' }}>{tSync('معدل المشاركة:', lang)} {data.kpis.engagement_rate}%</Text>
                     </View>
                   </View>
                 )}
@@ -1249,7 +1249,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
                   const label: Record<string, string> = { link: 'رابط دعوة', organic: 'تصفح عادي', push: 'إشعار', social_share: 'مشاركة اجتماعية' };
                   return (
                     <View key={row.source} style={s.barRow}>
-                      <Text style={s.barLabel}>{label[row.source] || row.source}</Text>
+                      <Text style={s.barLabel}>{tSync(label[row.source] || row.source || '', curLang())}</Text>
                       <View style={s.barTrack}><View style={[s.barFill, { width: `${pct}%` }]} /></View>
                       <Text style={s.barValue}>{row.count}</Text>
                     </View>
@@ -1352,14 +1352,14 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
               {/* Tabs */}
               <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
                 {[
-                  { k: 'comments', label: `تعليقات (${data.kpis.comment_count})` },
-                  { k: 'viewers', label: `مشاهدون (${data.viewers.length})` },
-                  { k: 'likers', label: `إعجابات (${data.likers.length})` },
-                  { k: 'sharers', label: `مشاركات` },
+                  { k: 'comments', label: tf('تعليقات ({0})', lang, [data.kpis.comment_count]) },
+                  { k: 'viewers', label: tf('مشاهدون ({0})', lang, [data.viewers.length]) },
+                  { k: 'likers', label: tf('إعجابات ({0})', lang, [data.likers.length]) },
+                  { k: 'sharers', label: 'عمليات المشاركة' },
                   ...(data.poll?.options ? [{ k: 'poll', label: 'استطلاع' }] : []),
                 ].map((t: any) => (
                   <TouchableOpacity key={t.k} onPress={() => setTab(t.k)} style={[s.cmpBtn, tab === t.k && { backgroundColor: GOLD }]}>
-                    <Text style={[s.cmpText, tab === t.k && { color: BG }]}>{t.label}</Text>
+                    <Text style={[s.cmpText, tab === t.k && { color: BG }]}>{tSync(t.label || '', curLang())}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -1379,7 +1379,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
                     {!!c.store_reply && (
                       <View style={s.replyBadge}>
                         <Ionicons name="checkmark-circle" size={11} color={GOLD} />
-                        <Text style={s.replyBadgeText}>ردّ المتجر: {c.store_reply}</Text>
+                        <Text style={s.replyBadgeText}>{tSync('ردّ المتجر:', lang)} {c.store_reply}</Text>
                       </View>
                     )}
                     {(c.replies || []).map((r: any) => (
@@ -1405,7 +1405,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
                 {tab === 'poll' && data.poll?.options?.map((opt: any, i: number) => (
                   <View key={i} style={s.sheetCard}>
                     <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right' }}>{opt.text}</Text>
-                    <Text style={{ color: '#E5E7EB', fontSize: 12, marginTop: 2, textAlign: 'right' }}>{opt.votes || 0} صوت</Text>
+                    <Text style={{ color: '#E5E7EB', fontSize: 12, marginTop: 2, textAlign: 'right' }}>{opt.votes || 0} {tSync('صوت', lang)}</Text>
                     {(opt.voter_list || []).slice(0, 12).map((vt: any, k: number) => (
                       <View key={k} style={s.listRow}>
                         <Text style={s.listRowText}>{vt.user_name} · {vt.user_city || '—'}</Text>
@@ -1418,7 +1418,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
               </ScrollView>
               {replyTo && (
                 <View style={{ borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 8, marginTop: 8 }}>
-                  <Text style={{ color: MUTED, fontSize: 11, textAlign: 'right' }}>رد على: {replyTo.commentText}</Text>
+                  <Text style={{ color: MUTED, fontSize: 11, textAlign: 'right' }}>{tSync('رد على:', lang)} {replyTo.commentText}</Text>
                   <TextInput style={s.replyInput} placeholder={tSync("ردك...", lang)} placeholderTextColor={MUTED}
                     multiline value={replyText} onChangeText={setReplyText} />
                   <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
@@ -1466,7 +1466,7 @@ function SharersView({ postId, apiCall }: any) {
     <>
       <View style={s.sheetCard}>
         <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right', marginBottom: 8 }}>
-          🔗 مشاركات ({data.total})
+          {tf('🔗 المشاركات عبر الروابط ({0})', curLang(), [data.total])}
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           {Object.entries(data.by_platform || {}).map(([platform, count]: any) => {
@@ -1474,7 +1474,7 @@ function SharersView({ postId, apiCall }: any) {
             return (
               <View key={platform} style={[s.svcMetaChip, { backgroundColor: meta.color + '20', borderColor: meta.color }]}>
                 <Ionicons name={meta.icon} size={12} color={meta.color} />
-                <Text style={[s.svcMetaText, { color: meta.color }]}>{meta.label} · {count}</Text>
+                <Text style={[s.svcMetaText, { color: meta.color }]}>{tSync(meta.label || '', lang)} · {count}</Text>
               </View>
             );
           })}
@@ -1513,11 +1513,11 @@ function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondary
       {avatar ? (
         <View style={{ position: 'relative' }}>
           <Image source={{ uri: avatar }} style={s.luxeAvatar} contentFit="cover" />
-          {medal && <View style={s.luxeAvatarMedal}><Text style={{ fontSize: 12 }}>{medal.label}</Text></View>}
+          {medal && <View style={s.luxeAvatarMedal}><Text style={{ fontSize: 12 }}>{tSync(medal.label || '', curLang())}</Text></View>}
         </View>
       ) : (
         <View style={[s.luxeMedal, medal ? { backgroundColor: medal.bg + '30', borderColor: medal.border } : { backgroundColor: BORDER, borderColor: BORDER }]}>
-          {medal ? <Text style={{ fontSize: 18 }}>{medal.label}</Text>
+          {medal ? <Text style={{ fontSize: 18 }}>{tSync(medal.label || '', curLang())}</Text>
             : <Text style={{ color: MUTED, fontSize: 13, fontWeight: '800' }}>{rank + 1}</Text>}
         </View>
       )}
@@ -1553,14 +1553,14 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
   const s = useSStyles();
   if (!entity) return null;
   const rows: { icon: string; label: string; value: string; color?: string }[] = [];
-  const K = (v: any) => v ? Number(v).toLocaleString('ar-SA') : '0';
+  const K = (v: any) => v ? Number(v).toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US') : '0';
 
   if (kind === 'driver') {
     rows.push({ icon: 'car', label: 'المركبة', value: entity.vehicle || '—' });
-    rows.push({ icon: 'radio-button-on', label: 'الحالة', value: entity.online ? '🟢 متصل الآن' : '⚪ غير متصل', color: entity.online ? '#34D399' : MUTED });
+    rows.push({ icon: 'radio-button-on', label: 'الحالة', value: entity.online ? tSync('🟢 متصل الآن', curLang()) : tSync('⚪ غير متصل', curLang()), color: entity.online ? '#34D399' : MUTED });
     rows.push({ icon: 'star', label: 'التقييم', value: `⭐ ${(entity.rating || 0).toFixed(1)}` });
     rows.push({ icon: 'briefcase', label: 'نظام الدفع', value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ${tSync(" ر.س", lang)}` : entity.salary_type === 'hourly' ? `أجر بالساعة: ${K(entity.hourly_rate)} ${tSync(" ر.س", lang)}` : 'عمولة على التوصيلات' });
-    rows.push({ icon: 'today', label: 'اليوم', value: `${K(entity.today_deliveries)} توصيلة`, color: GOLD });
+    rows.push({ icon: 'today', label: 'اليوم', value: tf('{0} توصيلة', lang, [K(entity.today_deliveries)]), color: GOLD });
     rows.push({ icon: 'calendar', label: 'هذا الأسبوع', value: `${K(entity.week_deliveries)} توصيلة · ${K(entity.week_earnings)} ${tSync(" ر.س", lang)}` });
     rows.push({ icon: 'calendar-outline', label: 'هذا الشهر', value: `${K(entity.month_deliveries)} توصيلة · ${K(entity.month_earnings)} ${tSync(" ر.س", lang)}` });
     rows.push({ icon: 'trending-up', label: 'هذه السنة', value: `${K(entity.year_deliveries)} توصيلة · ${K(entity.year_earnings)} ${tSync(" ر.س", lang)}` });
@@ -1571,12 +1571,12 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
     rows.push({ icon: 'location', label: 'المدينة', value: entity.city });
     rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
     rows.push({ icon: 'time', label: 'ساعات العمل', value: entity.open_hours || '—' });
-    rows.push({ icon: 'checkmark-circle', label: 'الحالة', value: entity.active ? '✅ نشط' : '⚠️ متوقف', color: entity.active ? '#34D399' : '#F87171' });
-    rows.push({ icon: 'people', label: 'عدد الموظفين', value: `${entity.employees_count} موظف` });
+    rows.push({ icon: 'checkmark-circle', label: 'الحالة', value: entity.active ? tSync('✅ نشط', curLang()) : tSync('⚠️ متوقف', curLang()), color: entity.active ? '#34D399' : '#F87171' });
+    rows.push({ icon: 'people', label: 'عدد الموظفين', value: tf('{0} موظف', lang, [entity.employees_count]) });
     rows.push({ icon: 'cart', label: 'مبيعات داخل الفرع', value: `${K(entity.in_store_revenue)} ${tSync(" ر.س", lang)}`, color: '#34D399' });
     rows.push({ icon: 'phone-portrait', label: 'مبيعات من التطبيق', value: `${K(entity.app_revenue)} ${tSync(" ر.س", lang)}`, color: '#60A5FA' });
     rows.push({ icon: 'calculator', label: 'إجمالي الشهر', value: `${K(entity.pos_revenue + entity.app_revenue)} ${tSync(" ر.س", lang)}`, color: GOLD });
-    rows.push({ icon: 'receipt', label: 'إجمالي الطلبات', value: `${K(entity.orders_count)} طلب` });
+    rows.push({ icon: 'receipt', label: 'إجمالي الطلبات', value: tf('{0} طلب', lang, [K(entity.orders_count)]) });
     if (entity.monthly_target > 0) {
       const pct = ((entity.pos_revenue + entity.app_revenue) / entity.monthly_target * 100).toFixed(1);
       rows.push({ icon: 'flag', label: 'الهدف الشهري', value: `${K(entity.monthly_target)} ${tSync(" ر.س", lang)} (${pct}%)` });
@@ -1585,13 +1585,13 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
   if (kind === 'marketer') {
     rows.push({ icon: 'megaphone', label: 'رمز الإحالة', value: entity.referral_code, color: GOLD });
     rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
-    rows.push({ icon: 'link', label: 'نقرات إجمالية', value: `${K(entity.clicks)} نقرة` });
+    rows.push({ icon: 'link', label: 'نقرات إجمالية', value: tf('{0} نقرة', lang, [K(entity.clicks)]) });
     rows.push({ icon: 'trending-up', label: 'التحويلات', value: `${K(entity.conversions)} ${tSync('عملية', lang)} (${((entity.conversions/(entity.clicks||1))*100).toFixed(1)}%)`, color: '#34D399' });
     rows.push({ icon: 'cash', label: 'إجمالي المبيعات', value: `${K(entity.sales_total)} ${tSync(" ر.س", lang)}`, color: GOLD });
     rows.push({ icon: 'gift', label: 'العمولات المكتسبة', value: `${K(entity.commission_earned)} ${tSync(" ر.س", lang)}`, color: '#34D399' });
     rows.push({ icon: 'hourglass', label: 'قيد التسوية', value: `${K(entity.commission_pending)} ${tSync(" ر.س", lang)}`, color: '#F59E0B' });
     rows.push({ icon: 'checkmark-done', label: 'تم دفعها', value: `${K(entity.commission_paid)} ${tSync(" ر.س", lang)}` });
-    rows.push({ icon: 'share-social', label: 'مشاركات على السوشيال', value: `${K(entity.posts_shared)} منشور` });
+    rows.push({ icon: 'share-social', label: 'مشاركات على السوشيال', value: tf('{0} منشور', lang, [K(entity.posts_shared)]) });
     rows.push({ icon: 'globe', label: 'أكثر منصة نشاطاً', value: entity.top_platform || '—' });
   }
   if (kind === 'employee') {
@@ -1599,14 +1599,14 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
     rows.push({ icon: 'business', label: 'القسم', value: entity.department || '—' });
     rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
     rows.push({ icon: 'time', label: 'الدوام', value: `${entity.shift_start} - ${entity.shift_end}` });
-    rows.push({ icon: 'hourglass', label: 'ساعات العمل يومياً', value: `${entity.shift_hours} ساعة` });
+    rows.push({ icon: 'hourglass', label: 'ساعات العمل يومياً', value: tf('{0} ساعة', lang, [entity.shift_hours]) });
     rows.push({ icon: 'calendar', label: 'تاريخ التوظيف', value: entity.hire_date || '—' });
     rows.push({ icon: 'wallet', label: 'نظام الأجر',
       value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ${tSync(" ر.س", lang)}` : `أجر بالساعة: ${K(entity.hourly_rate)} ${tSync(" ر.س", lang)}`,
       color: GOLD });
     rows.push({ icon: 'receipt', label: 'إجمالي الفواتير', value: `${K(entity.invoices_total)} ${tSync(" ر.س", lang)}`, color: '#34D399' });
-    rows.push({ icon: 'cart', label: 'الطلبات المُنجزة', value: `${K(entity.orders_handled)} طلب` });
-    rows.push({ icon: 'location', label: 'الفروع', value: `${(entity.branch_ids || []).length} فرع` });
+    rows.push({ icon: 'cart', label: 'الطلبات المُنجزة', value: tf('{0} طلب', lang, [K(entity.orders_handled)]) });
+    rows.push({ icon: 'location', label: 'الفروع', value: tf('{0} فرع', lang, [(entity.branch_ids || []).length]) });
   }
 
   return (
@@ -1633,7 +1633,7 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
                 <View style={{ width: 30, alignItems: 'center' }}>
                   <Ionicons name={r.icon as any} size={16} color={r.color || GOLD} />
                 </View>
-                <Text style={s.detailLabel}>{r.label}</Text>
+                <Text style={s.detailLabel}>{tSync(r.label || '', curLang())}</Text>
                 <Text style={[s.detailValue, r.color ? { color: r.color } : null]}>{r.value}</Text>
               </View>
             ))}
@@ -1673,10 +1673,10 @@ function OverviewSection({ apiCall }: any) {
   if (!data) return <TX style={s.empty}>لا تتوفر بيانات</TX>;
 
   const summary = [
-    { icon: 'car', color: '#60A5FA', label: 'السائقون', value: data.drivers.total, sub: `${data.drivers.online} متصل الآن` },
-    { icon: 'business', color: '#34D399', label: 'الفروع', value: data.branches.total, sub: `${data.branches.active} فرع نشط` },
+    { icon: 'car', color: '#60A5FA', label: 'السائقون', value: data.drivers.total, sub: tf('{0} متصل الآن', lang, [data.drivers.online]) },
+    { icon: 'business', color: '#34D399', label: 'الفروع', value: data.branches.total, sub: tf('{0} فرع نشط', lang, [data.branches.active]) },
     { icon: 'megaphone', color: '#F59E0B', label: 'المسوّقون', value: data.marketers.total, sub: `${Math.round(data.marketers.total_commission).toLocaleString()} ${tSync(" ر.س", lang)}` },
-    { icon: 'people', color: '#F472B6', label: 'الموظفون', value: data.employees.total, sub: `${data.employees.list.length} نشط` },
+    { icon: 'people', color: '#F472B6', label: 'الموظفون', value: data.employees.total, sub: tf('{0} نشط', lang, [data.employees.list.length]) },
   ];
 
   // Max value for progress bars per tab
@@ -1714,8 +1714,8 @@ function OverviewSection({ apiCall }: any) {
               <Ionicons name={k.icon as any} size={20} color={k.color} />
             </View>
             <Text style={s.luxeKpiValue}>{k.value}</Text>
-            <Text style={s.luxeKpiLabel}>{k.label}</Text>
-            <Text style={[s.luxeKpiSub, { color: k.color }]}>{k.sub}</Text>
+            <Text style={s.luxeKpiLabel}>{tSync(k.label || '', curLang())}</Text>
+            <Text style={[s.luxeKpiSub, { color: k.color }]}>{tSync(k.sub || '', curLang())}</Text>
           </BlurView>
         ))}
       </View>
@@ -1731,7 +1731,7 @@ function OverviewSection({ apiCall }: any) {
           <TouchableOpacity key={t.k} onPress={() => setTab(t.k as any)}
             style={[s.luxeTab, tab === t.k && s.luxeTabActive]}>
             <Ionicons name={t.icon as any} size={16} color={tab === t.k ? BG : GOLD} />
-            <Text style={[s.luxeTabText, tab === t.k && { color: BG, fontWeight: '900' }]}>{t.label}</Text>
+            <Text style={[s.luxeTabText, tab === t.k && { color: BG, fontWeight: '900' }]}>{tSync(t.label || '', curLang())}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>

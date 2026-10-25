@@ -236,3 +236,14 @@ agent_communication_end: true
         - working: "NA"
           agent: "main"
           comment: "Extended the approved Product Analytics design (v1.13.12) to services, competitions, and posts. Fixed field mismatches: service_bookings.total_fee (revenue), competition_entries (participants collection) + joined_at, social_posts.likes/shares as int totals with liked_by/shared_by as drill-down lists. Kind-aware KPI labels: services show 'الحجوزات', competitions show 'مشاركون'/'أماكن شاغرة'/'نسبة الامتلاء', posts show 'الوصول'/'المعجبون'/'تعليقات'/'نقاط التفاعل'. Backend curl tests all 200 OK with realistic numbers. Please test the 4 kinds end-to-end via Live Preview."
+  - task: "Translation quality fix pass (June 2026) — fixes from /app/memory/TRANSLATION_AUDIT_REPORT.md"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/i18n.tsx, /app/frontend/src/i18n-generated.json, /app/frontend/src/useAutoT.tsx (new tf()), /app/backend/translate.py, ~60 screens"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Static dict: 614 LLM-reviewed corrections across 19 langs, literal \\n fixed, os.completed added, curLang() helper. Generated JSON: cleaned 418 Persian/Urdu + code-fragment keys, 9.6k corrections, currency ر.س→SAR, weekday/AM-PM tokens fixed. Screens: product/category/service names now picked by language (name_ar for ar, name_en otherwise) on Home/Cart/Favorites/Search/Services; appearance.tsx and orders.tsx fully localized; ~500 raw Arabic/English texts wrapped with tSync/tf. Backend /api/translate: stricter prompt + script validation + 549 bad cache entries purged."

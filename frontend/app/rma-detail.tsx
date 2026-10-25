@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useT } from '../src/i18n';
-import { tSync } from '../src/useAutoT';
+import { useT, curLang } from '../src/i18n';
+import { tSync, TX } from '../src/useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from './_layout';
-import { TX } from '../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -86,7 +85,7 @@ export default function RMADetailScreen() {
               <Ionicons name={meta!.icon as any} size={26} color={meta!.color} />
             </View>
             <View style={{ flex: 1, marginHorizontal: 12 }}>
-              <Text style={[s.heroLabel, { color: meta!.color }]}>{meta!.label}</Text>
+              <Text style={[s.heroLabel, { color: meta!.color }]}>{tSync(meta!.label, lang)}</Text>
               <Text style={s.heroMeta}>{(r.updated_at || r.created_at || '').slice(0, 16).replace('T', ' ')}</Text>
             </View>
           </View>
@@ -99,7 +98,7 @@ export default function RMADetailScreen() {
                   <View style={[s.stepDot, i <= currentStepIdx && { backgroundColor: OK, borderColor: OK }]}>
                     <Ionicons name={st.icon as any} size={12} color={i <= currentStepIdx ? '#FFF' : MUTED} />
                   </View>
-                  <Text style={[s.stepLabel, i <= currentStepIdx && { color: OK }]}>{st.label}</Text>
+                  <Text style={[s.stepLabel, i <= currentStepIdx && { color: OK }]}>{tSync(st.label, lang)}</Text>
                   {i < STEPS.length - 1 && (
                     <View style={[s.stepLine, i < currentStepIdx && { backgroundColor: OK }]} />
                   )}
@@ -120,8 +119,8 @@ export default function RMADetailScreen() {
               )}
               <View style={{ flex: 1, marginHorizontal: 10 }}>
                 <Text style={s.pTitle}>{r.product_name}</Text>
-                <Text style={s.pSub}>{r.qty} × {r.unit_price?.toFixed(2)} ر.س</Text>
-                <Text style={s.reasonBadge}>{r.reason_label_ar}</Text>
+                <Text style={s.pSub}>{r.qty} × {r.unit_price?.toFixed(2)} {tSync('ر.س', lang)}</Text>
+                <TX style={s.reasonBadge}>{r.reason_label_ar || ''}</TX>
               </View>
             </View>
             {!!r.reason_text && (
@@ -151,10 +150,10 @@ export default function RMADetailScreen() {
             <View style={[s.card, { borderColor: OK, backgroundColor: OK + '15' }]}>
               <TX style={{ color: OK, fontSize: 13, fontWeight: '900', textAlign: 'right' }}>✅ تم الاسترداد</TX>
               <Text style={{ color: TEXT, fontSize: 12, textAlign: 'right', marginTop: 4 }}>
-                المبلغ: {r.refund.amount?.toFixed(2)} ر.س
+                {tSync('المبلغ:', lang)} {r.refund.amount?.toFixed(2)} {tSync('ر.س', lang)}
               </Text>
               <Text style={{ color: MUTED, fontSize: 11, textAlign: 'right', marginTop: 2 }}>
-                طريقة الاسترداد: {r.refund.route === 'wallet' ? 'المحفظة' : 'نفس وسيلة الدفع الأصلية'}
+                {tSync('طريقة الاسترداد:', lang)} {r.refund.route === 'wallet' ? tSync('المحفظة', curLang()) : tSync('نفس وسيلة الدفع الأصلية', curLang())}
               </Text>
             </View>
           )}
@@ -167,7 +166,7 @@ export default function RMADetailScreen() {
               </View>
               <View style={{ flex: 1, marginHorizontal: 8 }}>
                 <Text style={{ color: TEXT, fontSize: 12, textAlign: 'right' }}>
-                  {a.actor === 'customer' ? 'أنت' : 'المتجر'} · {a.action}
+                  {a.actor === 'customer' ? tSync('أنت', curLang()) : tSync('المتجر', curLang())} · {a.action}
                 </Text>
                 {!!a.note && <Text style={{ color: MUTED, fontSize: 10, textAlign: 'right' }}>{a.note}</Text>}
                 <Text style={{ color: MUTED, fontSize: 10, textAlign: 'right' }}>{(a.at || '').slice(0, 16).replace('T', ' ')}</Text>

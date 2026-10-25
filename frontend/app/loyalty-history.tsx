@@ -1,3 +1,4 @@
+import { curLang } from '../src/i18n';
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -5,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { LoyaltyWidget } from '../src/components/PaymentAndLoyalty';
-import { TX } from '../src/useAutoT';
+import { TX, tSync } from '../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -22,7 +23,7 @@ const SOURCE_ICON: any = {
 const SOURCE_LABEL: any = {
   order: 'شراء منتج', service: 'حجز صيانة', competition: 'مسابقة',
   review: 'تقييم', referral: 'دعوة صديق', birthday: 'عيد الميلاد',
-  checkout: 'استبدال', admin: 'إدارة',
+  checkout: 'استبدال نقاط', admin: 'إدارة', external_program: 'برنامج ولاء خارجي',
 };
 
 export default function LoyaltyHistoryScreen() {
@@ -45,7 +46,7 @@ export default function LoyaltyHistoryScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.back}>
-          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+          <Ionicons name={curLang() === 'ar' || curLang() === 'fa' || curLang() === 'ur' || curLang() === 'he' ? "chevron-forward" : "chevron-back"} size={22} color={TEXT} />
         </TouchableOpacity>
         <TX style={s.title}>نقاط الولاء</TX>
         <View style={{ width: 34 }} />
@@ -82,8 +83,8 @@ export default function LoyaltyHistoryScreen() {
               <Ionicons name={SOURCE_ICON[t.source] || 'sparkles'} size={16} color={t.kind === 'earn' ? '#10B981' : '#EF4444'} />
             </View>
             <View style={{ flex: 1, marginHorizontal: 10 }}>
-              <Text style={s.txDesc}>{t.description || SOURCE_LABEL[t.source] || t.source}</Text>
-              <Text style={s.txMeta}>{SOURCE_LABEL[t.source] || t.source} · {(t.created_at || '').slice(0, 10)}</Text>
+              <Text style={s.txDesc}>{tSync(t.description || SOURCE_LABEL[t.source] || t.source, curLang())}</Text>
+              <Text style={s.txMeta}>{tSync(SOURCE_LABEL[t.source] || t.source, curLang())} · {(t.created_at || '').slice(0, 10)}</Text>
             </View>
             <Text style={[s.txAmount, { color: t.kind === 'earn' ? '#10B981' : '#EF4444' }]}>
               {t.kind === 'earn' ? '+' : ''}{t.points}

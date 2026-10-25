@@ -5,8 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { useAuth } from './_layout';
-import { TX, tSync } from '../src/useAutoT';
-import { useT } from '../src/i18n';
+import { TX, tSync, tf } from '../src/useAutoT';
+import { useT, curLang } from '../src/i18n';
 
 const PURPLE = '#F5C518';
 
@@ -37,7 +37,7 @@ export default function ServiceBooking() {
   const useMyLocation = async () => {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
-      if (!perm.granted) { Alert.alert(tSync('صلاحية الموقع', lang), 'مطلوب السماح بالموقع لحساب رسم الاستلام'); return; }
+      if (!perm.granted) { Alert.alert(tSync('صلاحية الموقع', lang), tSync('مطلوب السماح بالموقع لحساب رسم الاستلام', curLang())); return; }
       const loc = await Location.getCurrentPositionAsync({});
       const c = { lat: loc.coords.latitude, lng: loc.coords.longitude };
       setCoords(c);
@@ -54,9 +54,9 @@ export default function ServiceBooking() {
   };
 
   const submit = async () => {
-    if (!deviceModel || !issue || !phone) { Alert.alert(tSync('مطلوب', lang), 'الجهاز، وصف المشكلة، ورقم الهاتف مطلوبة'); return; }
+    if (!deviceModel || !issue || !phone) { Alert.alert(tSync('مطلوب', lang), tSync('الجهاز، وصف المشكلة، ورقم الهاتف مطلوبة', curLang())); return; }
     if (deliveryType === 'home_pickup' && (!coords || !address)) {
-      Alert.alert(tSync('مطلوب', lang), 'لاستلام من المنزل، حدّد موقعك والعنوان'); return;
+      Alert.alert(tSync('مطلوب', lang), tSync('لاستلام من المنزل، حدّد موقعك والعنوان', curLang())); return;
     }
     setSaving(true);
     try {
@@ -69,8 +69,8 @@ export default function ServiceBooking() {
           dest_lat: coords?.lat, dest_lng: coords?.lng,
         }),
       });
-      Alert.alert(tSync('تم الحجز', lang), `الإجمالي: ${r.total_amount} ر.س`, [
-        { text: 'متابعة', onPress: () => router.replace('/my-services') },
+      Alert.alert(tSync('تم الحجز', lang), tf('الإجمالي: {0} ر.س', lang, [r.total_amount]), [
+        { text: tSync('متابعة', curLang()), onPress: () => router.replace('/my-services') },
       ]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
@@ -84,16 +84,16 @@ export default function ServiceBooking() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>حجز {svc.name}</Text>
+        <Text style={s.title}>{tSync('حجز', lang)} {(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))}</Text>
         <View style={{ width: 22 }} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         <View style={s.svcCard}>
-          <Text style={s.svcName}>{svc.name}</Text>
+          <Text style={s.svcName}>{(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))}</Text>
           <View style={s.svcRow}>
             <Text style={s.svcMeta}>⏱ {svc.turnaround}</Text>
-            {svc.warranty_available ? <Text style={s.svcMeta}>🛡 ضمان {svc.warranty_days} يوم</Text> : null}
+            {svc.warranty_available ? <Text style={s.svcMeta}>{tSync('🛡 ضمان', lang)} {svc.warranty_days} {tSync('يوم', lang)}</Text> : null}
           </View>
         </View>
 
@@ -131,14 +131,14 @@ export default function ServiceBooking() {
               {fetchingQuote ? <ActivityIndicator color="white" /> : <>
                 <Ionicons name="location" size={18} color="white" />
                 <Text style={s.locBtnText}>
-                  {coords ? `📍 المسافة: ${quote?.distance_km || 0} كم • رسم الاستلام: ${quote?.pickup_fee || 0} ر.س` : 'حدّد موقعي على الخريطة'}
+                  {coords ? tf('📍 المسافة: {0} كم • رسم الاستلام: {1} ر.س', lang, [quote?.distance_km || 0, quote?.pickup_fee || 0]) : tSync('حدّد موقعي على الخريطة', curLang())}
                 </Text>
               </>}
             </TouchableOpacity>
             {quote && (
               <View style={s.quoteBox}>
-                <Text style={s.quoteLine}>سعر الخدمة: <Text style={s.quoteVal}>{svc.price} ر.س</Text></Text>
-                <Text style={s.quoteLine}>رسم الاستلام (ذهاب + إياب): <Text style={s.quoteVal}>{quote.pickup_fee} ر.س</Text></Text>
+                <Text style={s.quoteLine}>{tSync('سعر الخدمة:', lang)} <Text style={s.quoteVal}>{svc.price} {tSync('ر.س', lang)}</Text></Text>
+                <Text style={s.quoteLine}>{tSync('رسم الاستلام (ذهاب + إياب):', lang)} <Text style={s.quoteVal}>{quote.pickup_fee} {tSync('ر.س', lang)}</Text></Text>
               </View>
             )}
           </>
@@ -147,24 +147,24 @@ export default function ServiceBooking() {
         <View style={s.summaryCard}>
           <View style={s.summaryRow}>
             <TX style={s.summaryLbl}>سعر الخدمة</TX>
-            <Text style={s.summaryVal}>{svc.price} ر.س</Text>
+            <Text style={s.summaryVal}>{svc.price} {tSync('ر.س', lang)}</Text>
           </View>
           {deliveryType === 'home_pickup' && quote && (
             <View style={s.summaryRow}>
               <TX style={s.summaryLbl}>رسم الاستلام</TX>
-              <Text style={s.summaryVal}>{quote.pickup_fee} ر.س</Text>
+              <Text style={s.summaryVal}>{quote.pickup_fee} {tSync('ر.س', lang)}</Text>
             </View>
           )}
           <View style={[s.summaryRow, { borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingTop: 8 }]}>
             <TX style={s.totalLbl}>الإجمالي</TX>
-            <Text style={s.totalVal}>{total} ر.س</Text>
+            <Text style={s.totalVal}>{total} {tSync('ر.س', lang)}</Text>
           </View>
         </View>
       </ScrollView>
 
       <View style={s.bottomBar}>
         <TouchableOpacity testID="confirm-book" style={s.submitBtn} onPress={submit} disabled={saving}>
-          {saving ? <ActivityIndicator color="white" /> : <Text style={s.submitText}>تأكيد الحجز — {total} ر.س</Text>}
+          {saving ? <ActivityIndicator color="white" /> : <Text style={s.submitText}>{tSync('تأكيد الحجز —', lang)} {total} {tSync('ر.س', lang)}</Text>}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

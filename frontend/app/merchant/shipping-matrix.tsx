@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useT } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { tSync, TX } from '../../src/useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Switch, Alert, ActivityIndicator, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
-import { TX } from '../../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -71,7 +70,7 @@ export default function ShippingMatrixScreen() {
       setCities(m.cities || []);
       setBranches(b.branches || b || []);
     } catch (e: any) {
-      Alert.alert(tSync('خطأ', lang), e?.message || 'تعذّر تحميل البيانات');
+      Alert.alert(tSync('خطأ', lang), e?.message || tSync('تعذّر تحميل البيانات', curLang()));
     } finally {
       setLoading(false);
     }
@@ -112,7 +111,7 @@ export default function ShippingMatrixScreen() {
       setEditing(null);
       await load();
     } catch (e: any) {
-      Alert.alert(tSync('خطأ', lang), e?.message || 'تعذّر الحفظ');
+      Alert.alert(tSync('خطأ', lang), e?.message || tSync('تعذّر الحفظ', curLang()));
     } finally {
       setSaving(false);
     }
@@ -120,10 +119,10 @@ export default function ShippingMatrixScreen() {
 
   const removeRule = async (r: Rule) => {
     if (!r.id) return;
-    Alert.alert(tSync('حذف القاعدة', lang), 'هل أنت متأكد من حذف هذه القاعدة؟', [
-      { text: 'إلغاء', style: 'cancel' },
+    Alert.alert(tSync('حذف القاعدة', lang), tSync('هل أنت متأكد من حذف هذه القاعدة؟', curLang()), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
       {
-        text: 'حذف', style: 'destructive',
+        text: tSync('حذف', curLang()), style: 'destructive',
         onPress: async () => {
           try {
             await apiCall(`/api/merchant/shipping/matrix/${r.id}`, { method: 'DELETE' });
@@ -139,7 +138,7 @@ export default function ShippingMatrixScreen() {
       <StatusBar barStyle="light-content" />
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.back}>
-          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+          <Ionicons name={curLang() === 'ar' || curLang() === 'fa' || curLang() === 'ur' || curLang() === 'he' ? "chevron-forward" : "chevron-back"} size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <TX style={s.title}>مصفوفة الشحن الذكية</TX>
@@ -169,8 +168,8 @@ export default function ShippingMatrixScreen() {
 
           {rules.map((r) => {
             const carrier = CARRIERS[r.carrier_code] || { name: r.carrier_code, logo: '📦', color: MUTED };
-            const cityName = r.city_code ? cities.find((c) => c.code === r.city_code)?.name_ar : 'كل المدن';
-            const branchName = r.branch_id ? branches.find((b: any) => (b.id || b._id) === r.branch_id)?.name : 'كل الفروع';
+            const cityName = r.city_code ? cities.find((c) => c.code === r.city_code)?.name_ar : tSync('كل المدن', lang);
+            const branchName = r.branch_id ? branches.find((b: any) => (b.id || b._id) === r.branch_id)?.name : tSync('كل الفروع', lang);
             return (
               <View key={r.id} style={s.card}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -179,12 +178,12 @@ export default function ShippingMatrixScreen() {
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={s.cardTitle}>{carrier.name}</Text>
+                      <Text style={s.cardTitle}>{tSync(carrier.name, lang)}</Text>
                       {!r.enabled && <View style={s.pillOff}><TX style={s.pillOffText}>موقوفة</TX></View>}
                     </View>
                     <Text style={s.cardSub}>{cityName} · {branchName}</Text>
                     <Text style={s.cardMeta}>
-                      {r.base_price}ر.س + {r.per_kg_price}ر.س/كجم · {r.min_days}-{r.max_days} أيام · أولوية {r.priority}
+                      {r.base_price}{tSync('ر.س +', lang)} {r.per_kg_price}{tSync('ر.س/كجم ·', lang)} {r.min_days}-{r.max_days} {tSync('أيام · أولوية', lang)} {r.priority}
                     </Text>
                   </View>
                   <TouchableOpacity onPress={() => setEditing(r)} style={s.iconBtn}>
@@ -207,7 +206,7 @@ export default function ShippingMatrixScreen() {
             <ScrollView contentContainerStyle={{ padding: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
                 <Text style={{ color: GOLD, fontSize: 16, fontWeight: '900', flex: 1, textAlign: 'right' }}>
-                  {editing?.id ? 'تعديل قاعدة شحن' : 'قاعدة شحن جديدة'}
+                  {editing?.id ? tSync('تعديل قاعدة شحن', curLang()) : tSync('قاعدة شحن جديدة', curLang())}
                 </Text>
                 <TouchableOpacity onPress={() => setEditing(null)}><Ionicons name="close" size={22} color={TEXT} /></TouchableOpacity>
               </View>
@@ -224,7 +223,7 @@ export default function ShippingMatrixScreen() {
                           onPress={() => setEditing({ ...editing, carrier_code: code })}
                           style={[s.chip, active && { borderColor: c.color, backgroundColor: c.color + '20' }]}>
                           <Text style={{ fontSize: 14 }}>{c.logo}</Text>
-                          <Text style={[s.chipText, active && { color: c.color }]}>{c.name}</Text>
+                          <Text style={[s.chipText, active && { color: c.color }]}>{tSync(c.name, lang)}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -333,7 +332,7 @@ export default function ShippingMatrixScreen() {
 
                   <TouchableOpacity onPress={saveRule} style={s.saveBtn} disabled={saving}>
                     {saving ? <ActivityIndicator color={BG} /> : (
-                      <Text style={s.saveText}>{editing.id ? 'حفظ التعديل' : 'إنشاء القاعدة'}</Text>
+                      <Text style={s.saveText}>{editing.id ? tSync('حفظ التعديل', curLang()) : tSync('إنشاء القاعدة', curLang())}</Text>
                     )}
                   </TouchableOpacity>
                 </>

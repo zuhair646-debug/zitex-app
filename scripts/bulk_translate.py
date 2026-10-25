@@ -36,7 +36,7 @@ PATTERNS = [
 def walk_source(base: str):
     for root, _dirs, files in os.walk(base):
         for f in files:
-            if f.endswith((".tsx", ".ts", ".jsx", ".js")):
+            if f.endswith((".tsx", ".ts", ".jsx", ".js")) and f not in ("i18n.tsx",):
                 yield os.path.join(root, f)
 
 
@@ -55,7 +55,8 @@ def extract_strings() -> list[str]:
         for pat in PATTERNS:
             for m in pat.findall(content):
                 s = m.strip()
-                if len(s) >= 2 and has_arabic(s) and not s.startswith("{"):
+                if (len(s) >= 2 and has_arabic(s) and not s.startswith("{")
+                        and not re.search(r"\n|\$\{|=>|\{ text|tSync\(|value=|label=", s)):
                     strings.add(s)
     return sorted(strings, key=lambda x: (len(x), x))
 

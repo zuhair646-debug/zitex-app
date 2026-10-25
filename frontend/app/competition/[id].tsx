@@ -1,11 +1,15 @@
+import { useT, curLang } from '../../src/i18n';
+import { tSync, tf } from '../../src/useAutoT';
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import TranslatableName from '../../src/components/TranslatableName';
 import { useAuth } from '../_layout';
 
 export default function CompetitionDetailScreen() {
+  useT(); // re-render when language or on-demand translations change
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -40,9 +44,9 @@ export default function CompetitionDetailScreen() {
       try {
         const result = await apiCall(`/api/competitions/${id}/answer`, { method: 'POST', body: JSON.stringify({ answers }) });
         setShowQuiz(false);
-        if (result.passed) Alert.alert('Congratulations!', `You scored ${result.score.toFixed(0)}% and joined the draw!`);
-        else Alert.alert('Sorry!', `You scored ${result.score.toFixed(0)}%. You need 70% to qualify. Try again!`);
-      } catch (e: any) { Alert.alert('Error', e.message); }
+        if (result.passed) Alert.alert(tSync('مبروك!', curLang()), tf('حصلت على {0}% وانضممت إلى السحب!', curLang(), [result.score.toFixed(0)]));
+        else Alert.alert(tSync('للأسف!', curLang()), tf('حصلت على {0}%. تحتاج 70% للتأهل. حاول مرة أخرى!', curLang(), [result.score.toFixed(0)]));
+      } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
     }
   };
 
@@ -52,11 +56,11 @@ export default function CompetitionDetailScreen() {
       const result = await apiCall(`/api/competitions/${id}/draw`, { method: 'POST' });
       setDrawResult(result.winners || []);
       setShowDraw(true);
-    } catch (e: any) { Alert.alert('Error', e.message); } finally { setDrawing(false); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); } finally { setDrawing(false); }
   };
 
   if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
-  if (!comp) return <View style={s.loadWrap}><Text>Not found</Text></View>;
+  if (!comp) return <View style={s.loadWrap}><Text>{tSync('غير موجود', curLang())}</Text></View>;
 
   const isOpen = comp.status === 'open';
   const isEnded = comp.status === 'ended';
@@ -78,38 +82,38 @@ export default function CompetitionDetailScreen() {
         <View style={s.content}>
           <View style={[s.statusBadge, { backgroundColor: isOpen ? '#DCFCE7' : isEnded ? '#F3F4F6' : '#DBEAFE' }]}>
             <Text style={[s.statusText, { color: isOpen ? '#10B981' : isEnded ? '#6B7280' : '#3B82F6' }]}>
-              {isOpen ? 'Still open' : isEnded ? 'Ended' : 'Coming soon'}
+              {tSync(isOpen ? 'مفتوحة' : isEnded ? 'منتهية' : 'قريباً', curLang())}
             </Text>
           </View>
 
-          <Text style={s.compTitle}>{comp.title}</Text>
+          <TranslatableName text={comp.title} style={s.compTitle} />
           <Text style={s.compDesc}>{comp.description}</Text>
 
           <View style={s.infoGrid}>
-            <View style={s.infoItem}><Text style={s.infoLabel}>Start date</Text><Text style={s.infoVal}>{comp.start_date}</Text></View>
-            <View style={s.infoItem}><Text style={s.infoLabel}>Draw date</Text><Text style={s.infoVal}>{comp.draw_date}</Text></View>
-            <View style={s.infoItem}><Text style={s.infoLabel}>Allowed to join</Text><Text style={s.infoVal}>{comp.max_participants} user</Text></View>
-            <View style={s.infoItem}><Text style={s.infoLabel}>Already Joined</Text><Text style={s.infoVal}>{comp.joined_count}</Text></View>
+            <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('تاريخ البداية', curLang())}</Text><Text style={s.infoVal}>{comp.start_date}</Text></View>
+            <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('تاريخ السحب', curLang())}</Text><Text style={s.infoVal}>{comp.draw_date}</Text></View>
+            <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('مسموح بالانضمام', curLang())}</Text><Text style={s.infoVal}>{tf('{0} مشارك', curLang(), [comp.max_participants])}</Text></View>
+            <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('انضممت مسبقاً', curLang())}</Text><Text style={s.infoVal}>{comp.joined_count}</Text></View>
           </View>
 
           <View style={s.prizeCard}>
             <Ionicons name="trophy" size={24} color="#F59E0B" />
-            <View style={s.prizeInfo}><Text style={s.prizeLabel}>Prize</Text><Text style={s.prizeText}>{comp.prize}</Text></View>
+            <View style={s.prizeInfo}><Text style={s.prizeLabel}>{tSync('الجائزة', curLang())}</Text><Text style={s.prizeText}>{comp.prize}</Text></View>
           </View>
 
           {comp.questions?.length > 0 && isOpen && (
             <View style={s.entrySection}>
-              <Text style={s.sectionTitle}>Entry Condition</Text>
-              <Text style={s.entryDesc}>Answer 70% of the questions to join the draw</Text>
+              <Text style={s.sectionTitle}>{tSync('شرط الدخول', curLang())}</Text>
+              <Text style={s.entryDesc}>{tSync('أجب على 70% من الأسئلة للانضمام إلى السحب', curLang())}</Text>
               <TouchableOpacity testID="start-quiz-btn" style={s.quizBtn} onPress={() => { setShowQuiz(true); setCurrentQ(0); setAnswers([]); }}>
                 <Ionicons name="help-circle" size={20} color="#FFF" />
-                <Text style={s.quizBtnText}>Answer Questions ({comp.questions.length} Q)</Text>
+                <Text style={s.quizBtnText}>{tf('أجب على الأسئلة ({0} سؤال)', curLang(), [comp.questions.length])}</Text>
               </TouchableOpacity>
             </View>
           )}
 
           <View style={s.participantsSection}>
-            <Text style={s.sectionTitle}>Participants ({participants.length})</Text>
+            <Text style={s.sectionTitle}>{tf('المشاركون ({0})', curLang(), [participants.length])}</Text>
             {participants.slice(0, 10).map((p, i) => (
               <View key={i} style={s.participantRow}>
                 <View style={s.participantAvatar}><Text style={s.avatarText}>{p.user_name?.[0] || '?'}</Text></View>
@@ -118,7 +122,7 @@ export default function CompetitionDetailScreen() {
                   <Text style={s.participantPhone}>{p.user_phone}</Text>
                 </View>
                 {comp.winners?.some((w: any) => w.user_name === p.user_name) && (
-                  <View style={s.winnerBadge}><Ionicons name="trophy" size={14} color="#F59E0B" /><Text style={s.winnerText}>Winner!</Text></View>
+                  <View style={s.winnerBadge}><Ionicons name="trophy" size={14} color="#F59E0B" /><Text style={s.winnerText}>{tSync('الفائز!', curLang())}</Text></View>
                 )}
               </View>
             ))}
@@ -126,7 +130,7 @@ export default function CompetitionDetailScreen() {
 
           {isEnded && comp.winners?.length > 0 && (
             <View style={s.winnersSection}>
-              <Text style={s.sectionTitle}>Winners</Text>
+              <Text style={s.sectionTitle}>{tSync('الفائزون', curLang())}</Text>
               {comp.winners.map((w: any, i: number) => (
                 <View key={i} style={s.winnerRow}>
                   <View style={s.winnerRank}><Text style={s.rankText}>#{i + 1}</Text></View>
@@ -134,7 +138,7 @@ export default function CompetitionDetailScreen() {
                     <Text style={s.winnerName}>{w.user_name}</Text>
                     <Text style={s.winnerPhone}>{w.user_phone}</Text>
                   </View>
-                  <TouchableOpacity style={s.giftBtn}><Text style={s.giftBtnText}>Get the gift</Text></TouchableOpacity>
+                  <TouchableOpacity style={s.giftBtn}><Text style={s.giftBtnText}>{tSync('احصل على الهدية', curLang())}</Text></TouchableOpacity>
                 </View>
               ))}
             </View>
@@ -143,7 +147,7 @@ export default function CompetitionDetailScreen() {
           {isOpen && (
             <TouchableOpacity testID="draw-btn" style={s.drawBtn} onPress={performDraw} disabled={drawing}>
               {drawing ? <ActivityIndicator color="#FFF" /> : (
-                <><Ionicons name="dice" size={22} color="#FFF" /><Text style={s.drawBtnText}>Start Draw</Text></>
+                <><Ionicons name="dice" size={22} color="#FFF" /><Text style={s.drawBtnText}>{tSync('ابدأ السحب', curLang())}</Text></>
               )}
             </TouchableOpacity>
           )}
@@ -156,10 +160,10 @@ export default function CompetitionDetailScreen() {
         <View style={s.modalOverlay}>
           <View style={s.quizModal}>
             <View style={s.quizHeader}>
-              <Text style={s.quizTitle}>Answer Questions</Text>
+              <Text style={s.quizTitle}>{tSync('أجب على الأسئلة', curLang())}</Text>
               <TouchableOpacity onPress={() => setShowQuiz(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
             </View>
-            <Text style={s.quizInfo}>Answer 70% of the questions to join</Text>
+            <Text style={s.quizInfo}>{tSync('أجب على 70% من الأسئلة للانضمام', curLang())}</Text>
             <Text style={s.qNumber}>{currentQ + 1}/{comp.questions?.length || 0}</Text>
             <Text style={s.question}>{comp.questions?.[currentQ]?.q}</Text>
             {comp.questions?.[currentQ]?.options?.map((opt: string, i: number) => (
@@ -171,7 +175,7 @@ export default function CompetitionDetailScreen() {
             ))}
             <TouchableOpacity testID="next-q-btn" style={[s.nextBtn, answers[currentQ] === undefined && s.nextBtnDisabled]}
               onPress={nextQuestion} disabled={answers[currentQ] === undefined}>
-              <Text style={s.nextBtnText}>{currentQ < (comp.questions?.length || 0) - 1 ? 'Next' : 'Submit'}</Text>
+              <Text style={s.nextBtnText}>{tSync(currentQ < (comp.questions?.length || 0) - 1 ? 'التالي' : 'إرسال الإجابات', curLang())}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -182,7 +186,7 @@ export default function CompetitionDetailScreen() {
         <View style={s.modalOverlay}>
           <View style={s.drawModal}>
             <Ionicons name="trophy" size={48} color="#F59E0B" />
-            <Text style={s.drawTitle}>Winners Announced!</Text>
+            <Text style={s.drawTitle}>{tSync('تم الإعلان عن الفائزين!', curLang())}</Text>
             {drawResult.map((w, i) => (
               <View key={i} style={s.drawWinner}>
                 <Text style={s.drawRank}>#{i + 1}</Text>
@@ -190,7 +194,7 @@ export default function CompetitionDetailScreen() {
               </View>
             ))}
             <TouchableOpacity style={s.closeDrawBtn} onPress={() => setShowDraw(false)}>
-              <Text style={s.closeDrawText}>Close</Text>
+              <Text style={s.closeDrawText}>{tSync('إغلاق', curLang())}</Text>
             </TouchableOpacity>
           </View>
         </View>

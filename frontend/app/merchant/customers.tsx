@@ -26,7 +26,7 @@ export default function MerchantCustomers() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>العملاء ({customers.length})</Text>
+        <Text style={s.title}>{tSync('العملاء (', lang)}{customers.length})</Text>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
@@ -44,7 +44,7 @@ export default function MerchantCustomers() {
               </View>
               <View style={s.statsBox}>
                 <Text style={s.statsVal}>{c.orders_count}</Text>
-                <Text style={s.statsLbl}>orders</Text>
+                <Text style={s.statsLbl}>{tSync('الطلبات', lang)}</Text>
               </View>
             </View>
           ))}

@@ -8,8 +8,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0A0A0A';
@@ -63,7 +63,7 @@ export default function MerchantServiceBookings() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}><Ionicons name="arrow-back" size={22} color={GOLD} /></TouchableOpacity>
-        <Text style={s.title}>حجوزات الخدمات ({bookings.length})</Text>
+        <Text style={s.title}>{tSync('حجوزات الخدمات (', lang)}{bookings.length})</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -78,14 +78,14 @@ export default function MerchantServiceBookings() {
           <TouchableOpacity key={b.id} style={s.card} onPress={() => openBooking(b)}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={s.svcName}>{b.service_name}</Text>
-              <View style={s.statusPill}><Text style={s.statusText}>{STATUS_FLOW.find(x => x.id === b.status)?.label || b.status}</Text></View>
+              <View style={s.statusPill}><Text style={s.statusText}>{tSync(STATUS_FLOW.find(x => x.id === b.status)?.label || b.status, curLang())}</Text></View>
             </View>
             <Text style={s.customer}>👤 {b.customer_name || '—'} • {b.customer_phone || b.phone}</Text>
             <Text style={s.device}>📱 {b.device_model}</Text>
             <Text style={s.issue} numberOfLines={2}>{b.issue_desc}</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-              <Text style={s.total}>الإجمالي: {b.total_amount || b.service_price || 0} ر.س</Text>
-              {b.delivery_type === 'home_pickup' && <Text style={s.pickup}>🚗 استلام منزلي ({b.distance_km || 0} كم)</Text>}
+              <Text style={s.total}>{tSync('الإجمالي:', lang)} {b.total_amount || b.service_price || 0} {tSync('ر.س', lang)}</Text>
+              {b.delivery_type === 'home_pickup' && <Text style={s.pickup}>{tSync('🚗 استلام منزلي (', lang)}{b.distance_km || 0} {tSync('كم)', lang)}</Text>}
             </View>
           </TouchableOpacity>
         ))}
@@ -105,6 +105,7 @@ export default function MerchantServiceBookings() {
 }
 
 function BookingDetailModal({ booking, onClose, onStatus, apiCall, onRefresh }: any) {
+  const { lang } = useT();
   const [composerOpen, setComposerOpen] = useState(false);
   return (
     <Modal visible transparent={false} animationType="slide" onRequestClose={onClose}>
@@ -122,13 +123,13 @@ function BookingDetailModal({ booking, onClose, onStatus, apiCall, onRefresh }: 
             <Row label={tSync('المشكلة', lang)} value={booking.issue_desc} />
             {booking.delivery_type === 'home_pickup' && (
               <>
-                <Row label={tSync('نوع الاستلام', lang)} value="استلام من المنزل" />
-                <Row label={tSync('العنوان', lang)} value={booking.address} />
-                <Row label={tSync('المسافة', lang)} value={`${booking.distance_km || 0} كم`} />
-                <Row label={tSync('رسم الاستلام', lang)} value={`${booking.pickup_fee || 0} ر.س`} />
+                <Row label={tSync('نوع الاستلام', lang)} value={tSync('استلام من المنزل', curLang())} />
+                <Row label={tSync('عنوان العميل', lang)} value={booking.address} />
+                <Row label={tSync('المسافة', lang)} value={tf('{0} كم', lang, [booking.distance_km || 0])} />
+                <Row label={tSync('رسم الاستلام', lang)} value={tf('{0} ر.س', lang, [booking.pickup_fee || 0])} />
               </>
             )}
-            <Row label={tSync('الإجمالي', lang)} value={`${booking.total_amount || 0} ر.س`} bold />
+            <Row label={tSync('الإجمالي', lang)} value={tf('{0} ر.س', lang, [booking.total_amount || 0])} bold />
           </View>
 
           <TX style={s.sec}>الحالة الحالية</TX>
@@ -136,7 +137,7 @@ function BookingDetailModal({ booking, onClose, onStatus, apiCall, onRefresh }: 
             {STATUS_FLOW.map(st => (
               <TouchableOpacity key={st.id} onPress={() => onStatus(booking.id, st.id)}
                 style={[s.statBtn, booking.status === st.id && s.statBtnActive]}>
-                <Text style={[s.statBtnText, booking.status === st.id && s.statBtnTextActive]}>{st.label}</Text>
+                <Text style={[s.statBtnText, booking.status === st.id && s.statBtnTextActive]}>{tSync(st.label, curLang())}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -183,13 +184,13 @@ function UpdateCard({ update, apiCall, onChange }: any) {
       await apiCall(`/api/services/updates/${update.id}`, { method: 'PUT',
         body: JSON.stringify({ [key]: v }) });
       onChange && onChange();
-    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
   };
-  const del = () => Alert.alert(tSync('حذف', lang), 'حذف هذا التحديث؟', [
-    { text: 'إلغاء' },
-    { text: 'حذف', style: 'destructive', onPress: async () => {
+  const del = () => Alert.alert(tSync('حذف', curLang()), tSync('حذف هذا التحديث؟', curLang()), [
+    { text: tSync('إلغاء', curLang()) },
+    { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => {
       try { await apiCall(`/api/services/updates/${update.id}`, { method: 'DELETE' }); onChange && onChange(); }
-      catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
+      catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
     }},
   ]);
   return (
@@ -213,7 +214,7 @@ function UpdateCard({ update, apiCall, onChange }: any) {
       {update.avg_rating > 0 && (
         <View style={s.rateInfo}>
           <Ionicons name="star" size={14} color={GOLD} />
-          <Text style={s.rateText}>{update.avg_rating} ({update.review_count} تقييم)</Text>
+          <Text style={s.rateText}>{update.avg_rating} ({update.review_count} {tSync('تقييم)', curLang())}</Text>
         </View>
       )}
       <TouchableOpacity style={s.delBtn} onPress={del}><Ionicons name="trash-outline" size={18} color="#EF4444" /></TouchableOpacity>
@@ -233,7 +234,7 @@ function VideoComposer({ bookingId, apiCall, onDone, onCancel }: any) {
 
   const pickVideo = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'مطلوب السماح للمعرض'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), tSync('مطلوب السماح للمعرض', curLang())); return; }
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['videos'] as any, quality: 0.7, videoMaxDuration: 60,
     });
@@ -248,7 +249,7 @@ function VideoComposer({ bookingId, apiCall, onDone, onCancel }: any) {
   };
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'مطلوب السماح للمعرض'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), tSync('مطلوب السماح للمعرض', curLang())); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, quality: 0.85 });
     if (res.canceled) return;
     setUploading(true);
@@ -261,7 +262,7 @@ function VideoComposer({ bookingId, apiCall, onDone, onCancel }: any) {
   };
 
   const submit = async () => {
-    if (!videoUrl && !imageUrl) { Alert.alert(tSync('مطلوب', lang), 'ارفع فيديو أو صورة'); return; }
+    if (!videoUrl && !imageUrl) { Alert.alert(tSync('مطلوب', lang), tSync('ارفع فيديو أو صورة', curLang())); return; }
     setSaving(true);
     try {
       await apiCall('/api/services/updates', { method: 'POST',

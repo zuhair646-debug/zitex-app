@@ -596,3 +596,15 @@ Instead of manually rewriting the 50+ files that still use `<TX>`, `useAutoT`, o
 - Read-only audit completed; report at /app/memory/TRANSLATION_AUDIT_REPORT.md. No fixes applied — awaiting user approval.
 - iOS still blocked: user has NOT signed Apple agreement yet.
 - Next (after approval): fix translation errors listed in report.
+
+## Translation Fix Pass (June 2026) — DONE (awaiting user verification)
+- Static dict (i18n.tsx): 614 LLM-reviewed corrections across 19 langs; literal "\n" fixed; new keys os.completed, gb.*, points.*, comp.daysLeft; curLang() helper.
+- Generated dict (i18n-generated.json): removed 418 Persian/Urdu + 34 code-fragment junk keys; ~10k corrections; ر.س→SAR; weekday/AM-PM fixed; context hints for ambiguous words (Font, Draw, Orders, Roles, Experiences...). ~1.9k entries.
+- Code: ~600 raw Arabic/English UI strings wrapped (tSync / new tf() with placeholders / TX); product/category/service/shipping/payment names follow language; RTL/LTR alignment in returns/checkout.
+- Runtime: useAutoT rewritten (shared in-flight promise, safe cache merge) + translationEvents bus re-renders screens when on-demand translations arrive.
+- Backend /api/translate: stricter prompt, script validation (rejects mixed/English-only output), bad cache entries purged (~800).
+- Scripts: /app/scripts/i18n_quality_fix.py (static|generated|new), i18n_fill_remaining.py, i18n_hint_fix.py, i18n_add_keys.py, wrap_*.py, fix_lang_scope.py, audit_i18n.js.
+- Known remaining: DB content (competition titles, branch names, social posts, server notification texts) translates on tap only; possible checkout delivery-fee difference (location-based, not language) to verify.
+- Iterations 28–36 of testing completed for the translation pass; last round: all requested items pass, final 7 small strings fixed afterwards.
+- Also fixed (found during testing): social comment add/delete 500 when post.comments is an array (server.py).
+- Open non-translation findings (NOT fixed, need user approval): POST /api/competitions/{id}/draw has no auth/role check; checkout points-redeem picker hidden under bottom bar; CORS allows all origins.

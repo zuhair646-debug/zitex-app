@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useT } from '../../src/i18n';
+import { useT, curLang } from '../../src/i18n';
 import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import TranslatableName from '../../src/components/TranslatableName';
 import { useAuth } from '../_layout';
 
 const APPROVAL_COLORS: any = { pending: '#F59E0B', approved: '#10B981', auto_approved: '#8833FF', rejected: '#EF4444' };
@@ -23,7 +24,7 @@ export default function MerchantCompetitions() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const del = (id: string) => Alert.alert(tSync('حذف المسابقة؟', lang), 'لا يمكن التراجع', [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/competitions/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
+  const del = (id: string) => Alert.alert(tSync('حذف المسابقة؟', lang), tSync('لا يمكن التراجع', curLang()), [{ text: tSync('إلغاء', curLang()), style: 'cancel' }, { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/competitions/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
 
   return (
     <SafeAreaView style={s.safe}>
@@ -34,12 +35,12 @@ export default function MerchantCompetitions() {
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
-          {comps.length === 0 ? <Text style={s.empty}>No competitions yet</Text> : comps.map(c => {
+          {comps.length === 0 ? <Text style={s.empty}>{tSync('ما في مسابقات لحد الآن', lang)}</Text> : comps.map(c => {
             const ap = c.approval_status || (c.requires_approval ? 'pending' : 'auto_approved');
             return (
               <View key={c.id} style={s.card}>
                 <View style={s.row}>
-                  <Text style={s.compTitle} numberOfLines={1}>{c.title}</Text>
+                  <TranslatableName text={c.title} style={s.compTitle} numberOfLines={1} />
                   <TouchableOpacity onPress={() => del(c.id)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
                 </View>
                 <Text style={s.prize}>{c.prize}</Text>

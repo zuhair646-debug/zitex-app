@@ -1,12 +1,15 @@
+import { tSync } from '../src/useAutoT';
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import { useT } from '../src/i18n';
 import TranslatableName from '../src/components/TranslatableName';
 
 export default function FavoritesScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [favs, setFavs] = useState<any[]>([]);
@@ -26,11 +29,11 @@ export default function FavoritesScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity testID="fav-back" style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Favorites</Text>
-        <Text style={s.count}>{favs.length} items</Text>
+        <Text style={s.title}>{tSync('المفضلة', lang)}</Text>
+        <Text style={s.count}>{favs.length} {tSync('منتج', lang)}</Text>
       </View>
       {favs.length === 0 ? (
-        <View style={s.empty}><Ionicons name="heart-outline" size={48} color="#A1A1AA" /><Text style={s.emptyTitle}>No favorites yet</Text><Text style={s.emptyDesc}>Products you like will appear here</Text></View>
+        <View style={s.empty}><Ionicons name="heart-outline" size={48} color="#A1A1AA" /><Text style={s.emptyTitle}>{tSync('ما أضفت أي مفضلة لحد الآن', lang)}</Text><Text style={s.emptyDesc}>{tSync('المنتجات اللي عجبتك تظهر هنا', lang)}</Text></View>
       ) : (
         <ScrollView contentContainerStyle={s.list}>
           {favs.map(p => (
@@ -38,13 +41,13 @@ export default function FavoritesScreen() {
               <Image source={{ uri: p.images?.[0] }} style={s.img} />
               <View style={s.info}>
                 <TranslatableName
-                  text={p.name_en}
-                  sourceLang="en"
+                  text={lang === 'ar' ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar)}
+                  sourceLang={lang === 'ar' ? 'ar' : 'en'}
                   style={s.name}
                   numberOfLines={1}
                   iconSize={11}
                 />
-                <Text style={s.price}>{p.discount_price || p.price} SAR</Text>
+                <Text style={s.price}>{p.discount_price || p.price} {tSync('ر.س', lang)}</Text>
               </View>
               <TouchableOpacity testID={`unfav-${p.id}`} onPress={() => removeFav(p.id)}><Ionicons name="heart" size={22} color="#EF4444" /></TouchableOpacity>
             </TouchableOpacity>

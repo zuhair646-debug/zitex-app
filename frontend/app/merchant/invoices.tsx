@@ -7,8 +7,8 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, EmptyState, SkeletonBox, Badge, StatCard, PrimaryButton } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 export default function Invoices() {
   const { lang } = useT();
@@ -31,10 +31,10 @@ export default function Invoices() {
   const totalRevenue = invs.reduce((a, i) => a + (i.total || 0), 0);
 
   const sendWhatsapp = (inv: any) => {
-    if (!inv.customer_phone) { Alert.alert(tSync('لا يوجد رقم', lang), 'العميل بدون رقم جوال'); return; }
+    if (!inv.customer_phone) { Alert.alert(tSync('لا يوجد رقم', lang), tSync('العميل بدون رقم جوال', curLang())); return; }
     const phone = String(inv.customer_phone).replace(/[^0-9]/g, '');
-    const msg = `مرحباً ${inv.customer_name || ''}%0A%0Aفاتورتك من Zenrex Store:%0A${inv.invoice_number}%0Aالمجموع: ${inv.total?.toFixed(2)} ر.س%0A%0Aشكراً لك 🌟`;
-    Linking.openURL(`https://wa.me/${phone}?text=${msg}`).catch(() => Alert.alert(tSync('خطأ', lang), 'تعذّر فتح واتساب'));
+    const msg = tf('مرحباً {0}%0A%0Aفاتورتك من Zenrex Store:%0A{1}%0Aالمجموع: {2} ر.س%0A%0Aشكراً لك 🌟', lang, [inv.customer_name || '', inv.invoice_number, inv.total?.toFixed(2)]);
+    Linking.openURL(`https://wa.me/${phone}?text=${msg}`).catch(() => Alert.alert(tSync('خطأ', lang), tSync('تعذّر فتح واتساب', curLang())));
   };
 
   const method = (m: string) => ({ cash: '💵 كاش', card: '💳 بطاقة', stc_pay: '📱 STC Pay', bank_transfer: '🏦 تحويل' } as any)[m] || m;
@@ -43,7 +43,7 @@ export default function Invoices() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title={tSync("الفواتير", lang)} onBack={() => router.back()} rightIcon="refresh" onRight={load} subtitle={`${invs.length} فاتورة`} />
+        <ScreenHeader title={tSync("الفواتير", lang)} onBack={() => router.back()} rightIcon="refresh" onRight={load} subtitle={tf('{0} فاتورة', lang, [invs.length])} />
 
         <View style={s.row}>
           <StatCard icon="today" label={tSync("اليوم", lang)} value={`${todayInvs.length}`} tone="gold" />
@@ -61,7 +61,7 @@ export default function Invoices() {
         {loading ? (
           <View style={{ padding: spacing.lg, gap: spacing.md }}><SkeletonBox height={80} /><SkeletonBox height={80} /></View>
         ) : invs.length === 0 ? (
-          <EmptyState icon="receipt-outline" title={tSync("لا توجد فواتير", lang)} description="أنشئ أول فاتورة من شاشة POS" actionLabel="فتح POS" onAction={() => router.push('/merchant/pos')} />
+          <EmptyState icon="receipt-outline" title={tSync("لا توجد فواتير", lang)} description={tSync('أنشئ أول فاتورة من شاشة POS', lang)} actionLabel={tSync('فتح POS', lang)} onAction={() => router.push('/merchant/pos')} />
         ) : (
           <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140, gap: spacing.sm }}>
             {invs.map(i => (
@@ -73,9 +73,9 @@ export default function Invoices() {
                   <Text style={s.amt}>{i.total?.toFixed(2)} <TX style={s.cur}>ر.س</TX></Text>
                 </View>
                 <Text style={s.meta} numberOfLines={1}>
-                  {i.customer_name || 'عميل مباشر'} • {i.items_count} منتج • {i.employee_name}
+                  {i.customer_name || tSync('عميل مباشر', curLang())} • {i.items_count} {tSync('منتج •', lang)} {i.employee_name}
                 </Text>
-                <Text style={s.date}>{new Date(i.created_at).toLocaleString('ar')}</Text>
+                <Text style={s.date}>{new Date(i.created_at).toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US')}</Text>
                 {i.customer_phone && (
                   <TouchableOpacity onPress={() => sendWhatsapp(i)} style={s.waBtn}>
                     <Ionicons name="logo-whatsapp" size={14} color="#25D366" />

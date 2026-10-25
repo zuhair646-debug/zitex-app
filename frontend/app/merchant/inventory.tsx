@@ -11,7 +11,7 @@ import { colors, spacing, radius, typography, shadows } from '../../src/theme/to
 import { Chip, EmptyState, SkeletonBox, PrimaryButton, Badge } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { useT, curLang } from '../../src/i18n';
 
 type Item = {
   product_id: string;
@@ -65,7 +65,7 @@ export default function MerchantInventory() {
       const d = await apiCall('/api/merchant/inventory');
       setData(d);
     } catch (e: any) {
-      Alert.alert(tSync('خطأ', lang), e.message || 'تعذّر تحميل المخزون');
+      Alert.alert(tSync('خطأ', lang), e.message || tSync('تعذّر تحميل المخزون', curLang()));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -96,7 +96,7 @@ export default function MerchantInventory() {
         body: JSON.stringify({ delta, channel, reason: 'تعديل يدوي سريع' }),
       });
       load();
-    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message || 'فشل التعديل'); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message || tSync('فشل التعديل', curLang())); }
   };
 
   return (
@@ -106,7 +106,7 @@ export default function MerchantInventory() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
-            <Ionicons name="chevron-forward" size={22} color={colors.onSurface} />
+            <Ionicons name={curLang() === 'ar' || curLang() === 'fa' || curLang() === 'ur' || curLang() === 'he' ? "chevron-forward" : "chevron-back"} size={22} color={colors.onSurface} />
           </TouchableOpacity>
           <TX style={styles.headerTitle}>إدارة المخزون</TX>
           <TouchableOpacity onPress={onRefresh} style={styles.iconBtn}>
@@ -152,7 +152,7 @@ export default function MerchantInventory() {
                 style={[styles.tab, tab === t.key && styles.tabActive]}
               >
                 <Ionicons name={t.icon as any} size={14} color={tab === t.key ? colors.onBrandPrimary : colors.onSurfaceSecondary} />
-                <Text style={[styles.tabLabel, tab === t.key && styles.tabLabelActive]}>{t.label}</Text>
+                <Text style={[styles.tabLabel, tab === t.key && styles.tabLabelActive]}>{tSync(t.label, lang)}</Text>
                 {t.key === 'alerts' && (data?.totals.low_stock ?? 0) > 0 && (
                   <View style={styles.tabBadge}>
                     <Text style={styles.tabBadgeText}>{data!.totals.low_stock}</Text>
@@ -168,7 +168,7 @@ export default function MerchantInventory() {
               {[1, 2, 3].map(i => <SkeletonBox key={i} height={90} />)}
             </View>
           ) : filtered.length === 0 ? (
-            <EmptyState icon="cube-outline" title={tSync("لا عناصر", lang)} description={tab === 'alerts' ? 'كل منتجاتك في وضع صحي 🎉' : 'أضف مخزوناً من صفحة الفروع'} />
+            <EmptyState icon="cube-outline" title={tSync("لا عناصر", lang)} description={tab === 'alerts' ? tSync('كل منتجاتك في وضع صحي 🎉', curLang()) : tSync('أضف مخزوناً من صفحة الفروع', curLang())} />
           ) : (
             <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
               {filtered.map(item => (
@@ -188,7 +188,7 @@ export default function MerchantInventory() {
                       </Text>
                       <View style={styles.modeRow}>
                         <View style={[styles.modePill, item.inventory_mode === 'separate' ? styles.modePillSep : styles.modePillCombined]}>
-                          <Text style={styles.modePillText}>{item.inventory_mode === 'separate' ? 'مخازن مفصولة' : 'مخزن موحّد'}</Text>
+                          <Text style={styles.modePillText}>{item.inventory_mode === 'separate' ? tSync('مخازن مفصولة', curLang()) : tSync('مخزن موحّد', curLang())}</Text>
                         </View>
                         <View style={[styles.modePill, styles.channelPill]}>
                           <Ionicons
@@ -196,7 +196,7 @@ export default function MerchantInventory() {
                             size={10} color={colors.brand}
                           />
                           <Text style={styles.modePillText}>
-                            {item.inventory_type === 'store' ? 'متجر فقط' : item.inventory_type === 'app' ? 'تطبيق فقط' : 'متجر + تطبيق'}
+                            {item.inventory_type === 'store' ? 'متجر فقط' : item.inventory_type === 'app' ? tSync('تطبيق فقط', curLang()) : tSync('متجر + تطبيق', curLang())}
                           </Text>
                         </View>
                         {item.is_out && <Badge label={tSync("نفدت", lang)} tone="error" />}
@@ -258,6 +258,7 @@ export default function MerchantInventory() {
 }
 
 function StatCard({ label, value, icon, tone }: { label: string; value: number; icon: string; tone: 'brand' | 'info' | 'success' | 'warning' | 'error' }) {
+  const styles = useSStyles();
   const toneColors: Record<string, { bg: string; fg: string }> = {
     brand: { bg: colors.brandTertiary, fg: colors.brand },
     info: { bg: colors.infoSoft, fg: colors.info },
@@ -278,6 +279,7 @@ function StatCard({ label, value, icon, tone }: { label: string; value: number; 
 }
 
 function StockRow({ label, icon, value, threshold, onMinus, onPlus }: any) {
+  const styles = useSStyles();
   const low = value <= threshold;
   const out = value === 0;
   return (
@@ -300,6 +302,7 @@ function StockRow({ label, icon, value, threshold, onMinus, onPlus }: any) {
 }
 
 function EditModal({ item, onClose, onSaved, apiCall }: { item: Item; onClose: () => void; onSaved: () => void; apiCall: any }) {
+  const styles = useSStyles();
   const [mode, setMode] = useState<'combined' | 'separate'>(item.inventory_mode);
   const [store, setStore] = useState(String(item.stock_store));
   const [apps, setApps] = useState(String(item.stock_app));
@@ -328,7 +331,7 @@ function EditModal({ item, onClose, onSaved, apiCall }: { item: Item; onClose: (
       });
       onSaved();
     } catch (e: any) {
-      Alert.alert(tSync('خطأ', lang), e.message || 'فشل الحفظ');
+      Alert.alert(tSync('خطأ', curLang()), e.message || tSync('فشل الحفظ', curLang()));
     } finally { setSaving(false); }
   };
 
@@ -375,13 +378,13 @@ function EditModal({ item, onClose, onSaved, apiCall }: { item: Item; onClose: (
           <View style={styles.segment}>
             {(['store', 'app', 'both'] as const).map(t => (
               <TouchableOpacity key={t} onPress={() => setType(t)} style={[styles.segmentBtn, type === t && styles.segmentBtnActive]}>
-                <Text style={[styles.segmentText, type === t && styles.segmentTextActive]}>{t === 'store' ? 'متجر' : t === 'app' ? 'تطبيق' : 'الاثنين'}</Text>
+                <Text style={[styles.segmentText, type === t && styles.segmentTextActive]}>{t === 'store' ? 'متجر' : t === 'app' ? tSync('تطبيق', curLang()) : tSync('الاثنين', curLang())}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
           <View style={{ marginTop: spacing.xl }}>
-            <PrimaryButton label={saving ? 'يحفظ…' : 'حفظ التغييرات'} onPress={save} disabled={saving} />
+            <PrimaryButton label={saving ? tSync('يحفظ…', curLang()) : tSync('حفظ التغييرات', curLang())} onPress={save} disabled={saving} />
           </View>
         </View>
       </View>

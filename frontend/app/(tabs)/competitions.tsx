@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import TranslatableName from '../../src/components/TranslatableName';
 import { useAuth } from '../_layout';
 import { useT } from '../../src/i18n';
 
@@ -62,7 +63,7 @@ export default function CompetitionsScreen() {
                 </Text>
               </View>
             </View>
-            <Text style={s.compTitle} numberOfLines={2}>{comp.title}</Text>
+            <TranslatableName text={comp.title} style={s.compTitle} numberOfLines={2} />
             <Text style={s.compDesc} numberOfLines={2}>{comp.description}</Text>
 
             <View style={s.prizeRow}>

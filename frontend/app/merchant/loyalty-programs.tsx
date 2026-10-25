@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { useT, curLang } from '../../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -82,7 +82,7 @@ export default function LoyaltyProgramsScreen() {
       <StatusBar barStyle="light-content" />
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.back}>
-          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+          <Ionicons name={curLang() === 'ar' || curLang() === 'fa' || curLang() === 'ur' || curLang() === 'he' ? "chevron-forward" : "chevron-back"} size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <TX style={s.title}>برامج الولاء السعودية</TX>
@@ -109,7 +109,7 @@ export default function LoyaltyProgramsScreen() {
                 </View>
                 <View style={{ flex: 1, marginHorizontal: 10 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={s.cardTitle}>{p.name_ar}</Text>
+                    <TX style={s.cardTitle}>{p.name_ar || ''}</TX>
                     <View style={[s.typePill, { backgroundColor: p.brand_color + '20', borderColor: p.brand_color }]}>
                       <Text style={[s.typePillText, { color: p.brand_color }]}>{
                         p.type === 'telco' ? 'اتصالات' :
@@ -121,7 +121,7 @@ export default function LoyaltyProgramsScreen() {
                       }</Text>
                     </View>
                   </View>
-                  <Text style={s.cardSub} numberOfLines={2}>{p.description_ar}</Text>
+                  <TX style={s.cardSub} numberOfLines={2}>{p.description_ar || ''}</TX>
                   {p.status === 'sandbox_pending' && (
                     <TX style={s.pendingTag}>⚠️ بانتظار بيانات الاعتماد</TX>
                   )}
@@ -162,8 +162,8 @@ export default function LoyaltyProgramsScreen() {
                       <Text style={{ fontSize: 24 }}>{editing.logo}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: TEXT, fontSize: 16, fontWeight: '900', textAlign: 'right' }}>{editing.name_ar}</Text>
-                      <Text style={{ color: MUTED, fontSize: 11, textAlign: 'right' }}>{editing.description_ar}</Text>
+                      <Text style={{ color: TEXT, fontSize: 16, fontWeight: '900', textAlign: 'auto' }}>{tSync(editing.name_ar || '', curLang())}</Text>
+                      <Text style={{ color: MUTED, fontSize: 11, textAlign: 'auto' }}>{tSync(editing.description_ar || '', curLang())}</Text>
                     </View>
                     <TouchableOpacity onPress={() => setEditing(null)}><Ionicons name="close" size={22} color={TEXT} /></TouchableOpacity>
                   </View>

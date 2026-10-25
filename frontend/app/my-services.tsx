@@ -7,8 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { mediaUrlSync } from '../src/utils/upload';
-import { TX, tSync } from '../src/useAutoT';
-import { useT } from '../src/i18n';
+import { TX, tSync, tf } from '../src/useAutoT';
+import { useT, curLang } from '../src/i18n';
 
 const PURPLE = '#F5C518';
 
@@ -79,12 +79,12 @@ export default function MyServices() {
                     <View style={[s.stepDot, i <= step && s.stepDotActive, i === step && s.stepDotCurrent]}>
                       <Ionicons name={st.icon as any} size={12} color={i <= step ? 'white' : '#9CA3AF'} />
                     </View>
-                    <Text style={[s.stepLabel, i <= step && s.stepLabelActive]}>{st.label}</Text>
+                    <Text style={[s.stepLabel, i <= step && s.stepLabelActive]}>{tSync(st.label, lang)}</Text>
                   </View>
                 ))}
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                <Text style={s.total}>الإجمالي: {b.total_amount || b.service_price || 0} ر.س</Text>
+                <Text style={s.total}>{tSync('الإجمالي:', lang)} {b.total_amount || b.service_price || 0} {tSync('ر.س', lang)}</Text>
                 <TX style={s.hint}>اضغط للتفاصيل ›</TX>
               </View>
             </TouchableOpacity>
@@ -98,6 +98,7 @@ export default function MyServices() {
 }
 
 function BookingDetail({ booking, onClose, apiCall }: any) {
+  const { lang } = useT();
   if (!booking) return null;
   return (
     <Modal visible transparent={false} animationType="slide" onRequestClose={onClose}>
@@ -113,8 +114,8 @@ function BookingDetail({ booking, onClose, apiCall }: any) {
             <Row label={tSync('الجهاز', lang)} value={booking.device_model} />
             <Row label={tSync('المشكلة', lang)} value={booking.issue_desc} />
             <Row label={tSync('الحالة', lang)} value={STEPS.find(x => x.key === booking.status)?.label || booking.status} />
-            {booking.pickup_fee > 0 && <Row label={tSync('رسم الاستلام', lang)} value={`${booking.pickup_fee} ر.س`} />}
-            <Row label={tSync('الإجمالي', lang)} value={`${booking.total_amount || 0} ر.س`} bold />
+            {booking.pickup_fee > 0 && <Row label={tSync('رسم الاستلام', lang)} value={tf('{0} ر.س', lang, [booking.pickup_fee])} />}
+            <Row label={tSync('الإجمالي', lang)} value={tf('{0} ر.س', lang, [booking.total_amount || 0])} bold />
           </View>
 
           <TX style={s.sec}>🎥 تحديثات الفني</TX>
@@ -151,13 +152,13 @@ function UpdateItem({ update, bookingId, apiCall }: any) {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const submit = async () => {
-    if (stars < 1) { Alert.alert(tSync('التقييم مطلوب', lang)); return; }
+    if (stars < 1) { Alert.alert(tSync('التقييم مطلوب', curLang())); return; }
     setSaving(true);
     try {
       await apiCall('/api/services/reviews', { method: 'POST',
         body: JSON.stringify({ booking_id: bookingId, update_id: update.id, stars, comment }) });
       setSubmitted(true);
-    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
     finally { setSaving(false); }
   };
   return (
@@ -178,7 +179,7 @@ function UpdateItem({ update, bookingId, apiCall }: any) {
               </TouchableOpacity>
             ))}
           </View>
-          <TextInput style={s.rateInput} placeholder={tSync("تعليق (اختياري)", lang)} value={comment} onChangeText={setComment} />
+          <TextInput style={s.rateInput} placeholder={tSync("تعليق (اختياري)", curLang())} value={comment} onChangeText={setComment} />
           <TouchableOpacity style={s.rateBtn} onPress={submit} disabled={saving}>
             {saving ? <ActivityIndicator color="white" /> : <TX style={s.rateBtnText}>إرسال</TX>}
           </TouchableOpacity>
@@ -196,13 +197,13 @@ function FinalRating({ bookingId, apiCall, existing }: any) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(!!existing);
   const submit = async () => {
-    if (stars < 1) { Alert.alert(tSync('التقييم مطلوب', lang)); return; }
+    if (stars < 1) { Alert.alert(tSync('التقييم مطلوب', curLang())); return; }
     setSaving(true);
     try {
       await apiCall('/api/services/reviews', { method: 'POST',
         body: JSON.stringify({ booking_id: bookingId, update_id: '', stars, comment }) });
       setSaved(true);
-    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
+    } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
     finally { setSaving(false); }
   };
   return (
@@ -215,7 +216,7 @@ function FinalRating({ bookingId, apiCall, existing }: any) {
           </TouchableOpacity>
         ))}
       </View>
-      <TextInput style={s.rateInput} placeholder={tSync("شارك تجربتك...", lang)} value={comment} onChangeText={setComment} editable={!saved} multiline />
+      <TextInput style={s.rateInput} placeholder={tSync("شارك تجربتك...", curLang())} value={comment} onChangeText={setComment} editable={!saved} multiline />
       {!saved && (
         <TouchableOpacity style={s.rateBtn} onPress={submit} disabled={saving}>
           {saving ? <ActivityIndicator color="white" /> : <TX style={s.rateBtnText}>إرسال التقييم</TX>}

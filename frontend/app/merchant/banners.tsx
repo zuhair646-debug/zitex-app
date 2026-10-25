@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useT } from '../../src/i18n';
+import { useT, curLang } from '../../src/i18n';
 import { tSync } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Image, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -24,18 +24,18 @@ export default function MerchantBanners() {
   useEffect(() => { load(); }, [load]);
 
   const save = async () => {
-    if (!form.image) { Alert.alert('Required', 'Image URL required'); return; }
+    if (!form.image) { Alert.alert(tSync('مطلوب', curLang()), tSync('رابط الصورة مطلوب', curLang())); return; }
     try { await apiCall('/api/merchant/banners', { method: 'POST', body: JSON.stringify({ ...form, order: parseInt(form.order) || 1 }) }); setForm({ title_ar: '', title_en: '', image: '', type: 'normal', published: true, order: 1 }); setModalOpen(false); load(); }
     catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
-  const del = (id: string) => Alert.alert(tSync('حذف البانر؟', lang), '', [{ text: 'إلغاء', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/banners/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
+  const del = (id: string) => Alert.alert(tSync('حذف البانر؟', lang), '', [{ text: tSync('إلغاء', curLang()), style: 'cancel' }, { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/banners/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>البانرات ({banners.length})</Text>
+        <Text style={s.title}>{tSync('البانرات (', lang)}{banners.length})</Text>
         <TouchableOpacity testID="add-banner" onPress={() => setModalOpen(true)} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
@@ -55,7 +55,7 @@ export default function MerchantBanners() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <Text style={s.title}>New Banner</Text>
+            <Text style={s.title}>{tSync('بانر جديد', lang)}</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
             <Text style={s.label}>Image URL *</Text>
@@ -64,9 +64,9 @@ export default function MerchantBanners() {
             <TextInput style={s.input} value={form.title_ar} onChangeText={t => setForm({ ...form, title_ar: t })} />
             <Text style={s.label}>Title (English)</Text>
             <TextInput style={s.input} value={form.title_en} onChangeText={t => setForm({ ...form, title_en: t })} />
-            <Text style={s.label}>Order</Text>
+            <Text style={s.label}>{tSync('الطلب', lang)}</Text>
             <TextInput style={s.input} keyboardType="numeric" value={String(form.order)} onChangeText={t => setForm({ ...form, order: t })} />
-            <TouchableOpacity style={s.saveBtn} onPress={save}><Text style={s.saveText}>Save Banner</Text></TouchableOpacity>
+            <TouchableOpacity style={s.saveBtn} onPress={save}><Text style={s.saveText}>{tSync('حفظ البانر', lang)}</Text></TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
       </Modal>

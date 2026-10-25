@@ -1,10 +1,11 @@
+import { tSync } from '../src/useAutoT';
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
-import { useT } from '../src/i18n';
+import { useT, curLang } from '../src/i18n';
 
 export default function SupportScreen() {
   const router = useRouter();
@@ -18,15 +19,15 @@ export default function SupportScreen() {
   }, []);
 
   const openLink = async (url: string) => {
-    try { await Linking.openURL(url); } catch { Alert.alert(t('common.error'), 'تعذر فتح الرابط'); }
+    try { await Linking.openURL(url); } catch { Alert.alert(t('common.error'), tSync('تعذر فتح الرابط', curLang())); }
   };
 
   if (loading || !info) return <View style={s.center}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
   const channels = [
-    { id: 'whatsapp', label: 'واتساب', sub: info.whatsapp, icon: 'logo-whatsapp', color: '#25D366', url: info.whatsapp ? `https://wa.me/${info.whatsapp}` : '' },
-    { id: 'phone', label: lang === 'ar' ? 'اتصال هاتفي' : 'Phone', sub: info.phone, icon: 'call', color: '#3B82F6', url: info.phone ? `tel:${info.phone}` : '' },
-    { id: 'email', label: lang === 'ar' ? 'البريد الإلكتروني' : 'Email', sub: info.email, icon: 'mail', color: '#EF4444', url: info.email ? `mailto:${info.email}` : '' },
+    { id: 'whatsapp', label: tSync('واتساب', lang), sub: info.whatsapp, icon: 'logo-whatsapp', color: '#25D366', url: info.whatsapp ? `https://wa.me/${info.whatsapp}` : '' },
+    { id: 'phone', label: tSync('اتصال هاتفي', lang), sub: info.phone, icon: 'call', color: '#3B82F6', url: info.phone ? `tel:${info.phone}` : '' },
+    { id: 'email', label: tSync('البريد الإلكتروني', lang), sub: info.email, icon: 'mail', color: '#EF4444', url: info.email ? `mailto:${info.email}` : '' },
     { id: 'instagram', label: 'Instagram', sub: info.instagram, icon: 'logo-instagram', color: '#E1306C', url: info.instagram ? `https://instagram.com/${info.instagram.replace('@','')}` : '' },
     { id: 'twitter', label: 'X (Twitter)', sub: info.twitter, icon: 'logo-twitter', color: '#000000', url: info.twitter ? `https://twitter.com/${info.twitter.replace('@','')}` : '' },
     { id: 'tiktok', label: 'TikTok', sub: info.tiktok, icon: 'logo-tiktok', color: '#000000', url: info.tiktok ? `https://tiktok.com/@${info.tiktok.replace('@','')}` : '' },
@@ -38,24 +39,24 @@ export default function SupportScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>🎧 {lang === 'ar' ? 'الدعم الفني' : 'Customer Support'}</Text>
+        <Text style={s.title}>🎧 {tSync('الدعم الفني', lang)}</Text>
         <View style={{ width: 22 }} />
       </View>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <View style={s.hero}>
           <Ionicons name="headset" size={36} color="white" />
-          <Text style={s.heroTitle}>{lang === 'ar' ? 'كيف يمكننا مساعدتك؟' : 'How can we help you?'}</Text>
+          <Text style={s.heroTitle}>{tSync('كيف يمكننا مساعدتك؟', lang)}</Text>
           <Text style={s.heroSub}>{info.working_hours}</Text>
         </View>
 
         {info.contact_via_social_first && (
           <View style={s.tipBox}>
             <Ionicons name="information-circle" size={18} color="#3B82F6" />
-            <Text style={s.tipText}>{lang === 'ar' ? 'للرد السريع، تواصل عبر السوشال ميديا أو الواتساب' : 'For fastest reply, contact via WhatsApp or social media'}</Text>
+            <Text style={s.tipText}>{tSync('للرد السريع، تواصل عبر السوشال ميديا أو الواتساب', lang)}</Text>
           </View>
         )}
 
-        <Text style={s.section}>{lang === 'ar' ? 'وسائل التواصل' : 'Contact Channels'}</Text>
+        <Text style={s.section}>{tSync('وسائل التواصل', lang)}</Text>
         <View style={s.grid}>
           {channels.map(c => (
             <TouchableOpacity key={c.id} style={[s.card, { borderColor: c.color + '40' }]} onPress={() => openLink(c.url)}>
@@ -69,7 +70,7 @@ export default function SupportScreen() {
         </View>
 
         {info.address && (<>
-          <Text style={s.section}>📍 {lang === 'ar' ? 'العنوان' : 'Address'}</Text>
+          <Text style={s.section}>📍 {tSync('عنوان المتجر', lang)}</Text>
           <View style={s.addrBox}><Text style={s.addrText}>{info.address}</Text></View>
         </>)}
       </ScrollView>

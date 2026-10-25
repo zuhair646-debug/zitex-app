@@ -1,3 +1,4 @@
+import { useT, curLang } from '../../src/i18n';
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -5,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import ZitexMap from '../../src/components/MapView';
-import { TX } from '../../src/useAutoT';
+import { TX, tSync } from '../../src/useAutoT';
 
 const STATUS_ORDER = ['pending', 'processing', 'ready_for_pickup', 'assigned', 'picked_up', 'delivered'];
 const STATUS_AR: Record<string, string> = {
@@ -14,6 +15,7 @@ const STATUS_AR: Record<string, string> = {
 };
 
 export default function TrackOrder() {
+  useT(); // re-render when language or on-demand translations change
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { apiCall } = useAuth();
@@ -47,9 +49,9 @@ export default function TrackOrder() {
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <View style={s.orderCard}>
           <Text style={s.orderNo}>#{order.id?.slice(-8).toUpperCase()}</Text>
-          <Text style={s.orderStatus}>{STATUS_AR[order.status] || order.status}</Text>
-          <Text style={s.orderTotal}>{order.total?.toFixed(2)} ر.س</Text>
-          {!!order.eta_minutes && <Text style={s.eta}>الوصول المتوقع: {order.eta_minutes} دقيقة</Text>}
+          <Text style={s.orderStatus}>{tSync(STATUS_AR[order.status] || order.status, curLang())}</Text>
+          <Text style={s.orderTotal}>{order.total?.toFixed(2)} {tSync('ر.س', curLang())}</Text>
+          {!!order.eta_minutes && <Text style={s.eta}>{tSync('الوصول المتوقع:', curLang())} {order.eta_minutes} {tSync('دقيقة', curLang())}</Text>}
         </View>
 
         {showMap && (
@@ -78,7 +80,7 @@ export default function TrackOrder() {
               <View style={[s.stepDot, i <= stepIdx ? s.stepDotActive : null]}>
                 {i <= stepIdx && <Ionicons name="checkmark" size={12} color="white" />}
               </View>
-              <Text style={[s.stepLabel, i <= stepIdx && s.stepLabelActive]}>{STATUS_AR[st]}</Text>
+              <Text style={[s.stepLabel, i <= stepIdx && s.stepLabelActive]}>{tSync(STATUS_AR[st], curLang())}</Text>
             </View>
           ))}
         </View>

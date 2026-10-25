@@ -8,6 +8,7 @@ import { useT } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
 
 export default function ServicesScreen() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall } = useAuth();
@@ -63,7 +64,7 @@ export default function ServicesScreen() {
               </View>
               <View style={s.serviceInfo}>
                 <TranslatableName
-                  text={svc.name}
+                  text={(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))}
                   style={s.serviceName}
                   numberOfLines={1}
                   iconSize={12}

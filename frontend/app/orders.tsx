@@ -3,10 +3,12 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useT, curLang } from '../src/i18n';
 import { useAuth } from './_layout';
-import { TX } from '../src/useAutoT';
+import { TX, tSync } from '../src/useAutoT';
 
 export default function OrdersScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
@@ -19,8 +21,8 @@ export default function OrdersScreen() {
     })();
   }, []);
 
-  const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
-  const statusColor = (s: string) => s === 'processing' ? '#F59E0B' : s === 'completed' ? '#10B981' : '#EF4444';
+  const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter || (filter === 'completed' && o.status === 'delivered'));
+  const statusColor = (s: string) => (s === 'completed' || s === 'delivered') ? '#10B981' : s === 'cancelled' ? '#EF4444' : '#F59E0B';
 
   return (
     <SafeAreaView style={s.safe}>
@@ -28,34 +30,34 @@ export default function OrdersScreen() {
         <TouchableOpacity testID="orders-back" style={s.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
         </TouchableOpacity>
-        <Text style={s.title}>Orders</Text>
+        <Text style={s.title}>{tSync('طلباتي', lang)}</Text>
       </View>
-      <View style={s.filterRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={s.filterRow}>
         {['all', 'processing', 'completed', 'cancelled'].map(f => (
           <TouchableOpacity key={f} testID={`filter-${f}`} style={[s.filterPill, filter === f && s.filterActive]}
             onPress={() => setFilter(f)}>
             <Text style={[s.filterText, filter === f && s.filterTextActive]}>
-              {f === 'all' ? 'All' : f === 'processing' ? 'Processing' : f === 'completed' ? 'Completed' : 'Canceled'}
+              {tSync(f === 'all' ? 'الكل' : f === 'processing' ? 'قيد التنفيذ' : f === 'completed' ? 'مكتمل' : 'ملغى', lang)}
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
       {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> :
         filtered.length === 0 ? (
-          <View style={s.empty}><Ionicons name="bag-outline" size={48} color="#A1A1AA" /><Text style={s.emptyText}>No orders found</Text></View>
+          <View style={s.empty}><Ionicons name="bag-outline" size={48} color="#A1A1AA" /><Text style={s.emptyText}>{tSync('لا توجد طلبات', lang)}</Text></View>
         ) : (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.list}>
             {filtered.map((o) => (
               <View key={o.id} style={s.orderCard}>
                 <View style={[s.statusBar, { backgroundColor: statusColor(o.status) }]}>
-                  <Ionicons name={o.status === 'completed' ? 'checkmark-circle' : o.status === 'cancelled' ? 'close-circle' : 'time'} size={16} color="#FFF" />
-                  <Text style={s.statusBarText}>{o.status === 'processing' ? 'Processing' : o.status === 'completed' ? 'Completed' : 'Canceled'}</Text>
+                  <Ionicons name={(o.status === 'completed' || o.status === 'delivered') ? 'checkmark-circle' : o.status === 'cancelled' ? 'close-circle' : 'time'} size={16} color="#FFF" />
+                  <Text style={s.statusBarText}>{tSync(({ pending: 'قيد الانتظار', processing: 'قيد التنفيذ', ready: 'جاهز', in_transit: 'في الطريق', out_for_delivery: 'في الطريق', delivered: 'تم التسليم', completed: 'مكتمل', cancelled: 'ملغى' } as Record<string, string>)[o.status] || o.status, lang)}</Text>
                 </View>
-                <Text style={s.orderId}>Order #{o.id?.slice(-8)}</Text>
-                <View style={s.orderRow}><Text style={s.orderLabel}>Payment</Text><Text style={s.orderVal}>{o.payment_method || 'Cash'}</Text></View>
-                <View style={s.orderRow}><Text style={s.orderLabel}>Items</Text><Text style={s.orderVal}>{o.items?.length || 0} products</Text></View>
-                <View style={s.orderRow}><Text style={s.orderLabel}>Delivery</Text><Text style={s.orderVal}>{o.delivery_type}</Text></View>
-                <View style={[s.orderRow, s.totalRow]}><Text style={s.totalLabel}>TOTAL</Text><Text style={s.totalVal}>{o.total} SAR</Text></View>
+                <Text style={s.orderId}>{tSync('طلب', lang)} #{o.id?.slice(-8)}</Text>
+                <View style={s.orderRow}><Text style={s.orderLabel}>{tSync('الدفع', lang)}</Text><Text style={s.orderVal}>{tSync(({ cod: 'الدفع عند الاستلام', cash_on_delivery: 'الدفع عند الاستلام', cash: 'نقداً', card: 'بطاقة ائتمان/مدى', mada: 'مدى', apple_pay: 'Apple Pay', tamara: 'تمارا (تقسيط)', tabby: 'تابي (تقسيط)', wallet: 'المحفظة' } as Record<string, string>)[o.payment_method] || o.payment_method || 'نقداً', lang)}</Text></View>
+                <View style={s.orderRow}><Text style={s.orderLabel}>{tSync('المنتجات', lang)}</Text><Text style={s.orderVal}>{o.items?.length || 0} {tSync('منتج', lang)}</Text></View>
+                <View style={s.orderRow}><Text style={s.orderLabel}>{tSync('التوصيل', lang)}</Text><Text style={s.orderVal}>{tSync(o.delivery_type === 'pickup' ? 'استلام من الفرع' : 'توصيل', lang)}</Text></View>
+                <View style={[s.orderRow, s.totalRow]}><Text style={s.totalLabel}>{tSync('الإجمالي', lang)}</Text><Text style={s.totalVal}>{o.total} {tSync('ر.س', lang)}</Text></View>
                 {(o.status === 'completed' || o.status === 'delivered') && (
                   <TouchableOpacity
                     onPress={() => router.push(`/create-return?order_id=${o.id}` as any)}

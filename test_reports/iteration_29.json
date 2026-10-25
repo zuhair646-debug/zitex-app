@@ -1,0 +1,57 @@
+{
+  "summary": "RETEST of iteration_28 i18n issues. Backend /api/translate: 22/22 pytest pass, including 6 new FRESH (uncached) tests for ru/zh/ja/he/hi/th, so the LLM path itself returns the target script. All 36,969 translations_cache rows pass _clean_ok (0 bad rows). Frontend: no crashes, 0 pageerrors and no red screen across 15 customer routes in ar/en/de/zh/he plus 6 merchant routes in en/de. VERIFIED FIXED: Orders (payment codes now show as labels, e.g. 'Zahlung bei Lieferung' and 'תשלום עם קבלה'; filter row scrolls horizontally with no clipping in de/fr; he title is 'ההזמנות שלי'); checkout delivery and payment option labels; service/[id] 'About'/'Übersicht' tab and 'Available'/'Verfügbar' value; search 'All' pill and 'N results'/'N نتيجة'; cart and favorites 'N item'/'N منتج'/'1 件商品'; product reviews/sold/Save; Home 'New', 'خصم 75%' and used-devices text; Appearance labels (en Font/Dark/Light/Custom, de Schrift/Dunkel/Hell, ru Пользовательская); 'طلب' now translates as Order/Bestellung; de Services tab '12 Services'; Live Preview Featured product names are English in en and numbers use Western digits (14,838 SAR). STILL BROKEN: return reasons and status descriptions; checkout summary currency and location line; shipping-matrix summary strings; roles and employees permission chips; Live Preview 'Best sellers' names; Arabic-Indic digits in the loyalty widget; several hardcoded English strings in the Arabic UI ('% OFF', 'Add to Cart - X SAR', 'Search products...', cart 'Tax (15%)' and 'SAR', product condition 'جديد (New)'). No deprecated Expo packages detected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/translate", "issue": "translate.py:220. When both the first answer and the retry fail _clean_ok, the endpoint returns the bad mixed-script answer instead of the source text. It is correctly not cached. Consider returning the source text instead. Not observed in the tests."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "My Returns / RMA detail / Merchant returns: reasons", "issue": "Return reason shows raw r.reason_label_ar in every language (seen in en/de/zh: 'غيّرت رأيي', 'عيب مصنعي', 'منتج غير مطابق للطلب'). Wrap it with tSync, or map r.reason codes to labels. Reference: app/my-returns.tsx:93, app/rma-detail.tsx:123, app/merchant/returns.tsx:171,197", "testID": "n/a", "priority": "HIGH"},
+      {"component": "My Returns status description", "issue": "meta.desc is rendered raw: 'يراجع المتجر طلبك حالياً', 'لم تتم الموافقة على الطلب' and 'المبلغ في محفظتك' appear in en/de/zh. Reference: app/my-returns.tsx:101 ({meta.desc} needs tSync). The pill label on :97 is fixed.", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Checkout order summary", "issue": "Currency is hardcoded 'ر.س' in Delivery/Tax/Coupon/Loyalty/Total rows, so en/zh show 'Total 277 ر.س'. Reference: app/checkout.tsx:274-278. Also the template string 'تم تحديد موقعك — استخدم موقعاً آخر؟' at :247 is not wrapped (Arabic in en/zh).", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Checkout payment ribbon", "issue": "In en/zh the ribbon shows '🛡 مرخّص من مؤسسة النقد (SAMA) · ' and '{n} خيار للدفع' raw. Reference: src/components/PaymentAndLoyalty.tsx:72-73. Payment names 'مدى', 'تحويل بنكي' and 'الدفع عند الاستلام' are also raw in this ribbon, and the loyalty line shows '1 نقطة = 0.01 SAR'.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Loyalty widget balance digits", "issue": "Number(data.balance).toLocaleString('ar-SA') produces Arabic-Indic '٠' on /wallet in en/de/zh. Reference: src/components/PaymentAndLoyalty.tsx:158 and :102. Use a lang-aware locale or 'en-US' when lang !== 'ar'.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Hardcoded English in Arabic (default) UI", "issue": "These strings are hardcoded and do not translate: app/(tabs)/index.tsx:107 '{discountPct}% OFF' (shows '8% OFF' in ar/de); app/product/[id].tsx:284 'Add to Cart - {price} SAR'; app/search.tsx:65 placeholder 'Search products...'; app/cart.tsx:139 'Tax (15%)'; app/cart.tsx:138-148 'SAR' hardcoded (Arabic cart shows both '219 ر.س' and '219 SAR').", "testID": "search-input", "priority": "HIGH"},
+      {"component": "Product condition label", "issue": "Shows 'الحالة: جديد (New)' in ar and 'Status: جديد (New)' in de. The 'جديد (New)' and 'مستعمل - 3 أشهر' branches are not wrapped in tSync. Reference: app/product/[id].tsx:187", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Product description", "issue": "Always renders product.description_en, so the Arabic UI shows English. Reference: app/product/[id].tsx:160. Should be lang==='ar' ? description_ar : description_en.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant Live Preview: Best sellers", "issue": "Top-seller cards render t.name, which is the Arabic name, in en/de ('ماك بوك برو Max 16', 'آيفون 15 برو 128GB'). Reference: app/merchant/live-preview.tsx:214. Needs a name_en from the top-sellers API or a product lookup. Featured products are fixed.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant shipping-matrix", "issue": "'كل المدن' and 'كل الفروع' fallbacks and the city name_ar are raw (app/merchant/shipping-matrix.tsx:171-172). The rule line '{base}ر.س + {kg}ر.س/كجم · {min}-{max} أيام · أولوية {p}' is a raw template (:186). Carrier 'أرامكس' is still Arabic in en.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant roles / employees permission chips", "issue": "Role badges use PERMS label without tSync (app/merchant/roles.tsx:106), and the group headers are raw (:136 {g}). Employee perm tags use perms.labels[p] raw (app/merchant/employees.tsx:107). All appear Arabic in en/de. Preset role names and descriptions (r.name/r.description) are also Arabic.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Merchant invoices empty state", "issue": "EmptyState description 'أنشئ أول فاتورة من شاشة POS' and actionLabel 'فتح POS' are not wrapped. Reference: app/merchant/invoices.tsx:64. invoices.tsx:78 still uses toLocaleString('ar'); so do social.tsx:276 and marketing.tsx:292.", "testID": "n/a", "priority": "LOW"},
+      {"component": "Orders filter / icon", "issue": "'delivered' orders do not appear under the 'Completed' filter, because the filter compares o.status === 'completed' strictly (app/orders.tsx:24). The delivered status bar is green but uses the 'time' clock icon (:53).", "testID": "filter-completed", "priority": "LOW"},
+      {"component": "Support screen", "issue": "Uses lang==='ar' ? ar : 'English', so de/zh/he users see English instead of their language. Reference: app/support.tsx:41,47,54,58,72. Use tSync.", "testID": "n/a", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dictionary quality (i18n-generated.json)", "issues": ["Service detail tab 'تجارب' (customer experiences) is translated en 'Trials (0)' and de 'Versuche (0)'. Better: 'Experiences' / 'Erfahrungen'.", "Warranty shows 'Warranty 90 Day' (en) and 'Garantie 90 Tag' (de). The unit needs plural: Days/Tage.", "zh tier labels: 'برونزي' → 青铜色 and 'فضي' → 银色 mean the colours. Tier names should be 青铜/白银.", "de 'عناصر' → 'Elemente'. For cart items 'Artikel' is better.", "ru 'نتيجة' → 'результат' (singular) shown as '40 результат'. Should be 'результатов'."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_i18n_translate.py", "/app/backend/tests/audit_translation_cache.py", "/app/test_reports/pytest/pytest_i18n_iter29.xml"],
+  "action_items": [
+    "Wrap return reasons with tSync: my-returns.tsx:93, rma-detail.tsx:123, merchant/returns.tsx:171,197. Also wrap my-returns.tsx:101 meta.desc.",
+    "checkout.tsx:274-278: replace the hardcoded 'ر.س' with {tSync('ر.س', lang)}. checkout.tsx:247: wrap the location template string.",
+    "PaymentAndLoyalty.tsx:72-73: wrap the SAMA text and '{n} خيار للدفع' with tSync/tf, and translate the payment method names in the ribbon. :102 and :158: stop using toLocaleString('ar-SA') for non-Arabic languages.",
+    "Replace hardcoded English: (tabs)/index.tsx:107 '% OFF'; product/[id].tsx:284 'Add to Cart - X SAR'; search.tsx:65 placeholder; cart.tsx:138-148 'SAR' and 'Tax (15%)'.",
+    "product/[id].tsx:187: wrap the condition labels with tSync. :160: use description_ar when lang==='ar'.",
+    "merchant/live-preview.tsx:214: make Best sellers names follow the language (add name_en to the top-sellers payload).",
+    "shipping-matrix.tsx:171-172,186; roles.tsx:106,136; employees.tsx:107; invoices.tsx:64: wrap with tSync/tf.",
+    "orders.tsx:24: include 'delivered' in the Completed filter. :53: use the checkmark icon for delivered.",
+    "Fix dictionary entries: 'تجارب' → Experiences/Erfahrungen; plural for days; zh tier names; de 'Artikel'; ru plural for 'نتيجة'.",
+    "support.tsx: replace the lang==='ar' ? ... : English ternaries with tSync."
+  ],
+  "critical_code_review_comments": [
+    "translate.py _clean_ok now requires the native script for non-Latin targets, with a brand allowlist. The bulk endpoint skips bad lines and the single endpoint skips caching after a failed retry. This looks good.",
+    "The remaining leftovers follow a pattern: data maps (STATE_META.desc, PERMS, perms.labels), template literals, and API fields with an _ar suffix are rendered without tSync. A lint rule or audit-script check for Arabic string literals inside JSX expressions without tSync would catch these.",
+    "orders.tsx no longer double-wraps tSync. The fix is confirmed."
+  ],
+  "updated_files": ["/app/backend/tests/test_i18n_translate.py (added ja and fresh-string tests)", "/app/backend/tests/audit_translation_cache.py (new)"],
+  "success_rate": {"backend": "100% (22/22)", "frontend": "~75%: 5 of the 7 requested items are fully fixed; the Arabic-leftovers and Live Preview items are only partly fixed"},
+  "seed_data_creation": "Added 1x 'Samsung Super Fast 45W' to the customer 0500000000 cart and favorites (for item-count checks).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Switch language with localStorage.setItem('app_lang', <code>) and reload. The customer has 2 delivered orders (cod and cash_on_delivery) and 3 RMAs (ids 6ab6b9e61a5375c94172a3c2, 6ab6b9e61a5375c94172a3bf, 6ab6b9e51a5375c94172a3bd). Customer tabs are at /, /services, /competitions, /social, /settings (there is no /profile route). The customer has no my-services bookings, so my-services status labels were NOT verified. Out of scope: DB content such as competition titles, social posts, branch names, wallet and loyalty transaction descriptions, and service/product specs and colours.",
+  "rca_of_issue": "The leftovers come from strings that never go through tSync: values in static maps (desc, permission labels), template strings, hardcoded English literals, and *_ar API fields rendered directly. The fix is to wrap them at render time."
+}

@@ -8,8 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from './_layout';
 import { uploadMedia, mediaUrlSync } from '../src/utils/upload';
-import { TX, tSync } from '../src/useAutoT';
-import { useT } from '../src/i18n';
+import { TX, tSync, tf } from '../src/useAutoT';
+import { useT, curLang } from '../src/i18n';
 
 export default function UGCContest() {
   const { lang } = useT();
@@ -43,7 +43,7 @@ export default function UGCContest() {
 
   const pickVideo = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'السماح للوصول للفيديوهات'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), tSync('السماح للوصول للفيديوهات', curLang())); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'] as any, quality: 0.85, videoMaxDuration: 60 });
     if (res.canceled) return;
     setUploading(true);
@@ -56,7 +56,7 @@ export default function UGCContest() {
   };
 
   const submitVideo = async () => {
-    if (!videoPath) { Alert.alert(tSync('مطلوب', lang), 'اختر فيديو أولاً'); return; }
+    if (!videoPath) { Alert.alert(tSync('مطلوب', lang), tSync('اختر فيديو أولاً', curLang())); return; }
     try {
       await apiCall(`/api/competitions/${id}/videos`, {
         method: 'POST',
@@ -67,7 +67,7 @@ export default function UGCContest() {
       });
       setSubmitOpen(false); setVideoPath(''); setCaption(''); setHashtags('');
       load();
-      Alert.alert('✅ نجاح', 'تم رفع فيديوك! شارك الرابط مع أصدقائك لجمع اللايكات.');
+      Alert.alert(tSync('✅ نجاح', curLang()), tSync('تم رفع فيديوك! شارك الرابط مع أصدقائك لجمع اللايكات.', curLang()));
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
@@ -99,7 +99,7 @@ export default function UGCContest() {
 
   const shareVideo = async (v: any) => {
     try {
-      await Share.share({ message: `شاهد فيديو ${v.user_name} في مسابقة ${comp?.title || 'Zenrex Store'}!\n\nصوت له الآن على تطبيق Zenrex Store.` });
+      await Share.share({ message: tf('شاهد فيديو {0} في مسابقة {1}!\n\nصوت له الآن على تطبيق Zenrex Store.', lang, [v.user_name, comp?.title || 'Zenrex Store']) });
       apiCall(`/api/competitions/${id}/videos/${v.id}/share`, { method: 'POST' }).catch(() => {});
     } catch {}
   };
@@ -118,7 +118,7 @@ export default function UGCContest() {
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
             <Ionicons name="arrow-back" size={22} color="#F5C518" />
           </TouchableOpacity>
-          <Text style={s.headerTitle} numberOfLines={1}>{comp?.title || 'مسابقة الفيديو'}</Text>
+          <Text style={s.headerTitle} numberOfLines={1}>{comp?.title || tSync('مسابقة الفيديو', curLang())}</Text>
           <View style={s.iconBtn} />
         </View>
 
@@ -128,7 +128,7 @@ export default function UGCContest() {
             <TX style={s.heroLabel}>🏆 الجائزة</TX>
             <Text style={s.heroPrize}>{comp?.prize}</Text>
             {timeLeft > 0 ? (
-              <Text style={s.heroCountdown}>ينتهي خلال {days > 0 ? `${days} أيام و ` : ''}{hours % 24} ساعة</Text>
+              <Text style={s.heroCountdown}>{tSync('ينتهي خلال', lang)} {days > 0 ? tf('{0} أيام و ', lang, [days]) : ''}{hours % 24} {tSync('ساعة', lang)}</Text>
             ) : (
               <TX style={s.heroCountdown}>انتهت المسابقة</TX>
             )}
@@ -184,7 +184,7 @@ export default function UGCContest() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={s.avatar}><Text style={s.avatarText}>{(v.user_name || '?').charAt(0)}</Text></View>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.userName}>{v.user_name || 'مشارك'}</Text>
+                    <Text style={s.userName}>{v.user_name || tSync('مشارك', curLang())}</Text>
                     <Text style={s.dateText}>{new Date(v.created_at).toLocaleDateString('ar')}</Text>
                   </View>
                 </View>
@@ -258,7 +258,7 @@ export default function UGCContest() {
               {!!comp?.ugc_hashtag && (
                 <View style={s.forceTag}>
                   <Ionicons name="pricetag" size={14} color="#F5C518" />
-                  <Text style={s.forceTagText}>هاشتاق المسابقة: #{comp.ugc_hashtag}</Text>
+                  <Text style={s.forceTagText}>{tSync('هاشتاق المسابقة: #', lang)}{comp.ugc_hashtag}</Text>
                 </View>
               )}
             </ScrollView>
@@ -274,7 +274,7 @@ export default function UGCContest() {
               <TouchableOpacity onPress={() => setCommentsFor(null)} style={s.iconBtn}>
                 <Ionicons name="close" size={24} color="#F5C518" />
               </TouchableOpacity>
-              <Text style={s.headerTitle}>التعليقات ({comments.length})</Text>
+              <Text style={s.headerTitle}>{tSync('التعليقات (', lang)}{comments.length})</Text>
               <View style={s.iconBtn} />
             </View>
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>

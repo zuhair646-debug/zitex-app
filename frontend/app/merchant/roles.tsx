@@ -7,8 +7,8 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, PrimaryButton, EmptyState, SkeletonBox, Badge, Chip } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 const PERMS: { key: string; label: string; group: string }[] = [
   { key: 'all', label: 'كل الصلاحيات (Admin)', group: 'شامل' },
@@ -50,12 +50,12 @@ export default function MerchantRoles() {
   useEffect(() => { load(); }, [load]);
 
   const openNew = () => setEditing({ name: '', description: '', permissions: [], color: '#D4AF37' });
-  const openEdit = (r: any) => { if (r.is_preset) { Alert.alert(tSync('دور جاهز', lang), 'الأدوار الجاهزة لا يمكن تعديلها. أنشئ دوراً مخصصاً بدلاً منها.'); return; } setEditing(r); };
+  const openEdit = (r: any) => { if (r.is_preset) { Alert.alert(tSync('دور جاهز', lang), tSync('الأدوار الجاهزة لا يمكن تعديلها. أنشئ دوراً مخصصاً بدلاً منها.', lang)); return; } setEditing(r); };
   const togglePerm = (k: string) => setEditing((e: any) => ({ ...e, permissions: e.permissions.includes(k) ? e.permissions.filter((x: string) => x !== k) : [...e.permissions, k] }));
 
   const save = async () => {
-    if (!editing.name?.trim()) { Alert.alert(tSync('نقص', lang), 'اسم الدور مطلوب'); return; }
-    if (editing.permissions.length === 0) { Alert.alert(tSync('نقص', lang), 'اختر صلاحية واحدة على الأقل'); return; }
+    if (!editing.name?.trim()) { Alert.alert(tSync('نقص', lang), tSync('اسم الدور مطلوب', lang)); return; }
+    if (editing.permissions.length === 0) { Alert.alert(tSync('نقص', lang), tSync('اختر صلاحية واحدة على الأقل', lang)); return; }
     try {
       const payload = { name: editing.name, description: editing.description || '', permissions: editing.permissions, color: editing.color || '#D4AF37' };
       if (editing.id && !editing.is_preset) await apiCall(`/api/merchant/roles/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) });
@@ -66,9 +66,9 @@ export default function MerchantRoles() {
 
   const remove = (r: any) => {
     if (r.is_preset) return;
-    Alert.alert(tSync('حذف الدور', lang), `حذف "${r.name}"؟`, [
-      { text: 'إلغاء', style: 'cancel' },
-      { text: 'حذف', style: 'destructive', onPress: async () => {
+    Alert.alert(tSync('حذف الدور', lang), tf('حذف "{0}"؟', lang, [r.name]), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
+      { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => {
         try { await apiCall(`/api/merchant/roles/${r.id}`, { method: 'DELETE' }); load(); }
         catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       }}
@@ -79,7 +79,7 @@ export default function MerchantRoles() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title={tSync("الأدوار والصلاحيات", lang)} onBack={() => router.back()} rightIcon="add" onRight={openNew} subtitle={`${roles.length} دور`} />
+        <ScreenHeader title={tSync("الأدوار والصلاحيات", lang)} onBack={() => router.back()} rightIcon="add" onRight={openNew} subtitle={tf('{0} دور', lang, [roles.length])} />
 
         {loading ? (
           <View style={{ padding: spacing.lg, gap: spacing.md }}>
@@ -97,13 +97,13 @@ export default function MerchantRoles() {
                   <View style={[s.dot, { backgroundColor: r.color || colors.brand }]} />
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                      <Text style={s.name}>{r.name}</Text>
-                      {r.is_preset && <Badge label={tSync("جاهز", lang)} tone="info" />}
+                      <TX style={s.name}>{r.name || ''}</TX>
+                      {r.is_preset && <Badge label={tSync('مُعدّ مسبقاً', lang)} tone="info" />}
                     </View>
-                    {!!r.description && <Text style={s.desc} numberOfLines={2}>{r.description}</Text>}
+                    {!!r.description && <TX style={s.desc} numberOfLines={2}>{r.description || ''}</TX>}
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
                       {r.permissions.slice(0, 4).map((p: string) => (
-                        <Badge key={p} label={PERMS.find(x => x.key === p)?.label || p} tone="default" />
+                        <Badge key={p} label={tSync(PERMS.find(x => x.key === p)?.label || p, lang)} tone="default" />
                       ))}
                       {r.permissions.length > 4 && <Badge label={`+${r.permissions.length - 4}`} tone="gold" />}
                     </View>
@@ -123,20 +123,20 @@ export default function MerchantRoles() {
       <Modal visible={!!editing} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditing(null)}>
         <View style={s.root}>
           <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-            <ScreenHeader title={editing?.id ? 'تعديل دور' : 'دور مخصص جديد'} onBack={() => setEditing(null)} rightIcon="checkmark" onRight={save} />
+            <ScreenHeader title={editing?.id ? tSync('تعديل دور', curLang()) : tSync('دور مخصص جديد', curLang())} onBack={() => setEditing(null)} rightIcon="checkmark" onRight={save} />
             <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40, gap: spacing.md }}>
               <TX style={s.lbl}>اسم الدور *</TX>
               <TextInput style={s.input} value={editing?.name || ''} onChangeText={t => setEditing({ ...editing, name: t })} placeholder={tSync("مثال: مسؤول تسويق متقدم", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
               <TX style={s.lbl}>الوصف</TX>
               <TextInput style={s.input} value={editing?.description || ''} onChangeText={t => setEditing({ ...editing, description: t })} placeholder={tSync("مسؤول عن السوشال والحملات", lang)} placeholderTextColor={colors.onSurfaceTertiary} />
 
-              <Text style={s.section}>🔐 الصلاحيات ({editing?.permissions?.length || 0})</Text>
+              <Text style={s.section}>{tSync('🔐 الصلاحيات (', lang)}{editing?.permissions?.length || 0})</Text>
               {GROUPS.map(g => (
                 <View key={g}>
-                  <Text style={s.groupLbl}>{g}</Text>
+                  <Text style={s.groupLbl}>{tSync(g, lang)}</Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                     {PERMS.filter(p => p.group === g).map(p => (
-                      <Chip key={p.key} label={p.label} active={editing?.permissions?.includes(p.key)} onPress={() => togglePerm(p.key)} />
+                      <Chip key={p.key} label={tSync(p.label, lang)} active={editing?.permissions?.includes(p.key)} onPress={() => togglePerm(p.key)} />
                     ))}
                   </View>
                 </View>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useT } from '../src/i18n';
+import { useT, curLang } from '../src/i18n';
 import { tSync } from '../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -56,8 +56,8 @@ export default function CartScreen() {
           payment_method: 'cash',
         })
       });
-      Alert.alert('Order Placed!', 'Your order will be processed soon', [
-        { text: 'OK', onPress: () => { router.back(); } }
+      Alert.alert(tSync('تم تقديم الطلب!', curLang()), tSync('سيتم تجهيز طلبك قريباً', curLang()), [
+        { text: tSync('حسناً', curLang()), onPress: () => { router.back(); } }
       ]);
       setItems([]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setOrdering(false); }
@@ -81,17 +81,17 @@ export default function CartScreen() {
         <TouchableOpacity testID="cart-back-btn" style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Shopping Cart</Text>
-        <Text style={styles.itemCount}>{items.length} items</Text>
+        <Text style={styles.headerTitle}>{tSync('سلة التسوق', lang)}</Text>
+        <Text style={styles.itemCount}>{items.length} {tSync('منتج', lang)}</Text>
       </View>
 
       {items.length === 0 ? (
         <View style={styles.emptyWrap}>
           <View style={styles.emptyIconWrap}><Ionicons name="cart-outline" size={64} color="#A1A1AA" /></View>
-          <Text style={styles.emptyTitle}>Cart is Empty</Text>
-          <Text style={styles.emptyDesc}>You haven't added any products yet</Text>
+          <Text style={styles.emptyTitle}>{tSync('السلة فارغة', lang)}</Text>
+          <Text style={styles.emptyDesc}>{tSync('ما أضفت أي منتجات لحد الآن', lang)}</Text>
           <TouchableOpacity testID="browse-products-btn" style={styles.browseBtn} onPress={() => router.back()}>
-            <Text style={styles.browseBtnText}>Browse Products</Text>
+            <Text style={styles.browseBtnText}>{tSync('تصفح المنتجات', lang)}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -106,15 +106,15 @@ export default function CartScreen() {
                   <Image source={{ uri: p.images?.[0] }} style={styles.cartImg} />
                   <View style={styles.cartInfo}>
                     <TranslatableName
-                      text={p.name_en}
-                      sourceLang="en"
+                      text={lang === 'ar' ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar)}
+                      sourceLang={lang === 'ar' ? 'ar' : 'en'}
                       style={styles.cartName}
                       numberOfLines={2}
                       iconSize={12}
                     />
                     {!!item.color && <Text style={styles.cartOption}>{item.color}</Text>}
                     {!!item.storage && <Text style={styles.cartOption}>{item.storage}</Text>}
-                    <Text style={styles.cartPrice}>{price} ر.س</Text>
+                    <Text style={styles.cartPrice}>{price} {tSync('ر.س', lang)}</Text>
                     <View style={styles.qtyRow}>
                       <TouchableOpacity testID={`qty-minus-${item.id}`} style={styles.qtyBtn} onPress={() => updateQty(item.id, item.quantity - 1)}>
                         <Ionicons name="remove" size={18} color="#0A0A0A" />
@@ -134,22 +134,22 @@ export default function CartScreen() {
 
             {/* Summary */}
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Order Summary</Text>
-              <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Subtotal</Text><Text style={styles.summaryVal}>{subtotal} SAR</Text></View>
-              <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Tax (15%)</Text><Text style={styles.summaryVal}>{tax} SAR</Text></View>
-              <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Delivery</Text><Text style={styles.summaryVal}>{delivery} SAR</Text></View>
-              <View style={[styles.summaryRow, styles.totalRow]}><Text style={styles.totalLabel}>Total</Text><Text style={styles.totalVal}>{total} SAR</Text></View>
+              <Text style={styles.summaryTitle}>{tSync('ملخص الطلب', lang)}</Text>
+              <View style={styles.summaryRow}><Text style={styles.summaryLabel}>{tSync('المجموع الجزئي', lang)}</Text><Text style={styles.summaryVal}>{subtotal} {tSync('ر.س', lang)}</Text></View>
+              <View style={styles.summaryRow}><Text style={styles.summaryLabel}>{tSync('الضريبة (15%)', lang)}</Text><Text style={styles.summaryVal}>{tax} {tSync('ر.س', lang)}</Text></View>
+              <View style={styles.summaryRow}><Text style={styles.summaryLabel}>{tSync('التوصيل', lang)}</Text><Text style={styles.summaryVal}>{delivery} {tSync('ر.س', lang)}</Text></View>
+              <View style={[styles.summaryRow, styles.totalRow]}><Text style={styles.totalLabel}>{tSync('الإجمالي', lang)}</Text><Text style={styles.totalVal}>{total} {tSync('ر.س', lang)}</Text></View>
             </View>
             <View style={{ height: 100 }} />
           </ScrollView>
 
           <View style={styles.bottomBar}>
             <View style={styles.bottomInfo}>
-              <Text style={styles.bottomTotal}>{total} SAR</Text>
-              <Text style={styles.bottomCount}>{items.length} items</Text>
+              <Text style={styles.bottomTotal}>{total} {tSync('ر.س', lang)}</Text>
+              <Text style={styles.bottomCount}>{items.length} {tSync('منتج', lang)}</Text>
             </View>
             <TouchableOpacity testID="place-order-btn" style={styles.orderBtn} onPress={() => router.push('/checkout')} disabled={ordering}>
-              {ordering ? <ActivityIndicator color="#FFF" /> : <Text style={styles.orderBtnText}>Checkout</Text>}
+              {ordering ? <ActivityIndicator color="#FFF" /> : <Text style={styles.orderBtnText}>{tSync('الدفع', lang)}</Text>}
             </TouchableOpacity>
           </View>
         </>

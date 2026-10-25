@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo} from 'react';
-import { useT } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { tSync, tf, TX } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +8,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { TX } from '../../src/useAutoT';
 
 const STATUSES: Record<string, string> = {
   pending: 'قيد المراجعة',
@@ -26,7 +25,7 @@ const SCOLOR: Record<string, string> = {
 };
 
 export default function MerchantBookings() {
-  const { lang } = useT();
+  const { lang, isRTL } = useT();
 
   const s = useSStyles();
   const router = useRouter();
@@ -46,7 +45,7 @@ export default function MerchantBookings() {
   useEffect(() => { load(); }, [load]);
 
   const updateStatus = (id: string, current: string) => {
-    Alert.alert(tSync('تحديث الحالة', lang), 'اختر الحالة الجديدة', [
+    Alert.alert(tSync('تحديث الحالة', lang), tSync('اختر الحالة الجديدة', curLang()), [
       ...Object.keys(STATUSES).filter(s => s !== current).map(s => ({
         text: STATUSES[s],
         onPress: async () => {
@@ -56,7 +55,7 @@ export default function MerchantBookings() {
           } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
         }
       })),
-      { text: 'إلغاء', style: 'cancel' as const },
+      { text: tSync('إلغاء', curLang()), style: 'cancel' as const },
     ]);
   };
 
@@ -73,9 +72,9 @@ export default function MerchantBookings() {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={s.header}>
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-            <Ionicons name="chevron-forward" size={22} color={colors.onSurface} />
+            <Ionicons name={isRTL ? "chevron-forward" : "chevron-back"} size={22} color={colors.onSurface} />
           </TouchableOpacity>
-          <Text style={s.title}>الحجوزات ({bookings.length})</Text>
+          <Text style={s.title}>{tSync('الحجوزات (', lang)}{bookings.length})</Text>
           <TouchableOpacity onPress={() => { setRefreshing(true); load(); }} style={s.iconBtn}>
             <Ionicons name="refresh" size={20} color={colors.brand} />
           </TouchableOpacity>
@@ -84,12 +83,12 @@ export default function MerchantBookings() {
         {/* Status tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabsRow}>
           <TouchableOpacity onPress={() => setFilter('all')} style={[s.tab, filter === 'all' && s.tabActive]}>
-            <Text style={[s.tabLabel, filter === 'all' && s.tabLabelActive]}>الكل ({bookings.length})</Text>
+            <Text style={[s.tabLabel, filter === 'all' && s.tabLabelActive]}>{tSync('الكل (', lang)}{bookings.length})</Text>
           </TouchableOpacity>
           {Object.keys(STATUSES).map(st => (
             <TouchableOpacity key={st} onPress={() => setFilter(st)} style={[s.tab, filter === st && s.tabActive]}>
               <View style={[s.dot, { backgroundColor: SCOLOR[st] }]} />
-              <Text style={[s.tabLabel, filter === st && s.tabLabelActive]}>{STATUSES[st]} ({counts[st] || 0})</Text>
+              <Text style={[s.tabLabel, filter === st && s.tabLabelActive]}>{tSync(STATUSES[st], lang)} ({counts[st] || 0})</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -104,14 +103,14 @@ export default function MerchantBookings() {
             {filtered.length === 0 ? (
               <View style={{ alignItems: 'center', padding: spacing['3xl'], gap: spacing.md }}>
                 <Ionicons name="calendar-outline" size={64} color={colors.brandTertiary} />
-                <Text style={s.empty}>لا توجد حجوزات{filter !== 'all' ? ` بحالة "${STATUSES[filter]}"` : ' بعد'}</Text>
+                <Text style={s.empty}>{tSync('لا توجد حجوزات', lang)}{filter !== 'all' ? tf(' بحالة "{0}"', lang, [tSync(STATUSES[filter], lang)]) : tSync(' بعد', lang)}</Text>
               </View>
             ) : filtered.map(b => (
               <View key={b.id} style={s.card}>
                 <View style={s.row}>
-                  <Text style={s.svc}>{b.service_name || b.name || 'حجز'}</Text>
+                  <Text style={s.svc}>{b.service_name || b.name || tSync('حجز', curLang())}</Text>
                   <TouchableOpacity onPress={() => updateStatus(b.id, b.status)} style={[s.statusBadge, { backgroundColor: (SCOLOR[b.status] || colors.brand) + '30', borderColor: SCOLOR[b.status] || colors.brand }]}>
-                    <Text style={[s.statusText, { color: SCOLOR[b.status] || colors.brand }]}>{STATUSES[b.status] || b.status}</Text>
+                    <Text style={[s.statusText, { color: SCOLOR[b.status] || colors.brand }]}>{tSync(STATUSES[b.status] || b.status, lang)}</Text>
                     <Ionicons name="chevron-down" size={11} color={SCOLOR[b.status] || colors.brand} />
                   </TouchableOpacity>
                 </View>
@@ -135,7 +134,7 @@ export default function MerchantBookings() {
                 {!!b.total_fee && (
                   <View style={s.priceRow}>
                     <TX style={s.priceLabel}>المجموع</TX>
-                    <Text style={s.price}>{b.total_fee} ر.س</Text>
+                    <Text style={s.price}>{b.total_fee} {tSync('ر.س', lang)}</Text>
                   </View>
                 )}
               </View>

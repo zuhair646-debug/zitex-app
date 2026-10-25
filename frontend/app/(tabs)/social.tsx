@@ -7,8 +7,8 @@ import { useAuth } from '../_layout';
 import MediaCarousel from '../../src/components/MediaCarousel';
 import TranslateButton from '../../src/components/TranslateButton';
 import TranslatableName from '../../src/components/TranslatableName';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 const { width } = Dimensions.get('window');
 
@@ -16,10 +16,10 @@ const formatNum = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 
 const timeAgo = (iso?: string) => {
   if (!iso) return '';
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return 'الآن';
-  if (diff < 3600) return `${Math.floor(diff / 60)} د`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} س`;
-  return `${Math.floor(diff / 86400)} ي`;
+  if (diff < 60) return tSync('الآن', curLang());
+  if (diff < 3600) return tf('{0} د', curLang(), [Math.floor(diff / 60)]);
+  if (diff < 86400) return tf('{0} س', curLang(), [Math.floor(diff / 3600)]);
+  return tf('{0} ي', curLang(), [Math.floor(diff / 86400)]);
 };
 
 export default function SocialScreen() {
@@ -91,7 +91,7 @@ export default function SocialScreen() {
   const openContact = async (type: 'whatsapp' | 'phone' | 'email' | 'instagram' | 'tiktok' | 'snapchat' | 'twitter' | 'telegram') => {
     if (!storeInfo) return;
     const v = storeInfo[type];
-    if (!v) { Alert.alert(tSync('غير متوفر', lang), `لم يضف المتجر ${type} بعد`); return; }
+    if (!v) { Alert.alert(tSync('غير متوفر', lang), tf('لم يضف المتجر {0} بعد', lang, [type])); return; }
     let url = '';
     switch (type) {
       case 'whatsapp': url = `https://wa.me/${String(v).replace(/[^0-9]/g, '')}`; break;
@@ -103,7 +103,7 @@ export default function SocialScreen() {
       case 'twitter':  url = `https://twitter.com/${String(v).replace('@','')}`; break;
       case 'telegram': url = `https://t.me/${String(v).replace('@','')}`; break;
     }
-    try { await Linking.openURL(url); } catch { Alert.alert(tSync('خطأ', lang), 'تعذر فتح الرابط'); }
+    try { await Linking.openURL(url); } catch { Alert.alert(tSync('خطأ', lang), tSync('تعذر فتح الرابط', curLang())); }
   };
   const sendComment = async () => {
     if (!threadText.trim() || !threadPostId) return;
@@ -112,7 +112,7 @@ export default function SocialScreen() {
       setThreadText('');
       const d = await apiCall(`/api/social/posts/${threadPostId}/comments`); setThreadComments(d);
       // update count
-      setPosts(posts.map(p => p.id === threadPostId ? { ...p, comments: (p.comments || 0) + 1 } : p));
+      setPosts(posts.map(p => p.id === threadPostId ? { ...p, comments: Array.isArray(p.comments) ? p.comments.length + 1 : (p.comments || 0) + 1 } : p));
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
@@ -160,7 +160,7 @@ export default function SocialScreen() {
           {/* Marketing campaign cards */}
           {campaigns.length > 0 && campaigns.map((c: any) => {
             const isAff = c.campaign_type === 'affiliate';
-            const label = c.cta_label || (isAff ? 'قدّم الآن' : 'تسوّق الآن');
+            const label = c.cta_label || (isAff ? tSync('قدّم الآن', curLang()) : tSync('تسوّق الآن', curLang()));
             const onPress = async () => {
               try { await apiCall(`/api/marketing/ads/${c.id}/track?event=click`, { method: 'POST' }); } catch {}
               if (isAff) {
@@ -184,11 +184,11 @@ export default function SocialScreen() {
                 <View style={s.campaignBody}>
                   <View style={s.campaignBadgeRow}>
                     <View style={[s.campaignBadge, isAff && s.campaignBadgeGold]}>
-                      <Text style={[s.campaignBadgeText, isAff && s.campaignBadgeTextGold]}>{isAff ? `🎁 ${c.commission_percent}% عمولة` : '📢 إعلان'}</Text>
+                      <Text style={[s.campaignBadgeText, isAff && s.campaignBadgeTextGold]}>{isAff ? tf('🎁 {0}% عمولة', lang, [c.commission_percent]) : tSync('📢 إعلان', curLang())}</Text>
                     </View>
                     <Text style={s.campaignMerchant}>{c.merchant_name}</Text>
                   </View>
-                  <Text style={s.campaignTitle}>{c.title}</Text>
+                  <TranslatableName text={c.title} style={s.campaignTitle} />
                   {!!c.description && <Text style={s.campaignDesc} numberOfLines={3}>{c.description}</Text>}
                   {!!c.incentives && isAff && <Text style={s.campaignIncentives}>🎯 {c.incentives}</Text>}
                   <View style={s.campaignCta}>
@@ -284,14 +284,14 @@ export default function SocialScreen() {
                     </TouchableOpacity>
                   );
                 })}
-                {isPoll && <Text style={s.totalVotesText}>{totalVotes} صوت</Text>}
+                {isPoll && <Text style={s.totalVotesText}>{totalVotes} {tSync('صوت', lang)}</Text>}
 
                 <View style={s.postActions}>
                   <TouchableOpacity style={s.actionItem} onPress={() => toggleLike(postId)}>
                     <Ionicons name={likedPosts.has(postId) ? 'heart' : 'heart-outline'} size={22} color={likedPosts.has(postId) ? '#EF4444' : '#52525B'} />
                     <Text style={s.actionCount}>{formatNum(post.likes || 0)}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={s.actionItem} onPress={() => openThread(postId)}>
+                  <TouchableOpacity testID={`post-comments-btn-${postId}`} style={s.actionItem} onPress={() => openThread(postId)}>
                     <Ionicons name="chatbubble-outline" size={20} color="#52525B" />
                     <Text style={s.actionCount}>{formatNum(Array.isArray(post.comments) ? post.comments.length : (post.comments || 0))}</Text>
                   </TouchableOpacity>
@@ -320,7 +320,7 @@ export default function SocialScreen() {
                       {!!storeInfo.email && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#EF4444' }]} onPress={() => openContact('email')}>
                           <Ionicons name="mail" size={14} color="white" />
-                          <Text style={s.chipText}>Email</Text>
+                          <Text style={s.chipText}>{tSync('البريد الإلكتروني', lang)}</Text>
                         </TouchableOpacity>
                       )}
                       {!!storeInfo.instagram && (
@@ -400,8 +400,8 @@ export default function SocialScreen() {
             )}
           />
           <View style={s.commentBar}>
-            <TextInput style={[s.commentInput]} value={threadText} onChangeText={setThreadText} placeholder={tSync("اكتب تعليقاً...", lang)} />
-            <TouchableOpacity style={s.sendBtn} onPress={sendComment}><Ionicons name="send" size={18} color="white" /></TouchableOpacity>
+            <TextInput testID="comment-input" style={[s.commentInput]} value={threadText} onChangeText={setThreadText} placeholder={tSync("اكتب تعليقاً...", lang)} />
+            <TouchableOpacity testID="comment-send-btn" style={s.sendBtn} onPress={sendComment}><Ionicons name="send" size={18} color="white" /></TouchableOpacity>
           </View>
         </SafeAreaView>
       </Modal>

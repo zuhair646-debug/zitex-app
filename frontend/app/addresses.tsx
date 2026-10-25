@@ -1,3 +1,5 @@
+import { useT, curLang } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -6,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 
 export default function AddressesScreen() {
+  useT(); // re-render when language or on-demand translations change
   const router = useRouter();
   const { apiCall } = useAuth();
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -14,9 +17,9 @@ export default function AddressesScreen() {
   const load = async () => { try { const d = await apiCall('/api/addresses'); setAddresses(d); } catch {} finally { setLoading(false); } };
   useEffect(() => { load(); }, []);
 
-  const deleteAddr = (id: string) => Alert.alert('Delete Address', 'Are you sure?', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Delete', style: 'destructive', onPress: async () => { await apiCall(`/api/addresses/${id}`, { method: 'DELETE' }); load(); } },
+  const deleteAddr = (id: string) => Alert.alert(tSync('حذف العنوان', curLang()), tSync('هل أنت متأكد؟', curLang()), [
+    { text: tSync('إلغاء', curLang()), style: 'cancel' },
+    { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => { await apiCall(`/api/addresses/${id}`, { method: 'DELETE' }); load(); } },
   ]);
 
   if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
@@ -27,30 +30,30 @@ export default function AddressesScreen() {
         <TouchableOpacity testID="addr-back" style={s.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
         </TouchableOpacity>
-        <Text style={s.title}>Address</Text>
+        <Text style={s.title}>{tSync('عناويني', curLang())}</Text>
         <TouchableOpacity testID="add-addr-btn" style={s.addBtn}><Ionicons name="add" size={22} color="#F5C518" /></TouchableOpacity>
       </View>
       <View style={s.locationRow}>
         <Ionicons name="location" size={20} color="#F5C518" />
         <View style={s.locationInfo}>
-          <Text style={s.locationLabel}>Enable location</Text>
-          <Text style={s.locationDesc}>Allow location to see your correct location</Text>
+          <Text style={s.locationLabel}>{tSync('فعّل الموقع', curLang())}</Text>
+          <Text style={s.locationDesc}>{tSync('فعّل الموقع عشان نحدد موقعك الصحيح', curLang())}</Text>
         </View>
         <View style={s.toggle}><View style={s.toggleDot} /></View>
       </View>
-      <Text style={s.sectionTitle}>Saved Addresses</Text>
+      <Text style={s.sectionTitle}>{tSync('العناوين المحفوظة', curLang())}</Text>
       <ScrollView contentContainerStyle={s.list}>
         {addresses.map((a) => (
           <View key={a.id} style={s.addrCard}>
             <View style={s.addrTop}>
               <Ionicons name={a.label === 'My home' ? 'home' : 'business'} size={20} color="#F5C518" />
               <Text style={s.addrLabel}>{a.label}</Text>
-              {a.is_default && <View style={s.defaultBadge}><Ionicons name="checkmark" size={12} color="#10B981" /><Text style={s.defaultText}>Default</Text></View>}
+              {a.is_default && <View style={s.defaultBadge}><Ionicons name="checkmark" size={12} color="#10B981" /><Text style={s.defaultText}>{tSync('افتراضي', curLang())}</Text></View>}
             </View>
             <Text style={s.addrText}>{a.address}</Text>
             <View style={s.addrActions}>
-              <TouchableOpacity testID={`edit-addr-${a.id}`} style={s.actionBtn}><Ionicons name="pencil" size={16} color="#52525B" /><Text style={s.actionText}>Edit</Text></TouchableOpacity>
-              <TouchableOpacity testID={`delete-addr-${a.id}`} style={s.actionBtn} onPress={() => deleteAddr(a.id)}><Ionicons name="trash" size={16} color="#EF4444" /><Text style={[s.actionText, { color: '#EF4444' }]}>Delete</Text></TouchableOpacity>
+              <TouchableOpacity testID={`edit-addr-${a.id}`} style={s.actionBtn}><Ionicons name="pencil" size={16} color="#52525B" /><Text style={s.actionText}>{tSync('تعديل', curLang())}</Text></TouchableOpacity>
+              <TouchableOpacity testID={`delete-addr-${a.id}`} style={s.actionBtn} onPress={() => deleteAddr(a.id)}><Ionicons name="trash" size={16} color="#EF4444" /><Text style={[s.actionText, { color: '#EF4444' }]}>{tSync('حذف', curLang())}</Text></TouchableOpacity>
             </View>
           </View>
         ))}

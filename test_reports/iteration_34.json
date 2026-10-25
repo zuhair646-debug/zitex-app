@@ -1,0 +1,58 @@
+{
+  "summary": "Frontend-only retest of the issues left open in iteration_33. Tested on the mobile web preview at 375x667 in ar/en/de/zh/he, with the autoT cache cleared, plus static scans of i18n-generated.json and the source. FIXED: en dictionary (Draw window, Draw date, Hours today, '26 participants', chamber stat 'Number of participants', zh 查看详情并进行抽奖); competition/[id] status, entry text, 'Answer the questions (n questions)', 'Participants (n)' and quiz 'Next' in ar/en/de/zh; merchant service-bookings badge; drivers 'SAR'; support-settings 'Without + or 00' and 'Store Address'; chamber detail 'All participants (n)'; loyalty-history 'External Loyalty Program' and 'Redeem Points'/'Punkte einlösen'; checkout Bank Transfer/COD in de/zh (Banküberweisung/转账); driver 'To:' (checked in code only, because the driver has no orders). All Alert.alert literals are wrapped: the static scan found 0 unwrapped. STILL OPEN or NEW: competition/[id].tsx:95 '{n} user' is hardcoded English in every language. The quiz Submit key 'إرسال' gives en 'Send' and de 'Versand' (means shipping). 'Internal Store Points' stays English in de/zh (LoyaltyRedeemPicker.tsx:98 uses name_en). The LoyaltyRedeemPicker title is still right-aligned. NEW HIGH: on checkout the LoyaltyRedeemPicker sits outside the ScrollView and the absolute bottomBar covers it, so customers cannot reach the points tiles. CRASH (fixed by me): /merchant/social showed a red screen 'Objects are not valid as a React child' because p.comments is an array. Many screens still render raw Arabic constant labels (create-return resolution, competition-form types, social post types, marketing chips, product-analytics tabs, product-form warranty types, services-catalog, live-preview). Regression: about 130 page loads across 4 roles and 5 languages; after the social fix there are no pageerrors or blank pages. No deprecated Expo packages were found.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/competitions/{comp_id}/draw", "issue": "No auth or role dependency (server.py:343). Any customer, or even an anonymous caller, can run a draw. The customer competition screen also shows the 'Start draw' button (draw-btn) to every user while the competition is open. Reference: app/competition/[id].tsx:147", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "GET /api/services/{id}, GET /api/competitions/{id}", "issue": "An invalid ObjectId ('undefined') raises bson InvalidId and returns 500. It should return 400 or 404."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Merchant social (CRASH, FIXED)", "issue": "Red screen 'Objects are not valid as a React child (keys user_name,text,created_at,likes)', because {p.comments || 0} renders an array. I fixed it to use Array.isArray(p.comments) ? p.comments.length : .... Reference: app/merchant/social.tsx:282", "testID": "n/a", "priority": "CRITICAL"},
+      {"component": "Customer social comment count", "issue": "After posting a comment, setPosts does (p.comments || 0) + 1 on an array, which produces a string like '[object Object],...1', and the count breaks. Reference: app/(tabs)/social.tsx:115", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Competition detail '{n} user'", "issue": "'10000 user' is hardcoded English in ar/en/de/zh/he. Reference: app/competition/[id].tsx:95", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Quiz Submit button", "issue": "The dict entry 'إرسال' is en 'Send' and de 'Versand' (= shipping), so the last quiz question shows the wrong button text. Use a dedicated key such as 'إرسال الإجابات' (Submit / Absenden / 提交). Reference: app/competition/[id].tsx:178", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Checkout LoyaltyRedeemPicker hidden", "issue": "PaymentMethodsRibbon and LoyaltyRedeemPicker are rendered outside the ScrollView. The bottomBar is position:absolute, so it covers the picker: the 'Internal Store Points' tile is at y=628 under the Buy button (580-667) at 375x667. Tapping it does nothing, and customers cannot redeem points. Reference: app/checkout.tsx:283-295,374", "testID": "n/a", "priority": "HIGH"},
+      {"component": "LoyaltyRedeemPicker i18n/RTL", "issue": "Line 98 shows p.name_en ('Internal Store Points') in de/zh instead of translating it. The sheet title (line 118) shows raw selected.name_ar in every language. textAlign 'right' is hardcoded on title, sheetTitle, sheetSub, label, input and legalNote (lines 161,172-181), so 'Redeem loyalty points for discount' is right-aligned in en/de/zh. PaymentAndLoyalty.tsx:89,90,157,158,204 also hardcode 'right'. Reference: src/components/LoyaltyRedeemPicker.tsx", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Raw Arabic constant labels (not wrapped)", "issue": "Static scan: {x.label}/{x.name}/{x.desc} rendered from Arabic constant arrays without tSync. Confirmed in en UI: competition-form types 'سحب عام / سؤال وجواب / فيديو تسويقي' and their descriptions. Files: app/create-return.tsx:246 (customer resolution: استرداد المبلغ / استبدال / إصلاح ضمان), app/merchant/competition-form.tsx:106,107,230, app/merchant/social.tsx:246,337,338 ('منشور' type pill), app/merchant/marketing.tsx:480, app/merchant/product-analytics.tsx:294, app/merchant/product-form.tsx:474, app/merchant/services-catalog.tsx:101, app/merchant/live-preview.tsx:551,694,850,1362,1477,1516,1636,1717,1734, src/components/live-preview/MerchantSocialFeed.tsx:149,515,532", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Other unwrapped Arabic literals", "issue": "app/checkout.tsx:217 'اختر فترة التوصيل ←' (scheduled delivery; the arrow is also RTL-only); app/service-booking.tsx:134 'حدّد موقعي على الخريطة'; app/merchant/service-bookings.tsx:126 value=\"استلام من المنزل\"", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Wrong or inexact dictionary entries", "issue": "'العنوان' is en 'Title' / zh '标题', but it is used as an address label (service-bookings.tsx:127). It should be Address / 地址. 'استبدال' = Replace/Ersetzen/替换 is shown on the loyalty-history card 'Replace – Your Points for Discounts' (should be Redeem/Einlösen/兑换). 'تقييم' en 'reviews' (lowercase plural). Plurals: en '5 employee' ({0} موظف), en '0 Point'/'500 Point to next level' and de '500 Punkt' (نقطة), de 'Fragen beantworten (2 Frage)'. 'منتهية' = 'Expired' and 'قريباً' = 'Soon', while the chamber stats say 'Ended' (inconsistent). The zh carrier 'Saudi Post SPL' is translated as '中国邮政（沙特邮政）' (China Post!) and de as 'Saudi Post (Sabel)' (backend on-demand translation).", "testID": "n/a", "priority": "LOW"},
+      {"component": "Merchant bookings header", "issue": "The back icon is hardcoded chevron-forward, so it points the wrong way in LTR (en/de). Reference: app/merchant/bookings.tsx:75", "testID": "n/a", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Checkout loyalty redemption", "issue": "The redeem picker cannot be reached on a mobile viewport because the absolute bottom bar overlaps it (see ui_bugs).", "affected_testIDs": []}
+    ],
+    "design_issues": [
+      {"screen": "Checkout", "issues": ["The PaymentMethodsRibbon band above the Buy button looks dimmed or grey. Its yellow title and grey 'Licensed by SAMA' text on grey have low contrast.", "The fixed ribbon plus picker take about 200px of a 667px screen and leave less room for the scroll content."]},
+      {"screen": "Merchant team (de)", "issues": ["'Heutige Arbeitsstunden' is truncated in the stat card. A shorter label such as 'Stunden heute' would fit."]},
+      {"screen": "Merchant service-bookings", "issues": ["All 101 list cards show '👤 — •  📱  Total: 0 SAR' (customer, device and total are empty). This is a data or field-mapping issue."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/i18n_static_check.py", "/app/backend/tests/i18n_unwrapped_scan.py"],
+  "action_items": [
+    "HIGH: checkout.tsx move PaymentMethodsRibbon and LoyaltyRedeemPicker inside the ScrollView, or add paddingBottom so the absolute bottomBar does not cover them.",
+    "HIGH: add auth plus a role check (merchant/chamber) to POST /api/competitions/{id}/draw, and hide draw-btn for customers in competition/[id].tsx:147.",
+    "Fix (tabs)/social.tsx:115 so the comment count works when comments is an array.",
+    "competition/[id].tsx:95 wrap '{0} مستخدم' with tf. :178 use a Submit-specific key (en Submit, de Absenden, zh 提交).",
+    "LoyaltyRedeemPicker.tsx:98 use tSync(name_ar) for non-ar/en languages and :118 translate the sheet title. Replace textAlign 'right' with 'auto' in LoyaltyRedeemPicker.tsx and PaymentAndLoyalty.tsx.",
+    "Wrap constant labels with tSync in create-return.tsx:246, competition-form.tsx:106-107,230, social.tsx:246,337-338, marketing.tsx:480, product-analytics.tsx:294, product-form.tsx:474, services-catalog.tsx:101, live-preview.tsx and MerchantSocialFeed.tsx (lines listed in ui_bugs).",
+    "Wrap checkout.tsx:217, service-booking.tsx:134 and service-bookings.tsx:126 literals.",
+    "Dict fixes: 'العنوان' (Address/地址, or add a separate address key); 'استبدال' on the loyalty card (Redeem); 'تقييم' en 'Review'; plurals for '{0} موظف', 'نقطة' and de '{0} سؤال'; align 'منتهية'/'قريباً' with Ended/Coming soon. Fix the cached zh translation of 'Saudi Post SPL' (中国邮政).",
+    "merchant/bookings.tsx:75 use a direction-aware back icon.",
+    "Return 400/404 for an invalid ObjectId in /api/services/{id} and /api/competitions/{id}."
+  ],
+  "critical_code_review_comments": [
+    "CORS allow_origins=['*'] with allow_credentials=True (server.py:3965). There is no brute-force lockout on /api/auth/login. Auth uses a Bearer token in AsyncStorage (no httpOnly cookies). Passwords are hashed with bcrypt.",
+    "The i18n strategy relies on wrapping each literal. Constant arrays with Arabic labels are the main remaining leak source; consider wrapping at render time with a shared helper.",
+    "useAutoT.tsx is fine: it does a static lookup, then cache, then a backend fetch."
+  ],
+  "updated_files": ["/app/frontend/app/merchant/social.tsx (line 282: crash fix for the comments array)", "/app/backend/tests/i18n_static_check.py (new)", "/app/backend/tests/i18n_unwrapped_scan.py (new)"],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "~85% of the requested retest items pass (Submit text, '{n} user', Internal Store Points and the picker's right alignment are still open); 1 crash found and fixed"},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login via fetch /api/auth/login (response .token), then set localStorage token and app_lang and remove '@zenrex_autot_cache_v2'. IDs: quiz competition 6ab6206a71b6ad54069c12bb (2 questions), competition 6ab6206a71b6ad54069c12bc, chamber draw 6ab6206a71b6ad54069c12be, service 6ab6206a71b6ad54069c12cc (/service-booking?service_id=), ugc 6ab6206a71b6ad54069c12ba (/ugc-contest?id=). The driver 0540001111 has no active or history orders, so 'To:' cannot be checked in the UI. Run python3 /app/backend/tests/i18n_static_check.py <files> (finds missing dict keys) and i18n_unwrapped_scan.py (finds unwrapped literals). Keep browser scripts under about 30 page loads per call to avoid a timeout."
+}

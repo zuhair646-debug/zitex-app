@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useT } from '../../i18n';
-import { tSync } from '../../useAutoT';
+import { useT, curLang } from '../../i18n';
+import { tSync, tf, TX } from '../../useAutoT';
 import { View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,7 +9,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { LP, K, KM } from './theme';
 import { KpiCard, Sparkline, HBar, Section } from './atoms';
 import { ExportButton } from './AlertsAndExport';
-import { TX } from '../../useAutoT';
 
 const DAY_LABELS = ['اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت', 'أحد'];
 const SOURCE_LABEL: Record<string, string> = {
@@ -30,10 +29,10 @@ const SOURCE_COLOR: Record<string, string> = {
 const timeAgo = (iso?: string) => {
   if (!iso) return '';
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return 'الآن';
-  if (diff < 3600) return `${Math.floor(diff / 60)}د`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}س`;
-  return `${Math.floor(diff / 86400)}ي`;
+  if (diff < 60) return tSync('الآن', curLang());
+  if (diff < 3600) return tf('{0}د', curLang(), [Math.floor(diff / 60)]);
+  if (diff < 86400) return tf('{0}س', curLang(), [Math.floor(diff / 3600)]);
+  return tf('{0}ي', curLang(), [Math.floor(diff / 86400)]);
 };
 
 export default function CompetitionDetailSheet({ competitionId, apiCall, onClose }: any) {
@@ -71,7 +70,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
   const comp = data.competition;
   const isEnded = comp.status === 'ended' || (data.winner_details || []).length > 0;
   const peakHour = data.peak_hour;
-  const peakHourLabel = `${peakHour === 0 ? 12 : peakHour > 12 ? peakHour - 12 : peakHour}${peakHour < 12 ? 'ص' : 'م'}`;
+  const peakHourLabel = `${peakHour === 0 ? 12 : peakHour > 12 ? peakHour - 12 : peakHour}${peakHour < 12 ? tSync('ص', curLang()) : tSync('م', curLang())}`;
   const maxDaily = Math.max(1, ...(data.daily_series || []).map((x: any) => x.count));
 
   return (
@@ -88,7 +87,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
             <View style={{ flex: 1 }} />
             <View style={[st.statusPill, { backgroundColor: isEnded ? '#3F3F4680' : '#065F4680' }]}>
               <View style={[st.dot, { backgroundColor: isEnded ? LP.MUTED : LP.SUCCESS }]} />
-              <Text style={[st.statusText, { color: isEnded ? LP.MUTED : LP.SUCCESS }]}>{isEnded ? 'منتهية' : 'مباشرة'}</Text>
+              <Text style={[st.statusText, { color: isEnded ? LP.MUTED : LP.SUCCESS }]}>{isEnded ? tSync('منتهية', curLang()) : tSync('مباشرة', curLang())}</Text>
             </View>
           </BlurView>
 
@@ -100,7 +99,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
               <View style={{ position: 'absolute', bottom: 14, left: 14, right: 14, alignItems: 'center' }}>
                 <View style={st.trophyBadge}>
                   <Ionicons name="trophy" size={16} color={LP.GOLD} />
-                  <Text style={st.prizeText} numberOfLines={1}>{comp.prize || 'جائزة قيّمة'}</Text>
+                  <Text style={st.prizeText} numberOfLines={1}>{comp.prize || tSync('جائزة قيّمة', curLang())}</Text>
                 </View>
                 <Text style={st.heroTitle} numberOfLines={2}>{comp.title}</Text>
               </View>
@@ -154,7 +153,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   <View style={st.peakChip}>
                     <Ionicons name="calendar" size={12} color={LP.GOLD} />
                     <TX style={st.peakLabel}>ذروة اليوم</TX>
-                    <Text style={st.peakValue}>{DAY_LABELS[data.peak_day_of_week] || '—'}</Text>
+                    <Text style={st.peakValue}>{tSync(DAY_LABELS[data.peak_day_of_week] || '', curLang()) || '—'}</Text>
                   </View>
                 </View>
 
@@ -202,7 +201,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
               <>
                 <View style={st.headerNote}>
                   <Ionicons name="people" size={14} color={LP.GOLD} />
-                  <Text style={st.headerNoteText}>{K(data.kpis.total_participants)} مشارك — عرض آخر {(data.all_participants || []).length}</Text>
+                  <Text style={st.headerNoteText}>{K(data.kpis.total_participants)} {tSync('مشارك — عرض آخر', lang)} {(data.all_participants || []).length}</Text>
                 </View>
                 {(data.all_participants || []).length === 0 && (
                   <View style={{ alignItems: 'center', padding: 40 }}>
@@ -217,7 +216,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                       <Text style={{ color: LP.BG, fontWeight: '900', fontSize: 14 }}>{(p.user_name || '?')[0]}</Text>
                     </View>
                     <View style={{ flex: 1, marginHorizontal: 10 }}>
-                      <Text style={st.userName}>{p.user_name || 'مستخدم'}</Text>
+                      <Text style={st.userName}>{p.user_name || tSync('مستخدم', curLang())}</Text>
                       <Text style={st.userMeta}>
                         {p.user_city ? `${p.user_city} · ` : ''}
                         {SOURCE_LABEL[p.source] || p.source} · {timeAgo(p.created_at)}
@@ -245,7 +244,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   <>
                     <View style={st.headerNote}>
                       <Ionicons name="trophy" size={14} color={LP.GOLD} />
-                      <Text style={st.headerNoteText}>🏆 {(data.winner_details || []).length} فائز</Text>
+                      <Text style={st.headerNoteText}>🏆 {(data.winner_details || []).length} {tSync('فائز', lang)}</Text>
                     </View>
                     {data.winner_details.map((w: any, i: number) => (
                       <LinearGradient key={i} colors={[LP.GOLD + '25', LP.CARD_2]} style={st.winnerCard}>
@@ -259,7 +258,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                             {(w.user_phone || '').slice(-4).padStart(4, '•')}
                           </Text>
                           <Text style={st.winnerPrize}>🏆 {w.prize_awarded || comp.prize}</Text>
-                          {!!w.picked_at && <Text style={{ color: LP.MUTED, fontSize: 10, textAlign: 'right', marginTop: 3 }}>اختير في: {(w.picked_at || '').slice(0, 10)}</Text>}
+                          {!!w.picked_at && <Text style={{ color: LP.MUTED, fontSize: 10, textAlign: 'right', marginTop: 3 }}>{tSync('اختير في:', lang)} {(w.picked_at || '').slice(0, 10)}</Text>}
                         </View>
                         {w.user_phone && (
                           <TouchableOpacity onPress={() => Linking.openURL(`tel:${w.user_phone}`)} style={st.callBtnGold}>
@@ -296,7 +295,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                     </View>
                   </View>
                   {comp.max_winners > 1 && (
-                    <Text style={{ color: LP.INFO, fontSize: 11, marginTop: 8, textAlign: 'right' }}>👥 {comp.max_winners} فائز</Text>
+                    <Text style={{ color: LP.INFO, fontSize: 11, marginTop: 8, textAlign: 'right' }}>👥 {comp.max_winners} {tSync('فائز', lang)}</Text>
                   )}
                 </View>
 
@@ -314,11 +313,11 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 <View style={st.infoBox}>
                   <View style={st.timelineRow}>
                     <Ionicons name="play-circle" size={16} color={LP.SUCCESS} />
-                    <Text style={st.timelineText}>البداية: {(comp.starts_at || comp.created_at || '').slice(0, 10)}</Text>
+                    <Text style={st.timelineText}>{tSync('البداية:', lang)} {(comp.starts_at || comp.created_at || '').slice(0, 10)}</Text>
                   </View>
                   <View style={st.timelineRow}>
                     <Ionicons name="stop-circle" size={16} color={LP.DANGER} />
-                    <Text style={st.timelineText}>النهاية: {(comp.ends_at || '').slice(0, 10) || 'مفتوحة'}</Text>
+                    <Text style={st.timelineText}>{tSync('النهاية:', lang)} {(comp.ends_at || '').slice(0, 10) || tSync('مفتوحة', curLang())}</Text>
                   </View>
                 </View>
 
@@ -329,7 +328,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                      comp.competition_type === 'referral' ? '🔗 دعوة أصدقاء' :
                      comp.competition_type === 'ugc' ? '🎬 محتوى مستخدم' :
                      comp.competition_type === 'simple' ? '✨ مشاركة بسيطة' :
-                     comp.competition_type || 'مسابقة عامة'}
+                     comp.competition_type || tSync('مسابقة عامة', curLang())}
                   </Text>
                 </View>
               </>

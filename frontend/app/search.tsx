@@ -4,13 +4,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
-import { TX } from '../src/useAutoT';
+import { TX, tSync } from '../src/useAutoT';
+import { useT } from '../src/i18n';
 import TranslatableName from '../src/components/TranslatableName';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 56) / 2;
 
 export default function SearchScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string; categoryName?: string; condition?: string }>();
   const { apiCall } = useAuth();
@@ -60,7 +62,7 @@ export default function SearchScreen() {
         </TouchableOpacity>
         <View style={styles.searchWrap}>
           <Ionicons name="search" size={20} color="#A1A1AA" />
-          <TextInput testID="search-input" style={styles.searchInput} placeholder="Search products..." placeholderTextColor="#A1A1AA"
+          <TextInput testID="search-input" style={styles.searchInput} placeholder={tSync('ابحث عن المنتجات...', lang)} placeholderTextColor="#A1A1AA"
             value={query} onChangeText={setQuery} onSubmitEditing={() => searchProducts()} returnKeyType="search" />
           {query ? (
             <TouchableOpacity testID="clear-search-btn" onPress={() => { setQuery(''); searchProducts(); }}>
@@ -73,24 +75,24 @@ export default function SearchScreen() {
       {/* Categories Filter */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catScroll}>
         <TouchableOpacity testID="filter-all" style={[styles.catPill, !selectedCat && styles.catPillActive]} onPress={() => selectCategory('')}>
-          <Text style={[styles.catPillText, !selectedCat && styles.catPillTextActive]}>All</Text>
+          <Text style={[styles.catPillText, !selectedCat && styles.catPillTextActive]}>{tSync('الكل', lang)}</Text>
         </TouchableOpacity>
         {categories.map((c) => (
           <TouchableOpacity testID={`filter-cat-${c.id}`} key={c.id} style={[styles.catPill, selectedCat === c.id && styles.catPillActive]} onPress={() => selectCategory(c.id)}>
             <Ionicons name={(catIcons[c.name_en] || 'grid') as any} size={16} color={selectedCat === c.id ? '#FFF' : '#52525B'} />
-            <Text style={[styles.catPillText, selectedCat === c.id && styles.catPillTextActive]}>{c.name_en}</Text>
+            <TranslatableName text={lang === 'ar' ? (c.name_ar || c.name_en) : (c.name_en || c.name_ar)} sourceLang={lang === 'ar' ? 'ar' : 'en'} style={selectedCat === c.id ? [styles.catPillText, styles.catPillTextActive] : styles.catPillText} numberOfLines={1} iconSize={11} />
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      <Text style={styles.resultCount}>{total} results</Text>
+      <Text style={styles.resultCount}>{total} {tSync('نتيجة', lang)}</Text>
 
       {loading ? (
         <View style={styles.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>
       ) : products.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Ionicons name="search" size={48} color="#A1A1AA" />
-          <Text style={styles.emptyText}>No results found</Text>
+          <Text style={styles.emptyText}>{tSync('ما في نتائج', lang)}</Text>
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.grid}>
@@ -101,8 +103,8 @@ export default function SearchScreen() {
               {!!p.discount_price && <View style={styles.discBadge}><TX style={styles.discText}>خصم</TX></View>}
               {p.condition !== 'new' && <View style={styles.usedBadge}><TX style={styles.usedText}>مستعمل</TX></View>}
               <TranslatableName
-                text={p.name_en}
-                sourceLang="en"
+                text={lang === 'ar' ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar)}
+                sourceLang={lang === 'ar' ? 'ar' : 'en'}
                 style={styles.productName}
                 numberOfLines={2}
                 iconSize={11}
@@ -111,8 +113,8 @@ export default function SearchScreen() {
                 <Ionicons name="star" size={12} color="#FACC15" />
                 <Text style={styles.ratingVal}>{p.rating}</Text>
               </View>
-              <Text style={styles.price}>{p.discount_price || p.price} ر.س</Text>
-              {!!p.discount_price && <Text style={styles.oldPrice}>{p.price} ر.س</Text>}
+              <Text style={styles.price}>{p.discount_price || p.price} {tSync('ر.س', lang)}</Text>
+              {!!p.discount_price && <Text style={styles.oldPrice}>{p.price} {tSync('ر.س', lang)}</Text>}
             </TouchableOpacity>
           ))}
         </ScrollView>

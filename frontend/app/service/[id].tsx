@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useT } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { tSync, tf, TX } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -10,7 +10,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../_layout';
 import { mediaUrlSync } from '../../src/utils/upload';
-import { TX } from '../../src/useAutoT';
 
 const PURPLE = '#F5C518';
 const { width } = Dimensions.get('window');
@@ -54,7 +53,7 @@ export default function ServiceDetail() {
         <TouchableOpacity style={s.topBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
         </TouchableOpacity>
-        <Text style={s.topTitle} numberOfLines={1}>{svc.name}</Text>
+        <Text style={s.topTitle} numberOfLines={1}>{(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -83,16 +82,16 @@ export default function ServiceDetail() {
           {svc.warranty_available && (
             <View style={s.warrantyBadge}>
               <Ionicons name="shield-checkmark" size={14} color="white" />
-              <Text style={s.warrantyBadgeText}>ضمان {svc.warranty_days} يوم</Text>
+              <Text style={s.warrantyBadgeText}>{tSync('ضمان', lang)} {svc.warranty_days} {tSync('يوم', lang)}</Text>
             </View>
           )}
         </View>
 
         <View style={s.headerCard}>
-          <Text style={s.name}>{svc.name}</Text>
-          {!!svc.desc && <Text style={s.desc}>{svc.desc}</Text>}
+          <Text style={s.name}>{(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))}</Text>
+          {!!svc.desc && <Text style={s.desc}>{tSync(svc.desc || '', curLang())}</Text>}
           <View style={s.metaRow}>
-            <View style={s.metaChip}><Ionicons name="cash" size={14} color={PURPLE} /><Text style={s.metaText}>{svc.price} ر.س</Text></View>
+            <View style={s.metaChip}><Ionicons name="cash" size={14} color={PURPLE} /><Text style={s.metaText}>{svc.price} {tSync('ر.س', lang)}</Text></View>
             <View style={s.metaChip}><Ionicons name="time" size={14} color={PURPLE} /><Text style={s.metaText}>{svc.turnaround}</Text></View>
             {svc.rating > 0 && (
               <View style={s.metaChip}><Ionicons name="star" size={14} color="#F5C518" /><Text style={s.metaText}>{svc.rating} ({svc.review_count})</Text></View>
@@ -104,12 +103,12 @@ export default function ServiceDetail() {
         <View style={s.tabsBar}>
           {[
             { id: 'about', name: 'نبذة', icon: 'information-circle' },
-            { id: 'experiences', name: `تجارب (${experiences.length})`, icon: 'videocam' },
-            { id: 'reviews', name: `تقييمات (${reviews.length})`, icon: 'star' },
+            { id: 'experiences', name: tf('تجارب ({0})', lang, [experiences.length]), icon: 'videocam' },
+            { id: 'reviews', name: tf('تقييمات ({0})', lang, [reviews.length]), icon: 'star' },
           ].map(t => (
             <TouchableOpacity key={t.id} onPress={() => setTab(t.id as Tab)} style={[s.tabItem, tab === t.id && s.tabItemActive]}>
               <Ionicons name={t.icon as any} size={16} color={tab === t.id ? PURPLE : '#6B7280'} />
-              <Text style={[s.tabText, tab === t.id && s.tabTextActive]}>{t.name}</Text>
+              <Text style={[s.tabText, tab === t.id && s.tabTextActive]}>{tSync(t.name, lang)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -124,10 +123,10 @@ export default function ServiceDetail() {
             )}
             <View style={s.featureGrid}>
               <Feature icon="time-outline" title={tSync('مدة الإنجاز', lang)} value={svc.turnaround} />
-              {svc.warranty_available && <Feature icon="shield-checkmark-outline" title={tSync('الضمان', lang)} value={`${svc.warranty_days} يوم`} />}
-              {svc.home_pickup && <Feature icon="car-outline" title={tSync('استلام منزلي', lang)} value={`من ${svc.pickup_base_fee || 10} ر.س`} />}
-              {svc.delivery_available && <Feature icon="paper-plane-outline" title={tSync('توصيل', lang)} value="متاح" />}
-              {svc.inspection_price > 0 && <Feature icon="search-outline" title={tSync('رسم الفحص', lang)} value={`${svc.inspection_price} ر.س`} />}
+              {svc.warranty_available && <Feature icon="shield-checkmark-outline" title={tSync('الضمان', lang)} value={tf('{0} يوم', lang, [svc.warranty_days])} />}
+              {svc.home_pickup && <Feature icon="car-outline" title={tSync('استلام منزلي', lang)} value={tf('من {0} ر.س', lang, [svc.pickup_base_fee || 10])} />}
+              {svc.delivery_available && <Feature icon="paper-plane-outline" title={tSync('توصيل', lang)} value={tSync('متاح', lang)} />}
+              {svc.inspection_price > 0 && <Feature icon="search-outline" title={tSync('رسم الفحص', lang)} value={tf('{0} ر.س', lang, [svc.inspection_price])} />}
             </View>
             {!!svc.warranty_terms && (
               <View style={s.warrantyCard}>
@@ -163,7 +162,7 @@ export default function ServiceDetail() {
             ) : reviews.map(r => (
               <View key={r.id} style={s.reviewCard}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={s.reviewer}>{r.user_name || 'عميل'}</Text>
+                  <Text style={s.reviewer}>{r.user_name || tSync('عميل', curLang())}</Text>
                   <View style={{ flexDirection: 'row', gap: 2 }}>
                     {[1,2,3,4,5].map(i => (
                       <Ionicons key={i} name={i <= r.stars ? 'star' : 'star-outline'} size={14} color="#F5C518" />
@@ -180,7 +179,7 @@ export default function ServiceDetail() {
       <View style={s.bottomBar}>
         <View style={{ flex: 1 }}>
           <TX style={s.bottomLabel}>السعر</TX>
-          <Text style={s.bottomPrice}>{svc.price} ر.س</Text>
+          <Text style={s.bottomPrice}>{svc.price} {tSync('ر.س', lang)}</Text>
         </View>
         <TouchableOpacity testID="book-svc-btn" style={s.bookBtn}
           onPress={() => router.push(`/service-booking?service_id=${svc.id}`)}>
@@ -221,7 +220,7 @@ function ExperienceCard({ exp }: { exp: any }) {
             <Ionicons key={i} name={i <= Math.round(exp.avg_rating || 0) ? 'star' : 'star-outline'} size={14} color="#F5C518" />
           ))}
           <Text style={{ fontSize: 12, color: '#6B7280', marginLeft: 4 }}>
-            {exp.avg_rating > 0 ? `${exp.avg_rating} • ${exp.review_count} تقييم` : 'لا توجد تقييمات بعد'}
+            {exp.avg_rating > 0 ? tf('{0} • {1} تقييم', curLang(), [exp.avg_rating, exp.review_count]) : tSync('لا توجد تقييمات بعد', curLang())}
           </Text>
           {exp.review_count > 0 && (
             <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color="#F5C518" style={{ marginLeft: 'auto' }} />
@@ -232,7 +231,7 @@ function ExperienceCard({ exp }: { exp: any }) {
             {reviews.map(r => (
               <View key={r.id} style={{ backgroundColor: '#F9FAFB', padding: 10, borderRadius: 10 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0A0A0A' }}>{r.user_name || 'عميل'}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0A0A0A' }}>{r.user_name || tSync('عميل', curLang())}</Text>
                   <View style={{ flexDirection: 'row', gap: 2 }}>
                     {[1,2,3,4,5].map(i => (
                       <Ionicons key={i} name={i <= r.stars ? 'star' : 'star-outline'} size={12} color="#F5C518" />

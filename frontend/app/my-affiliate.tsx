@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useT } from '../src/i18n';
-import { tSync } from '../src/useAutoT';
+import { useT, curLang } from '../src/i18n';
+import { tSync, tf, TX } from '../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Share, Alert, StatusBar, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +8,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import { useAuth } from './_layout';
-import { TX } from '../src/useAutoT';
 
 const APP_LINK_BASE = (process.env.EXPO_PUBLIC_BACKEND_URL || 'https://zitex.app').replace(/\/api\/?$/, '');
 
@@ -38,15 +37,15 @@ export default function MyAffiliate() {
   const copy = async () => {
     if (!refLink) return;
     await Clipboard.setStringAsync(refLink);
-    Alert.alert('✅ تم النسخ', 'رابط الإحالة في الحافظة');
+    Alert.alert(tSync('✅ تم النسخ', curLang()), tSync('رابط الإحالة في الحافظة', curLang()));
   };
   const shareLink = async () => {
     if (!refLink) return;
-    try { await Share.share({ message: `اطلب من Zenrex Store عبر رابطي وادعمني 🎁\n${refLink}` }); } catch {}
+    try { await Share.share({ message: tf('اطلب من Zenrex Store عبر رابطي وادعمني 🎁\n{0}', lang, [refLink]) }); } catch {}
   };
   const shareWhatsApp = () => {
     if (!refLink) return;
-    const url = `https://wa.me/?text=${encodeURIComponent(`اطلب من Zenrex Store عبر رابطي 🎁\n${refLink}`)}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(tf('اطلب من Zenrex Store عبر رابطي 🎁\n{0}', lang, [refLink]))}`;
     if (Platform.OS === 'web') window.open(url, '_blank');
   };
 
@@ -100,7 +99,7 @@ export default function MyAffiliate() {
           <LinearGradient colors={['#F5C518', '#D4A017']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
             <TX style={s.heroLabel}>عمولتك من كل عملية شراء</TX>
             <Text style={s.heroValue}>{cur.commission_percent}%</Text>
-            <Text style={s.heroSub}>تاجر: {cur.merchant_name || 'Zenrex Store'}</Text>
+            <Text style={s.heroSub}>{tSync('تاجر:', lang)} {cur.merchant_name || 'Zenrex Store'}</Text>
           </LinearGradient>
 
           {/* Referral link */}
@@ -147,11 +146,11 @@ export default function MyAffiliate() {
 
           <View style={s.gridRow}>
             <View style={[s.gridCell, s.gridCellGold]}>
-              <Text style={s.gridNumGold}>{(cur.this_month_earnings || 0).toFixed(0)} ر.س</Text>
+              <Text style={s.gridNumGold}>{(cur.this_month_earnings || 0).toFixed(0)} {tSync('ر.س', lang)}</Text>
               <TX style={s.gridLbl}>هذا الشهر</TX>
             </View>
             <View style={[s.gridCell, s.gridCellGold]}>
-              <Text style={s.gridNumGold}>{(cur.total_earnings || 0).toFixed(0)} ر.س</Text>
+              <Text style={s.gridNumGold}>{(cur.total_earnings || 0).toFixed(0)} {tSync('ر.س', lang)}</Text>
               <TX style={s.gridLbl}>مجموع الأرباح</TX>
             </View>
           </View>
@@ -159,11 +158,11 @@ export default function MyAffiliate() {
           <View style={s.card}>
             <TX style={s.cardTitle}>💰 محفظتك</TX>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={s.walletValue}>{(cur.wallet_balance || 0).toFixed(2)} ر.س</Text>
+              <Text style={s.walletValue}>{(cur.wallet_balance || 0).toFixed(2)} {tSync('ر.س', lang)}</Text>
               <TouchableOpacity style={s.withdrawBtn}
                 onPress={() => {
-                  if ((cur.wallet_balance || 0) < 50) Alert.alert(tSync('الحد الأدنى', lang), 'يتم السحب من 50 ر.س');
-                  else Alert.alert(tSync('طلب السحب', lang), 'سيتم التواصل معك خلال 3 أيام عمل');
+                  if ((cur.wallet_balance || 0) < 50) Alert.alert(tSync('الحد الأدنى', lang), tSync('يتم السحب من 50 ر.س', curLang()));
+                  else Alert.alert(tSync('طلب السحب', lang), tSync('سيتم التواصل معك خلال 3 أيام عمل', curLang()));
                 }}>
                 <TX style={s.withdrawText}>سحب</TX>
               </TouchableOpacity>
@@ -185,10 +184,10 @@ export default function MyAffiliate() {
               cur.recent_conversions.map((c: any) => (
                 <View key={c.id} style={s.histRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.histOrder}>طلب #{c.order_id?.slice(-6) || '—'}</Text>
+                    <Text style={s.histOrder}>{tSync('طلب #', lang)}{c.order_id?.slice(-6) || '—'}</Text>
                     <Text style={s.histDate}>{new Date(c.created_at).toLocaleDateString('ar')}</Text>
                   </View>
-                  <Text style={s.histAmount}>+{(c.commission_amount || 0).toFixed(2)} ر.س</Text>
+                  <Text style={s.histAmount}>+{(c.commission_amount || 0).toFixed(2)} {tSync('ر.س', lang)}</Text>
                 </View>
               ))
             )}

@@ -13,8 +13,8 @@ import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 type Tab = 'ads' | 'affiliates';
 type CampaignType = 'ad' | 'affiliate';
@@ -74,7 +74,7 @@ export default function MarketingPanel() {
     setCampaignType(type);
     setForm({
       title: '', description: '', image: '',
-      cta_label: type === 'affiliate' ? 'قدّم الآن' : 'تسوّق الآن',
+      cta_label: type === 'affiliate' ? tSync('قدّم الآن', curLang()) : tSync('تسوّق الآن', curLang()),
       cta_link: '',
       target_cities: [], target_gender: 'all', target_interest_tags: [],
       starts_at: '', ends_at: '',
@@ -86,7 +86,7 @@ export default function MarketingPanel() {
 
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'السماح للوصول للمعرض'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), tSync('السماح للوصول للمعرض', curLang())); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, quality: 0.85 });
     if (res.canceled) return;
     setUploading(true);
@@ -104,9 +104,9 @@ export default function MarketingPanel() {
     setForm((f: any) => ({ ...f, target_interest_tags: f.target_interest_tags.includes(t) ? f.target_interest_tags.filter((x: string) => x !== t) : [...f.target_interest_tags, t] }));
 
   const submit = async () => {
-    if (!form.title.trim()) { Alert.alert(tSync('مطلوب', lang), 'اكتب عنوان الحملة'); return; }
+    if (!form.title.trim()) { Alert.alert(tSync('مطلوب', lang), tSync('اكتب عنوان الحملة', curLang())); return; }
     if (campaignType === 'affiliate' && (!form.commission_percent || parseFloat(form.commission_percent) <= 0)) {
-      Alert.alert(tSync('مطلوب', lang), 'حدد نسبة العمولة'); return;
+      Alert.alert(tSync('مطلوب', lang), tSync('حدد نسبة العمولة', curLang())); return;
     }
     setSaving(true);
     try {
@@ -115,7 +115,7 @@ export default function MarketingPanel() {
         title: form.title,
         description: form.description,
         image: form.image,
-        cta_label: form.cta_label || (campaignType === 'affiliate' ? 'قدّم الآن' : 'تسوّق الآن'),
+        cta_label: form.cta_label || (campaignType === 'affiliate' ? tSync('قدّم الآن', curLang()) : tSync('تسوّق الآن', curLang())),
         cta_link: form.cta_link,
         target_cities: form.target_cities,
         target_genders: form.target_gender === 'all' ? [] : [form.target_gender],
@@ -130,34 +130,34 @@ export default function MarketingPanel() {
       await apiCall('/api/merchant/marketing/ads', { method: 'POST', body: JSON.stringify(body) });
       setFormOpen(false);
       load();
-      Alert.alert('✅ تم', campaignType === 'affiliate' ? 'تم نشر برنامج المسوقين' : 'تم نشر الإعلان');
+      Alert.alert(tSync('✅ تم', curLang()), campaignType === 'affiliate' ? tSync('تم نشر برنامج المسوقين', curLang()) : tSync('تم نشر الإعلان', curLang()));
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 
   const deleteAd = (id: string) => Alert.alert(tSync('حذف الحملة؟', lang), '', [
-    { text: 'إلغاء', style: 'cancel' },
-    { text: 'حذف', style: 'destructive', onPress: async () => {
+    { text: tSync('إلغاء', curLang()), style: 'cancel' },
+    { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => {
       try { await apiCall(`/api/merchant/marketing/ads/${id}`, { method: 'DELETE' }); load(); }
       catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     } },
   ]);
 
   const approveApp = (id: string, name: string) => {
-    Alert.alert(tSync('الموافقة على المسوق', lang), `الموافقة على ${name}؟`, [
-      { text: 'إلغاء', style: 'cancel' },
-      { text: 'موافقة', onPress: async () => {
+    Alert.alert(tSync('الموافقة على المسوق', lang), tf('الموافقة على {0}؟', lang, [name]), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
+      { text: tSync('موافقة', curLang()), onPress: async () => {
         try {
           const r = await apiCall(`/api/merchant/affiliate/applications/${id}/approve`, { method: 'POST' });
-          Alert.alert('✅ تمت الموافقة', `كود الإحالة: ${r.referral_code}\nالعمولة: ${r.commission_percent}%`);
+          Alert.alert(tSync('✅ تمت الموافقة', curLang()), tf('كود الإحالة: {0}\nالعمولة: {1}%', lang, [r.referral_code, r.commission_percent]));
           load();
         } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       } },
     ]);
   };
   const rejectApp = (id: string) => Alert.alert(tSync('رفض الطلب؟', lang), '', [
-    { text: 'إلغاء', style: 'cancel' },
-    { text: 'رفض', style: 'destructive', onPress: async () => {
+    { text: tSync('إلغاء', curLang()), style: 'cancel' },
+    { text: tSync('رفض', curLang()), style: 'destructive', onPress: async () => {
       try { await apiCall(`/api/merchant/affiliate/applications/${id}/reject`, { method: 'POST' }); load(); }
       catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     } },
@@ -184,11 +184,11 @@ export default function MarketingPanel() {
         <View style={s.segmentWrap}>
           <TouchableOpacity onPress={() => setTab('ads')} style={[s.segment, tab === 'ads' && s.segmentActive]}>
             <Ionicons name="megaphone" size={16} color={tab === 'ads' ? colors.onBrandPrimary : colors.onSurfaceSecondary} />
-            <Text style={[s.segmentText, tab === 'ads' && s.segmentTextActive]}>الإعلانات ({adCampaigns.length})</Text>
+            <Text style={[s.segmentText, tab === 'ads' && s.segmentTextActive]}>{tSync('الإعلانات (', lang)}{adCampaigns.length})</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setTab('affiliates')} style={[s.segment, tab === 'affiliates' && s.segmentActive]}>
             <Ionicons name="people" size={16} color={tab === 'affiliates' ? colors.onBrandPrimary : colors.onSurfaceSecondary} />
-            <Text style={[s.segmentText, tab === 'affiliates' && s.segmentTextActive]}>المسوقون {pending.length > 0 ? `🔔 ${pending.length}` : `(${affiliates.length})`}</Text>
+            <Text style={[s.segmentText, tab === 'affiliates' && s.segmentTextActive]}>{tSync('المسوقون', lang)} {pending.length > 0 ? `🔔 ${pending.length}` : `(${affiliates.length})`}</Text>
           </TouchableOpacity>
         </View>
 
@@ -213,7 +213,7 @@ export default function MarketingPanel() {
                   <View style={{ padding: spacing.md }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <View style={[s.pill, { backgroundColor: ad.active ? colors.brandTertiary : colors.surfaceTertiary }]}>
-                        <Text style={[s.pillText, { color: ad.active ? colors.brand : colors.onSurfaceSecondary }]}>{ad.active ? '● مباشر' : '○ متوقف'}</Text>
+                        <Text style={[s.pillText, { color: ad.active ? colors.brand : colors.onSurfaceSecondary }]}>{ad.active ? tSync('● مباشر', curLang()) : tSync('○ متوقف', curLang())}</Text>
                       </View>
                       <Text style={s.adTitle}>{ad.title}</Text>
                     </View>
@@ -221,7 +221,7 @@ export default function MarketingPanel() {
                     <View style={s.adStats}>
                       <View style={s.adStat}><Ionicons name="eye" size={12} color={colors.onSurfaceTertiary} /><Text style={s.adStatText}>{ad.views || 0}</Text></View>
                       <View style={s.adStat}><Ionicons name="hand-left" size={12} color={colors.onSurfaceTertiary} /><Text style={s.adStatText}>{ad.clicks || 0}</Text></View>
-                      {!!ad.target_cities?.length && <View style={s.adStat}><Ionicons name="location" size={12} color={colors.onSurfaceTertiary} /><Text style={s.adStatText}>{ad.target_cities.length} مدن</Text></View>}
+                      {!!ad.target_cities?.length && <View style={s.adStat}><Ionicons name="location" size={12} color={colors.onSurfaceTertiary} /><Text style={s.adStatText}>{ad.target_cities.length} {tSync('مدن', lang)}</Text></View>}
                       <TouchableOpacity onPress={() => deleteAd(ad.id)} style={{ marginLeft: 'auto' }}>
                         <Ionicons name="trash-outline" size={18} color={colors.error} />
                       </TouchableOpacity>
@@ -255,7 +255,7 @@ export default function MarketingPanel() {
               {/* Affiliate Campaigns */}
               {affCampaigns.length > 0 && (
                 <>
-                  <Text style={s.sectionTitle}>💎 برامج التسويق بالعمولة ({affCampaigns.length})</Text>
+                  <Text style={s.sectionTitle}>{tSync('💎 برامج التسويق بالعمولة (', lang)}{affCampaigns.length})</Text>
                   {affCampaigns.map(c => (
                     <View key={c.id} style={s.affCampCard}>
                       {!!c.image && <Image source={{ uri: mediaUrlSync(c.image) }} style={s.affCampImage} contentFit="cover" />}
@@ -267,7 +267,7 @@ export default function MarketingPanel() {
                         {!!c.description && <Text style={s.adDesc}>{c.description}</Text>}
                         {!!c.incentives && <Text style={s.incentives}>🎁 {c.incentives}</Text>}
                         <View style={s.adStats}>
-                          <View style={s.adStat}><Ionicons name="eye" size={12} color={colors.onSurfaceTertiary} /><Text style={s.adStatText}>{c.views || 0} مشاهدة</Text></View>
+                          <View style={s.adStat}><Ionicons name="eye" size={12} color={colors.onSurfaceTertiary} /><Text style={s.adStatText}>{c.views || 0} {tSync('مشاهدة', lang)}</Text></View>
                           <TouchableOpacity onPress={() => deleteAd(c.id)} style={{ marginLeft: 'auto' }}>
                             <Ionicons name="trash-outline" size={18} color={colors.error} />
                           </TouchableOpacity>
@@ -280,7 +280,7 @@ export default function MarketingPanel() {
 
               {pending.length > 0 && (
                 <>
-                  <Text style={s.sectionTitle}>📥 طلبات قيد المراجعة ({pending.length})</Text>
+                  <Text style={s.sectionTitle}>{tSync('📥 طلبات قيد المراجعة (', lang)}{pending.length})</Text>
                   {pending.map(a => (
                     <View key={a.id} style={s.appCard}>
                       <View style={s.appAvatar}><Text style={s.appAvText}>{(a.applicant_name || '?').charAt(0)}</Text></View>
@@ -289,7 +289,7 @@ export default function MarketingPanel() {
                         <Text style={s.appPhone}>📱 {a.applicant_phone}</Text>
                         {!!a.applicant_city && <Text style={s.appSocial}>📍 {a.applicant_city}</Text>}
                         {!!a.social_handle && <Text style={s.appSocial}>🔗 {a.social_handle}</Text>}
-                        {!!a.audience_size && <Text style={s.appSocial}>👥 {(a.audience_size || 0).toLocaleString('ar')} متابع</Text>}
+                        {!!a.audience_size && <Text style={s.appSocial}>👥 {(a.audience_size || 0).toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US')} {tSync('متابع', lang)}</Text>}
                         {!!a.note && <Text style={s.appNote}>“{a.note}”</Text>}
                         <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
                           <TouchableOpacity onPress={() => rejectApp(a.id)} style={s.rejectBtn}>
@@ -307,12 +307,12 @@ export default function MarketingPanel() {
                 </>
               )}
 
-              <Text style={s.sectionTitle}>🏆 المسوقون النشطون ({affiliates.length})</Text>
+              <Text style={s.sectionTitle}>{tSync('🏆 المسوقون النشطون (', lang)}{affiliates.length})</Text>
               {affiliates.length === 0 && pending.length === 0 && affCampaigns.length === 0 && (
                 <View style={s.empty}>
                   <Ionicons name="people-outline" size={54} color={colors.onSurfaceTertiary} />
                   <TX style={s.emptyTitle}>ابدأ برنامج المسوقين</TX>
-                  <Text style={s.emptyDesc}>اضغط + وأنشئ برنامج تسويق بالعمولة{'\n'}العملاء سيرون العرض في السوشال ويقدمون</Text>
+                  <Text style={s.emptyDesc}>{tSync('اضغط + وأنشئ برنامج تسويق بالعمولة', lang)}{'\n'}{tSync('العملاء سيرون العرض في السوشال ويقدمون', lang)}</Text>
                 </View>
               )}
               {affiliates.map(af => (
@@ -326,8 +326,8 @@ export default function MarketingPanel() {
                     </View>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={s.affEarn}>{(af.total_earnings || 0).toFixed(0)} ر.س</Text>
-                    <Text style={s.affConv}>{af.total_conversions || 0} تحويل • {af.total_clicks || 0} نقرة</Text>
+                    <Text style={s.affEarn}>{(af.total_earnings || 0).toFixed(0)} {tSync('ر.س', lang)}</Text>
+                    <Text style={s.affConv}>{af.total_conversions || 0} {tSync('تحويل •', lang)} {af.total_clicks || 0} {tSync('نقرة', lang)}</Text>
                   </View>
                   <Ionicons name="chevron-back" size={18} color={colors.onSurfaceTertiary} />
                 </TouchableOpacity>
@@ -369,7 +369,7 @@ export default function MarketingPanel() {
               <TouchableOpacity onPress={() => setFormOpen(false)} style={s.headerIcon}>
                 <Ionicons name="close" size={24} color={colors.brand} />
               </TouchableOpacity>
-              <Text style={s.headerTitle}>{campaignType === 'affiliate' ? 'برنامج مسوّقين' : 'إعلان مستهدف'}</Text>
+              <Text style={s.headerTitle}>{campaignType === 'affiliate' ? tSync('برنامج مسوّقين', curLang()) : tSync('إعلان مستهدف', curLang())}</Text>
               <TouchableOpacity testID="form-submit-btn" onPress={submit} disabled={saving || uploading} style={s.headerIcon}>
                 <LinearGradient colors={['#F5C518', '#D4AF37']} style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                   {saving ? <ActivityIndicator size="small" color={colors.onBrandPrimary} /> : <TX style={{ color: colors.onBrandPrimary, fontWeight: '800' }}>نشر</TX>}
@@ -381,13 +381,13 @@ export default function MarketingPanel() {
               <TX style={s.label}>عنوان الحملة *</TX>
               <TextInput testID="form-title-input" style={s.input} value={form.title} onChangeText={t => setForm({ ...form, title: t })}
                 placeholderTextColor={colors.onSurfaceTertiary}
-                placeholder={campaignType === 'affiliate' ? 'انضم لبرنامج مسوّقي زايتكس' : 'خصومات نهاية الأسبوع 30%'} />
+                placeholder={campaignType === 'affiliate' ? tSync('انضم لبرنامج مسوّقي زايتكس', curLang()) : tSync('خصومات نهاية الأسبوع 30%', curLang())} />
 
               <TX style={s.label}>الوصف</TX>
               <TextInput style={[s.input, { height: 80, textAlignVertical: 'top' }]} multiline value={form.description}
                 onChangeText={t => setForm({ ...form, description: t })}
                 placeholderTextColor={colors.onSurfaceTertiary}
-                placeholder={campaignType === 'affiliate' ? 'اشترك واحصل على عمولة ثابتة من كل عملية شراء تتم عبر رابطك' : 'اشترك بأفضل الأسعار والعروض الحصرية'} />
+                placeholder={campaignType === 'affiliate' ? tSync('اشترك واحصل على عمولة ثابتة من كل عملية شراء تتم عبر رابطك', curLang()) : tSync('اشترك بأفضل الأسعار والعروض الحصرية', curLang())} />
 
               {campaignType === 'affiliate' && (
                 <>
@@ -431,7 +431,7 @@ export default function MarketingPanel() {
 
               <TX style={s.label}>نص زر الدعوة</TX>
               <TextInput style={s.input} value={form.cta_label} onChangeText={t => setForm({ ...form, cta_label: t })}
-                placeholderTextColor={colors.onSurfaceTertiary} placeholder={campaignType === 'affiliate' ? 'قدّم الآن' : 'تسوّق الآن'} />
+                placeholderTextColor={colors.onSurfaceTertiary} placeholder={campaignType === 'affiliate' ? tSync('قدّم الآن', curLang()) : tSync('تسوّق الآن', curLang())} />
 
               {campaignType === 'ad' && (
                 <>
@@ -477,7 +477,7 @@ export default function MarketingPanel() {
                   const active = form.target_interest_tags.includes(t.id);
                   return (
                     <TouchableOpacity key={t.id} onPress={() => toggleTag(t.id)} style={[s.chip, active && s.chipActive]}>
-                      <Text style={[s.chipText, active && s.chipTextActive]}>{t.label}</Text>
+                      <Text style={[s.chipText, active && s.chipTextActive]}>{tSync(t.label || '', curLang())}</Text>
                     </TouchableOpacity>
                   );
                 })}

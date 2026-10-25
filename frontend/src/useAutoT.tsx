@@ -15,6 +15,7 @@ import React, { useEffect, useState } from 'react';
 import { Text, TextProps } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useT, type Lang } from './i18n';
+import { emitTranslationArrived } from './translationEvents';
 // Pre-baked translations. Structure: { source_ar: { en, fa, hi, zh, ... } }
 // Do not edit by hand — regenerate via scripts/bulk_translate.py.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -23,19 +24,28 @@ const STATIC_TRANSLATIONS: Record<string, Partial<Record<Lang, string>>> = requi
 const CACHE_KEY = '@zenrex_autot_cache_v2';
 const memoryCache: Record<string, Record<string, string>> = {}; // lang → { source: translated }
 let cacheLoaded = false;
-const inflight: Set<string> = new Set();
+const inflight: Map<string, Promise<string>> = new Map();
+let cacheLoading: Promise<void> | null = null;
 
-async function loadCacheOnce() {
-  if (cacheLoaded) return;
-  cacheLoaded = true;
-  try {
-    const raw = await AsyncStorage.getItem(CACHE_KEY);
-    if (raw) {
-      const obj = JSON.parse(raw);
-      Object.assign(memoryCache, obj);
-    }
-  } catch { /* ignore */ }
+function loadCacheOnce(): Promise<void> {
+  if (cacheLoaded) return Promise.resolve();
+  if (!cacheLoading) {
+    cacheLoading = (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(CACHE_KEY);
+        if (raw) {
+          const obj = JSON.parse(raw);
+          // Merge (don't overwrite) entries fetched before the stored cache finished loading.
+          Object.keys(obj).forEach((l) => { memoryCache[l] = { ...obj[l], ...(memoryCache[l] || {}) }; });
+        }
+      } catch { /* ignore */ }
+      cacheLoaded = true;
+    })();
+  }
+  return cacheLoading;
 }
+// Start loading immediately so tSync() can hit the persisted cache on first paint.
+loadCacheOnce();
 
 async function persistCache() {
   try { await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(memoryCache)); } catch { /* ignore */ }
@@ -54,11 +64,22 @@ async function translate(source: string, targetLang: Lang): Promise<string> {
   // Fast path — pre-baked
   const staticHit = staticLookup(source, targetLang);
   if (staticHit) return staticHit;
+  await loadCacheOnce();
   memoryCache[targetLang] = memoryCache[targetLang] || {};
   if (memoryCache[targetLang][source]) return memoryCache[targetLang][source];
   const inflightKey = `${targetLang}::${source}`;
-  if (inflight.has(inflightKey)) return source;
-  inflight.add(inflightKey);
+  const pending = inflight.get(inflightKey);
+  if (pending) return pending;
+  const p = doFetch(source, targetLang);
+  inflight.set(inflightKey, p);
+  try {
+    return await p;
+  } finally {
+    inflight.delete(inflightKey);
+  }
+}
+
+async function doFetch(source: string, targetLang: Lang): Promise<string> {
   try {
     const base = (process.env.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_BACKEND_URL || (globalThis as any).EXPO_BACKEND_URL || '').toString();
     const url = `${base}/api/translate`;
@@ -70,13 +91,15 @@ async function translate(source: string, targetLang: Lang): Promise<string> {
     if (!res.ok) throw new Error('translate failed');
     const data = await res.json();
     const translated = data?.translated || data?.translated_text || data?.translation || source;
-    memoryCache[targetLang][source] = translated;
-    setTimeout(() => persistCache(), 300);
+    if (translated && translated !== source) {
+      memoryCache[targetLang] = memoryCache[targetLang] || {};
+      memoryCache[targetLang][source] = translated;
+      setTimeout(() => persistCache(), 300);
+      emitTranslationArrived();
+    }
     return translated;
   } catch {
     return source;
-  } finally {
-    inflight.delete(inflightKey);
   }
 }
 
@@ -124,10 +147,26 @@ export function TX({ children, ...rest }: { children: string } & TextProps) {
  * Non-hook synchronous string translator, safe to call inside callbacks/map/renderItem.
  * Returns pre-baked translation if available, otherwise cached, otherwise source.
  */
+/**
+ * Translate a template with numbered placeholders, then fill them:
+ *   tf('الإجمالي: {0} ر.س', lang, [total])
+ */
+export function tf(source: string, lang: Lang, values: unknown[]): string {
+  let out = tSync(source, lang);
+  values.forEach((v, i) => { out = out.split(`{${i}}`).join(String(v ?? '')); });
+  return out;
+}
+
 export function tSync(source: string, lang: Lang): string {
   if (!source || lang === 'ar') return source;
   const s = staticLookup(source, lang);
   if (s) return s;
+  // Keys are stored trimmed — keep the caller's surrounding spaces.
+  const core = source.trim();
+  if (core !== source && core) {
+    const t = staticLookup(core, lang);
+    if (t) return source.replace(core, t);
+  }
   const cached = memoryCache[lang]?.[source];
   if (cached) return cached;
   // Warm the cache in background (no-op if pre-baked exists — checked above)

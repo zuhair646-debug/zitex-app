@@ -51,6 +51,46 @@ def _put_mem(key: str, value: str):
     _MEM_CACHE[key] = value
 
 
+# Rules shared by single + bulk prompts (June 2026 quality pass).
+_RULES = (
+    "Context: UI text and product/branch/service names in 'Zenrex Store', a Saudi electronics store app. "
+    "Write ONLY in the target language and its normal script; never leave Arabic words and never mix in another "
+    "script. Keep placeholders like {n} exactly. Keep emoji and numbers. Saudi riyal (ر.س / ريال) => 'SAR'. "
+    "Keep brand/model names in Latin (iPhone, Samsung, Galaxy, Huawei, Zenrex Store, WhatsApp, POS). "
+    "Use the standard spelling of Saudi city names in the target language. 'Balance' means money balance."
+)
+
+_SCRIPT_RX = {
+    'arab': r'[\u0600-\u06FF]', 'heb': r'[\u0590-\u05FF]', 'cyr': r'[\u0400-\u04FF]', 'cjk': r'[\u4E00-\u9FFF]',
+    'kana': r'[\u3040-\u30FF]', 'hangul': r'[\uAC00-\uD7AF]', 'deva': r'[\u0900-\u097F]',
+    'beng': r'[\u0980-\u09FF]', 'thai': r'[\u0E00-\u0E7F]', 'geo': r'[\u10A0-\u10FF]',
+}
+_ALLOWED = {
+    'ar': ['arab'], 'ur': ['arab'], 'fa': ['arab'], 'he': ['heb'], 'ru': ['cyr'], 'zh': ['cjk'],
+    'ja': ['cjk', 'kana'], 'ko': ['hangul', 'cjk'], 'hi': ['deva'], 'bn': ['beng'], 'th': ['thai'],
+}
+
+
+_NATIVE = {'ur': 'arab', 'fa': 'arab', 'he': 'heb', 'ru': 'cyr', 'zh': 'cjk', 'ja': 'kana|cjk', 'ko': 'hangul',
+           'hi': 'deva', 'bn': 'beng', 'th': 'thai'}
+_BRANDS = ('Zenrex', 'iPhone', 'Samsung', 'Galaxy', 'Huawei', 'Apple', 'POS', 'SAR', 'WhatsApp', 'Tamara', 'Tabby')
+
+
+def _clean_ok(target: str, text: str) -> bool:
+    """True when the translation only uses scripts valid for the target language and,
+    for non-Latin languages, actually contains the target script (unless it's a pure brand/model name)."""
+    import re
+    allowed = _ALLOWED.get(target, [])
+    if any(re.search(rx, text) for name, rx in _SCRIPT_RX.items() if name not in allowed):
+        return False
+    native = _NATIVE.get(target)
+    if native and re.search(r'[A-Za-z]{4,}', text):
+        has_native = any(re.search(_SCRIPT_RX[n], text) for n in native.split('|'))
+        if not has_native and not any(b in text for b in _BRANDS):
+            return False
+    return True
+
+
 class TranslateReq(BaseModel):
     text: str = Field(..., min_length=1, max_length=5000)
     target_lang: str = Field(..., min_length=2, max_length=5)
@@ -160,7 +200,7 @@ def build_router(db=None):
                 system_message=(
                     f"You are a professional translator. Translate the user's text to {target_name}. "
                     "Return ONLY the translation — no explanation, no quotes, no metadata. "
-                    "Preserve emoji, numbers, line breaks, and proper nouns/brand names."
+                    "Preserve line breaks. " + _RULES
                 ),
             ).with_model("anthropic", "claude-haiku-4-5")
             resp = await chat.send_message(UserMessage(text=text))
@@ -169,6 +209,15 @@ def build_router(db=None):
                 translated = translated[1:-1]
             if not translated:
                 translated = text
+            translated = translated.replace('ر.س', 'SAR')
+            if not _clean_ok(req.target_lang, translated):
+                retry = await chat.send_message(UserMessage(text=(
+                    f"Your answer mixed scripts or kept Arabic. Translate again, ONLY in {target_name}: {text}")))
+                retry = (retry or '').strip().strip('"').replace('ر.س', 'SAR')
+                if retry and _clean_ok(req.target_lang, retry):
+                    translated = retry
+                else:
+                    return {"translated": translated, "source": req.source_lang or "auto", "target": req.target_lang, "cached": False}
             await _cache_put(text, req.target_lang, translated, req.source_lang)
             return {"translated": translated, "source": req.source_lang or "auto", "target": req.target_lang, "cached": False}
         except Exception as e:
@@ -218,8 +267,7 @@ def build_router(db=None):
                     system_message=(
                         f"You are a professional translator. Translate each numbered line to {target_name}. "
                         "Return ONLY the translations in the same order, each on its own line, prefixed with the "
-                        "same number and a dot. No explanations, no extra text, no quotes. Preserve emoji and "
-                        "proper nouns/brand names."
+                        "same number and a dot. No explanations, no extra text, no quotes. " + _RULES
                     ),
                 ).with_model("anthropic", "claude-haiku-4-5")
                 resp = await chat.send_message(UserMessage(text=numbered))
@@ -238,6 +286,9 @@ def build_router(db=None):
                                     if tr.startswith('"') and tr.endswith('"'):
                                         tr = tr[1:-1]
                                     src = batch[idx]
+                                    tr = tr.replace('ر.س', 'SAR')
+                                    if not _clean_ok(req.target_lang, tr):
+                                        break
                                     results[src] = tr
                                     await _cache_put(src.strip(), req.target_lang, tr, req.source_lang)
                                 break

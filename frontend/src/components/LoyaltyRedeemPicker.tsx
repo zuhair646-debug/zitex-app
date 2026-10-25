@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Modal, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { TX, tSync } from '../useAutoT';
-import { useT } from '../i18n';
+import { TX, tSync, tf } from '../useAutoT';
+import { useT, curLang } from '../i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -26,6 +26,7 @@ export default function LoyaltyRedeemPicker({
   cartTotal: number;
   onDiscountApplied?: (programCode: string, discountSar: number, pointsUsed: number) => void;
 }) {
+  useT(); // re-render when language or on-demand translations change
   const [loading, setLoading] = useState(true);
   const [programs, setPrograms] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -50,7 +51,7 @@ export default function LoyaltyRedeemPicker({
   const redeem = async () => {
     if (!selected) return;
     const p = parseInt(points, 10);
-    if (!p || p <= 0) { Alert.alert(tSync('تنبيه', lang), 'أدخل عدد النقاط'); return; }
+    if (!p || p <= 0) { Alert.alert(tSync('تنبيه', curLang()), tSync('أدخل عدد النقاط', curLang())); return; }
     setRedeeming(true);
     try {
       const r = await apiCall(`/api/loyalty/programs/${selected.code}/redeem`, {
@@ -60,9 +61,9 @@ export default function LoyaltyRedeemPicker({
       setApplied({ code: selected.code, discount: disc, points: p });
       onDiscountApplied?.(selected.code, disc, p);
       setModalOpen(false);
-      Alert.alert('✅ تم الاستبدال', r.message || `تم تطبيق خصم ${disc} ر.س`);
+      Alert.alert(tSync('✅ تم الاستبدال', curLang()), r.message || tf('تم تطبيق خصم {0} ر.س', curLang(), [disc]));
     } catch (e: any) {
-      Alert.alert(tSync('خطأ', lang), e?.message || 'تعذّر الاستبدال');
+      Alert.alert(tSync('خطأ', curLang()), e?.message || tSync('تعذّر الاستبدال', curLang()));
     } finally { setRedeeming(false); }
   };
 
@@ -81,7 +82,7 @@ export default function LoyaltyRedeemPicker({
         <TX style={s.title}>استبدل نقاط الولاء بخصم</TX>
         {applied && (
           <TouchableOpacity onPress={removeApplied} style={s.appliedTag}>
-            <Text style={s.appliedText}>خصم {applied.discount} ر.س ✕</Text>
+            <Text style={s.appliedText}>{tSync('خصم', curLang())} {applied.discount} {tSync('ر.س ✕', curLang())}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -94,8 +95,8 @@ export default function LoyaltyRedeemPicker({
               onPress={() => openRedeem(p)}
               style={[s.card, { borderColor: active ? OK : p.brand_color, backgroundColor: active ? OK + '15' : (p.brand_color || GOLD) + '10' }]}>
               <Text style={{ fontSize: 22 }}>{p.logo}</Text>
-              <Text style={s.name} numberOfLines={1}>{p.name_ar}</Text>
-              <Text style={s.rate}>1 نقطة = {(p.conversion_rate || 0.01).toFixed(2)} ر.س</Text>
+              <Text style={s.name} numberOfLines={1}>{curLang() === 'ar' ? p.name_ar : curLang() === 'en' ? (p.name_en || p.name_ar) : tSync(p.name_ar, curLang())}</Text>
+              <Text style={s.rate}>{tSync('1 نقطة =', curLang())} {(p.conversion_rate || 0.01).toFixed(2)} {tSync('ر.س', curLang())}</Text>
               {p.status === 'sandbox_pending' && (
                 <View style={s.pendPill}><TX style={s.pendText}>وضع تجريبي</TX></View>
               )}
@@ -114,8 +115,8 @@ export default function LoyaltyRedeemPicker({
                     <Text style={{ fontSize: 28 }}>{selected.logo}</Text>
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
-                    <Text style={s.sheetTitle}>{selected.name_ar}</Text>
-                    <Text style={s.sheetSub}>{selected.description_ar}</Text>
+                    <Text style={s.sheetTitle}>{curLang() === 'ar' ? selected.name_ar : curLang() === 'en' ? (selected.name_en || selected.name_ar) : tSync(selected.name_ar, curLang())}</Text>
+                    <TX style={s.sheetSub}>{selected.description_ar || ''}</TX>
                   </View>
                   <TouchableOpacity onPress={() => setModalOpen(false)}>
                     <Ionicons name="close" size={22} color={TEXT} />
@@ -125,13 +126,13 @@ export default function LoyaltyRedeemPicker({
                 <TX style={s.label}>عدد النقاط المراد استبدالها</TX>
                 <TextInput style={s.input} keyboardType="numeric"
                   value={points} onChangeText={setPoints}
-                  placeholder={tSync("مثال: 500", lang)} placeholderTextColor={MUTED} />
+                  placeholder={tSync("مثال: 500", curLang())} placeholderTextColor={MUTED} />
 
                 {points && !isNaN(Number(points)) && Number(points) > 0 && (
                   <View style={s.previewBox}>
                     <TX style={s.previewLabel}>معاينة الخصم</TX>
                     <Text style={[s.previewValue, { color: selected.brand_color }]}>
-                      {(Number(points) * (selected.conversion_rate || 0.01)).toFixed(2)} ر.س
+                      {(Number(points) * (selected.conversion_rate || 0.01)).toFixed(2)} {tSync('ر.س', curLang())}
                     </Text>
                   </View>
                 )}
@@ -143,7 +144,7 @@ export default function LoyaltyRedeemPicker({
                 </TouchableOpacity>
 
                 <Text style={s.legalNote}>
-                  ⚠️ الاستبدال {selected.status === 'sandbox_pending' ? 'في وضع الاختبار — لن يُخصم فعلياً من رصيد نقاطك حتى يكتمل الاعتماد القانوني للتاجر مع المزوّد.' : 'يخصم النقاط من حساب البرنامج مباشرة.'}
+                  {tSync('⚠️ الاستبدال', curLang())} {selected.status === 'sandbox_pending' ? tSync('في وضع الاختبار — لن يُخصم فعلياً من رصيد نقاطك حتى يكتمل الاعتماد القانوني للتاجر مع المزوّد.', curLang()) : tSync('يخصم النقاط من حساب البرنامج مباشرة.', curLang())}
                 </Text>
               </>
             )}
@@ -157,7 +158,7 @@ export default function LoyaltyRedeemPicker({
 const s = StyleSheet.create({
   wrap: { marginTop: 10 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  title: { color: '#0A0A0A', fontSize: 12, fontWeight: '900', flex: 1, textAlign: 'right' },
+  title: { color: '#0A0A0A', fontSize: 12, fontWeight: '900', flex: 1, textAlign: 'auto' },
   appliedTag: { backgroundColor: OK + '20', borderColor: OK, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   appliedText: { color: OK, fontSize: 10, fontWeight: '900' },
   card: { borderWidth: 1.5, borderRadius: 12, padding: 10, minWidth: 130, alignItems: 'center', position: 'relative' },
@@ -168,14 +169,14 @@ const s = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: BG, padding: 18, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: BORDER },
   logoBox: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: CARD },
-  sheetTitle: { color: TEXT, fontSize: 15, fontWeight: '900', textAlign: 'right' },
-  sheetSub: { color: MUTED, fontSize: 11, textAlign: 'right', marginTop: 2, lineHeight: 15 },
-  label: { color: MUTED, fontSize: 11, textAlign: 'right', marginTop: 12, marginBottom: 6 },
-  input: { backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, borderRadius: 10, padding: 12, color: TEXT, textAlign: 'right', fontSize: 16, fontWeight: '900' },
+  sheetTitle: { color: TEXT, fontSize: 15, fontWeight: '900', textAlign: 'auto' },
+  sheetSub: { color: MUTED, fontSize: 11, textAlign: 'auto', marginTop: 2, lineHeight: 15 },
+  label: { color: MUTED, fontSize: 11, textAlign: 'auto', marginTop: 12, marginBottom: 6 },
+  input: { backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, borderRadius: 10, padding: 12, color: TEXT, textAlign: 'auto', fontSize: 16, fontWeight: '900' },
   previewBox: { backgroundColor: CARD, borderRadius: 12, padding: 12, marginTop: 10, borderWidth: 1, borderColor: BORDER, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   previewLabel: { color: MUTED, fontSize: 11 },
   previewValue: { fontSize: 18, fontWeight: '900' },
   redeemBtn: { borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 16 },
   redeemText: { color: '#FFF', fontSize: 14, fontWeight: '900' },
-  legalNote: { color: MUTED, fontSize: 10, textAlign: 'right', marginTop: 10, lineHeight: 14 },
+  legalNote: { color: MUTED, fontSize: 10, textAlign: 'auto', marginTop: 10, lineHeight: 14 },
 });

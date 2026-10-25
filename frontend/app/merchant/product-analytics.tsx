@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useT } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { tSync, tf, TX } from '../../src/useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
-import { TX } from '../../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -47,13 +46,13 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
   const kindLabel = kind === 'service' ? 'تحليلات الخدمة العميقة'
     : kind === 'competition' ? 'تحليلات المسابقة العميقة'
-    : kind === 'post' ? 'تحليلات المنشور العميقة'
-    : 'تحليلات المنتج العميقة';
+    : kind === 'post' ? tSync('تحليلات المنشور العميقة', curLang())
+    : tSync('تحليلات المنتج العميقة', curLang());
 
   const buyersLabel = kind === 'service' ? 'الحجوزات'
     : kind === 'competition' ? 'المشتركون'
-    : kind === 'post' ? 'التفاعل'
-    : 'المشترون';
+    : kind === 'post' ? tSync('التفاعل', curLang())
+    : tSync('المشترون', curLang());
 
   // Kind-aware KPI labels & icons — using researched KSA-standard terminology
   const L = kind === 'service' ? {
@@ -124,7 +123,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.back}>
-          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+          <Ionicons name={curLang() === 'ar' || curLang() === 'fa' || curLang() === 'ur' || curLang() === 'he' ? "chevron-forward" : "chevron-back"} size={22} color={TEXT} />
         </TouchableOpacity>
       </View>
       <View style={{ padding: 40, alignItems: 'center' }}>
@@ -146,7 +145,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
       <StatusBar barStyle="light-content" />
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.back}>
-          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+          <Ionicons name={curLang() === 'ar' || curLang() === 'fa' || curLang() === 'ur' || curLang() === 'he' ? "chevron-forward" : "chevron-back"} size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.title} numberOfLines={1}>{p.name_ar}</Text>
@@ -178,22 +177,22 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
           <View style={s.heroOverlay}>
             <View style={{ flexDirection: 'row', gap: 6, marginBottom: 4 }}>
               <View style={s.condPill}><Text style={s.condText}>{
-                kind === 'product' ? (p.condition === 'new' ? 'جديد' : 'مستعمل')
+                kind === 'product' ? (p.condition === 'new' ? tSync('جديد', curLang()) : tSync('مستعمل', curLang()))
                 : L.heroPill
               }</Text></View>
               {p.warranty_days > 0 && (
                 <View style={[s.condPill, { backgroundColor: PURPLE + '30', borderColor: PURPLE }]}>
-                  <Text style={[s.condText, { color: PURPLE }]}>ضمان {p.warranty_days} يوم</Text>
+                  <Text style={[s.condText, { color: PURPLE }]}>{tSync('ضمان', lang)} {p.warranty_days} {tSync('يوم', lang)}</Text>
                 </View>
               )}
               {kind === 'competition' && k.winners_count != null && (
                 <View style={[s.condPill, { backgroundColor: GOLD + '30', borderColor: GOLD }]}>
-                  <Text style={[s.condText, { color: GOLD }]}>🏆 {k.winners_count}/{k.prize_count || '?'} فائز</Text>
+                  <Text style={[s.condText, { color: GOLD }]}>🏆 {k.winners_count}/{k.prize_count || '?'} {tSync('فائز', lang)}</Text>
                 </View>
               )}
               {kind === 'post' && (
                 <View style={[s.condPill, { backgroundColor: BLUE + '30', borderColor: BLUE }]}>
-                  <Text style={[s.condText, { color: BLUE }]}>وصول ~{(k.reach_estimate || k.total_views).toLocaleString()}</Text>
+                  <Text style={[s.condText, { color: BLUE }]}>{tSync('وصول ~', lang)}{(k.reach_estimate || k.total_views).toLocaleString()}</Text>
                 </View>
               )}
             </View>
@@ -206,13 +205,13 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                 </>
               ) : kind === 'competition' ? (
                 <>
-                  <Text style={s.priceMain}>{p.price > 0 ? `${p.price} ر.س` : 'مجاناً'}</Text>
+                  <Text style={s.priceMain}>{p.price > 0 ? tf('{0} ر.س', lang, [p.price]) : tSync('مجاناً', curLang())}</Text>
                   <TX style={{ color: MUTED, fontSize: 10, marginBottom: 3 }}>حد الإنفاق</TX>
                 </>
               ) : (
                 <>
-                  <Text style={s.priceMain}>{disc || p.price} ر.س</Text>
-                  {disc && <Text style={s.priceOld}>{p.price} ر.س</Text>}
+                  <Text style={s.priceMain}>{disc || p.price} {tSync('ر.س', lang)}</Text>
+                  {disc && <Text style={s.priceOld}>{p.price} {tSync('ر.س', lang)}</Text>}
                 </>
               )}
               <View style={{ flex: 1 }} />
@@ -229,8 +228,8 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
         {/* Big KPIs grid */}
         <View style={{ padding: 12 }}>
           <View style={s.kpiRow}>
-            <KPI label={L.views} value={fmt(k.total_views)} icon="eye" color={BLUE} sub={`اليوم: ${fmt(k.views_today)}`} />
-            <KPI label={kind === 'post' ? 'الوصول التقديري' : 'زوار فريدون'} value={fmt(kind === 'post' ? (k.reach_estimate || k.total_views) : k.unique_visitors)} icon="people" color={PURPLE} sub={`آخر ٧ أيام: ${fmt(k.views_week)}`} />
+            <KPI label={L.views} value={fmt(k.total_views)} icon="eye" color={BLUE} sub={tf('اليوم: {0}', lang, [fmt(k.views_today)])} />
+            <KPI label={kind === 'post' ? tSync('الوصول التقديري', curLang()) : tSync('زوار فريدون', curLang())} value={fmt(kind === 'post' ? (k.reach_estimate || k.total_views) : k.unique_visitors)} icon="people" color={PURPLE} sub={tf('آخر ٧ أيام: {0}', lang, [fmt(k.views_week)])} />
           </View>
           <View style={s.kpiRow}>
             <KPI label={L.addToCart} value={fmt(k.add_to_cart)} icon={L.addIcon} color={AMBER} sub={`${k.cart_conversion_rate}% ${L.addSubUnit}`} />
@@ -241,24 +240,24 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
             <KPI label={L.revenue} value={kind === 'post' ? fmt(k.engagement_score || 0) : fmt(k.total_revenue || 0)} icon={kind === 'post' ? 'flash' as any : 'cash' as any} color={GOLD} sub={`${fmt(k.total_units)} ${L.unitLabel}`} unit={kind === 'post' ? '' : 'ر.س'} />
           </View>
           <View style={s.kpiRow}>
-            <KPI label={kind === 'post' ? 'المشاركات' : 'مشاركات'} value={fmt(k.shares_total)} icon="share-social" color="#EC4899" sub="على المنصات" />
-            <KPI label={kind === 'competition' ? 'نسبة الامتلاء' : kind === 'post' ? 'مرات الظهور' : 'متوسط الوقت'}
+            <KPI label={kind === 'post' ? tSync('المشاركات', curLang()) : tSync('مشاركات', curLang())} value={fmt(k.shares_total)} icon="share-social" color="#EC4899" sub="على المنصات" />
+            <KPI label={kind === 'competition' ? 'نسبة الامتلاء' : kind === 'post' ? tSync('مرات الظهور', curLang()) : tSync('متوسط الوقت', curLang())}
                  value={kind === 'competition' ? `${k.capacity_pct || 0}%`
                         : kind === 'post' ? fmt(Math.round((k.total_views || 0) * 1.4))
-                        : `${Math.round(k.avg_duration_seconds / 60)}د`}
+                        : tf('{0}د', lang, [Math.round(k.avg_duration_seconds / 60)])}
                  icon={kind === 'competition' ? 'speedometer' as any : kind === 'post' ? 'stats-chart' as any : 'time' as any}
                  color={BLUE}
-                 sub={kind === 'competition' ? `${fmt(k.total_units)}/${fmt(p.stock)}` : kind === 'post' ? 'إجمالي الظهور' : 'لكل زيارة'} />
+                 sub={kind === 'competition' ? `${fmt(k.total_units)}/${fmt(p.stock)}` : kind === 'post' ? tSync('إجمالي الظهور', curLang()) : tSync('لكل زيارة', curLang())} />
           </View>
           {kind === 'service' && (
             <View style={s.kpiRow}>
-              <KPI label={tSync('طلبات إرجاع', lang)} value={fmt(k.returns_count || 0)} icon="return-up-back" color={RED} sub={`${k.returns_pct || 0}% من الحجوزات`} />
+              <KPI label={tSync('طلبات إرجاع', lang)} value={fmt(k.returns_count || 0)} icon="return-up-back" color={RED} sub={tf('{0}% من الحجوزات', lang, [k.returns_pct || 0])} />
               <KPI label={tSync('الشكاوى', lang)} value={fmt(k.complaints_count || 0)} icon="alert-circle" color={AMBER} sub="بلاغات العملاء" />
             </View>
           )}
           {kind === 'competition' && (
             <View style={s.kpiRow}>
-              <KPI label={tSync('الفائزون', lang)} value={fmt(k.winners_count || 0)} icon="trophy" color={GOLD} sub={`من ${fmt(k.prize_count || 0)} جائزة`} />
+              <KPI label={tSync('الفائزون', lang)} value={fmt(k.winners_count || 0)} icon="trophy" color={GOLD} sub={tf('من {0} جائزة', lang, [fmt(k.prize_count || 0)])} />
               <KPI label={tSync('فيديوهات ترويجية', lang)} value={fmt(k.videos_count || 0)} icon="videocam" color={PURPLE} sub="محفوظة للأرشيف" />
             </View>
           )}
@@ -292,7 +291,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               onPress={() => setTab(t.code as any)}
               style={[s.tab, tab === t.code && s.tabActive]}>
               <Ionicons name={t.icon as any} size={12} color={tab === t.code ? BG : TEXT} />
-              <Text style={[s.tabText, tab === t.code && { color: BG }]}>{t.label}</Text>
+              <Text style={[s.tabText, tab === t.code && { color: BG }]}>{tSync(t.label || '', curLang())}</Text>
               {t.count != null && t.count > 0 && (
                 <View style={[s.tabBadge, tab === t.code && { backgroundColor: BG + '30' }]}>
                   <Text style={[s.tabBadgeText, tab === t.code && { color: BG }]}>{t.count}</Text>
@@ -337,7 +336,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                           <View style={s.monthBar}>
                             <View style={[s.monthFill, { width: `${(m.sales * 100) / maxSales}%` }]} />
                           </View>
-                          <Text style={s.monthVal}>{m.sales.toLocaleString()} ر.س</Text>
+                          <Text style={s.monthVal}>{m.sales.toLocaleString()} {tSync('ر.س', lang)}</Text>
                         </View>
                       );
                     })}
@@ -358,15 +357,15 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
           {tab === 'visitors' && (
             <>
-              <SectionTitle icon="people" label={`أكثر الزوار نشاطاً (${d.top_visitors.length})`} />
+              <SectionTitle icon="people" label={tf('أكثر الزوار نشاطاً ({0})', lang, [d.top_visitors.length])} />
               {d.top_visitors.map((v: any, i: number) => (
                 <View key={i} style={s.userCard}>
                   <View style={[s.avatar, { backgroundColor: BLUE + '30' }]}>
-                    <Text style={{ color: BLUE, fontWeight: '900' }}>{(v.user_name || 'ز').charAt(0)}</Text>
+                    <Text style={{ color: BLUE, fontWeight: '900' }}>{(v.user_name || tSync('ز', curLang())).charAt(0)}</Text>
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <Text style={s.userName}>{v.user_name}</Text>
-                    <Text style={s.userMeta}>{v.count} زيارة · آخر ظهور: {(v.last_seen || '').slice(0, 10)}</Text>
+                    <Text style={s.userMeta}>{v.count} {tSync('زيارة · آخر ظهور:', lang)} {(v.last_seen || '').slice(0, 10)}</Text>
                   </View>
                   {v.cart_adds > 0 && (
                     <View style={s.miniPill}>
@@ -377,7 +376,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                 </View>
               ))}
 
-              <SectionTitle icon="alert-circle" label={`سلات مهجورة (${d.cart_abandonments.length})`} />
+              <SectionTitle icon="alert-circle" label={tf('سلات مهجورة ({0})', lang, [d.cart_abandonments.length])} />
               {d.cart_abandonments.length === 0 && <TX style={s.emptyText}>لا توجد سلات مهجورة 🎉</TX>}
               {d.cart_abandonments.map((a: any, i: number) => (
                 <View key={i} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: RED }]}>
@@ -386,7 +385,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <Text style={s.userName}>{a.user_name}</Text>
-                    <Text style={s.userMeta}>أضاف للسلة: {(a.added_at || '').slice(0, 16).replace('T', ' ')}</Text>
+                    <Text style={s.userMeta}>{tSync('أضاف للسلة:', lang)} {(a.added_at || '').slice(0, 16).replace('T', ' ')}</Text>
                     {a.reached_checkout && <TX style={{ color: AMBER, fontSize: 10, marginTop: 2 }}>⚠️ وصل الدفع ولم يكمل</TX>}
                   </View>
                 </View>
@@ -396,12 +395,12 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
           {tab === 'buyers' && (
             <>
-              <SectionTitle icon="bag-check" label={`المشترون (${d.buyers.length})`} />
+              <SectionTitle icon="bag-check" label={tf('المشترون ({0})', lang, [d.buyers.length])} />
               {d.buyers.length === 0 && <TX style={s.emptyText}>لا مشتريات بعد</TX>}
               {d.buyers.map((b: any, i: number) => (
                 <View key={i} style={s.userCard}>
                   <View style={[s.avatar, { backgroundColor: OK + '30' }]}>
-                    <Text style={{ color: OK, fontWeight: '900' }}>{(b.user_name || 'ع').charAt(0)}</Text>
+                    <Text style={{ color: OK, fontWeight: '900' }}>{(b.user_name || tSync('ع', curLang())).charAt(0)}</Text>
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <Text style={s.userName}>{b.user_name} <Text style={{ color: MUTED, fontSize: 10, fontWeight: '400' }}>· {b.phone || ''}</Text></Text>
@@ -415,7 +414,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                     </View>
                   </View>
                   <View style={{ alignItems: 'flex-start' }}>
-                    <Text style={{ color: GOLD, fontSize: 13, fontWeight: '900' }}>{b.total} ر.س</Text>
+                    <Text style={{ color: GOLD, fontSize: 13, fontWeight: '900' }}>{b.total} {tSync('ر.س', lang)}</Text>
                     <Text style={{ color: MUTED, fontSize: 10 }}>×{b.quantity}</Text>
                   </View>
                 </View>
@@ -435,7 +434,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                 ))}
               </View>
 
-              <SectionTitle icon="paper-plane" label={`آخر ${d.recent_shares.length} مشاركة`} />
+              <SectionTitle icon="paper-plane" label={tf('آخر {0} مشاركة', lang, [d.recent_shares.length])} />
               {d.recent_shares.length === 0 && <TX style={s.emptyText}>لم يتم مشاركة المنتج بعد</TX>}
               {d.recent_shares.map((r: any, i: number) => (
                 <View key={i} style={s.userCard}>
@@ -444,7 +443,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <Text style={s.userName}>{r.user_name}</Text>
-                    <Text style={s.userMeta}>شارك عبر <Text style={{ color: PLATFORM_COLORS[r.platform] || GOLD, fontWeight: '900' }}>{r.platform}</Text> {r.shared_to ? `→ ${r.shared_to}` : ''}</Text>
+                    <Text style={s.userMeta}>{tSync('شارك عبر', lang)} <Text style={{ color: PLATFORM_COLORS[r.platform] || GOLD, fontWeight: '900' }}>{r.platform}</Text> {r.shared_to ? `→ ${r.shared_to}` : ''}</Text>
                     <Text style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{(r.created_at || '').slice(0, 16).replace('T', ' ')}</Text>
                   </View>
                 </View>
@@ -458,7 +457,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <View>
                     <Text style={{ color: TEXT, fontSize: 26, fontWeight: '900' }}>{k.avg_rating} ⭐</Text>
-                    <Text style={{ color: MUTED, fontSize: 11 }}>{k.review_count_real} تقييم</Text>
+                    <Text style={{ color: MUTED, fontSize: 11 }}>{k.review_count_real} {tSync('تقييم', lang)}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', gap: 6 }}>
                     {[5, 4, 3, 2, 1].map((star) => {
@@ -478,7 +477,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                 </View>
               </View>
 
-              <SectionTitle icon="chatbubbles" label={`التعليقات والتقييمات (${d.reviews.length})`} />
+              <SectionTitle icon="chatbubbles" label={tf('التعليقات والتقييمات ({0})', lang, [d.reviews.length])} />
               {d.reviews.map((r: any, i: number) => (
                 <View key={i} style={s.reviewCard}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -497,7 +496,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
               {d.questions.length > 0 && (
                 <>
-                  <SectionTitle icon="help-circle" label={`أسئلة العملاء (${d.questions.length})`} />
+                  <SectionTitle icon="help-circle" label={tf('أسئلة العملاء ({0})', lang, [d.questions.length])} />
                   {d.questions.map((q: any, i: number) => (
                     <View key={i} style={[s.reviewCard, { borderLeftWidth: 3, borderLeftColor: PURPLE }]}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -519,7 +518,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
           {tab === 'returns' && kind === 'service' && (
             <>
-              <SectionTitle icon="return-up-back" label={`طلبات الإرجاع (${(d.returns || []).length})`} />
+              <SectionTitle icon="return-up-back" label={tf('طلبات الإرجاع ({0})', lang, [(d.returns || []).length])} />
               {(d.returns || []).length === 0 && <TX style={s.emptyText}>لا يوجد طلبات إرجاع لهذه الخدمة 🎉</TX>}
               {(d.returns || []).map((r: any, i: number) => (
                 <View key={i} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: RED, alignItems: 'flex-start' }]}>
@@ -527,18 +526,18 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                     <Ionicons name="return-up-back" size={16} color={RED} />
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
-                    <Text style={s.userName}>{r.user_name || 'عميل'} <Text style={{ color: MUTED, fontSize: 10, fontWeight: '400' }}>· {r.phone || ''}</Text></Text>
-                    <Text style={s.userMeta}>{r.reason || 'بدون سبب'}</Text>
+                    <Text style={s.userName}>{r.user_name || tSync('عميل', curLang())} <Text style={{ color: MUTED, fontSize: 10, fontWeight: '400' }}>· {r.phone || ''}</Text></Text>
+                    <Text style={s.userMeta}>{r.reason || tSync('بدون سبب', curLang())}</Text>
                     <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
                       <View style={[s.miniPill, { backgroundColor: (r.status === 'approved' ? OK : r.status === 'rejected' ? RED : AMBER) + '20' }]}>
                         <Text style={[s.miniPillText, { color: r.status === 'approved' ? OK : r.status === 'rejected' ? RED : AMBER }]}>
-                          {r.status === 'approved' ? 'مقبول' : r.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة'}
+                          {r.status === 'approved' ? 'مقبول' : r.status === 'rejected' ? tSync('مرفوض', curLang()) : tSync('قيد المراجعة', curLang())}
                         </Text>
                       </View>
                       <Text style={{ color: MUTED, fontSize: 10 }}>{(r.created_at || '').slice(0, 10)}</Text>
                     </View>
                   </View>
-                  <Text style={{ color: RED, fontWeight: '900', fontSize: 12 }}>-{r.amount || 0} ر.س</Text>
+                  <Text style={{ color: RED, fontWeight: '900', fontSize: 12 }}>-{r.amount || 0} {tSync('ر.س', lang)}</Text>
                 </View>
               ))}
             </>
@@ -546,21 +545,21 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
           {tab === 'complaints' && kind === 'service' && (
             <>
-              <SectionTitle icon="alert-circle" label={`الشكاوى (${(d.complaints || []).length})`} />
+              <SectionTitle icon="alert-circle" label={tf('الشكاوى ({0})', lang, [(d.complaints || []).length])} />
               {(d.complaints || []).length === 0 && <TX style={s.emptyText}>لا توجد شكاوى مسجلة 👌</TX>}
               {(d.complaints || []).map((c: any, i: number) => (
                 <View key={i} style={[s.reviewCard, { borderLeftWidth: 3, borderLeftColor: AMBER }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={[s.avatar, { backgroundColor: AMBER + '30' }]}>
-                      <Text style={{ color: AMBER, fontWeight: '900' }}>{(c.user_name || '؟').charAt(0)}</Text>
+                      <Text style={{ color: AMBER, fontWeight: '900' }}>{(c.user_name || tSync('؟', curLang())).charAt(0)}</Text>
                     </View>
                     <View style={{ flex: 1, marginHorizontal: 10 }}>
                       <Text style={s.userName}>{c.user_name} <Text style={{ color: MUTED, fontSize: 10, fontWeight: '400' }}>· {c.phone || ''}</Text></Text>
-                      <Text style={{ color: MUTED, fontSize: 10 }}>{(c.created_at || '').slice(0, 10)} · {c.category || 'عام'}</Text>
+                      <Text style={{ color: MUTED, fontSize: 10 }}>{(c.created_at || '').slice(0, 10)} · {c.category || tSync('عام', curLang())}</Text>
                     </View>
                     <View style={[s.miniPill, { backgroundColor: (c.status === 'resolved' ? OK : c.status === 'escalated' ? RED : AMBER) + '20' }]}>
                       <Text style={[s.miniPillText, { color: c.status === 'resolved' ? OK : c.status === 'escalated' ? RED : AMBER }]}>
-                        {c.status === 'resolved' ? 'مُعالج' : c.status === 'escalated' ? 'مُصعّد' : 'مفتوح'}
+                        {c.status === 'resolved' ? 'مُعالج' : c.status === 'escalated' ? tSync('مُصعّد', curLang()) : tSync('مفتوح', curLang())}
                       </Text>
                     </View>
                   </View>
@@ -578,7 +577,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
           {tab === 'winners' && kind === 'competition' && (
             <>
-              <SectionTitle icon="trophy" label={`قائمة الفائزين (${(d.winners || []).length})`} />
+              <SectionTitle icon="trophy" label={tf('قائمة الفائزين ({0})', lang, [(d.winners || []).length])} />
               {(d.winners || []).length === 0 && <TX style={s.emptyText}>لم يتم الإعلان عن الفائزين بعد 🎯</TX>}
               {(d.winners || []).map((w: any, i: number) => (
                 <View key={i} style={[s.userCard, { borderWidth: 1.5, borderColor: GOLD + '80' }]}>
@@ -586,18 +585,18 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                     <Text style={{ color: GOLD, fontWeight: '900' }}>🏆</Text>
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
-                    <Text style={s.userName}>{w.user_name} <Text style={{ color: GOLD, fontSize: 10, fontWeight: '900' }}>· المركز {w.rank || i + 1}</Text></Text>
-                    <Text style={s.userMeta}>{w.prize_name || 'جائزة قيّمة'} · {(w.announced_at || '').slice(0, 10)}</Text>
+                    <Text style={s.userName}>{w.user_name} <Text style={{ color: GOLD, fontSize: 10, fontWeight: '900' }}>{tSync('· المركز', lang)} {w.rank || i + 1}</Text></Text>
+                    <Text style={s.userMeta}>{w.prize_name || tSync('جائزة قيّمة', curLang())} · {(w.announced_at || '').slice(0, 10)}</Text>
                     <View style={{ flexDirection: 'row', gap: 6, marginTop: 3 }}>
                       <View style={[s.miniPill, { backgroundColor: (w.claim_status === 'claimed' ? OK : AMBER) + '20' }]}>
                         <Text style={[s.miniPillText, { color: w.claim_status === 'claimed' ? OK : AMBER }]}>
-                          {w.claim_status === 'claimed' ? '✓ تسلّم الجائزة' : 'بانتظار الاستلام'}
+                          {w.claim_status === 'claimed' ? tSync('✓ تسلّم الجائزة', curLang()) : tSync('بانتظار الاستلام', curLang())}
                         </Text>
                       </View>
                       {!!w.city && <View style={s.miniPill}><Text style={s.miniPillText}>{w.city}</Text></View>}
                     </View>
                   </View>
-                  {!!w.prize_value && <Text style={{ color: GOLD, fontWeight: '900', fontSize: 13 }}>{w.prize_value} ر.س</Text>}
+                  {!!w.prize_value && <Text style={{ color: GOLD, fontWeight: '900', fontSize: 13 }}>{w.prize_value} {tSync('ر.س', lang)}</Text>}
                 </View>
               ))}
             </>
@@ -605,7 +604,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
           {tab === 'videos' && kind === 'competition' && (
             <>
-              <SectionTitle icon="videocam" label={`أرشيف الفيديوهات الترويجية (${(d.videos || []).length})`} />
+              <SectionTitle icon="videocam" label={tf('أرشيف الفيديوهات الترويجية ({0})', lang, [(d.videos || []).length])} />
               <TX style={{ color: MUTED, fontSize: 10, textAlign: 'right', marginBottom: 8 }}>💾 محفوظ للأبد — حتى بعد انتهاء المسابقة</TX>
               {(d.videos || []).length === 0 && <TX style={s.emptyText}>لم يتم رفع فيديوهات ترويجية</TX>}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -629,8 +628,8 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                       )}
                     </View>
                     <View style={{ padding: 8 }}>
-                      <Text style={{ color: TEXT, fontSize: 11, fontWeight: '900', textAlign: 'right' }} numberOfLines={2}>{v.title || 'فيديو ترويجي'}</Text>
-                      <Text style={{ color: MUTED, fontSize: 9, textAlign: 'right', marginTop: 4 }}>{fmt(v.views || 0)} مشاهدة · {(v.created_at || '').slice(0, 10)}</Text>
+                      <Text style={{ color: TEXT, fontSize: 11, fontWeight: '900', textAlign: 'right' }} numberOfLines={2}>{v.title || tSync('فيديو ترويجي', curLang())}</Text>
+                      <Text style={{ color: MUTED, fontSize: 9, textAlign: 'right', marginTop: 4 }}>{fmt(v.views || 0)} {tSync('مشاهدة ·', lang)} {(v.created_at || '').slice(0, 10)}</Text>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -640,18 +639,18 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
 
           {tab === 'compare' && (
             <>
-              <SectionTitle icon="stats-chart" label={kind === 'service' ? 'مقارنة بخدمات مشابهة' : kind === 'competition' ? 'مقارنة بمسابقات أخرى' : kind === 'post' ? 'مقارنة بمنشورات أخرى' : 'مقارنة بمنتجات مشابهة'} />
+              <SectionTitle icon="stats-chart" label={kind === 'service' ? 'مقارنة بخدمات مشابهة' : kind === 'competition' ? 'مقارنة بمسابقات أخرى' : kind === 'post' ? tSync('مقارنة بمنشورات أخرى', curLang()) : tSync('مقارنة بمنتجات مشابهة', curLang())} />
               <View style={s.card}>
                 <View style={s.compareHeaderRow}>
-                  <Text style={[s.compareHeader, { flex: 2 }]}>{kind === 'service' ? 'الخدمة' : kind === 'competition' ? 'المسابقة' : kind === 'post' ? 'المنشور' : 'المنتج'}</Text>
+                  <Text style={[s.compareHeader, { flex: 2 }]}>{kind === 'service' ? 'الخدمة' : kind === 'competition' ? 'المسابقة' : kind === 'post' ? tSync('المنشور', curLang()) : tSync('المنتج', curLang())}</Text>
                   <TX style={s.compareHeader}>مشاهدات</TX>
-                  <Text style={s.compareHeader}>{kind === 'service' ? 'حجوزات' : kind === 'competition' ? 'مشاركون' : kind === 'post' ? 'إعجاب' : 'سلة'}</Text>
-                  <Text style={s.compareHeader}>{kind === 'service' ? 'مكتمل' : kind === 'competition' ? 'دخل' : kind === 'post' ? 'مشاركات' : 'بيعات'}</Text>
+                  <Text style={s.compareHeader}>{kind === 'service' ? 'حجوزات' : kind === 'competition' ? 'مشاركون' : kind === 'post' ? tSync('إعجاب', curLang()) : tSync('سلة', curLang())}</Text>
+                  <Text style={s.compareHeader}>{kind === 'service' ? 'مكتمل' : kind === 'competition' ? 'دخل' : kind === 'post' ? tSync('مشاركات', curLang()) : tSync('بيعات', curLang())}</Text>
                 </View>
                 <View style={[s.compareRow, { backgroundColor: GOLD + '10', borderRadius: 8 }]}>
                   <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     {p.images?.[0] && <Image source={{ uri: p.images[0] }} style={s.compareImg} />}
-                    <Text style={[s.compareName, { color: GOLD }]} numberOfLines={2}>{p.name_ar} ← {kind === 'service' ? 'هذه الخدمة' : kind === 'competition' ? 'هذه المسابقة' : kind === 'post' ? 'هذا المنشور' : 'هذا المنتج'}</Text>
+                    <Text style={[s.compareName, { color: GOLD }]} numberOfLines={2}>{p.name_ar} ← {kind === 'service' ? 'هذه الخدمة' : kind === 'competition' ? 'هذه المسابقة' : kind === 'post' ? tSync('هذا المنشور', curLang()) : tSync('هذا المنتج', curLang())}</Text>
                   </View>
                   <Text style={s.compareVal}>{k.total_views}</Text>
                   <Text style={s.compareVal}>{k.add_to_cart}</Text>
@@ -672,7 +671,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               {d.category_ranking && (
                 <View style={[s.card, { backgroundColor: GOLD + '10', borderColor: GOLD }]}>
                   <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900', textAlign: 'right' }}>
-                    🏆 هذا المنتج مصنّف #{d.category_ranking.rank} من أصل {d.category_ranking.total} منتج في فئته
+                    {tSync('🏆 هذا المنتج مصنّف #', lang)}{d.category_ranking.rank} {tSync('من أصل', lang)} {d.category_ranking.total} {tSync('منتج في فئته', lang)}
                   </Text>
                 </View>
               )}

@@ -5,13 +5,15 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
-import { TX } from '../../src/useAutoT';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 60) / 2;
 
 export default function HomeScreen() {
+  const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
   const { apiCall, user } = useAuth();
@@ -102,13 +104,13 @@ export default function HomeScreen() {
         <View style={s.productImgWrap}>
           <Image source={{ uri: p.images?.[0] }} style={s.productImg} />
           {showDiscount && hasDiscount && (
-            <View style={s.discountBadge}><Text style={s.discountText}>{discountPct}% OFF</Text></View>
+            <View style={s.discountBadge}><Text style={s.discountText}>{tf('خصم {0}%', lang, [discountPct])}</Text></View>
           )}
           {!showDiscount && p.condition === 'new' && (
-            <View style={s.newBadge}><Text style={s.newBadgeText}>New</Text></View>
+            <View style={s.newBadge}><Text style={s.newBadgeText}>{tSync('جديد', lang)}</Text></View>
           )}
           {p.condition !== 'new' && (
-            <View style={s.usedBadge}><Text style={s.usedBadgeText}>Used</Text></View>
+            <View style={s.usedBadge}><Text style={s.usedBadgeText}>{tSync('مستعمل', lang)}</Text></View>
           )}
         </View>
         <View style={s.productInfo}>
@@ -117,13 +119,13 @@ export default function HomeScreen() {
             <Text style={s.ratingText}>{p.rating}</Text>
           </View>
           <TranslatableName
-            text={p.name_en}
-            sourceLang="en"
+            text={lang === 'ar' ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar)}
+            sourceLang={lang === 'ar' ? 'ar' : 'en'}
             style={s.productName}
             numberOfLines={1}
             iconSize={12}
           />
-          <Text style={s.soldText}>{p.sold_count} SOLD</Text>
+          <Text style={s.soldText}>{tf('{0} مُباع', lang, [p.sold_count])}</Text>
           <View style={s.priceRow}>
             <Text style={s.price}>{price}</Text>
             {hasDiscount && <Text style={s.oldPrice}>{p.price}</Text>}
@@ -149,13 +151,13 @@ export default function HomeScreen() {
           </View>
           <TouchableOpacity testID="store-selector" style={s.storeSelector}>
             <Ionicons name="storefront-outline" size={18} color="#F5C518" />
-            <Text style={s.storeName}>Riyadh Store</Text>
+            <Text style={s.storeName}>{tSync('فرع الرياض', lang)}</Text>
             <Ionicons name="chevron-down" size={14} color="#52525B" />
           </TouchableOpacity>
           <View style={s.headerRight}>
             <TouchableOpacity testID="location-btn" style={s.locationBtn}>
               <Ionicons name="location-outline" size={16} color="#52525B" />
-              <Text style={s.locationText}>My home</Text>
+              <Text style={s.locationText}>{tSync('بيتي', lang)}</Text>
               <Ionicons name="chevron-down" size={12} color="#52525B" />
             </TouchableOpacity>
             <TouchableOpacity testID="cart-btn" style={s.cartBtn} onPress={() => router.push('/cart')}>
@@ -199,8 +201,8 @@ export default function HomeScreen() {
         {/* ─── Categories ─── */}
         <View style={s.section}>
           <View style={s.sectionHeader}>
-            <Text style={s.sectionTitle}>Categories</Text>
-            <TouchableOpacity testID="see-all-categories"><Text style={s.seeAll}>See all</Text></TouchableOpacity>
+            <Text style={s.sectionTitle}>{tSync('الفئات', lang)}</Text>
+            <TouchableOpacity testID="see-all-categories"><Text style={s.seeAll}>{tSync('شوف الكل', lang)}</Text></TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.catScroll}>
             {categories.map((cat) => (
@@ -210,8 +212,8 @@ export default function HomeScreen() {
                   <Ionicons name={(catImages[cat.name_en] || 'grid') as any} size={28} color={cat.color1} />
                 </View>
                 <TranslatableName
-                  text={cat.name_en}
-                  sourceLang="en"
+                  text={lang === 'ar' ? (cat.name_ar || cat.name_en) : (cat.name_en || cat.name_ar)}
+                  sourceLang={lang === 'ar' ? 'ar' : 'en'}
                   style={s.catLabel}
                   numberOfLines={1}
                   iconSize={11}
@@ -238,11 +240,11 @@ export default function HomeScreen() {
         {/* ─── Used Devices Banner ─── */}
         <TouchableOpacity activeOpacity={0.85} style={s.usedDevicesBanner} onPress={() => router.push({ pathname: '/search', params: { condition: 'used', categoryName: 'الأجهزة المستخدمة' } })}>
           <View style={s.usedDevicesLeft}>
-            <View style={s.offBadge}><Text style={s.offBadgeText}>75% OFF</Text></View>
-            <Text style={s.usedDevicesTitle}>Used Devices</Text>
-            <Text style={s.usedDevicesDesc}>Get like new devices in{'\n'}low price</Text>
+            <View style={s.offBadge}><Text style={s.offBadgeText}>{tSync('خصم 75%', lang)}</Text></View>
+            <Text style={s.usedDevicesTitle}>{tSync('الأجهزة المستعملة', lang)}</Text>
+            <Text style={s.usedDevicesDesc}>{tSync('أجهزة بحالة الجديد\nبأسعار منخفضة', lang)}</Text>
             <View style={s.checkNowBtn}>
-              <Text style={s.checkNowText}>Check it now</Text>
+              <Text style={s.checkNowText}>{tSync('شوفها الحين', lang)}</Text>
             </View>
           </View>
           <View style={s.usedDevicesRight}>
@@ -255,10 +257,10 @@ export default function HomeScreen() {
           <View style={s.sectionHeader}>
             <View style={s.sectionTitleRow}>
               <Ionicons name="flame" size={22} color="#EF4444" />
-              <Text style={s.sectionTitle}>Hot products</Text>
+              <Text style={s.sectionTitle}>{tSync('منتجات رائجة', lang)}</Text>
             </View>
             <TouchableOpacity testID="see-all-hot" onPress={() => router.push('/search')}>
-              <Text style={s.seeAll}>See all</Text>
+              <Text style={s.seeAll}>{tSync('شوف الكل', lang)}</Text>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.productScroll}>
@@ -271,7 +273,7 @@ export default function HomeScreen() {
           <View style={s.featuredContent}>
             <Text style={s.featuredTitle}>iPhone 16</Text>
             <View style={s.checkOutBtn}>
-              <Text style={s.checkOutText}>Check out now!</Text>
+              <Text style={s.checkOutText}>{tSync('أتمم الشراء الحين!', lang)}</Text>
             </View>
           </View>
           <Image source={{ uri: hotProducts[0]?.images?.[0] || '' }} style={s.featuredImg} />
@@ -282,10 +284,10 @@ export default function HomeScreen() {
           <View style={s.sectionHeader}>
             <View style={s.sectionTitleRow}>
               <Ionicons name="pricetag" size={20} color="#F5C518" />
-              <Text style={s.sectionTitle}>Best deals</Text>
+              <Text style={s.sectionTitle}>{tSync('أفضل العروض', lang)}</Text>
             </View>
             <TouchableOpacity testID="see-all-deals" onPress={() => router.push('/search')}>
-              <Text style={s.seeAll}>See all</Text>
+              <Text style={s.seeAll}>{tSync('شوف الكل', lang)}</Text>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.productScroll}>
@@ -327,13 +329,13 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View style={s.competitionContent}>
-                <Text style={s.competitionText} numberOfLines={1}>🏆 {topCompetition.title || 'مسابقة جديدة'}</Text>
-                <Text style={s.competitionPrize} numberOfLines={1}>{topCompetition.prize || 'جوائز قيمة'}</Text>
+                <Text style={s.competitionText} numberOfLines={1}>🏆 {topCompetition.title || tSync('مسابقة جديدة', curLang())}</Text>
+                <Text style={s.competitionPrize} numberOfLines={1}>{topCompetition.prize || tSync('جوائز قيمة', curLang())}</Text>
                 <View style={s.progressBar}>
                   <View style={[s.progressFill, { width: `${pct}%` }]} />
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={s.progressText}>{joined}/{max} مشارك</Text>
+                  <Text style={s.progressText}>{joined}/{max} {tSync('مشارك', lang)}</Text>
                   <TX style={[s.progressText, { color: '#F5C518', fontWeight: '700' }]}>اضغط للتفاصيل ←</TX>
                 </View>
               </View>

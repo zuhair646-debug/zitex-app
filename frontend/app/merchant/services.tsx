@@ -8,8 +8,8 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 const GOLD = '#F5C518';
 const BG = '#0A0A0A';
@@ -75,7 +75,7 @@ export default function MerchantServices() {
 
   const pickImages = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), 'السماح للوصول للمعرض مطلوب'); return; }
+    if (!perm.granted) { Alert.alert(tSync('صلاحية', lang), tSync('السماح للوصول للمعرض مطلوب', curLang())); return; }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, allowsMultipleSelection: true, selectionLimit: 5, quality: 0.85 });
     if (res.canceled) return;
     setUploading(true);
@@ -96,17 +96,17 @@ export default function MerchantServices() {
   const captureShopLocation = async () => {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
-      if (!perm.granted) { Alert.alert(tSync('صلاحية الموقع', lang), 'مطلوب السماح بالموقع لتحديد إحداثيات المحل'); return; }
+      if (!perm.granted) { Alert.alert(tSync('صلاحية الموقع', lang), tSync('مطلوب السماح بالموقع لتحديد إحداثيات المحل', curLang())); return; }
       const loc = await Location.getCurrentPositionAsync({});
       setForm((f: any) => ({ ...f, shop_lat: loc.coords.latitude, shop_lng: loc.coords.longitude }));
-      Alert.alert(tSync('تم', lang), `تم حفظ الإحداثيات:\n${loc.coords.latitude.toFixed(5)}, ${loc.coords.longitude.toFixed(5)}`);
+      Alert.alert(tSync('تم', lang), tf('تم حفظ الإحداثيات:\n{0}, {1}', lang, [loc.coords.latitude.toFixed(5), loc.coords.longitude.toFixed(5)]));
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
   const save = async () => {
-    if (!form.name || !form.price) { Alert.alert(tSync('مطلوب', lang), 'الاسم والسعر مطلوبان'); return; }
+    if (!form.name || !form.price) { Alert.alert(tSync('مطلوب', lang), tSync('الاسم والسعر مطلوبان', curLang())); return; }
     if (form.home_pickup && (form.shop_lat == null || form.shop_lng == null)) {
-      Alert.alert(tSync('موقع المحل مطلوب', lang), 'لدعم استلام المنزل، حدّد إحداثيات المحل أولاً'); return;
+      Alert.alert(tSync('موقع المحل مطلوب', lang), tSync('لدعم استلام المنزل، حدّد إحداثيات المحل أولاً', curLang())); return;
     }
     setSaving(true);
     try {
@@ -126,9 +126,9 @@ export default function MerchantServices() {
   };
 
   const del = (id: string, name: string) => {
-    Alert.alert(tSync('حذف', lang), `حذف "${name}"؟`, [
-      { text: 'إلغاء', style: 'cancel' },
-      { text: 'حذف', style: 'destructive', onPress: async () => {
+    Alert.alert(tSync('حذف', lang), tf('حذف "{0}"؟', lang, [name]), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
+      { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => {
         try { await apiCall(`/api/merchant/services/${id}`, { method: 'DELETE' }); load(); }
         catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
       }},
@@ -139,7 +139,7 @@ export default function MerchantServices() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}><Ionicons name="arrow-back" size={22} color={GOLD} /></TouchableOpacity>
-        <Text style={s.title}>الخدمات ({services.length})</Text>
+        <Text style={s.title}>{tSync('الخدمات (', lang)}{services.length})</Text>
         <TouchableOpacity testID="add-svc" onPress={openCreate} style={s.addBtn}>
           <Ionicons name="add" size={22} color={BG} />
         </TouchableOpacity>
@@ -163,13 +163,13 @@ export default function MerchantServices() {
               )}
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={s.name}>{sv.name}</Text>
+                  <Text style={s.name}>{lang === 'ar' ? (sv.name_ar || sv.name) : (sv.name || sv.name_ar)}</Text>
                   {!sv.published && <View style={s.hiddenBadge}><TX style={s.hiddenBadgeText}>مخفية</TX></View>}
                 </View>
-                <Text style={s.desc} numberOfLines={2}>{sv.desc}</Text>
+                <Text style={s.desc} numberOfLines={2}>{tSync(sv.desc || '', curLang())}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
-                  <Text style={s.price}>{sv.price} ر.س</Text>
-                  {sv.warranty_available ? <Text style={s.warranty}>🛡 {sv.warranty_days}ي</Text> : null}
+                  <Text style={s.price}>{sv.price} {tSync('ر.س', lang)}</Text>
+                  {sv.warranty_available ? <Text style={s.warranty}>🛡 {sv.warranty_days}{tSync('ي', lang)}</Text> : null}
                   {sv.home_pickup ? <TX style={s.pickup}>🚗 استلام منزلي</TX> : null}
                 </View>
               </View>
@@ -186,7 +186,7 @@ export default function MerchantServices() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color={GOLD} /></TouchableOpacity>
-            <Text style={s.title}>{editing ? 'تعديل' : 'خدمة جديدة'}</Text>
+            <Text style={s.title}>{editing ? tSync('تعديل', curLang()) : tSync('خدمة جديدة', curLang())}</Text>
             <View style={{ width: 24 }} />
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -249,7 +249,7 @@ export default function MerchantServices() {
             <View style={s.toggle}>
               <View style={{ flex: 1 }}>
                 <TX style={s.toggleLbl}>ضمان متاح</TX>
-                <Text style={s.toggleHint}>يظهر شارة {"«مضمون»"} للعميل</Text>
+                <Text style={s.toggleHint}>{tSync('يظهر شارة', lang)} {"«مضمون»"} {tSync('للعميل', lang)}</Text>
               </View>
               <Switch value={form.warranty_available} onValueChange={v => setForm({ ...form, warranty_available: v })} trackColor={{ true: GOLD, false: '#3A3A3C' }} thumbColor={form.warranty_available ? BG : '#FFF'} />
             </View>
@@ -315,7 +315,7 @@ export default function MerchantServices() {
             </View>
 
             <TouchableOpacity style={s.saveBtn} onPress={save} disabled={saving}>
-              {saving ? <ActivityIndicator color={BG} /> : <Text style={s.saveText}>{editing ? 'تحديث الخدمة' : 'حفظ الخدمة'}</Text>}
+              {saving ? <ActivityIndicator color={BG} /> : <Text style={s.saveText}>{editing ? tSync('تحديث الخدمة', curLang()) : tSync('حفظ الخدمة', curLang())}</Text>}
             </TouchableOpacity>
             <View style={{ height: 40 }} />
           </ScrollView>

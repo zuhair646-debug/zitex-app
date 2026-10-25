@@ -4,13 +4,13 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
-import { useT } from '../src/i18n';
-import { TX } from '../src/useAutoT';
+import { useT, curLang } from '../src/i18n';
+import { TX, tSync } from '../src/useAutoT';
 
 export default function PointsScreen() {
   const router = useRouter();
   const { apiCall } = useAuth();
-  const { t } = useT();
+  const { t, lang } = useT();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [redeemModal, setRedeemModal] = useState(false);
@@ -26,7 +26,7 @@ export default function PointsScreen() {
 
   const redeem = async () => {
     const amt = parseInt(redeemAmt);
-    if (!amt || amt < 10) { Alert.alert(t('common.error'), '10 نقاط على الأقل / Minimum 10 points'); return; }
+    if (!amt || amt < 10) { Alert.alert(t('common.error'), tSync('10 نقاط على الأقل / Minimum 10 points', curLang())); return; }
     setRedeeming(true);
     try {
       const r = await apiCall('/api/points/redeem', { method: 'POST', body: JSON.stringify({ points: amt }) });
@@ -53,7 +53,7 @@ export default function PointsScreen() {
           <Text style={s.heroLabel}>{t('points.balance')}</Text>
           <Text style={s.heroValue}>{data.balance}</Text>
           <View style={[s.tierBadge, { backgroundColor: tierColor }]}>
-            <Text style={s.tierText}>{data.tier}</Text>
+            <TX style={s.tierText}>{data.tier || ''}</TX>
           </View>
           <Text style={s.heroSub}>{t('points.value')}: {data.value_sar} {t('common.currency')}</Text>
           <Text style={s.heroSub}>{t('points.earnRate')}</Text>
@@ -69,8 +69,8 @@ export default function PointsScreen() {
         {(data.history || []).map((h: any) => (
           <View key={h.id || h._id || Math.random()} style={s.historyItem}>
             <View style={{ flex: 1 }}>
-              <Text style={s.histReason}>{h.reason}</Text>
-              <Text style={s.histDate}>{new Date(h.created_at).toLocaleDateString('ar')}</Text>
+              <TX style={s.histReason}>{h.reason || ''}</TX>
+              <Text style={s.histDate}>{new Date(h.created_at).toLocaleDateString(lang === 'ar' ? 'ar-SA' : lang)}</Text>
             </View>
             <Text style={[s.histDelta, { color: h.delta > 0 ? '#10B981' : '#EF4444' }]}>{h.delta > 0 ? '+' : ''}{h.delta}</Text>
           </View>

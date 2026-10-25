@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useT } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
+import { tSync, TX } from '../../src/useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, StatusBar, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
-import { TX } from '../../src/useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -69,7 +68,7 @@ export default function ServicesCatalogScreen() {
       <StatusBar barStyle="light-content" />
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.back}>
-          <Ionicons name="chevron-forward" size={22} color={TEXT} />
+          <Ionicons name={curLang() === 'ar' || curLang() === 'fa' || curLang() === 'ur' || curLang() === 'he' ? "chevron-forward" : "chevron-back"} size={22} color={TEXT} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <TX style={s.title}>ميزات التطبيق</TX>
@@ -99,7 +98,7 @@ export default function ServicesCatalogScreen() {
                   <View style={[s.catIcon, { backgroundColor: meta.color + '20', borderColor: meta.color }]}>
                     <Ionicons name={meta.icon as any} size={14} color={meta.color} />
                   </View>
-                  <Text style={[s.catTitle, { color: meta.color }]}>{meta.label}</Text>
+                  <Text style={[s.catTitle, { color: meta.color }]}>{tSync(meta.label || '', curLang())}</Text>
                   <View style={{ flex: 1 }} />
                   <Text style={{ color: MUTED, fontSize: 10 }}>
                     {cat.modules.filter((m: any) => m.enabled).length}/{cat.modules.length}
@@ -112,8 +111,8 @@ export default function ServicesCatalogScreen() {
                         <Ionicons name={m.icon as any} size={16} color={meta.color} />
                       </View>
                       <View style={{ flex: 1, marginHorizontal: 10 }}>
-                        <Text style={s.rowTitle}>{m.name_ar}</Text>
-                        <Text style={s.rowDesc} numberOfLines={2}>{m.description_ar}</Text>
+                        <TX style={s.rowTitle}>{m.name_ar || ''}</TX>
+                        <TX style={s.rowDesc} numberOfLines={2}>{m.description_ar || ''}</TX>
                       </View>
                       <Switch
                         value={!!m.enabled}

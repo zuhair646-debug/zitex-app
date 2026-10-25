@@ -1,7 +1,8 @@
+import { useT, curLang } from '../i18n';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { TX } from '../useAutoT';
+import { TX, tSync } from '../useAutoT';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -38,6 +39,7 @@ export default function ShippingOptionsPicker({
   selectedCarrier?: string;
   onSelect: (carrierCode: string, price: number, etaDays: string) => void;
 }) {
+  const { lang } = useT();
   const [loading, setLoading] = useState(true);
   const [options, setOptions] = useState<any[]>([]);
   const [destination, setDestination] = useState<any>(null);
@@ -80,8 +82,8 @@ export default function ShippingOptionsPicker({
         <Ionicons name="airplane" size={14} color={MUTED} />
         <Text style={s.emptyText}>
           {destination?.city_code
-            ? 'لا توجد شركة شحن متاحة لموقعك حالياً'
-            : 'حدد موقع التوصيل لعرض خيارات الشحن الخارجي'}
+            ? tSync('لا توجد شركة شحن متاحة لموقعك حالياً', curLang())
+            : tSync('حدد موقع التوصيل لعرض خيارات الشحن الخارجي', curLang())}
         </Text>
       </View>
     );
@@ -95,7 +97,7 @@ export default function ShippingOptionsPicker({
         {destination?.city_name_ar && (
           <View style={s.cityPill}>
             <Ionicons name="location" size={10} color={GOLD} />
-            <Text style={s.cityText}>{destination.city_name_ar}</Text>
+            <Text style={s.cityText}>{lang === 'ar' ? destination.city_name_ar : lang === 'en' ? (destination.city_name_en || destination.city_name_ar) : tSync(destination.city_name_ar || '', lang)}</Text>
           </View>
         )}
       </View>
@@ -110,12 +112,12 @@ export default function ShippingOptionsPicker({
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={{ fontSize: 18 }}>{o.logo}</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[s.name, active && { color: o.brand_color }]}>{o.name_ar}</Text>
-                  <Text style={s.eta}>{o.eta_days} أيام</Text>
+                  <Text style={[s.name, active && { color: o.brand_color }]}>{lang === 'ar' ? o.name_ar : lang === 'en' ? (o.name_en || o.name_ar) : tSync(o.name_ar || '', lang)}</Text>
+                  <Text style={s.eta}>{o.eta_days} {tSync('أيام', lang)}</Text>
                 </View>
                 {active && <Ionicons name="checkmark-circle" size={14} color={o.brand_color} />}
               </View>
-              <Text style={[s.price, active && { color: o.brand_color }]}>{o.price_sar} ر.س</Text>
+              <Text style={[s.price, active && { color: o.brand_color }]}>{o.price_sar} {tSync('ر.س', lang)}</Text>
               {o.cod_supported && (
                 <View style={s.codBadge}>
                   <Text style={s.codText}>COD ✓</Text>
@@ -131,16 +133,16 @@ export default function ShippingOptionsPicker({
 
 const s = StyleSheet.create({
   box: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: CARD, borderRadius: 12, borderWidth: 1, borderColor: BORDER, padding: 12 },
-  emptyText: { color: MUTED, fontSize: 11, flex: 1, textAlign: 'right' },
+  emptyText: { color: MUTED, fontSize: 11, flex: 1, textAlign: 'auto' },
   wrap: { marginTop: 10 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  title: { color: GOLD, fontSize: 12, fontWeight: '900', flex: 1, textAlign: 'right' },
+  title: { color: GOLD, fontSize: 12, fontWeight: '900', flex: 1, textAlign: 'auto' },
   cityPill: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: GOLD + '20', borderColor: GOLD, borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
   cityText: { color: GOLD, fontSize: 10, fontWeight: '900' },
   card: { borderWidth: 1.5, borderRadius: 12, padding: 10, minWidth: 130, position: 'relative' },
-  name: { color: TEXT, fontSize: 11, fontWeight: '900', textAlign: 'right' },
-  eta: { color: MUTED, fontSize: 10, textAlign: 'right', marginTop: 1 },
-  price: { color: TEXT, fontSize: 15, fontWeight: '900', textAlign: 'right', marginTop: 8 },
+  name: { color: TEXT, fontSize: 11, fontWeight: '900', textAlign: 'auto' },
+  eta: { color: MUTED, fontSize: 10, textAlign: 'auto', marginTop: 1 },
+  price: { color: TEXT, fontSize: 15, fontWeight: '900', textAlign: 'auto', marginTop: 8 },
   codBadge: { position: 'absolute', top: 4, right: 4, backgroundColor: '#10B98120', paddingHorizontal: 4, borderRadius: 4 },
   codText: { color: '#10B981', fontSize: 8, fontWeight: '900' },
 });

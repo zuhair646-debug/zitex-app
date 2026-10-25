@@ -3,12 +3,13 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import TranslatableName from '../../src/components/TranslatableName';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
 import { PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, Badge, ScreenHeader, StatCard, Chip } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 interface Branch {
   id: string; name: string; address: string; city?: string; district?: string;
@@ -60,7 +61,7 @@ export default function MerchantBranches() {
 
   const save = async () => {
     if (!editing?.name?.trim() || !editing?.address?.trim()) {
-      Alert.alert(tSync('نقص', lang), 'اسم الفرع والعنوان مطلوبان'); return;
+      Alert.alert(tSync('نقص', lang), tSync('اسم الفرع والعنوان مطلوبان', curLang())); return;
     }
     const payload = {
       name: editing.name, address: editing.address, city: editing.city || '',
@@ -79,9 +80,9 @@ export default function MerchantBranches() {
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
-  const remove = (b: Branch) => Alert.alert(tSync('حذف الفرع', lang), `حذف "${b.name}"؟`, [
-    { text: 'إلغاء', style: 'cancel' },
-    { text: 'حذف', style: 'destructive', onPress: async () => {
+  const remove = (b: Branch) => Alert.alert(tSync('حذف الفرع', lang), tf('حذف "{0}"؟', lang, [b.name]), [
+    { text: tSync('إلغاء', curLang()), style: 'cancel' },
+    { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => {
       try { await apiCall(`/api/merchant/branches/${b.id}`, { method: 'DELETE' }); load(); }
       catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     }},
@@ -95,7 +96,7 @@ export default function MerchantBranches() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScreenHeader title={tSync("الفروع", lang)} onBack={() => router.back()} rightIcon="add" onRight={openNew} subtitle={`${branches.length} فرع`} />
+        <ScreenHeader title={tSync("الفروع", lang)} onBack={() => router.back()} rightIcon="add" onRight={openNew} subtitle={tf('{0} فرع', lang, [branches.length])} />
 
         {/* Summary stats */}
         <View style={s.summaryRow}>
@@ -115,8 +116,8 @@ export default function MerchantBranches() {
           <EmptyState
             icon="business-outline"
             title={tSync("لا توجد فروع بعد", lang)}
-            description="أضف أول فرع لبدء إدارة عملياتك متعددة المواقع"
-            actionLabel="إضافة فرع" onAction={openNew}
+            description={tSync('أضف أول فرع لبدء إدارة عملياتك متعددة المواقع', lang)}
+            actionLabel={tSync('إضافة فرع', lang)} onAction={openNew}
           />
         ) : (
           <ScrollView
@@ -134,7 +135,7 @@ export default function MerchantBranches() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                        <Text style={s.cardName}>{b.name}</Text>
+                        <TranslatableName text={b.name} style={s.cardName} />
                         {b.is_main && <Badge label={tSync("الرئيسي", lang)} tone="gold" />}
                         {!!b.branch_code && <Badge label={b.branch_code} tone="info" />}
                         {!b.published && <Badge label={tSync("مغلق", lang)} tone="error" />}
@@ -196,7 +197,7 @@ export default function MerchantBranches() {
         <View style={s.root}>
           <SafeAreaView edges={['top']} style={{ flex: 1 }}>
             <ScreenHeader
-              title={editing?.id ? 'تعديل فرع' : 'فرع جديد'}
+              title={editing?.id ? tSync('تعديل فرع', curLang()) : tSync('فرع جديد', curLang())}
               onBack={() => setEditing(null)}
               rightIcon="checkmark" onRight={save}
             />
@@ -223,7 +224,7 @@ export default function MerchantBranches() {
                   {DAYS.map(d => {
                     const active = (editing?.working_days || []).includes(d.key);
                     return (
-                      <Chip key={d.key} label={d.label} active={active} onPress={() => {
+                      <Chip key={d.key} label={tSync(d.label || '', curLang())} active={active} onPress={() => {
                         const cur = editing?.working_days || [];
                         setEditing({ ...editing, working_days: active ? cur.filter(x => x !== d.key) : [...cur, d.key] });
                       }} />
@@ -251,7 +252,7 @@ export default function MerchantBranches() {
               </View>
 
               <View style={{ marginTop: spacing.lg }}>
-                <PrimaryButton label={editing?.id ? 'حفظ التغييرات' : 'إنشاء الفرع'} onPress={save} icon="checkmark-circle" />
+                <PrimaryButton label={editing?.id ? tSync('حفظ التغييرات', curLang()) : tSync('إنشاء الفرع', curLang())} onPress={save} icon="checkmark-circle" />
               </View>
             </ScrollView>
           </SafeAreaView>

@@ -1,0 +1,40 @@
+{
+  "summary": "Final retest of the items left open in iteration_35. Tested on mobile web at 375x667. BACKEND FIXED: POST /api/social/posts/{id}/comments returns 200 on posts whose comments field is an array (6 posts tested). The array is left untouched. In the UI the comment posts with 200 and no alert, and the count goes 10->11. Test comments were deleted. FRONTEND FIXED: In en/de the competition-form type names and 'Type * / Name * / Mobile Number * / Password *' are translated. The team/pos/branches EmptyState props are wrapped and the dict entries exist; the empty state itself was not shown because the merchant has data. The services-catalog modules (37 /api/translate calls, all 200), loyalty-programs and the LoyaltyRedeemPicker subtitle (TX) translate on demand. Live-preview Contests shows 'General / Allgemein' and '2456 Participants / Teilnehmer'. The product-form condition pills show '🆕 New / ♻️ Used / 🔧 Refurbished'. All 7 back arrows plus loyalty-history use the chevron-back glyph f229 in en (forward in ar). Dict entries are correct: 'No Stories', 'Home Pickup', 'Points to Next Level', and the checkout slot text has no arrow. Regression: 80 page loads (customer, merchant, chamber and driver × ar/en/de/zh/he) gave 0 pageerrors and 0 red screens. A few small strings are still wrong or untranslated (listed below).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "DELETE /api/merchant/social/comments/{cid}", "issue": "Out of scope, noted only: server.py:1228 still runs an unguarded $inc comments:-1, so it will 500 on posts whose comments field is an array. Add the same {$not:{$type:'array'}} filter that add_comment uses."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Remaining untranslated/wrong strings", "issues": [
+        "merchant/competition-form.tsx:258 preview badge shows raw TYPES name {TYPES.find(...)?.name}. Wrap it with tSync.",
+        "merchant/live-preview.tsx:1252 participant-source bar labels show raw label[row.source] ('رابط دعوة', 'تصفح عادي', 'إشعار', 'مشاركة اجتماعية'). Wrap with tSync; the dict keys exist.",
+        "merchant/live-preview.tsx:1469 the header '🔗 مشاركات ({data.total})' is raw Arabic. Use tf with a new key.",
+        "merchant/live-preview.tsx:1358 the post sheet 'sharers' tab uses key 'مشاركات', which gives en 'Participations' / de 'Beiträge'. It should be 'Shares' / 'Geteilt'. Use a dedicated key.",
+        "merchant/product-form.tsx:336,347 category/brand chips show name_ar in en/de even though name_en exists (for example 'هواتف', 'أبل').",
+        "Dict zh: 'سحب عام' = '普通提现' (cash withdrawal) should be '普通抽奖'; 'عامة' = '全部' (all) should be '通用'; 'إضافة فرع' = '添加分支' should be '添加分店'.",
+        "translations_cache en: 'SMSA / Aramex / Speel...' ('سبل' should be 'SPL') in the services-catalog description."
+      ]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_social_comments_array.py", "/app/test_reports/pytest/pytest_iter36.xml"],
+  "action_items": [
+    "Wrap competition-form.tsx:258 and live-preview.tsx:1252 with tSync.",
+    "Add translated keys for live-preview.tsx:1469 header and the 1358 'sharers' tab ('Shares').",
+    "product-form.tsx:336,347: use name_en (or tSync) for non-ar languages.",
+    "Fix zh dict entries 'سحب عام', 'عامة', 'إضافة فرع', and the cached 'Speel' -> 'SPL'."
+  ],
+  "critical_code_review_comments": ["server.py:1228 merchant_delete_comment has the same array/$inc bug that add_comment had."],
+  "updated_files": ["/app/backend/tests/test_social_comments_array.py"],
+  "success_rate": {"backend": "100% (3 passed, 1 skipped: no numeric-comments post exists)", "frontend": "~93% (all requested items pass; 7 minor leftover strings)"},
+  "seed_data_creation": "None. The TEST_comment_iter36 comments were deleted.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login with fetch /api/auth/login, then set localStorage token and app_lang. TX translations on services-catalog need about 15s after the '@zenrex_autot_cache_v2' cache is cleared. Back-arrow check: the first Ionicons glyph in body.innerText is f229 (back) in LTR and f23b (forward) in RTL. In live-preview the en tab label is 'Contests'.",
+  "rca_of_issue": ""
+}

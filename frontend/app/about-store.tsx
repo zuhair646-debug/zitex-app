@@ -1,9 +1,12 @@
+import { useT } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AboutStoreScreen() {
+  const { lang } = useT();
   const router = useRouter();
   const stores = [
     { name: 'Riyadh Store', address: 'Prince Mohammed Bin Abdulaziz Rd, Riyadh', phone: '+966 1234 8366 90' },
@@ -18,7 +21,7 @@ export default function AboutStoreScreen() {
         <TouchableOpacity testID="about-back" style={s.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
         </TouchableOpacity>
-        <Text style={s.title}>About the store</Text>
+        <Text style={s.title}>{tSync('عن المتجر', lang)}</Text>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
         <View style={s.storeSelector}>
@@ -34,7 +37,7 @@ export default function AboutStoreScreen() {
         <View style={s.logoSection}>
           <View style={s.logoCircle}><Ionicons name="phone-portrait-outline" size={40} color="#F5C518" /></View>
           <Text style={s.storeName}>Tech Store</Text>
-          <Text style={s.storeDesc}>A tech store for phones and accessories</Text>
+          <Text style={s.storeDesc}>{tSync('متجر تقني للجوالات والإكسسوارات', lang)}</Text>
         </View>
 
         <View style={s.infoCard}>
@@ -58,7 +61,7 @@ export default function AboutStoreScreen() {
         </View>
 
         <View style={s.socialSection}>
-          <Text style={s.socialTitle}>Follow us</Text>
+          <Text style={s.socialTitle}>{tSync('تابعنا', lang)}</Text>
           <View style={s.socialRow}>
             {[{ icon: 'logo-twitter', color: '#1DA1F2' }, { icon: 'logo-instagram', color: '#E4405F' }, { icon: 'logo-whatsapp', color: '#25D366' }, { icon: 'logo-tiktok', color: '#000' }].map((soc, i) => (
               <TouchableOpacity key={i} style={[s.socialBtn, { backgroundColor: soc.color + '15' }]}>

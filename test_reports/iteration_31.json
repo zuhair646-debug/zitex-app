@@ -1,0 +1,52 @@
+{
+  "summary": "Frontend-only retest of the i18n items still broken in iteration_30, using the mobile web preview at 375x667. Before each check the runtime cache '@zenrex_autot_cache_v2' was cleared. VERIFIED FIXED: (1) useAutoT runtime translations. On My Returns in en, the 3 reasons ('I changed my mind' / 'Product does not match the order' / 'Manufacturing defect') appear within 1.5s with no reload, persist to the cache and stay translated after reload. The preset role names and descriptions on merchant/roles translate on demand in en/de within about 8s with no reload. (2) The SAMA ribbon reads correctly in all 3 languages: en '🛡 Licensed by the Saudi Central Bank (SAMA) · 3 payment options', de '... · 3 Zahlungsoptionen', zh '... · 3 种支付方式'. (3) In zh My Returns, the header reads '5 个退货申请' and the labels 已退款 / 制造缺陷 are correct. (4) Service tab shows Experiences (0) / Erfahrungen (0). Roles header shows '5 roles' / '5 Rollen'. (5) Driver SAR, Active (N), Available (N) are translated in de/en/zh/he. (6) Support 'WhatsApp' label, Arabic Home 'N مُباع', LoyaltyRedeemPicker '1 Point =' / '1 Punkt =' / '1积分 =', and the inventory tabs are all translated. (7) /merchant/inventory loads in ar/en/de/zh/he. REGRESSION: no pageerrors or crashes on 20 customer routes in zh/he/en, 18 merchant routes in ar/en/de/zh/he, or the driver dashboard in 5 languages. STILL BROKEN or NEW: (a) The driver Status value 'متصل' stays Arabic in every non-Arabic language. It is not in the static dictionary, and driver/index.tsx never calls useT(), so it does not re-render when the translation arrives. 'No {tab} orders' is hardcoded English in every language, including ar. (b) Warranties status 'ساري' stays Arabic on the first visit in en/de until reload, for the same no-useT() reason. In en it then reads 'Current'. (c) Wrong dictionary entries on Roles and Support. (d) Raw i18n keys appear on /group-buys and /points. No deprecated Expo packages were checked or changed in this iteration.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/warranties (customer)", "issue": "Warranties with end_date 2025-07-14 and 2025-05-30 (in the past) still have status 'active' and show '0 days left'. They should be expired."},
+      {"endpoint": "GET /api/points (customer)", "issue": "tier ('فضي') and history reason ('طلب #e87b8bce') come back as Arabic strings, so they show in Arabic in every UI language (points.tsx:56,72)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Group Buys screen", "issue": "Raw keys are rendered because 'gb.subtitle', 'gb.activated', 'gb.joined', 'gb.participants' and 'comp.daysLeft' are missing from all 20 dictionaries in i18n.tsx. Reference: app/group-buys.tsx:49,88", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Points screen", "issue": "Raw keys 'points.value', 'points.earnRate' and 'points.history' are shown in every language because they are missing from i18n.tsx. The screen is reachable from Home and Settings. Reference: app/points.tsx:58,59,67", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Driver dashboard status", "issue": "The status value 'متصل' stays Arabic in en/de/zh/he even after waiting 6s. It is missing from i18n-generated.json, and the screen does not subscribe to useT(), so the on-demand result never re-renders. /api/translate returns 'Verbunden' for de; 'Online' would be better. Reference: app/driver/index.tsx:95", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Driver empty state", "issue": "Hardcoded English text 'No {tab} orders' shows in every language, including ar. Reference: app/driver/index.tsx:108", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Driver alerts", "issue": "Hardcoded English alert texts: 'Error', 'Confirm Delivery', 'Mark this order as delivered?', 'Cancel', 'Delivered', 'Done', 'Earned N SAR'. Reference: app/driver/index.tsx:60-65", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Warranties status", "issue": "'ساري' is not in the static dictionary and warranties.tsx has no useT(), so it stays Arabic on the first visit in en/de and only changes after reload. In en it then reads 'Current' instead of 'Active'/'Valid'. 'منتهي' is also not pre-baked. Reference: app/warranties.tsx:37", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Support address header", "issue": "In en, 'العنوان' is translated as 'Title' (the dictionary entry is context-ambiguous), so the address section reads '📍 Title'. Reference: app/support.tsx:73", "testID": "n/a", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "On-demand translation re-render", "issue": "Only useT() consumers re-render when emitTranslationArrived fires. These files use tSync/tf without calling useT(), so they never update until reload: app/chamber.tsx, app/competition/[id].tsx, app/driver/index.tsx, app/warranties.tsx, app/addresses.tsx, app/draw.tsx, app/track-order/[id].tsx, src/components/LoyaltyRedeemPicker.tsx. Fix: call `const { lang } = useT();` in each one (and pass lang instead of curLang()), or pre-bake the strings.", "affected_testIDs": []}
+    ],
+    "design_issues": [
+      {"screen": "My Returns (LTR languages)", "issues": ["Hardcoded RTL styling in en/de/zh: textAlign 'right', the back button uses chevron-forward on the left, and the cards use chevron-back. Reference: app/my-returns.tsx:56,103,118-123"]},
+      {"screen": "Merchant services (he)", "issues": ["The header title 'שירותים (0)' overlaps the + add button."]},
+      {"screen": "Dictionary wording", "issues": ["roles 'دور جاهز' is en 'Ready to Ship' / zh '准备就绪' (should be 'Preset role')", "roles 'حذف الدور' is en 'Delete Round' / de 'Schicht löschen' / zh '删除路线' (should be 'Delete role' / 'Rolle löschen' / '删除角色')", "roles 'نقص' is en 'Shortage' / de 'Mangel' (should be 'Missing info' / 'Fehlende Angaben')", "roles badge 'جاهز' is 'Ready' (should be 'Preset')", "permission 'الطلبات' is en 'Requests' (should be 'Orders')", "driver tab 'السجل' is en 'Record' (should be 'History')", "warranty 'منتهية' is de 'Beendet' (should be 'Abgelaufen')", "inventory stat 'mit der App' in de reads oddly (should be 'In der App')"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_31.json"],
+  "action_items": [
+    "Add the missing i18n keys in all 20 languages: gb.subtitle, gb.activated, gb.joined, gb.participants, comp.daysLeft (group-buys.tsx), and points.value, points.earnRate, points.history (points.tsx).",
+    "driver/index.tsx: call useT() and use its lang so on-demand translations re-render. Pre-bake 'متصل' as Online / Online / 在线 etc. Wrap 'No {tab} orders' at :108 (e.g. 'لا توجد طلبات نشطة/متاحة/سابقة') and the English Alert texts at :60-65.",
+    "Add useT() subscription to chamber.tsx, competition/[id].tsx, warranties.tsx, addresses.tsx, draw.tsx, track-order/[id].tsx and LoyaltyRedeemPicker.tsx.",
+    "Pre-bake 'ساري' as Active/Gültig and 'منتهي' as Expired/Abgelaufen in i18n-generated.json.",
+    "Fix the dictionary entries: 'دور جاهز', 'حذف الدور', 'نقص', 'جاهز' (roles badge → use a distinct source like 'دور جاهز' or 'افتراضي'), 'الطلبات' en → Orders, 'السجل' en → History. Use a context-specific key for the support address ('📍 العنوان' or 'عنوان المتجر') because 'العنوان' maps to 'Title'.",
+    "Backend/business: warranties whose end_date is in the past should report status 'expired'. Translate the points tier and history reason client-side, e.g. map tier names and use tf('طلب #{0}').",
+    "my-returns.tsx: make alignment and chevrons follow isRTL."
+  ],
+  "critical_code_review_comments": [
+    "The useAutoT v3 design is sound: the shared in-flight Map, loading the cache before writing, the merge on load, and the debounced event bus all work. The weak point is that the event only reaches components that consume I18nContext. Screens using curLang() bypass it, so the bus fix does not apply to them.",
+    "translationEvents.emitTranslationArrived only fires when translated !== source. That is fine, but a failed fetch is never retried in the same session because translate() returns the source and nothing is cached. This is acceptable.",
+    "The same Arabic source string is used with different meanings (العنوان = title/address, نقص, جاهز, الطلبات). The one-to-one static dictionary cannot disambiguate these, so use distinct source strings per context."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only retest)", "frontend": "~75% of the requested retest items pass (12/16). Driver status and empty state, warranty status on first visit, and roles alert wording still fail. The new raw-key bugs on group-buys and points were found."},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login via fetch to /api/auth/login, then set localStorage 'token' and 'app_lang' before page.goto. Clear '@zenrex_autot_cache_v2' to test on-demand translation. Alert.alert is a no-op on react-native-web, so alert text can only be verified in code. Driver: 0540001111/driver1234. Service id: 6ab6206a71b6ad54069c12cc. To find missing t() keys, grep t('x.y') with no fallback and compare against i18n.tsx (8 were missing).",
+  "rca_of_issue": "Untranslated text on the driver and warranties screens: tSync() returns the Arabic source and starts a background fetch. When the fetch resolves, emitTranslationArrived → I18nProvider setTick → a new context value object, which only re-renders components that call useContext via useT(). driver/index.tsx and warranties.tsx import useT but never call it; they read curLang(). So they are not re-rendered, and the Arabic source stays until remount. Reproduce: clear the cache, set app_lang=de, open /driver, wait 6s, and the status still shows 'متصل'. Mitigation: call useT() in those screens, or pre-bake the strings."
+}

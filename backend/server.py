@@ -1212,7 +1212,10 @@ async def add_comment(post_id: str, request: Request, user=Depends(get_current_u
         "reply_to": body.get("reply_to"),  # optional parent comment id
         "created_at": datetime.now(timezone.utc).isoformat()
     })
-    await db.social_posts.update_one({"_id": ObjectId(post_id)}, {"$inc": {"comments": 1}})
+    # Some posts store `comments` as an array (legacy seed) — only $inc numeric counters.
+    await db.social_posts.update_one(
+        {"_id": ObjectId(post_id), "comments": {"$not": {"$type": "array"}}}, {"$inc": {"comments": 1}}
+    )
     return {"message": "Comment added"}
 
 @api_router.delete("/merchant/social/comments/{cid}")
@@ -1222,7 +1225,9 @@ async def merchant_delete_comment(cid: str, user=Depends(get_current_user)):
     if not c:
         raise HTTPException(status_code=404, detail="Comment not found")
     await db.social_comments.delete_one({"_id": ObjectId(cid)})
-    await db.social_posts.update_one({"_id": ObjectId(c["post_id"])}, {"$inc": {"comments": -1}})
+    await db.social_posts.update_one(
+        {"_id": ObjectId(c["post_id"]), "comments": {"$not": {"$type": "array"}}}, {"$inc": {"comments": -1}}
+    )
     return {"message": "Deleted"}
 
 @api_router.get("/merchant/social/comments")

@@ -5,8 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import ZitexMap from '../../src/components/MapView';
-import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { TX, tSync, tf } from '../../src/useAutoT';
+import { useT, curLang } from '../../src/i18n';
 
 type Zone = {
   name: string;
@@ -72,7 +72,7 @@ export default function DeliverySettings() {
         zones: data.zones,
       };
       await apiCall('/api/merchant/delivery/settings', { method: 'PUT', body: JSON.stringify(body) });
-      Alert.alert(tSync('تم الحفظ', lang), 'تم تحديث إعدادات التوصيل بنجاح');
+      Alert.alert(tSync('تم الحفظ', lang), tSync('تم تحديث إعدادات التوصيل بنجاح', curLang()));
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setSaving(false); }
   };
 
@@ -89,17 +89,17 @@ export default function DeliverySettings() {
   const saveZone = () => {
     if (!editingZone) return;
     const z = editingZone.zone;
-    if (!z.name) { Alert.alert(tSync('مطلوب', lang), 'يرجى إدخال اسم المنطقة'); return; }
-    if ((!z.polygon || z.polygon.length < 3) && (!z.center_lat || !z.radius_km)) { Alert.alert(tSync('مطلوب', lang), 'ارسم منطقة على الخريطة أو حدد دائرة'); return; }
+    if (!z.name) { Alert.alert(tSync('مطلوب', lang), tSync('يرجى إدخال اسم المنطقة', curLang())); return; }
+    if ((!z.polygon || z.polygon.length < 3) && (!z.center_lat || !z.radius_km)) { Alert.alert(tSync('مطلوب', lang), tSync('ارسم منطقة على الخريطة أو حدد دائرة', curLang())); return; }
     const zones = [...data.zones];
     if (editingZone.idx === -1) zones.push(z); else zones[editingZone.idx] = z;
     setData({ ...data, zones });
     setZoneModal(false);
   };
   const delZone = (i: number) => {
-    Alert.alert(tSync('حذف المنطقة', lang), 'هل أنت متأكد؟', [
-      { text: 'إلغاء', style: 'cancel' },
-      { text: 'حذف', style: 'destructive', onPress: () => setData({ ...data, zones: data.zones.filter((_: any, idx: number) => idx !== i) }) }
+    Alert.alert(tSync('حذف المنطقة', lang), tSync('هل أنت متأكد؟', curLang()), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
+      { text: tSync('حذف', curLang()), style: 'destructive', onPress: () => setData({ ...data, zones: data.zones.filter((_: any, idx: number) => idx !== i) }) }
     ]);
   };
 
@@ -118,7 +118,7 @@ export default function DeliverySettings() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabs}>
         {TABS.map(t => (
           <TouchableOpacity key={t} style={[s.tab, tab === t && s.tabActive]} onPress={() => setTab(t)}>
-            <Text style={[s.tabText, tab === t && s.tabTextActive]}>{TAB_LABELS[t]}</Text>
+            <Text style={[s.tabText, tab === t && s.tabTextActive]}>{tSync(TAB_LABELS[t], curLang())}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -162,7 +162,7 @@ export default function DeliverySettings() {
             <TX style={s.hint}>أرخص من نفس اليوم لأن العميل يختار موعداً مرناً</TX>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
-            <Text style={s.section}>الفترات المتاحة ({data.scheduled_slots.length})</Text>
+            <Text style={s.section}>{tSync('الفترات المتاحة (', lang)}{data.scheduled_slots.length})</Text>
             <TouchableOpacity onPress={addSlot} style={s.addSmall}><TX style={s.addSmallText}>+ فترة</TX></TouchableOpacity>
           </View>
           {data.scheduled_slots.map((sl: Slot, i: number) => (
@@ -178,7 +178,7 @@ export default function DeliverySettings() {
 
         {tab === 'zones' && <>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={s.section}>🗺️ مناطق بأسعار ثابتة ({data.zones.length})</Text>
+            <Text style={s.section}>{tSync('🗺️ مناطق بأسعار ثابتة (', lang)}{data.zones.length})</Text>
             <TouchableOpacity onPress={openNewZone} style={s.addZoneBtn}><TX style={s.addZoneText}>+ منطقة</TX></TouchableOpacity>
           </View>
           <TX style={s.hint}>ارسم مضلعات على الخريطة (مثل أحياء) واحدد سعراً ثابتاً</TX>
@@ -192,9 +192,9 @@ export default function DeliverySettings() {
               <View style={{ flex: 1 }}>
                 <Text style={s.zoneName}>{z.name}</Text>
                 <Text style={s.zoneInfo}>
-                  {z.polygon && z.polygon.length >= 3 ? `مضلع (${z.polygon.length} نقاط)` : `دائرة نصف قطر ${z.radius_km} كم`}
+                  {z.polygon && z.polygon.length >= 3 ? tf('مضلع ({0} نقاط)', lang, [z.polygon.length]) : tf('دائرة نصف قطر {0} كم', lang, [z.radius_km])}
                 </Text>
-                <Text style={s.zonePrice}>{z.fixed_price} ر.س • {z.delivery_type === 'same_day' ? 'نفس اليوم' : z.delivery_type === 'scheduled' ? 'مجدول' : z.delivery_type === 'standard' ? 'عادي' : 'الكل'}</Text>
+                <Text style={s.zonePrice}>{z.fixed_price} {tSync('ر.س •', lang)} {z.delivery_type === 'same_day' ? 'نفس اليوم' : z.delivery_type === 'scheduled' ? 'مجدول' : z.delivery_type === 'standard' ? tSync('عادي', curLang()) : tSync('الكل', curLang())}</Text>
               </View>
               <View style={{ gap: 6 }}>
                 <TouchableOpacity onPress={() => openEditZone(i)}><Ionicons name="create-outline" size={20} color="#3B82F6" /></TouchableOpacity>
@@ -210,7 +210,7 @@ export default function DeliverySettings() {
           <SafeAreaView style={s.safe}>
             <View style={s.header}>
               <TouchableOpacity onPress={() => setZoneModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-              <Text style={s.title}>{editingZone.idx === -1 ? 'منطقة جديدة' : 'تعديل المنطقة'}</Text>
+              <Text style={s.title}>{editingZone.idx === -1 ? tSync('منطقة جديدة', curLang()) : tSync('تعديل المنطقة', curLang())}</Text>
               <TouchableOpacity onPress={saveZone}><TX style={{ color: '#8833FF', fontWeight: '800', fontSize: 15 }}>تم</TX></TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={{ padding: 12 }}>
@@ -227,7 +227,7 @@ export default function DeliverySettings() {
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {(['any', 'same_day', 'scheduled', 'standard'] as const).map(t => (
                   <TouchableOpacity key={t} style={[s.opt, editingZone.zone.delivery_type === t && s.optActive]} onPress={() => setEditingZone({ ...editingZone, zone: { ...editingZone.zone, delivery_type: t } })}>
-                    <Text style={[s.optText, editingZone.zone.delivery_type === t && s.optTextActive]}>{t === 'any' ? 'الكل' : t === 'same_day' ? 'نفس اليوم' : t === 'scheduled' ? 'مجدول' : 'عادي'}</Text>
+                    <Text style={[s.optText, editingZone.zone.delivery_type === t && s.optTextActive]}>{t === 'any' ? 'الكل' : t === 'same_day' ? 'نفس اليوم' : t === 'scheduled' ? tSync('مجدول', curLang()) : tSync('عادي', curLang())}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -243,7 +243,7 @@ export default function DeliverySettings() {
                   height={320}
                 />
               </View>
-              <Text style={s.hint}>عدد النقاط الحالية: {editingZone.zone.polygon?.length || 0}</Text>
+              <Text style={s.hint}>{tSync('عدد النقاط الحالية:', lang)} {editingZone.zone.polygon?.length || 0}</Text>
 
               <TX style={[s.section, { marginTop: 14 }]}>أو استخدم دائرة (إذا لم ترسم مضلعاً)</TX>
               <View style={{ flexDirection: 'row', gap: 8 }}>

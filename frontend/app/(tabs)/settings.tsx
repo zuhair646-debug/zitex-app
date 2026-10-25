@@ -145,7 +145,7 @@ export default function SettingsScreen() {
       <Modal visible={langModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setLangModal(false)}>
         <SafeAreaView style={styles.safe}>
           <View style={styles.langHeader}>
-            <TouchableOpacity onPress={() => setLangModal(false)}><Ionicons name="close" size={24} color={colors.text} /></TouchableOpacity>
+            <TouchableOpacity testID="lang-modal-close" onPress={() => setLangModal(false)}><Ionicons name="close" size={24} color={colors.text} /></TouchableOpacity>
             <Text style={styles.langTitle}>🌐 {t('settings.changeLanguage')}</Text>
             <View style={{ width: 24 }} />
           </View>
@@ -153,6 +153,7 @@ export default function SettingsScreen() {
             <Ionicons name="search" size={18} color={colors.textSecondary} />
             <TextInput
               style={styles.searchInput}
+              testID="lang-search-input"
               value={langSearch}
               onChangeText={setLangSearch}
               placeholder={t('pf.searchLangPh')}
@@ -161,7 +162,7 @@ export default function SettingsScreen() {
           </View>
           <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
             {filteredLangs.map(l => (
-              <TouchableOpacity key={l.code} style={[styles.langRow, lang === l.code && styles.langRowActive]} onPress={() => pickLang(l.code)}>
+              <TouchableOpacity key={l.code} testID={`lang-option-${l.code}`} style={[styles.langRow, lang === l.code && styles.langRowActive]} onPress={() => pickLang(l.code)}>
                 <Text style={styles.langFlag}>{l.flag}</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.langNative}>{l.nativeName}</Text>

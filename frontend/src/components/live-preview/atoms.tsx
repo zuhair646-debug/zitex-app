@@ -1,10 +1,11 @@
+import { useT, curLang } from '../../i18n';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polyline, Defs, LinearGradient as SvgGrad, Stop, Polygon, Circle, Rect } from 'react-native-svg';
 import { LP } from './theme';
-import { TX } from '../../useAutoT';
+import { TX, tSync } from '../../useAutoT';
 
 const { width: SCREEN } = Dimensions.get('window');
 
@@ -88,7 +89,7 @@ export function HBar({ label, value, max, color = LP.GOLD, secondary }: any) {
     <View style={{ marginBottom: 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
         <Text style={{ color: LP.TEXT, fontSize: 12, fontWeight: '700', flex: 1, textAlign: 'right' }}>{label}</Text>
-        <Text style={{ color, fontSize: 12, fontWeight: '900' }}>{value.toLocaleString('ar-SA')}</Text>
+        <Text style={{ color, fontSize: 12, fontWeight: '900' }}>{value.toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US')}</Text>
         {secondary !== undefined && <Text style={{ color: LP.MUTED, fontSize: 10, marginStart: 6 }}>{secondary}</Text>}
       </View>
       <View style={{ height: 8, backgroundColor: LP.BORDER_SOFT, borderRadius: 4, overflow: 'hidden' }}>
@@ -101,6 +102,7 @@ export function HBar({ label, value, max, color = LP.GOLD, secondary }: any) {
 
 /* ─────── RATING BREAKDOWN ─────── */
 export function RatingBreakdown({ distribution, total, avg }: any) {
+  const { lang } = useT();
   const tot = total || distribution.reduce((a: number, b: number) => a + b, 0) || 1;
   return (
     <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
@@ -109,7 +111,7 @@ export function RatingBreakdown({ distribution, total, avg }: any) {
         <View style={{ flexDirection: 'row', gap: 1 }}>
           {[1,2,3,4,5].map(i => <Ionicons key={i} name="star" size={11} color={(avg || 0) >= i ? LP.GOLD : LP.BORDER} />)}
         </View>
-        <Text style={{ color: LP.MUTED, fontSize: 10, marginTop: 2 }}>{tot} تقييم</Text>
+        <Text style={{ color: LP.MUTED, fontSize: 10, marginTop: 2 }}>{tot} {tSync('تقييم', lang)}</Text>
       </View>
       <View style={{ flex: 1, gap: 3 }}>
         {[5, 4, 3, 2, 1].map((star, idx) => {

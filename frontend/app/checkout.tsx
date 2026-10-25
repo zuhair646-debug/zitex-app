@@ -8,8 +8,8 @@ import { useAuth } from './_layout';
 import PaymentMethodsRibbon from '../src/components/PaymentAndLoyalty';
 import ShippingOptionsPicker from '../src/components/ShippingOptionsPicker';
 import LoyaltyRedeemPicker from '../src/components/LoyaltyRedeemPicker';
-import { TX, tSync } from '../src/useAutoT';
-import { useT } from '../src/i18n';
+import { TX, tSync, tf } from '../src/useAutoT';
+import { useT, curLang } from '../src/i18n';
 
 export default function CheckoutScreen() {
   const { lang } = useT();
@@ -48,10 +48,10 @@ export default function CheckoutScreen() {
         if (!canAskAgain) {
           Alert.alert(
             tSync('إذن الموقع', lang),
-            'الرجاء تفعيل صلاحية الموقع من إعدادات التطبيق لتحديد شركة الشحن الصحيحة تلقائياً',
+            tSync('الرجاء تفعيل صلاحية الموقع من إعدادات التطبيق لتحديد شركة الشحن الصحيحة تلقائياً', curLang()),
             [
-              { text: 'إلغاء', style: 'cancel' },
-              { text: 'فتح الإعدادات', onPress: () => Linking.openSettings() },
+              { text: tSync('إلغاء', curLang()), style: 'cancel' },
+              { text: tSync('فتح الإعدادات', curLang()), onPress: () => Linking.openSettings() },
             ]
           );
           return;
@@ -59,7 +59,7 @@ export default function CheckoutScreen() {
         const req = await Location.requestForegroundPermissionsAsync();
         status = req.status;
         if (status !== 'granted') {
-          Alert.alert(tSync('إذن الموقع', lang), 'تم رفض الوصول للموقع — يمكنك تحديده يدوياً');
+          Alert.alert(tSync('إذن الموقع', lang), tSync('تم رفض الوصول للموقع — يمكنك تحديده يدوياً', curLang()));
           return;
         }
       }
@@ -68,7 +68,7 @@ export default function CheckoutScreen() {
       setUserLng(pos.coords.longitude);
       setAutoDetectedOnce(true);
     } catch (e: any) {
-      Alert.alert(tSync('تعذّر تحديد الموقع', lang), e?.message || 'حاول مرة أخرى');
+      Alert.alert(tSync('تعذّر تحديد الموقع', lang), e?.message || tSync('حاول مرة أخرى', curLang()));
     } finally { setLocating(false); }
   }, []);
 
@@ -105,11 +105,11 @@ export default function CheckoutScreen() {
       if (q.alternative_note) {
         Alert.alert(
           tSync('تنبيه: المنتجات في فرع بديل', lang),
-          `${q.alternative_note.reason}\n${q.alternative_note.available_count}/${q.alternative_note.total_requested} متوفر في الفرع المختار`,
+          tf('{0}\n{1}/{2} متوفر في الفرع المختار', lang, [q.alternative_note.reason, q.alternative_note.available_count, q.alternative_note.total_requested]),
         );
       }
     } catch (e: any) {
-      Alert.alert(tSync('تعذّر حساب التوصيل', lang), e.message || 'حاول مرة أخرى');
+      Alert.alert(tSync('تعذّر حساب التوصيل', lang), e.message || tSync('حاول مرة أخرى', curLang()));
     }
   }, [userLat, userLng, deliveryType, cart]);
 
@@ -121,13 +121,13 @@ export default function CheckoutScreen() {
       const c = await apiCall(`/api/coupons/validate/${couponCode}`);
       const disc = c.discount_type === 'percent' ? Math.min(subtotal * c.discount_value / 100, c.max_discount) : Math.min(c.discount_value, c.max_discount);
       setCouponDiscount(disc); setCouponApplied(c.code);
-      Alert.alert(tSync('تم تطبيق الكوبون!', lang), `وفّرت ${disc} ر.س`);
-    } catch { Alert.alert(tSync('غير صالح', lang), 'رمز الكوبون غير صحيح'); }
+      Alert.alert(tSync('تم تطبيق الكوبون!', lang), tf('وفّرت {0} ر.س', lang, [disc]));
+    } catch { Alert.alert(tSync('غير صالح', lang), tSync('رمز الكوبون غير صحيح', curLang())); }
   };
 
   const placeOrder = async () => {
-    if (addresses.length === 0) { Alert.alert(tSync('خطأ', lang), 'يرجى إضافة عنوان أولاً'); return; }
-    if (deliveryType === 'scheduled' && !scheduledSlot) { Alert.alert(tSync('مطلوب', lang), 'يرجى اختيار فترة التوصيل'); return; }
+    if (addresses.length === 0) { Alert.alert(tSync('خطأ', lang), tSync('يرجى إضافة عنوان أولاً', curLang())); return; }
+    if (deliveryType === 'scheduled' && !scheduledSlot) { Alert.alert(tSync('مطلوب', lang), tSync('يرجى اختيار فترة التوصيل', curLang())); return; }
     setOrdering(true);
     try {
       const addr = addresses[selectedAddr];
@@ -138,9 +138,9 @@ export default function CheckoutScreen() {
         branch_id: quote?.branch?.id, branch_lat: quote?.branch?.lat, branch_lng: quote?.branch?.lng,
         scheduled_slot: scheduledSlot,
       })});
-      Alert.alert(tSync('تم الطلب!', lang), `رقم الطلب #${order.id?.slice(-8)}`, [
-        { text: 'تتبع', onPress: () => { router.dismiss(); router.push(`/track-order/${order.id}` as any); } },
-        { text: 'طلباتي', onPress: () => { router.dismiss(); router.push('/orders'); } }
+      Alert.alert(tSync('تم الطلب!', lang), tf('رقم الطلب #{0}', lang, [order.id?.slice(-8)]), [
+        { text: tSync('تتبع', curLang()), onPress: () => { router.dismiss(); router.push(`/track-order/${order.id}` as any); } },
+        { text: tSync('طلباتي', curLang()), onPress: () => { router.dismiss(); router.push('/orders'); } }
       ]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setOrdering(false); }
   };
@@ -185,7 +185,7 @@ export default function CheckoutScreen() {
         ) : addresses.map((a, i) => (
           <TouchableOpacity key={a.id} style={[s.addrCard, selectedAddr === i && s.addrActive]} onPress={() => setSelectedAddr(i)}>
             <Ionicons name={selectedAddr === i ? 'radio-button-on' : 'radio-button-off'} size={20} color={selectedAddr === i ? '#F5C518' : '#A1A1AA'} />
-            <View style={s.addrInfo}><Text style={s.addrLabel}>{a.label}</Text><Text style={s.addrText} numberOfLines={1}>{a.address}</Text></View>
+            <View style={s.addrInfo}><Text style={s.addrLabel}>{tSync(a.label, lang)}</Text><Text style={s.addrText} numberOfLines={1}>{a.address}</Text></View>
           </TouchableOpacity>
         ))}
 
@@ -193,8 +193,8 @@ export default function CheckoutScreen() {
           <View style={s.branchBox}>
             <Ionicons name="storefront" size={18} color="#F5C518" />
             <View style={{ flex: 1, marginLeft: 8 }}>
-              <Text style={s.branchName}>الفرع: {quote.branch.name}</Text>
-              <Text style={s.branchDist}>{quote.branch.distance_km} كم {quote.fee?.in_zone ? `• ضمن منطقة "${quote.fee.zone_name}"` : ''}</Text>
+              <Text style={s.branchName}>{tSync('الفرع:', lang)} {quote.branch.name}</Text>
+              <Text style={s.branchDist}>{quote.branch.distance_km} {tSync('كم', lang)} {quote.fee?.in_zone ? tf('• ضمن منطقة "{0}"', lang, [quote.fee.zone_name]) : ''}</Text>
             </View>
           </View>
         )}
@@ -205,8 +205,8 @@ export default function CheckoutScreen() {
             <TouchableOpacity key={opt.id} style={[s.shipCard, deliveryType === opt.id && s.shipActive]} onPress={() => setDeliveryType(opt.id)}>
               <Ionicons name={deliveryType === opt.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={deliveryType === opt.id ? '#F5C518' : '#A1A1AA'} />
               <Ionicons name={opt.icon as any} size={20} color="#52525B" />
-              <View style={s.shipInfo}><Text style={s.shipLabel}>{opt.label}</Text><Text style={s.shipTime}>{opt.time}</Text></View>
-              {deliveryType === opt.id && <Text style={s.shipPrice}>{deliveryFee} ر.س</Text>}
+              <View style={s.shipInfo}><Text style={s.shipLabel}>{tSync(opt.label, lang)}</Text><Text style={s.shipTime}>{tSync(opt.time, lang)}</Text></View>
+              {deliveryType === opt.id && <Text style={s.shipPrice}>{deliveryFee} {tSync('ر.س', lang)}</Text>}
             </TouchableOpacity>
           ))}
         </View>
@@ -214,7 +214,7 @@ export default function CheckoutScreen() {
         {deliveryType === 'scheduled' && (
           <TouchableOpacity style={s.slotBtn} onPress={() => setSlotModalOpen(true)}>
             <Ionicons name="time" size={18} color="#F5C518" />
-            <Text style={s.slotBtnText}>{scheduledSlot ? `الفترة: ${scheduledSlot.label} (${scheduledSlot.start} - ${scheduledSlot.end})` : 'اختر فترة التوصيل ←'}</Text>
+            <Text style={s.slotBtnText}>{scheduledSlot ? tf('الفترة: {0} ({1} - {2})', lang, [scheduledSlot.label, scheduledSlot.start, scheduledSlot.end]) : tSync('اختر فترة التوصيل', curLang())}</Text>
           </TouchableOpacity>
         )}
 
@@ -223,8 +223,8 @@ export default function CheckoutScreen() {
           <TouchableOpacity key={pm.id} style={[s.payCard, paymentMethod === pm.id && s.payActive]} onPress={() => setPaymentMethod(pm.id)}>
             <Ionicons name={paymentMethod === pm.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={paymentMethod === pm.id ? '#F5C518' : '#A1A1AA'} />
             <Ionicons name={pm.icon as any} size={20} color="#52525B" />
-            <Text style={s.payLabel}>{pm.label}</Text>
-            {!!pm.tag && <View style={s.payTag}><Text style={s.payTagText}>{pm.tag}</Text></View>}
+            <Text style={s.payLabel}>{tSync(pm.label, lang)}</Text>
+            {!!pm.tag && <View style={s.payTag}><Text style={s.payTagText}>{tSync(pm.tag, lang)}</Text></View>}
           </TouchableOpacity>
         ))}
 
@@ -233,7 +233,7 @@ export default function CheckoutScreen() {
           <TextInput style={s.couponInput} placeholder={tSync("أدخل كود الخصم", lang)} value={couponCode} onChangeText={setCouponCode} autoCapitalize="characters" />
           <TouchableOpacity style={s.couponBtn} onPress={applyCoupon}><TX style={s.couponBtnText}>تطبيق</TX></TouchableOpacity>
         </View>
-        {couponApplied ? <Text style={s.couponApplied}>{couponApplied} طُبِّق! -{couponDiscount} ر.س</Text> : null}
+        {couponApplied ? <Text style={s.couponApplied}>{couponApplied} {tSync('طُبِّق! -', lang)}{couponDiscount} {tSync('ر.س', lang)}</Text> : null}
 
         <TextInput style={s.notesInput} placeholder={tSync("ملاحظات للطلب (اختياري)", lang)} value={notes} onChangeText={setNotes} multiline />
 
@@ -243,9 +243,9 @@ export default function CheckoutScreen() {
             <Ionicons name={userLat ? 'checkmark-circle' : 'locate'} size={16} color={userLat ? '#10B981' : '#F5C518'} />
           )}
           <Text style={[s.locText, userLat && { color: '#10B981' }]}>
-            {userLat && userLng
-              ? `تم تحديد موقعك — استخدم موقعاً آخر؟`
-              : 'تحديد موقعي تلقائياً لعرض خيارات الشحن المناسبة'}
+            {tSync(userLat && userLng
+              ? 'تم تحديد موقعك — استخدم موقعاً آخر؟'
+              : 'تحديد موقعي تلقائياً لعرض خيارات الشحن المناسبة', lang)}
           </Text>
           <Ionicons name="refresh" size={14} color="#9CA3AF" />
         </TouchableOpacity>
@@ -270,12 +270,12 @@ export default function CheckoutScreen() {
 
         <View style={s.summaryCard}>
           <TX style={s.summaryTitle}>ملخص الطلب</TX>
-          <View style={s.summaryRow}><Text style={s.sLabel}>المجموع الفرعي ({cart.length} منتج)</Text><Text style={s.sVal}>{subtotal} ر.س</Text></View>
-          <View style={s.summaryRow}><TX style={s.sLabel}>التوصيل</TX><Text style={s.sVal}>{deliveryCost} ر.س</Text></View>
-          <View style={s.summaryRow}><TX style={s.sLabel}>الضريبة (١٥٪)</TX><Text style={s.sVal}>{tax} ر.س</Text></View>
-          {couponDiscount > 0 && <View style={s.summaryRow}><TX style={[s.sLabel, { color: '#10B981' }]}>خصم الكوبون</TX><Text style={[s.sVal, { color: '#10B981' }]}>-{couponDiscount} ر.س</Text></View>}
-          {loyaltyOff > 0 && <View style={s.summaryRow}><TX style={[s.sLabel, { color: '#8B5CF6' }]}>خصم نقاط الولاء</TX><Text style={[s.sVal, { color: '#8B5CF6' }]}>-{loyaltyOff} ر.س</Text></View>}
-          <View style={[s.summaryRow, s.totalRow]}><TX style={s.totalLabel}>المجموع</TX><Text style={s.totalVal}>{total} ر.س</Text></View>
+          <View style={s.summaryRow}><Text style={s.sLabel}>{tSync('المجموع الفرعي (', lang)}{cart.length} {tSync('منتج)', lang)}</Text><Text style={s.sVal}>{subtotal} {tSync('ر.س', lang)}</Text></View>
+          <View style={s.summaryRow}><TX style={s.sLabel}>التوصيل</TX><Text style={s.sVal}>{deliveryCost} {tSync('ر.س', lang)}</Text></View>
+          <View style={s.summaryRow}><TX style={s.sLabel}>الضريبة (15%)</TX><Text style={s.sVal}>{tax} {tSync('ر.س', lang)}</Text></View>
+          {couponDiscount > 0 && <View style={s.summaryRow}><TX style={[s.sLabel, { color: '#10B981' }]}>خصم الكوبون</TX><Text style={[s.sVal, { color: '#10B981' }]}>-{couponDiscount} {tSync('ر.س', lang)}</Text></View>}
+          {loyaltyOff > 0 && <View style={s.summaryRow}><TX style={[s.sLabel, { color: '#8B5CF6' }]}>خصم نقاط الولاء</TX><Text style={[s.sVal, { color: '#8B5CF6' }]}>-{loyaltyOff} {tSync('ر.س', lang)}</Text></View>}
+          <View style={[s.summaryRow, s.totalRow]}><TX style={s.totalLabel}>المجموع</TX><Text style={s.totalVal}>{total} {tSync('ر.س', lang)}</Text></View>
         </View>
       </ScrollView>
 
@@ -296,7 +296,7 @@ export default function CheckoutScreen() {
 
       <View style={s.bottomBar}>
         <TouchableOpacity style={s.buyBtn} onPress={placeOrder} disabled={ordering}>
-          {ordering ? <ActivityIndicator color="#FFF" /> : <Text style={s.buyText}>اشترِ الآن - {total} ر.س</Text>}
+          {ordering ? <ActivityIndicator color="#FFF" /> : <Text style={s.buyText}>{tSync('اشترِ الآن -', lang)} {total} {tSync('ر.س', lang)}</Text>}
         </TouchableOpacity>
       </View>
 
@@ -313,7 +313,7 @@ export default function CheckoutScreen() {
               <TouchableOpacity key={i} style={[s.slotItem, scheduledSlot?.label === sl.label && s.slotItemActive]} onPress={() => { setScheduledSlot(sl); setSlotModalOpen(false); }}>
                 <Ionicons name="time-outline" size={20} color={scheduledSlot?.label === sl.label ? 'white' : '#F5C518'} />
                 <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={[s.slotLabel, scheduledSlot?.label === sl.label && { color: 'white' }]}>{sl.label}</Text>
+                  <Text style={[s.slotLabel, scheduledSlot?.label === sl.label && { color: 'white' }]}>{tSync(sl.label, lang)}</Text>
                   <Text style={[s.slotTime, scheduledSlot?.label === sl.label && { color: 'white' }]}>{sl.start} - {sl.end}</Text>
                 </View>
               </TouchableOpacity>
@@ -331,7 +331,7 @@ const s = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
   title: { fontSize: 20, fontWeight: '800', color: '#0A0A0A' },
   content: { paddingHorizontal: 20, paddingBottom: 120 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginTop: 16, marginBottom: 10, textAlign: 'right' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginTop: 16, marginBottom: 10, textAlign: 'auto' },
   warnBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FEF3C7', padding: 12, borderRadius: 10, marginBottom: 8 },
   warnText: { flex: 1, color: '#92400E', fontSize: 12, fontWeight: '600' },
   addAddrBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: '#F5C518', borderStyle: 'dashed' },
@@ -362,11 +362,11 @@ const s = StyleSheet.create({
   couponBtn: { backgroundColor: '#F5C518', borderRadius: 12, paddingHorizontal: 20, justifyContent: 'center' },
   couponBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
   couponApplied: { fontSize: 13, color: '#10B981', fontWeight: '600', marginTop: 6 },
-  notesInput: { backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, marginTop: 16, borderWidth: 1, borderColor: '#E4E4E7', height: 60, textAlign: 'right' },
+  notesInput: { backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, marginTop: 16, borderWidth: 1, borderColor: '#E4E4E7', height: 60, textAlign: 'auto' },
   locBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginTop: 10 },
-  locText: { flex: 1, textAlign: 'right', color: '#0A0A0A', fontSize: 12, fontWeight: '700' },
+  locText: { flex: 1, textAlign: 'auto', color: '#0A0A0A', fontSize: 12, fontWeight: '700' },
   summaryCard: { backgroundColor: '#F9F9FB', borderRadius: 16, padding: 16, marginTop: 16 },
-  summaryTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 12, textAlign: 'right' },
+  summaryTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 12, textAlign: 'auto' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   sLabel: { fontSize: 13, color: '#52525B' }, sVal: { fontSize: 13, color: '#0A0A0A', fontWeight: '600' },
   totalRow: { borderTopWidth: 1, borderTopColor: '#E4E4E7', paddingTop: 10, marginTop: 4 },
