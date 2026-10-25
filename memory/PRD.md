@@ -591,3 +591,8 @@ Instead of manually rewriting the 50+ files that still use `<TX>`, `useAutoT`, o
 ### Verification (Chinese, merchant Live Preview)
 - 直播模式 — v1.14.3 ✨ / 0 直接访客现在 / 比较 / 今日销售 / 0 SAR / 0 操作 / 本周 / 192,473 SAR / 38 操作 / 本月 / 1,111,157 SAR / 187 操作 / 🏆 畅销商品 / ⭐ 精选产品 / 🛍 所有产品
 - 0 leftover UI Arabic strings (only DB product names remain, which are data not UI).
+
+## Translation Audit Report (June 2026)
+- Read-only audit completed; report at /app/memory/TRANSLATION_AUDIT_REPORT.md. No fixes applied — awaiting user approval.
+- iOS still blocked: user has NOT signed Apple agreement yet.
+- Next (after approval): fix translation errors listed in report.
