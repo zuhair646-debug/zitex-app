@@ -615,3 +615,15 @@ Instead of manually rewriting the 50+ files that still use `<TX>`, `useAutoT`, o
 - Apple agreement now signed (user confirmed).
 - GitHub push failing: token in git remote is invalid — needs new token from user.
 - Language audit report v1.18: /app/memory/LANGUAGE_AUDIT_REPORT_v1.18.md — awaiting user approval before fixing (DB content auto-translation, mixed-text unification, _clean_ok Latin rejection, RTL restart, Arabic letterSpacing).
+
+## v1.19.0 (Oct 25 2026) — Automatic DB content translation
+- TranslatableName/Translatable now auto-translate by default (batched /api/translate/bulk, 80ms debounce) when needsTranslation(text, lang): non-ar langs translate any Arabic or non-brand English; ar translates non-brand English words. Icon toggles to original. Device cache key v3; identical results not cached.
+- Backend bulk: Sonnet 4.6, target language in user msg, parallel chunks, retry failed lines once, returns `failed`; _clean_ok accepts short Latin proper names; mixed-text unification rule.
+- Wrapped DB fields: product description/colors/specs, notifications, competitions desc/prize, home banner, support hours, about-store branches/address, loyalty descriptions, checkout branch.
+- expo-updates installed + updates.url/runtimeVersion(appVersion)/channel production → "Restart Now" after RTL switch uses Updates.reloadAsync (works in store builds).
+- Typography letterSpacing set to 0 (Arabic joining).
+- Builds: Android b6ed7697 (vc 74), iOS 6892cedc (build 69); poller log /tmp/eas_release_119.log.
+- Known low-priority: Arabic person names not transliterated; translate chip 21px tall.
+
+- GitHub: new GITHUB_TOKEN (backend/.env) set in git remote; v1.19.0 pushed to main (d50e286). Read token with tr -d quotes/CR.
+- iOS + Android v1.19.0 both submitted OK (TestFlight + Play internal).
