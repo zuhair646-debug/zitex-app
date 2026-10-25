@@ -1,3 +1,4 @@
+import TranslatableName from '../src/components/TranslatableName';
 import { useT } from '../src/i18n';
 import { tSync } from '../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'react-native';
@@ -29,14 +30,14 @@ export default function AboutStoreScreen() {
             <TouchableOpacity key={i} testID={`store-${i}`} style={[s.storePill, selected === i && s.storePillActive]}
               onPress={() => setSelected(i)}>
               <Ionicons name="storefront" size={16} color={selected === i ? '#FFF' : '#52525B'} />
-              <Text style={[s.storePillText, selected === i && s.storePillTextActive]}>{st.name}</Text>
+              <TranslatableName text={st.name} style={selected === i ? [s.storePillText, s.storePillTextActive] : s.storePillText} />
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={s.logoSection}>
           <View style={s.logoCircle}><Ionicons name="phone-portrait-outline" size={40} color="#F5C518" /></View>
-          <Text style={s.storeName}>Tech Store</Text>
+          <Text style={s.storeName}>Zenrex Store</Text>
           <Text style={s.storeDesc}>{tSync('متجر تقني للجوالات والإكسسوارات', lang)}</Text>
         </View>
 
@@ -49,15 +50,15 @@ export default function AboutStoreScreen() {
           <View style={s.divider} />
           <View style={s.infoRow}>
             <Ionicons name="location" size={20} color="#F5C518" />
-            <Text style={s.infoText}>{store.address}</Text>
+            <TranslatableName text={store.address} style={s.infoText} />
             <TouchableOpacity><Ionicons name="open-outline" size={18} color="#A1A1AA" /></TouchableOpacity>
           </View>
         </View>
 
         <View style={s.mapPlaceholder}>
           <Ionicons name="map" size={40} color="#A1A1AA" />
-          <Text style={s.mapText}>Map - {store.name}</Text>
-          <Text style={s.mapAddr}>{store.address}</Text>
+          <TranslatableName text={tSync('الخريطة', lang) + ' - ' + (store.name || '')} style={s.mapText} />
+          <TranslatableName text={store.address} style={s.mapAddr} />
         </View>
 
         <View style={s.socialSection}>

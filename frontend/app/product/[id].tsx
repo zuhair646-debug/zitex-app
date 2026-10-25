@@ -116,7 +116,7 @@ export default function ProductDetailScreen() {
             <View style={styles.optionSection}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <TX style={styles.optionTitle}>اللون</TX>
-                <Text style={styles.colorSelectedName}>{product.colors[selectedColor]?.name || ''}</Text>
+                <TranslatableName text={product.colors[selectedColor]?.name || ''} style={styles.colorSelectedName} />
               </View>
               <View style={styles.colorCircleRow}>
                 {product.colors.map((c: any, i: number) => (
@@ -157,7 +157,7 @@ export default function ProductDetailScreen() {
           {/* Description */}
           <View style={styles.descSection}>
             <Text style={styles.optionTitle}>{tSync('الوصف', lang)}</Text>
-            <Text style={styles.descText}>{lang === 'ar' ? (product.description_ar || product.description_en) : (product.description_en || product.description_ar)}</Text>
+            <TranslatableName text={lang === 'ar' ? (product.description_ar || product.description_en) : (product.description_en || product.description_ar)} style={styles.descText} inline={false} />
           </View>
 
           {/* Specs */}
@@ -166,8 +166,8 @@ export default function ProductDetailScreen() {
               <Text style={styles.optionTitle}>{tSync('المواصفات', lang)}</Text>
               {Object.entries(specs).map(([key, val]) => (
                 <View key={key} style={styles.specRow}>
-                  <Text style={styles.specKey}>{key}</Text>
-                  <Text style={styles.specVal}>{val as string}</Text>
+                  <TranslatableName text={key} style={styles.specKey} />
+                  <TranslatableName text={String(val)} style={styles.specVal} />
                 </View>
               ))}
             </View>

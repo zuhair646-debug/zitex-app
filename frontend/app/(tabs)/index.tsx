@@ -329,8 +329,8 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View style={s.competitionContent}>
-                <Text style={s.competitionText} numberOfLines={1}>🏆 {topCompetition.title || tSync('مسابقة جديدة', curLang())}</Text>
-                <Text style={s.competitionPrize} numberOfLines={1}>{topCompetition.prize || tSync('جوائز قيمة', curLang())}</Text>
+                <TranslatableName text={'🏆 ' + (topCompetition.title || tSync('مسابقة جديدة', curLang()))} style={s.competitionText} numberOfLines={1} />
+                <TranslatableName text={topCompetition.prize || tSync('جوائز قيمة', curLang())} style={s.competitionPrize} numberOfLines={1} />
                 <View style={s.progressBar}>
                   <View style={[s.progressFill, { width: `${pct}%` }]} />
                 </View>

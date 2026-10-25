@@ -1,3 +1,4 @@
+import TranslatableName from '../src/components/TranslatableName';
 import { tSync } from '../src/useAutoT';
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, Alert, ActivityIndicator } from 'react-native';
@@ -46,7 +47,7 @@ export default function SupportScreen() {
         <View style={s.hero}>
           <Ionicons name="headset" size={36} color="white" />
           <Text style={s.heroTitle}>{tSync('كيف يمكننا مساعدتك؟', lang)}</Text>
-          <Text style={s.heroSub}>{info.working_hours}</Text>
+          <TranslatableName text={info.working_hours} style={s.heroSub} />
         </View>
 
         {info.contact_via_social_first && (
@@ -71,7 +72,7 @@ export default function SupportScreen() {
 
         {info.address && (<>
           <Text style={s.section}>📍 {tSync('عنوان المتجر', lang)}</Text>
-          <View style={s.addrBox}><Text style={s.addrText}>{info.address}</Text></View>
+          <View style={s.addrBox}><TranslatableName text={info.address} style={s.addrText} inline={false} /></View>
         </>)}
       </ScrollView>
     </SafeAreaView>

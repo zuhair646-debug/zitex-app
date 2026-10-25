@@ -1,0 +1,42 @@
+{
+  "summary": "Retest of iteration_37 (auto-translation). BACKEND: 24/24 pytest pass, using v1_18 plus the new v1_19 file. The 24 English service names/descs → zh came back fully in Chinese in 3 of 3 fresh attempts (zh cache cleared, 5-6s each) with failed=[]. 'ناقل إكسبرس' → 'Naqel Express' in de/fr/zh/en/ja. 48 texts → de in parallel chunks took 12s. The 'failed' list is returned. FRONTEND (375x667, customer): no wrong-language DB text after the wait on Home banner, Competitions tab, Support hours, About-store pills/map, Loyalty history, Product colour/specs or Notifications in en/de/zh/he. English-only content becomes Arabic in ar. One field remains: the competition DETAIL prize is still raw <Text>. Device cache key is @zenrex_dyn_tr_v3. Results equal to the source are not cached. Translatable now has its own key. The notification chip is now compact (24x21), but the product-name chip is still full width (329px). Regression: merchant/chamber/driver/customer in ar/en/de/zh/he show no page errors and no red screen. A first load in a new language can take 12-20s (he Competitions was still Arabic at 12s and translated at 20s).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/translate/bulk", "issue": "The all-cached early return has no 'failed' key, so the response shape is inconsistent. translate.py:254-255"},
+      {"endpoint": "POST /api/translate", "issue": "Still not fixed from iter 37: if the retry is unclean, the bad translation is returned uncached, so the LLM is called again on every request. translate.py:225-226"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Competition detail prize", "issue": "comp.prize is raw <Text>. 'سيارة تسلا Model 3 + iPhone 15 Pro' stays Arabic in en/de/zh/he, and 'Win 1 of 5 iPhone 15s' stays English in ar. app/competition/[id].tsx:101", "affected_testIDs": []},
+      {"flow": "Mixed text in ar", "issue": "needsTranslation('ar') returns false whenever the text has any Arabic, so mixed AR+EN text is never unified in ar. Example notification body: 'طلب #e87b8bce - الحالة: delivered'. src/components/TranslatableName.tsx:122. This could also be fixed at the source by localising the status in the backend notification text.", "affected_testIDs": []},
+      {"flow": "Person names (low priority)", "issue": "Arabic user names stay Arabic in en/de/zh/he: merchant dashboard recent orders ('عبدالله القحطاني • 1 item'), chamber lists, driver welcome 'محمد السائق' (app/driver/index.tsx:82; seed server.py:3538 contains the word 'السائق' = 'the driver'), competition participants/winners (competition/[id].tsx:121,138,193). Decide whether to transliterate.", "affected_testIDs": []}
+    ],
+    "design_issues": [
+      {"screen": "Product detail", "issues": ["The 'Original' chip under the product name is still 329x21 (full width). Translatable non-inline wrapper `<View style={{ marginTop: 2 }}>` has no alignSelf:'flex-start', and Translatable's iconBtn style is also missing alignSelf. src/components/Translatable.tsx:264,275 (used at app/product/[id].tsx:86)."]},
+      {"screen": "Notifications / Competitions", "issues": ["The chip is now compact (24x21), but with inline={false} it sits on its own line under every title and body (4 chips for 2 notifications). Also, a wrapped description pushes its chip onto a separate line above the prize pill. Chip is 21px tall (41 with hitSlop), under 44."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_translate_bulk_v1_19.py", "/app/backend/tests/test_translate_auto_v1_18.py", "/app/test_reports/pytest/pytest_translate_v1_19.xml"],
+  "action_items": [
+    "Wrap comp.prize with TranslatableName in app/competition/[id].tsx:101.",
+    "Translatable.tsx:264 → add alignSelf:'flex-start' (as in TranslatableName.tsx:312) and add alignSelf to styles.iconBtn, so the product-name chip is not full width.",
+    "needsTranslation('ar'): also return true when Arabic text contains real non-brand Latin words (e.g. 'delivered'), or localise the order status in the backend notification body.",
+    "Optional: show the notification/competition chips inline (or iconOnly next to the title) to reduce clutter. Decide on person-name transliteration.",
+    "Minor: add 'failed': [] to the bulk all-cached response. Cache or mark the unclean single-translate result."
+  ],
+  "critical_code_review_comments": [
+    "Translatable.tsx still duplicates about 60 lines of the fetch/cache/toast logic from TranslatableName.tsx (separate key @zenrex_dyn_tr_multi_v3 now, so it no longer overwrites the shared cache, but DRY remains).",
+    "flush() still has no fetch timeout/AbortController. A hung bulk call leaves queued texts pending forever.",
+    "translate.py docstring still says v1.17."
+  ],
+  "updated_files": ["/app/backend/tests/test_translate_bulk_v1_19.py"],
+  "success_rate": {"backend": "100% (24/24)", "frontend": "~90% (all iter-37 fields fixed except the competition-detail prize; product chip still full width; no crashes on 4 roles x 5 langs)"},
+  "seed_data_creation": "None. The tests deleted and regenerated translations_cache entries for the zh/de/fr/en test texts (with suffix variants).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Lang is set via localStorage 'app_lang' and then navigate. Wait 15-20s on the first load in a new language. Competition 6ab6206a71b6ad54069c12b8 = Ramadan Mega Draw (Arabic prize), 6ab6206a71b6ad54069c12b5 = Eid draw (English prize). Product 6ab6de22e0ac8916314aa324. Chip measurement: elements with aria-label matching /original|translate/i. The browser tool needs literal screenshot paths."
+}

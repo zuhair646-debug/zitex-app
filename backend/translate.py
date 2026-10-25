@@ -1,11 +1,11 @@
 """
 Translation router — v1.17.0 (June 2026)
-Persistent MongoDB cache + Emergent LLM (Claude Haiku 4.5).
+Persistent MongoDB cache + Emergent LLM (Claude Sonnet 4.6).
 
 Architecture:
   - Dynamic DB content (product/customer/category names, descriptions)
     is translated ON-DEMAND when the user taps a 🌐 button in the UI.
-  - The first translation hits Claude Haiku 4.5 and is PERMANENTLY
+  - The first translation hits Claude Sonnet 4.6 and is PERMANENTLY
     cached in MongoDB `translations_cache` collection, keyed by a
     SHA-1 hash of the source text + target language.
   - Subsequent requests for the same text + language hit the DB
@@ -57,7 +57,10 @@ _RULES = (
     "Write ONLY in the target language and its normal script; never leave Arabic words and never mix in another "
     "script. Keep placeholders like {n} exactly. Keep emoji and numbers. Saudi riyal (ر.س / ريال) => 'SAR'. "
     "Keep brand/model names in Latin (iPhone, Samsung, Galaxy, Huawei, Zenrex Store, WhatsApp, POS). "
-    "Use the standard spelling of Saudi city names in the target language. 'Balance' means money balance."
+    "Use the standard spelling of Saudi city names in the target language. 'Balance' means money balance. Keep courier/brand names as names (Naqel Express, SMSA, Aramex, SPL, Sony). "
+    "The source may MIX Arabic and English words and numbers (e.g. 'آيفون 15 Pro Max أسود 256 جيجا'): rewrite it as ONE "
+    "natural phrase fully in the target language — translate every common word (colours, storage, condition, "
+    "descriptions), keep only brand/model names and numbers (e.g. 'iPhone 15 Pro Max Black 256GB')."
 )
 
 _SCRIPT_RX = {
@@ -76,7 +79,7 @@ _NATIVE = {'ur': 'arab', 'fa': 'arab', 'he': 'heb', 'ru': 'cyr', 'zh': 'cjk', 'j
 _BRANDS = ('Zenrex', 'iPhone', 'Samsung', 'Galaxy', 'Huawei', 'Apple', 'POS', 'SAR', 'WhatsApp', 'Tamara', 'Tabby')
 
 
-def _clean_ok(target: str, text: str) -> bool:
+def _clean_ok(target: str, text: str, source: str = '') -> bool:
     """True when the translation only uses scripts valid for the target language and,
     for non-Latin languages, actually contains the target script (unless it's a pure brand/model name)."""
     import re
@@ -87,7 +90,10 @@ def _clean_ok(target: str, text: str) -> bool:
     if native and re.search(r'[A-Za-z]{4,}', text):
         has_native = any(re.search(_SCRIPT_RX[n], text) for n in native.split('|'))
         if not has_native and not any(b in text for b in _BRANDS):
-            return False
+            # Latin-only output is fine for short proper names (e.g. "Sony", "Naqel Express")
+            # but not for real sentences that should have been translated.
+            if re.search(r'[\u0600-\u06FF]', text) or len(text.split()) > 3:
+                return False
     return True
 
 
@@ -202,7 +208,7 @@ def build_router(db=None):
                     "Return ONLY the translation — no explanation, no quotes, no metadata. "
                     "Preserve line breaks. " + _RULES
                 ),
-            ).with_model("anthropic", "claude-haiku-4-5")
+            ).with_model("anthropic", "claude-sonnet-4-6")
             resp = await chat.send_message(UserMessage(text=text))
             translated = (resp or "").strip()
             if translated.startswith('"') and translated.endswith('"'):
@@ -210,11 +216,11 @@ def build_router(db=None):
             if not translated:
                 translated = text
             translated = translated.replace('ر.س', 'SAR')
-            if not _clean_ok(req.target_lang, translated):
+            if not _clean_ok(req.target_lang, translated, text):
                 retry = await chat.send_message(UserMessage(text=(
                     f"Your answer mixed scripts or kept Arabic. Translate again, ONLY in {target_name}: {text}")))
                 retry = (retry or '').strip().strip('"').replace('ر.س', 'SAR')
-                if retry and _clean_ok(req.target_lang, retry):
+                if retry and _clean_ok(req.target_lang, retry, text):
                     translated = retry
                 else:
                     return {"translated": translated, "source": req.source_lang or "auto", "target": req.target_lang, "cached": False}
@@ -246,7 +252,7 @@ def build_router(db=None):
                 remaining.append(raw)
 
         if not remaining:
-            return {"translations": results, "cached": True}
+            return {"translations": results, "cached": True, "failed": []}
 
         try:
             from emergentintegrations.llm.chat import LlmChat, UserMessage
@@ -257,50 +263,55 @@ def build_router(db=None):
             raise HTTPException(500, "EMERGENT_LLM_KEY missing")
 
         CHUNK = 40
-        for i in range(0, len(remaining), CHUNK):
-            batch = remaining[i:i + CHUNK]
+
+        async def run_chunk(batch: list, tag: str) -> list:
+            """Translate one chunk; returns the items that failed validation."""
             numbered = "\n".join(f"{j + 1}. {s}" for j, s in enumerate(batch))
+            done = set()
             try:
                 chat = LlmChat(
                     api_key=api_key,
-                    session_id=f"trb-{req.target_lang}-{i}",
+                    session_id=f"trb-{req.target_lang}-{tag}-{_hash(numbered)[:10]}",
                     system_message=(
-                        f"You are a professional translator. Translate each numbered line to {target_name}. "
+                        f"You are a professional translator. Translate each numbered line into {target_name} "
+                        f"(language code '{req.target_lang}'). Output MUST be written in {target_name}. "
                         "Return ONLY the translations in the same order, each on its own line, prefixed with the "
                         "same number and a dot. No explanations, no extra text, no quotes. " + _RULES
                     ),
-                ).with_model("anthropic", "claude-haiku-4-5")
-                resp = await chat.send_message(UserMessage(text=numbered))
-                raw_lines = (resp or "").strip().split("\n")
-                for line in raw_lines:
+                ).with_model("anthropic", "claude-sonnet-4-6")
+                resp = await chat.send_message(UserMessage(
+                    text=f"Translate into {target_name} ({req.target_lang}) — write every line in {target_name}:\n{numbered}"))
+                for line in (resp or "").strip().split("\n"):
                     line = line.strip()
-                    if not line:
+                    head, dot, tail = line.partition(".")
+                    if not dot or not head.strip().isdigit():
                         continue
-                    for sep in (". ", ".", " "):
-                        if sep in line:
-                            head, _, tail = line.partition(sep)
-                            if head.strip().isdigit():
-                                idx = int(head.strip()) - 1
-                                if 0 <= idx < len(batch):
-                                    tr = tail.strip()
-                                    if tr.startswith('"') and tr.endswith('"'):
-                                        tr = tr[1:-1]
-                                    src = batch[idx]
-                                    tr = tr.replace('ر.س', 'SAR')
-                                    if not _clean_ok(req.target_lang, tr):
-                                        break
-                                    results[src] = tr
-                                    await _cache_put(src.strip(), req.target_lang, tr, req.source_lang)
-                                break
+                    idx = int(head.strip()) - 1
+                    if not (0 <= idx < len(batch)):
+                        continue
+                    tr = tail.strip().strip('"').replace('ر.س', 'SAR')
+                    src = batch[idx]
+                    if tr and _clean_ok(req.target_lang, tr, src):
+                        results[src] = tr
+                        done.add(idx)
+                        await _cache_put(src.strip(), req.target_lang, tr, req.source_lang)
             except Exception as e:
                 log.warning(f"bulk translate chunk failed: {e}")
-                continue
+            return [b for j, b in enumerate(batch) if j not in done]
+
+        import asyncio as _asyncio
+        chunks = [remaining[i:i + CHUNK] for i in range(0, len(remaining), CHUNK)]
+        failed_lists = await _asyncio.gather(*[run_chunk(c, f"c{i}") for i, c in enumerate(chunks)])
+        retry = [x for fl in failed_lists for x in fl]
+        if retry:  # one retry for lines the model answered in the wrong language
+            await _asyncio.gather(*[run_chunk(retry[i:i + 20], f"r{i}") for i in range(0, len(retry), 20)])
+        failed = [raw for raw in req.texts if raw not in results]
 
         # Fallback: any text we couldn't translate — return source
         for raw in req.texts:
             results.setdefault(raw, raw)
 
-        return {"translations": results, "cached": False}
+        return {"translations": results, "cached": False, "failed": failed}
 
     @router.get("/translate/cache/stats")
     async def cache_stats():

@@ -11,7 +11,8 @@
       "android": {
         "buildType": "app-bundle",
         "image": "latest"
-      }
+      },
+      "channel": "production"
     },
     "preview": {
       "distribution": "internal",

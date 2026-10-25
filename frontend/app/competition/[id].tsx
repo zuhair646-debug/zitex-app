@@ -87,7 +87,7 @@ export default function CompetitionDetailScreen() {
           </View>
 
           <TranslatableName text={comp.title} style={s.compTitle} />
-          <Text style={s.compDesc}>{comp.description}</Text>
+          <TranslatableName text={comp.description} style={s.compDesc} inline={false} />
 
           <View style={s.infoGrid}>
             <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('تاريخ البداية', curLang())}</Text><Text style={s.infoVal}>{comp.start_date}</Text></View>
@@ -98,7 +98,7 @@ export default function CompetitionDetailScreen() {
 
           <View style={s.prizeCard}>
             <Ionicons name="trophy" size={24} color="#F59E0B" />
-            <View style={s.prizeInfo}><Text style={s.prizeLabel}>{tSync('الجائزة', curLang())}</Text><Text style={s.prizeText}>{comp.prize}</Text></View>
+            <View style={s.prizeInfo}><Text style={s.prizeLabel}>{tSync('الجائزة', curLang())}</Text><TranslatableName text={comp.prize} style={s.prizeText} /></View>
           </View>
 
           {comp.questions?.length > 0 && isOpen && (

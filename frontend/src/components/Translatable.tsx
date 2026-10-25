@@ -27,6 +27,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useT, type Lang } from '../i18n';
 import { colors } from '../theme/tokens';
+import { needsTranslation, autoTranslate } from './TranslatableName';
 
 type FieldMap = { ar?: string; en?: string; [key: string]: string | undefined };
 type AnyValue = string | string[] | FieldMap | null | undefined;
@@ -47,7 +48,7 @@ interface Props {
 }
 
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_BACKEND_URL || '';
-const CACHE_KEY = '@zenrex_dyn_tr_v2';
+const CACHE_KEY = '@zenrex_dyn_tr_multi_v3';
 const memCache: Record<string, string> = {};
 const inflight: Map<string, Promise<string | null>> = new Map();
 let diskLoaded = false;
@@ -104,6 +105,7 @@ function normalize(value: AnyValue, joiner: string): string {
 
 async function fetchTranslation(text: string, target: Lang, source?: string): Promise<string | null> {
   const key = `${target}::${text}`;
+  await loadDiskOnce();
   if (memCache[key] !== undefined) return memCache[key];
   const existing = inflight.get(key);
   if (existing) return existing;
@@ -164,10 +166,9 @@ export default function Translatable({
     let alive = true;
     (async () => {
       if (!original) return;
-      if (sourceLang && sourceLang === lang) return;
-      await loadDiskOnce();
-      const key = `${lang}::${original}`;
-      if (memCache[key] !== undefined && alive) setTranslated(memCache[key]);
+      if (!needsTranslation(original, lang)) return;
+      const tr = await autoTranslate(original, lang);
+      if (alive && tr) { setTranslated(tr); setShowing('translated'); }
     })();
     return () => { alive = false; };
   }, [original, lang, sourceLang]);
@@ -204,9 +205,8 @@ export default function Translatable({
     }
   }, [original, lang, showing, translated, sourceLang, onToggle, t]);
 
-  const sameLang = !!sourceLang && sourceLang === lang;
   const tooShort = !original || original.trim().length < 2;
-  const hideIcon = sameLang || tooShort;
+  const hideIcon = tooShort || (!needsTranslation(original, lang) && translated === null);
   const displayText = showing === 'translated' && translated !== null ? translated : original;
   const isTr = showing === 'translated' && translated !== null;
 
@@ -261,7 +261,7 @@ export default function Translatable({
       <Text style={[style, isTr ? translatedStyle : null]} numberOfLines={numberOfLines}>
         {displayText}
       </Text>
-      {hideIcon ? null : <View style={{ marginTop: 2 }}>{IconBtn}</View>}
+      {hideIcon ? null : <View style={{ marginTop: 2, alignSelf: 'flex-start' }}>{IconBtn}</View>}
     </View>
   );
 }
@@ -273,6 +273,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   iconBtn: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,

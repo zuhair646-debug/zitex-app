@@ -211,10 +211,10 @@ export const typography = {
   bodySmall: { fontSize: 13, fontWeight: '500' as const },
   body: { fontSize: 14, fontWeight: '500' as const },
   labelLarge: { fontSize: 14, fontWeight: '600' as const },
-  labelMedium: { fontSize: 12, fontWeight: '600' as const, letterSpacing: 0.3 },
-  labelSmall: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0.4 },
+  labelMedium: { fontSize: 12, fontWeight: '600' as const, letterSpacing: 0 },
+  labelSmall: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0 },
   caption: { fontSize: 12, fontWeight: '500' as const },
-  overline: { fontSize: 11, fontWeight: '700' as const, letterSpacing: 0.8, textTransform: 'uppercase' as const },
+  overline: { fontSize: 11, fontWeight: '700' as const, letterSpacing: 0, textTransform: 'uppercase' as const },
 } as const;
 
 export const shadows = {

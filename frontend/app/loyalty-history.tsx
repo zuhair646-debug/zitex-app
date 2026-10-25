@@ -1,3 +1,4 @@
+import TranslatableName from '../src/components/TranslatableName';
 import { curLang } from '../src/i18n';
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
@@ -83,7 +84,7 @@ export default function LoyaltyHistoryScreen() {
               <Ionicons name={SOURCE_ICON[t.source] || 'sparkles'} size={16} color={t.kind === 'earn' ? '#10B981' : '#EF4444'} />
             </View>
             <View style={{ flex: 1, marginHorizontal: 10 }}>
-              <Text style={s.txDesc}>{tSync(t.description || SOURCE_LABEL[t.source] || t.source, curLang())}</Text>
+              <TranslatableName text={tSync(t.description || SOURCE_LABEL[t.source] || t.source || '', curLang())} style={s.txDesc} />
               <Text style={s.txMeta}>{tSync(SOURCE_LABEL[t.source] || t.source, curLang())} · {(t.created_at || '').slice(0, 10)}</Text>
             </View>
             <Text style={[s.txAmount, { color: t.kind === 'earn' ? '#10B981' : '#EF4444' }]}>

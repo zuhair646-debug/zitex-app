@@ -1,0 +1,56 @@
+{
+  "summary": "v1.18 auto-translation QA. Backend: 15/15 pytest pass (bulk mixed-text unification de/fr/ru/zh/ja/th e.g. de 'iPhone 15 Pro Max Schwarz 256GB'; Latin proper names accepted for ja/hi; en->ar, ar->en, single, validation, cache). BUT bulk is FLAKY for zh: a 24-item English services batch came back entirely in ARABIC from the LLM 2 of 3 times (reproduced directly with LlmChat). Every line was rejected and the English source returned silently, with no retry. Frontend (375x667, customer logged in, ar/en/de/zh/ja/th/fr/he): auto-translation works with no tap on Home categories/products, Search, Favorites, Cart, Services, Notifications and product name/description. The translate icon toggles original <-> translation (verified on product page in de). Several DB fields are still rendered with raw <Text> and stay in the wrong language after 13s+ (list in action_items). Regression: merchant/chamber/driver dashboards in ar/en/de/zh/he load with no page errors or red screen, and static labels are translated.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/translate/bulk", "issue": "Flaky for zh: with 24 English service names+descs, Claude returned ALL lines in Arabic (2 of 3 attempts). _clean_ok rejects them, there is no retry, and the source is returned as if translated, so the zh Services tab stayed English. Fix: put the target language in the user message too (e.g. 'Translate to Chinese (Simplified):'), retry rejected lines once (like the single endpoint), and return a 'failed' list instead of silently echoing the source. Ref: /app/backend/translate.py:268-309", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/translate/bulk", "issue": "Chunks of 40 are sent one after another, so screens with >40 texts wait 10-30s+. Use asyncio.gather. translate.py:266"},
+      {"endpoint": "POST /api/translate", "issue": "If the retry is still unclean, the bad translation is returned without caching, so the LLM is called again on every request. translate.py:225-226"},
+      {"endpoint": "translate quality", "issue": "Courier brand 'ناقل إكسبرس' (Naqel Express) is translated as a generic phrase: de 'Express-Kurier', fr 'Express Transfer', zh '快递配送'; hi gives 'Nakil Express'. Add Naqel/SMSA/Aramex/Anker/Sony to the brand glossary in _RULES."},
+      {"endpoint": "docs", "issue": "Docstring says Claude Haiku 4.5 but the code uses claude-sonnet-4-6 (higher cost/latency). translate.py:3,211,278"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "TranslatableName flush()", "issue": "When the backend echoes the source (failed translation), flush() treats it as OK for any text without Arabic (and always for ar/fa/ur) and saves it to memCache + AsyncStorage permanently. That device never retries: zh Services and the about-store address stayed English for the whole session. Do not cache when tr===tx and needsTranslation() was true. Ref: src/components/TranslatableName.tsx:146-150", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Translatable.tsx cache", "issue": "Has its own memCache under the SAME AsyncStorage key '@zenrex_dyn_tr_v2', and its loadDiskOnce() is never called. Its schedulePersist() overwrites the shared blob with only its own entries, wiping the auto-translations persisted by TranslatableName. About 60 lines of fetch/cache/toast code are duplicated. Export one cache module from TranslatableName. Ref: src/components/Translatable.tsx:50-133", "testID": "n/a", "priority": "HIGH"}
+    ],
+    "integration_issues": [
+      {"flow": "Home competition banner (all non-ar langs)", "issue": "Title '🏆 دعوة صديق واربح 🎁' stays Arabic in en/de/zh/ja/th/fr/he. Raw <Text>. app/(tabs)/index.tsx:332 (prize :333)", "affected_testIDs": []},
+      {"flow": "Competitions tab", "issue": "description and prize use raw <Text>. Arabic descs/prizes ('ادعُ 5 أصدقاء...', 'PlayStation 5 + متحف من الألعاب', 'سيارة تسلا Model 3 + iPhone 15 Pro') stay Arabic in en/de/zh. The English desc 'Spend $100 or more ... Eid' and 'Win 1 of 5 iPhone 15s' stay English in ar and zh. app/(tabs)/competitions.tsx:67,71", "affected_testIDs": []},
+      {"flow": "Competition detail", "issue": "description is raw <Text> and stays Arabic in en. app/competition/[id].tsx:90", "affected_testIDs": []},
+      {"flow": "Product detail", "issue": "Colour name ('أسود') and spec keys/values ('القدرة','النوع','شاشة','6.82 بوصة','معالج','الكاميرا') stay Arabic in en/de/zh. DB only has Arabic for these. app/product/[id].tsx:119,169-170", "affected_testIDs": []},
+      {"flow": "Support", "issue": "working_hours 'السبت - الخميس: 9 ص - 11 م' stays Arabic in en/de/zh. app/support.tsx:50", "affected_testIDs": []},
+      {"flow": "About store", "issue": "Branch pill names ('Riyadh Store','Jeddah Store') use raw <Text> and stay English in ar/he/ja/th/zh (about-store.tsx:33). Hardcoded 'Tech Store' heading (:40) and 'Map - {store.name}' (:60) are not translated either.", "affected_testIDs": []},
+      {"flow": "Loyalty history", "issue": "Transaction descriptions ('استبدال 100 نقطة قطاف بخصم 1.0 ر.س', 'طلب #1024 - ايفون 14', 'حجز صيانة شاشة'...) go through the static tSync() only and stay Arabic in en. app/loyalty-history.tsx:86", "affected_testIDs": []}
+    ],
+    "design_issues": [
+      {"screen": "Notifications / Product detail / Home categories", "issues": ["The translate toggle chip stretches full width (335x21px) under the product name and under each notification title and body. Each notification shows 2 near-empty bars.", "The toggle chip is ~21px tall (~41px with hitSlop), under the 44px touch target.", "Each category tile gets its own undo chip, which clutters the carousel."]},
+      {"screen": "Home header (375px)", "issues": ["The cart icon and badge are clipped at the right edge."]},
+      {"screen": "Product detail", "issues": ["The 'Original' view shows Arabic and English joined ('شاحن سامسونج سوبر فاست 45W\\nSamsung Super Fast 45W').", "The image for 'Samsung Super Fast 45W' charger is an AirPods photo (data mismatch).", "about-store 'copy' icon opens tel: instead of copying."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_translate_auto_v1_18.py", "/app/test_reports/pytest/pytest_translate_v1_18.xml"],
+  "action_items": [
+    "HIGH: translate.py bulk: state the target language in the user message, retry rejected lines once (batch or single), return 'failed' keys instead of echoing the source.",
+    "HIGH: TranslatableName.flush(): don't cache tr===tx when needsTranslation() was true. Also bump CACHE_KEY to purge bad entries already on devices.",
+    "HIGH: merge Translatable.tsx's cache into TranslatableName (one memCache, one persist), so the shared AsyncStorage key is no longer overwritten.",
+    "Wrap with TranslatableName/Translatable: (tabs)/index.tsx:332-333, (tabs)/competitions.tsx:67,71, competition/[id].tsx:90, product/[id].tsx:119,169-170, support.tsx:50, about-store.tsx:33,60 (plus i18n for hardcoded 'Tech Store' :40 and 'Map -'), loyalty-history.tsx:86.",
+    "Make the translate chip compact (not full width) on product name and notifications. Fix the home header cart clipping at 375px.",
+    "Send bulk chunks in parallel (asyncio.gather). Add Naqel/SMSA/Aramex/Anker/Sony to the brand glossary."
+  ],
+  "critical_code_review_comments": [
+    "Translatable.tsx duplicates the cache/fetch/toast logic of TranslatableName.tsx (DRY) and has a dead loadDiskOnce().",
+    "flush() has no fetch timeout/AbortController. A hung bulk call leaves every queued text pending.",
+    "_clean_ok() 'source' param is unused."
+  ],
+  "updated_files": ["/app/backend/tests/test_translate_auto_v1_18.py"],
+  "success_rate": {"backend": "100% (15/15) – zh bulk flaky in ad-hoc runs", "frontend": "~70% (auto-translate OK on Home/Search/Favorites/Cart/Services/Notifications/product name+desc; 8 DB fields untranslated; toggle OK; no crashes on 4 roles x 5 langs)"},
+  "seed_data_creation": "None. The translations_cache collection now holds the entries generated by these tests.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Use page.evaluate on leaf divs to find Arabic left (non-ar) or English-only text (ar/non-Latin). The browser tool rewrites screenshot paths, so use literal paths only. Lang is set via localStorage 'app_lang' and then reload. The product toggle chip shows the label 'Original'/'Übersetzen' in de. Product 6ab6de22e0ac8916314aa324 = Samsung Super Fast 45W. Re-run pytest tests/test_translate_auto_v1_18.py and /tmp/svc_all.py-style bulk test for zh with all 24 services texts (clear cache for zh first).",
+  "rca_of_issue": "zh Services stayed English: the bulk LLM call (claude-sonnet-4-6) sometimes answers in Arabic because _RULES is Saudi/Arabic-centric and the target language appears only in the system prompt. _clean_ok rejects every line, the backend echoes the source with no retry, and the frontend flush() then permanently caches the English source as the 'translation'."
+}

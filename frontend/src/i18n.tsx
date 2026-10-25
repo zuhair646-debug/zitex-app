@@ -6446,7 +6446,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
               { text: okLbl },
               {
                 text: nowLbl,
-                onPress: () => {
+                onPress: async () => {
+                  try {
+                    const Updates = require('expo-updates');
+                    if (Updates?.reloadAsync) { await Updates.reloadAsync(); return; }
+                  } catch {}
                   try {
                     const { DevSettings } = require('react-native');
                     if (DevSettings?.reload) DevSettings.reload();

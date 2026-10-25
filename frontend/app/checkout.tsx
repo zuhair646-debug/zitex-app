@@ -1,3 +1,4 @@
+import TranslatableName from '../src/components/TranslatableName';
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Linking } from 'react-native';
 import * as Location from 'expo-location';
@@ -193,7 +194,7 @@ export default function CheckoutScreen() {
           <View style={s.branchBox}>
             <Ionicons name="storefront" size={18} color="#F5C518" />
             <View style={{ flex: 1, marginLeft: 8 }}>
-              <Text style={s.branchName}>{tSync('الفرع:', lang)} {quote.branch.name}</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}><Text style={s.branchName}>{tSync('الفرع:', lang)} </Text><TranslatableName text={quote.branch.name} style={s.branchName} /></View>
               <Text style={s.branchDist}>{quote.branch.distance_km} {tSync('كم', lang)} {quote.fee?.in_zone ? tf('• ضمن منطقة "{0}"', lang, [quote.fee.zone_name]) : ''}</Text>
             </View>
           </View>

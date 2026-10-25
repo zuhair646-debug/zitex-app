@@ -1,3 +1,4 @@
+import TranslatableName from '../src/components/TranslatableName';
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -62,8 +63,8 @@ export default function NotificationsScreen() {
             <TouchableOpacity key={n.id} style={[s.card, !n.read && s.cardUnread]} onPress={() => openNotification(n)}>
               {!n.read && <View style={s.dot} />}
               <View style={{ flex: 1 }}>
-                <Text style={s.nTitle}>{n.title}</Text>
-                <Text style={s.nBody}>{n.body}</Text>
+                <TranslatableName text={n.title} style={s.nTitle} inline={false} />
+                <TranslatableName text={n.body} style={s.nBody} inline={false} />
                 <Text style={s.nTime}>{timeAgo(n.created_at)}</Text>
               </View>
               <Ionicons name="chevron-back" size={18} color="#9CA3AF" />

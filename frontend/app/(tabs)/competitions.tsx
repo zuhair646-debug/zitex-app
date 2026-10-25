@@ -64,11 +64,11 @@ export default function CompetitionsScreen() {
               </View>
             </View>
             <TranslatableName text={comp.title} style={s.compTitle} numberOfLines={2} />
-            <Text style={s.compDesc} numberOfLines={2}>{comp.description}</Text>
+            <TranslatableName text={comp.description} style={s.compDesc} numberOfLines={2} />
 
             <View style={s.prizeRow}>
               <Ionicons name="trophy" size={16} color="#F59E0B" />
-              <Text style={s.prizeText} numberOfLines={1}>{comp.prize}</Text>
+              <TranslatableName text={comp.prize} style={s.prizeText} numberOfLines={1} />
             </View>
 
             <View style={s.progressSection}>

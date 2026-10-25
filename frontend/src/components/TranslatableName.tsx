@@ -40,7 +40,7 @@ interface Props {
 
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_BACKEND_URL || '';
 
-const CACHE_KEY = '@zenrex_dyn_tr_v2';
+const CACHE_KEY = '@zenrex_dyn_tr_v3';
 const memCache: Record<string, string> = {}; // `${lang}::${text}` → translated (identical-to-source stored as same text)
 const inflight: Map<string, Promise<string | null>> = new Map();
 let diskLoaded = false;
@@ -108,6 +108,68 @@ async function fetchTranslation(text: string, target: Lang, source?: string): Pr
   return promise;
 }
 
+// ───────────── Automatic translation (batched) ─────────────
+const BRAND_RX = /^(iphone|ipad|macbook|airpods|apple|samsung|galaxy|huawei|xiaomi|redmi|oppo|vivo|realme|honor|nokia|sony|lg|lenovo|hp|dell|asus|acer|pro|max|ultra|plus|mini|lite|note|fold|flip|watch|pad|tab|buds|gb|tb|mah|5g|4g|usb|type-c|zenrex|store|pos|sar|smsa|aramex|spl|tabby|tamara|stc|mada|apple pay|x)$/i;
+const AR_RX = /[\u0600-\u06FF]/;
+const LATIN_LANGS = new Set(['en', 'es', 'fr', 'de', 'it', 'pt', 'tr', 'id', 'ms']);
+
+/** Does `text` need translating to be fully in `lang`? (keeps brand/model words) */
+export function needsTranslation(text: string, lang: Lang): boolean {
+  const s = (text || '').trim();
+  if (s.length < 2) return false;
+  const hasAr = AR_RX.test(s);
+  const realLatinWords = (s.match(/[A-Za-z][A-Za-z\-]{2,}/g) || []).filter((w) => !BRAND_RX.test(w));
+  if (lang === 'ar') return realLatinWords.length > 0; // English words (not brands/models) → Arabic
+  if (lang === 'en') return hasAr;
+  if (LATIN_LANGS.has(lang)) return hasAr || realLatinWords.length > 0;
+  return hasAr || realLatinWords.length > 0; // non-Latin target scripts
+}
+
+type Waiter = { resolve: (v: string | null) => void };
+const queues: Record<string, Map<string, Waiter[]>> = {};
+const timers: Record<string, ReturnType<typeof setTimeout> | null> = {};
+
+async function flush(lang: Lang) {
+  const q = queues[lang];
+  timers[lang] = null;
+  if (!q || !q.size) return;
+  queues[lang] = new Map();
+  const texts = Array.from(q.keys());
+  try {
+    const res = await fetch(`${BACKEND}/api/translate/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texts, target_lang: lang }),
+    });
+    const j = res.ok ? await res.json() : null;
+    const out: Record<string, string> = j?.translations || {};
+    texts.forEach((tx) => {
+      const tr = (out[tx] ?? '').toString().trim();
+      const ok = !!tr && !(lang !== 'ar' && lang !== 'fa' && lang !== 'ur' && AR_RX.test(tr));
+      const same = tr === tx;
+      if (ok && !same) { memCache[`${lang}::${tx}`] = tr; }
+      q.get(tx)?.forEach((w) => w.resolve(ok && !same ? tr : null));
+    });
+    schedulePersist();
+  } catch {
+    texts.forEach((tx) => q.get(tx)?.forEach((w) => w.resolve(null)));
+  }
+}
+
+/** Queue a text for automatic translation; many calls on one screen become one request. */
+export async function autoTranslate(text: string, lang: Lang): Promise<string | null> {
+  await loadDiskOnce();
+  const key = `${lang}::${text}`;
+  if (memCache[key] !== undefined) return memCache[key];
+  return new Promise((resolve) => {
+    queues[lang] = queues[lang] || new Map();
+    const list = queues[lang].get(text) || [];
+    list.push({ resolve });
+    queues[lang].set(text, list);
+    if (!timers[lang]) timers[lang] = setTimeout(() => flush(lang), 80);
+  });
+}
+
 export default function TranslatableName({
   text,
   sourceLang,
@@ -141,11 +203,10 @@ export default function TranslatableName({
     let alive = true;
     (async () => {
       if (!original) return;
-      // Even when sourceLang === lang we skip, but we do want to warm when they differ
-      if (sourceLang && sourceLang === lang) return;
-      await loadDiskOnce();
-      const key = `${lang}::${original}`;
-      if (memCache[key] !== undefined && alive) setTranslated(memCache[key]);
+      // Automatic: show the text fully in the user's language (mixed AR/EN unified).
+      if (!needsTranslation(original, lang)) return;
+      const tr = await autoTranslate(original, lang);
+      if (alive && tr) { setTranslated(tr); setShowing('translated'); }
     })();
     return () => { alive = false; };
   }, [original, lang, sourceLang]);
@@ -187,9 +248,9 @@ export default function TranslatableName({
   // Rule: show whenever we DON'T have a confirmed match between source and target lang.
   // Even if the UI is Arabic, if the text was authored in English the user still
   // benefits from a translate option.
-  const sameLang = !!sourceLang && sourceLang === lang;
+  // Icon only matters when a translation exists/needed (lets the user see the original).
   const tooShort = !original || original.trim().length < 2;
-  const hideIcon = sameLang || tooShort;
+  const hideIcon = tooShort || (!needsTranslation(original, lang) && translated === null);
 
   const displayText = showing === 'translated' && translated !== null ? translated : original;
   const isTr = showing === 'translated' && translated !== null;
@@ -248,7 +309,7 @@ export default function TranslatableName({
       <Text style={[style, isTr ? translatedStyle : null]} numberOfLines={numberOfLines}>
         {displayText}
       </Text>
-      {hideIcon ? null : <View style={{ marginTop: 2 }}>{IconBtn}</View>}
+      {hideIcon ? null : <View style={{ marginTop: 2, alignSelf: 'flex-start' }}>{IconBtn}</View>}
     </View>
   );
 }
@@ -260,6 +321,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   iconBtn: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
