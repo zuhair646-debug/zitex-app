@@ -608,3 +608,10 @@ Instead of manually rewriting the 50+ files that still use `<TX>`, `useAutoT`, o
 - Iterations 28–36 of testing completed for the translation pass; last round: all requested items pass, final 7 small strings fixed afterwards.
 - Also fixed (found during testing): social comment add/delete 500 when post.comments is an array (server.py).
 - Open non-translation findings (NOT fixed, need user approval): POST /api/competitions/{id}/draw has no auth/role check; checkout points-redeem picker hidden under bottom bar; CORS allows all origins.
+
+## v1.18.0 release (Oct 25 2026)
+- Android build ca3fa774 (versionCode 73), iOS build 5e27438f (buildNumber 68) — auto-submit pollers running (logs /tmp/eas_release.log, /tmp/eas_release_ios.log).
+- iOS fix: eas.json production.ios.image pinned to macos-sequoia-15.6-xcode-26.0 (EAS "latest" = Xcode 27, breaks SDK 54).
+- Apple agreement now signed (user confirmed).
+- GitHub push failing: token in git remote is invalid — needs new token from user.
+- Language audit report v1.18: /app/memory/LANGUAGE_AUDIT_REPORT_v1.18.md — awaiting user approval before fixing (DB content auto-translation, mixed-text unification, _clean_ok Latin rejection, RTL restart, Arabic letterSpacing).
