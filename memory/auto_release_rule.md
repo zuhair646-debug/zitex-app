@@ -83,3 +83,10 @@ Feature category → semver bump:
 - Commit: d2caf6a
 - Poller PID: 1279 (status log: /tmp/eas_release_v1.17.0.log)
 - Changes: Dynamic translate-on-demand + MongoDB persistent cache, VideoComposer crash fix, TranslatableName component applied on 8 screens
+
+## v1.20.0 release — 2026-10-26
+- iOS build: 4c7e4ef0-40c9-4c6e-83eb-a5e1efead12d (buildNumber 70)
+- Android build: 1b48f297-8ac2-4a7e-97a1-bdfea4a3cc76 (versionCode 75)
+- Commit: 6fe00dc. Backend deployed to Hetzner (api.zenrex.ai), bad cached translations cleaned.
+- Poller log: /tmp/eas_release_v1.20.0.log
+- Changes: smart bilingual name translation (dedupe + brands Latin), full Live Preview + analytics i18n
