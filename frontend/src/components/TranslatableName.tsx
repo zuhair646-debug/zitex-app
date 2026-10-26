@@ -40,7 +40,7 @@ interface Props {
 
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_BACKEND_URL || '';
 
-const CACHE_KEY = '@zenrex_dyn_tr_v3';
+const CACHE_KEY = '@zenrex_dyn_tr_v4';
 const memCache: Record<string, string> = {}; // `${lang}::${text}` → translated (identical-to-source stored as same text)
 const inflight: Map<string, Promise<string | null>> = new Map();
 let diskLoaded = false;
@@ -118,6 +118,9 @@ export function needsTranslation(text: string, lang: Lang): boolean {
   const s = (text || '').trim();
   if (s.length < 2) return false;
   const hasAr = AR_RX.test(s);
+  // Mixed Arabic + Latin (e.g. "آيفون 16 iPhone 16 أسود") → always unify into one clean phrase
+  // in the viewer's language (removes the duplicated bilingual words).
+  if (hasAr && /[A-Za-z]{2,}/.test(s)) return true;
   const realLatinWords = (s.match(/[A-Za-z][A-Za-z\-]{2,}/g) || []).filter((w) => !BRAND_RX.test(w));
   if (lang === 'ar') return realLatinWords.length > 0; // English words (not brands/models) → Arabic
   if (lang === 'en') return hasAr;
@@ -258,8 +261,9 @@ export default function TranslatableName({
   const IconBtn = (
     <TouchableOpacity
       onPress={toggle}
+      testID="translatable-name-toggle"
       activeOpacity={0.6}
-      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       style={[
         styles.iconBtn,
         isTr && styles.iconBtnActive,
@@ -325,9 +329,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    minWidth: 26,
+    minHeight: 24,
+    justifyContent: 'center',
+    borderRadius: 8,
     backgroundColor: 'rgba(201,166,107,0.08)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(201,166,107,0.25)',

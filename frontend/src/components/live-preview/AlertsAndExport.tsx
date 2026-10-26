@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useT, curLang } from '../../i18n';
 import { tSync, tf, TX } from '../../useAutoT';
+import TranslatableName from '../TranslatableName';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, ActivityIndicator, Linking, Alert as RNAlert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -112,7 +113,7 @@ export function AlertsBell({ apiCall }: any) {
                       </View>
                       <View style={{ flex: 1, marginHorizontal: 10 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Text style={s.alertTitle} numberOfLines={1}>{a.title}</Text>
+                          <TranslatableName text={a.title} style={s.alertTitle} numberOfLines={1} containerStyle={{ flexShrink: 1 }} />
                           {!a.ack && <View style={[s.newDot, { backgroundColor: color }]} />}
                         </View>
                         <Text style={s.alertMsg} numberOfLines={2}>{a.message}</Text>

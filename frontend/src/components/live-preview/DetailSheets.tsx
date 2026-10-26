@@ -4,10 +4,11 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { LP, K, KM, PLATFORM_COLORS, PLATFORM_LABEL, PLATFORM_ICON } from './theme';
+import { LP, K, KM, PLATFORM_COLORS, PLATFORM_LABEL, PLATFORM_ICON, weekdayShort } from './theme';
 import { KpiCard, Sparkline, BarChart, HBar, RatingBreakdown, EntityPill, Section } from './atoms';
 import { ExportButton } from './AlertsAndExport';
-import { TX, tSync } from '../../useAutoT';
+import { TX, tSync, tf } from '../../useAutoT';
+import TranslatableName from '../TranslatableName';
 import { useT, curLang } from '../../i18n';
 
 /* ═════════════════════════ SHEET SHELL ═════════════════════════ */
@@ -42,8 +43,8 @@ function SheetShell({ visible, onClose, title, subtitle, avatar, icon, accent = 
                   <Ionicons name={icon || 'person'} size={48} color={accent} />
                 </View>
               )}
-              <Text style={st.heroTitle}>{title}</Text>
-              {!!subtitle && <Text style={st.heroSub}>{subtitle}</Text>}
+              <TranslatableName text={title} style={st.heroTitle} />
+              {!!subtitle && <TranslatableName text={subtitle} style={st.heroSub} />}
             </View>
           </LinearGradient>
           <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
@@ -106,10 +107,10 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
       {/* Tabs */}
       <View style={st.tabRow}>
         {[{ k: 'stats', l: 'الأداء', i: 'stats-chart' }, { k: 'reviews', l: 'التقييمات', i: 'chatbubbles' }, { k: 'earnings', l: 'المدخولات', i: 'cash' }].map(t => (
-          <TouchableOpacity key={t.k} onPress={() => setTab(t.k as any)}
+          <TouchableOpacity key={t.k} testID={`sheet-tab-${t.k}`} onPress={() => setTab(t.k as any)}
             style={[st.tab, tab === t.k && st.tabActive]}>
             <Ionicons name={t.i as any} size={12} color={tab === t.k ? LP.BG : LP.MUTED} />
-            <Text style={[st.tabText, tab === t.k && { color: LP.BG, fontWeight: '900' }]}>{t.l}</Text>
+            <Text style={[st.tabText, tab === t.k && { color: LP.BG, fontWeight: '900' }]}>{tSync(t.l, curLang())}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -118,28 +119,28 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
         <>
           <Section icon="rocket" title={tSync('عدد التوصيلات', lang)} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="today" label={tSync('اليوم', lang)} value={K(d.kpis.today)} color={LP.GOLD} sub="توصيلة" />
-            <KpiCard icon="calendar" label={tSync('هذا الأسبوع', lang)} value={K(d.kpis.week)} color={LP.INFO} sub="توصيلة" />
-            <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={K(d.kpis.month)} color={LP.SUCCESS} sub="توصيلة" />
-            <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={K(d.kpis.year)} color={LP.MAGENTA} sub="توصيلة" />
+            <KpiCard icon="today" label={tSync('اليوم', lang)} value={K(d.kpis.today)} color={LP.GOLD} sub={tSync('توصيلة', curLang())} />
+            <KpiCard icon="calendar" label={tSync('هذا الأسبوع', lang)} value={K(d.kpis.week)} color={LP.INFO} sub={tSync('توصيلة', curLang())} />
+            <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={K(d.kpis.month)} color={LP.SUCCESS} sub={tSync('توصيلة', curLang())} />
+            <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={K(d.kpis.year)} color={LP.MAGENTA} sub={tSync('توصيلة', curLang())} />
           </View>
 
           <Section icon="pulse" title={tSync('نبض التوصيلات (7 أيام)', lang)} />
           <View style={st.chartBox}>
             <Sparkline data={d.week_series} color={LP.GOLD} height={70} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-              {['سبت', 'أحد', 'اثن', 'ثلا', 'أرب', 'خمي', 'جمع'].map(l => <Text key={l} style={{ color: LP.MUTED, fontSize: 9 }}>{tSync(l, curLang())}</Text>)}
+              {[0, 1, 2, 3, 4, 5, 6].map(i => <Text key={i} style={{ color: LP.MUTED, fontSize: 9 }}>{weekdayShort(i)}</Text>)}
             </View>
           </View>
 
           <Section icon="briefcase" title={tSync('الدوام وتفاصيل التوظيف', lang)} />
           <View style={st.infoBox}>
-            <Row label={tSync('الدوام اليومي', lang)} value={`${d.shift_start} - ${d.shift_end} (${d.shift_hours} ساعة)`} />
+            <Row label={tSync('الدوام اليومي', lang)} value={`${d.shift_start} - ${d.shift_end} (${tf('{0} ساعة', curLang(), [d.shift_hours])})`} />
             <Row label={tSync('تاريخ التوظيف', lang)} value={d.hire_date || '—'} />
             <Row label={tSync('نظام الأجر', lang)} value={
-              d.salary_type === 'monthly' ? `راتب شهري: ${K(d.salary_monthly)} ر.س`
-              : d.salary_type === 'hourly' ? `بالساعة: ${K(d.hourly_rate)} ر.س`
-              : `عمولة (${d.commission_type})`
+              d.salary_type === 'monthly' ? tf('راتب شهري: {0} ر.س', curLang(), [K(d.salary_monthly)])
+              : d.salary_type === 'hourly' ? tf('بالساعة: {0} ر.س', curLang(), [K(d.hourly_rate)])
+              : tf('عمولة ({0})', curLang(), [d.commission_type])
             } />
             <Row label={tSync('رقم اللوحة', lang)} value={d.vehicle_plate || '—'} />
             <Row label={tSync('الجوال', lang)} value={d.phone} onPress={() => Linking.openURL(`tel:${d.phone}`)} icon="call" />
@@ -149,7 +150,7 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
             <>
               <Section icon="business" title={tSync('الفروع المرتبطة', lang)} />
               {d.assigned_branches.map((b: any) => (
-                <EntityPill key={b.id} image={b.image} name={b.name} subtitle={b.city} icon="business"
+                <EntityPill key={b.id} image={b.image} name={b.name} subtitle={tSync(b.city || '', curLang())} icon="business"
                   onPress={() => onOpenBranch && onOpenBranch(b.id)} />
               ))}
             </>
@@ -166,16 +167,16 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
 
           {d.positive_reviews?.length > 0 && (
             <>
-              <Section icon="thumbs-up" title={`تعليقات إيجابية (${d.positive_reviews.length})`} />
+              <Section icon="thumbs-up" title={tf('تعليقات إيجابية ({0})', curLang(), [d.positive_reviews.length])} />
               {d.positive_reviews.map((r: any, i: number) => (
                 <View key={i} style={[st.reviewCard, { borderLeftColor: LP.SUCCESS }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ color: LP.SUCCESS, fontSize: 12, fontWeight: '900' }}>{r.user_name}</Text>
+                    <TranslatableName text={r.user_name} style={{ color: LP.SUCCESS, fontSize: 12, fontWeight: '900' }} />
                     <View style={{ flexDirection: 'row' }}>
                       {[1,2,3,4,5].map(s => <Ionicons key={s} name="star" size={10} color={s <= (r.rating || 0) ? LP.GOLD : LP.BORDER} />)}
                     </View>
                   </View>
-                  <Text style={st.reviewText}>{r.comment}</Text>
+                  <TranslatableName text={r.comment} style={st.reviewText} inline={false} />
                 </View>
               ))}
             </>
@@ -183,16 +184,16 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
 
           {d.negative_reviews?.length > 0 && (
             <>
-              <Section icon="thumbs-down" title={`تعليقات سلبية (${d.negative_reviews.length})`} />
+              <Section icon="thumbs-down" title={tf('تعليقات سلبية ({0})', curLang(), [d.negative_reviews.length])} />
               {d.negative_reviews.map((r: any, i: number) => (
                 <View key={i} style={[st.reviewCard, { borderLeftColor: LP.DANGER }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ color: LP.DANGER, fontSize: 12, fontWeight: '900' }}>{r.user_name}</Text>
+                    <TranslatableName text={r.user_name} style={{ color: LP.DANGER, fontSize: 12, fontWeight: '900' }} />
                     <View style={{ flexDirection: 'row' }}>
                       {[1,2,3,4,5].map(s => <Ionicons key={s} name="star" size={10} color={s <= (r.rating || 0) ? LP.GOLD : LP.BORDER} />)}
                     </View>
                   </View>
-                  <Text style={st.reviewText}>{r.comment}</Text>
+                  <TranslatableName text={r.comment} style={st.reviewText} inline={false} />
                 </View>
               ))}
             </>
@@ -204,10 +205,10 @@ export function DriverDetailSheet({ driverId, apiCall, onClose, onOpenBranch }: 
         <>
           <Section icon="cash" title={tSync('المدخولات', lang)} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="today" label={tSync('اليوم', lang)} value={`${K(d.kpis.today_earnings)} ر.س`} color={LP.GOLD} />
-            <KpiCard icon="calendar" label={tSync('الأسبوع', lang)} value={`${K(d.kpis.week_earnings)} ر.س`} color={LP.INFO} />
-            <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={`${K(d.kpis.month_earnings)} ر.س`} color={LP.SUCCESS} />
-            <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={`${K(d.kpis.year_earnings)} ر.س`} color={LP.MAGENTA} />
+            <KpiCard icon="today" label={tSync('اليوم', lang)} value={`${K(d.kpis.today_earnings)} ${tSync('ر.س', curLang())}`} color={LP.GOLD} />
+            <KpiCard icon="calendar" label={tSync('الأسبوع', lang)} value={`${K(d.kpis.week_earnings)} ${tSync('ر.س', curLang())}`} color={LP.INFO} />
+            <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={`${K(d.kpis.month_earnings)} ${tSync('ر.س', curLang())}`} color={LP.SUCCESS} />
+            <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={`${K(d.kpis.year_earnings)} ${tSync('ر.س', curLang())}`} color={LP.MAGENTA} />
           </View>
 
           <Section icon="bar-chart" title={tSync('توزيع المدخول الشهري', lang)} />
@@ -274,9 +275,9 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
 
       <View style={st.tabRow}>
         {[{ k: 'stats', l: 'الأداء', i: 'stats-chart' }, { k: 'staff', l: 'الموظفون', i: 'people' }, { k: 'reviews', l: 'التقييمات', i: 'star' }].map(t => (
-          <TouchableOpacity key={t.k} onPress={() => setTab(t.k as any)} style={[st.tab, tab === t.k && st.tabActive]}>
+          <TouchableOpacity key={t.k} testID={`sheet-tab-${t.k}`} onPress={() => setTab(t.k as any)} style={[st.tab, tab === t.k && st.tabActive]}>
             <Ionicons name={t.i as any} size={12} color={tab === t.k ? LP.BG : LP.MUTED} />
-            <Text style={[st.tabText, tab === t.k && { color: LP.BG, fontWeight: '900' }]}>{t.l}</Text>
+            <Text style={[st.tabText, tab === t.k && { color: LP.BG, fontWeight: '900' }]}>{tSync(t.l, curLang())}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -285,20 +286,20 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
         <>
           <Section icon="receipt" title={tSync('عدد الطلبات', curLang())} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="today" label={tSync('اليوم', curLang())} value={K(b.orders.today)} color={LP.GOLD} sub="طلب" />
-            <KpiCard icon="calendar" label={tSync('الأمس', curLang())} value={K(b.orders.yesterday)} color={LP.INFO} sub="طلب" />
-            <KpiCard icon="calendar-outline" label={tSync('آخر يومين', curLang())} value={K(b.orders.two_days)} color={LP.MAGENTA} sub="طلب" />
-            <KpiCard icon="calendar-clear" label={tSync('الأسبوع', curLang())} value={K(b.orders.week)} color={LP.WARN} sub="طلب" />
-            <KpiCard icon="stats-chart" label={tSync('الشهر', curLang())} value={K(b.orders.month)} color={LP.SUCCESS} sub="طلب" />
-            <KpiCard icon="trending-up" label={tSync('السنة', curLang())} value={KM(b.orders.year)} color={LP.DANGER} sub="طلب" />
+            <KpiCard icon="today" label={tSync('اليوم', curLang())} value={K(b.orders.today)} color={LP.GOLD} sub={tSync('طلب', curLang())} />
+            <KpiCard icon="calendar" label={tSync('الأمس', curLang())} value={K(b.orders.yesterday)} color={LP.INFO} sub={tSync('طلب', curLang())} />
+            <KpiCard icon="calendar-outline" label={tSync('آخر يومين', curLang())} value={K(b.orders.two_days)} color={LP.MAGENTA} sub={tSync('طلب', curLang())} />
+            <KpiCard icon="calendar-clear" label={tSync('الأسبوع', curLang())} value={K(b.orders.week)} color={LP.WARN} sub={tSync('طلب', curLang())} />
+            <KpiCard icon="stats-chart" label={tSync('الشهر', curLang())} value={K(b.orders.month)} color={LP.SUCCESS} sub={tSync('طلب', curLang())} />
+            <KpiCard icon="trending-up" label={tSync('السنة', curLang())} value={KM(b.orders.year)} color={LP.DANGER} sub={tSync('طلب', curLang())} />
           </View>
 
           <Section icon="cash" title={tSync('المدخولات', curLang())} />
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <KpiCard icon="today" label={tSync('اليوم', curLang())} value={`${KM(b.revenue.today)} ر.س`} color={LP.GOLD} />
-            <KpiCard icon="cart" label={tSync('داخل الفرع', curLang())} value={`${KM(b.revenue.in_store)} ر.س`} color={LP.INFO} />
-            <KpiCard icon="phone-portrait" label={tSync('من التطبيق', curLang())} value={`${KM(b.revenue.app)} ر.س`} color={LP.SUCCESS} />
-            <KpiCard icon="calculator" label={tSync('إجمالي الشهر', curLang())} value={`${KM(b.revenue.total_month)} ر.س`} color={LP.MAGENTA} />
+            <KpiCard icon="today" label={tSync('اليوم', curLang())} value={`${KM(b.revenue.today)} ${tSync('ر.س', curLang())}`} color={LP.GOLD} />
+            <KpiCard icon="cart" label={tSync('داخل الفرع', curLang())} value={`${KM(b.revenue.in_store)} ${tSync('ر.س', curLang())}`} color={LP.INFO} />
+            <KpiCard icon="phone-portrait" label={tSync('من التطبيق', curLang())} value={`${KM(b.revenue.app)} ${tSync('ر.س', curLang())}`} color={LP.SUCCESS} />
+            <KpiCard icon="calculator" label={tSync('إجمالي الشهر', curLang())} value={`${KM(b.revenue.total_month)} ${tSync('ر.س', curLang())}`} color={LP.MAGENTA} />
           </View>
 
           {b.revenue.monthly_target > 0 && (
@@ -325,7 +326,7 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
 
           <Section icon="location" title={tSync('معلومات الفرع', curLang())} />
           <View style={st.infoBox}>
-            <Row label={tSync('عنوان العميل', curLang())} value={b.address || '—'} />
+            <Row label={tSync('عنوان الفرع', curLang())} value={b.address || '—'} />
             <Row label={tSync('الحي', curLang())} value={b.district || '—'} />
             <Row label={tSync('ساعات العمل', curLang())} value={b.open_hours} />
             <Row label={tSync('أيام العمل', curLang())} value={(b.working_days || []).join(', ') || '—'} />
@@ -337,7 +338,7 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
 
       {tab === 'staff' && (
         <>
-          <Section icon="people" title={`طاقم الفرع (${b.staff.length})`} />
+          <Section icon="people" title={tf('طاقم الفرع ({0})', curLang(), [b.staff.length])} />
           {b.staff.length === 0 ? (
             <TX style={{ color: LP.MUTED, textAlign: 'center', padding: 30 }}>لا يوجد موظفون مرتبطون بهذا الفرع</TX>
           ) : (
@@ -358,12 +359,12 @@ export function BranchDetailSheet({ branchId, apiCall, onClose, onOpenEmployee }
           {b.reviews.map((r: any, i: number) => (
             <View key={i} style={[st.reviewCard, { borderLeftColor: (r.rating || 0) >= 4 ? LP.SUCCESS : (r.rating || 0) === 3 ? LP.WARN : LP.DANGER }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ color: LP.TEXT, fontSize: 12, fontWeight: '900' }}>{r.user_name}</Text>
+                <TranslatableName text={r.user_name} style={{ color: LP.TEXT, fontSize: 12, fontWeight: '900' }} />
                 <View style={{ flexDirection: 'row' }}>
                   {[1,2,3,4,5].map(s => <Ionicons key={s} name="star" size={10} color={s <= (r.rating || 0) ? LP.GOLD : LP.BORDER} />)}
                 </View>
               </View>
-              <Text style={st.reviewText}>{r.comment}</Text>
+              <TranslatableName text={r.comment} style={st.reviewText} inline={false} />
             </View>
           ))}
         </>
@@ -398,13 +399,13 @@ export function MarketerDetailSheet({ marketerId, apiCall, onClose }: any) {
   const maxRev = Math.max(1, ...platforms.map((p: any) => p[1].revenue || 0));
 
   return (
-    <SheetShell visible onClose={onClose} title={m.name} subtitle={`رمز: ${m.referral_code}`}
+    <SheetShell visible onClose={onClose} title={m.name} subtitle={tf('رمز: {0}', curLang(), [m.referral_code])}
       avatar={m.avatar} icon="megaphone" accent={LP.WARN}
       exportKind="marketer" exportId={marketerId} apiCall={apiCall}>
       <View style={st.centerRow}>
         <View style={[st.ratingChip, { backgroundColor: PLATFORM_COLORS[m.top_platform] + '25', borderColor: PLATFORM_COLORS[m.top_platform] }]}>
           <Ionicons name={PLATFORM_ICON[m.top_platform] as any} size={12} color={PLATFORM_COLORS[m.top_platform]} />
-          <Text style={{ color: PLATFORM_COLORS[m.top_platform], fontSize: 11, fontWeight: '900' }}>{tSync('الأفضل:', lang)} {PLATFORM_LABEL[m.top_platform]}</Text>
+          <Text style={{ color: PLATFORM_COLORS[m.top_platform], fontSize: 11, fontWeight: '900' }}>{tSync('الأفضل:', lang)} {tSync(PLATFORM_LABEL[m.top_platform] || '', curLang())}</Text>
         </View>
         <View style={st.ratingChip}>
           <Ionicons name="trending-up" size={12} color={LP.SUCCESS} />
@@ -414,10 +415,10 @@ export function MarketerDetailSheet({ marketerId, apiCall, onClose }: any) {
 
       <Section icon="cash" title={tSync('المدخولات', lang)} />
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-        <KpiCard icon="today" label={tSync('اليوم', lang)} value={`${K(m.kpis.today_earnings)} ر.س`} color={LP.GOLD} />
-        <KpiCard icon="calendar" label={tSync('الأسبوع', lang)} value={`${K(m.kpis.week_earnings)} ر.س`} color={LP.INFO} />
-        <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={`${K(m.kpis.month_earnings)} ر.س`} color={LP.SUCCESS} />
-        <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={`${KM(m.kpis.year_earnings)} ر.س`} color={LP.MAGENTA} />
+        <KpiCard icon="today" label={tSync('اليوم', lang)} value={`${K(m.kpis.today_earnings)} ${tSync('ر.س', curLang())}`} color={LP.GOLD} />
+        <KpiCard icon="calendar" label={tSync('الأسبوع', lang)} value={`${K(m.kpis.week_earnings)} ${tSync('ر.س', curLang())}`} color={LP.INFO} />
+        <KpiCard icon="calendar-outline" label={tSync('الشهر', lang)} value={`${K(m.kpis.month_earnings)} ${tSync('ر.س', curLang())}`} color={LP.SUCCESS} />
+        <KpiCard icon="trending-up" label={tSync('السنة', lang)} value={`${KM(m.kpis.year_earnings)} ${tSync('ر.س', curLang())}`} color={LP.MAGENTA} />
       </View>
 
       <Section icon="analytics" title={tSync('أرقام أساسية', lang)} />
@@ -425,22 +426,22 @@ export function MarketerDetailSheet({ marketerId, apiCall, onClose }: any) {
         <KpiCard icon="link" label={tSync('نقرات', lang)} value={KM(m.kpis.clicks)} color={LP.INFO} />
         <KpiCard icon="person" label={tSync('نقرات فريدة', lang)} value={KM(m.kpis.unique_clicks)} color={LP.MAGENTA} />
         <KpiCard icon="checkmark-circle" label={tSync('تحويلات', lang)} value={K(m.kpis.conversions)} color={LP.SUCCESS} />
-        <KpiCard icon="cart" label={tSync('إجمالي المبيعات', lang)} value={`${KM(m.kpis.sales_total)} ر.س`} color={LP.GOLD} />
+        <KpiCard icon="cart" label={tSync('إجمالي المبيعات', lang)} value={`${KM(m.kpis.sales_total)} ${tSync('ر.س', curLang())}`} color={LP.GOLD} />
       </View>
 
       <Section icon="wallet" title={tSync('حالة العمولات', lang)} />
       <View style={st.infoBox}>
-        <Row label={tSync('المكتسبة', lang)} value={`${K(m.kpis.commission_earned)} ر.س`} valueColor={LP.SUCCESS} />
-        <Row label={tSync('قيد التسوية', lang)} value={`${K(m.kpis.commission_pending)} ر.س`} valueColor={LP.WARN} />
-        <Row label={tSync('تم دفعها', lang)} value={`${K(m.kpis.commission_paid)} ر.س`} valueColor={LP.INFO} />
+        <Row label={tSync('المكتسبة', lang)} value={`${K(m.kpis.commission_earned)} ${tSync('ر.س', curLang())}`} valueColor={LP.SUCCESS} />
+        <Row label={tSync('قيد التسوية', lang)} value={`${K(m.kpis.commission_pending)} ${tSync('ر.س', curLang())}`} valueColor={LP.WARN} />
+        <Row label={tSync('تم دفعها', lang)} value={`${K(m.kpis.commission_paid)} ${tSync('ر.س', curLang())}`} valueColor={LP.INFO} />
         <Row label={tSync('نسبة العمولة', lang)} value={`${m.commission_rate}%`} />
       </View>
 
       <Section icon="pie-chart" title={tSync('أفضل قنوات النشر', lang)} />
       {platforms.map(([plat, stats]: any) => (
-        <HBar key={plat} label={`${PLATFORM_LABEL[plat] || plat}`}
+        <HBar key={plat} label={tSync(PLATFORM_LABEL[plat] || plat, curLang())}
           value={stats.revenue || 0} max={maxRev} color={PLATFORM_COLORS[plat] || LP.GOLD}
-          secondary={`${K(stats.clicks || 0)} نقرة · ${K(stats.conversions || 0)} تحويل`} />
+          secondary={tf('{0} نقرة · {1} تحويل', curLang(), [K(stats.clicks || 0), K(stats.conversions || 0)])} />
       ))}
 
       <Section icon="megaphone" title={tSync('أفضل المنشورات', lang)} />
@@ -450,9 +451,9 @@ export function MarketerDetailSheet({ marketerId, apiCall, onClose }: any) {
             <View style={[st.platformIcon, { backgroundColor: PLATFORM_COLORS[p.platform] + '25' }]}>
               <Ionicons name={PLATFORM_ICON[p.platform] as any} size={14} color={PLATFORM_COLORS[p.platform] || LP.GOLD} />
             </View>
-            <Text style={{ color: LP.TEXT, fontSize: 12, fontWeight: '800', flex: 1, textAlign: 'right' }}>{PLATFORM_LABEL[p.platform] || p.platform}</Text>
+            <Text style={{ color: LP.TEXT, fontSize: 12, fontWeight: '800', flex: 1, textAlign: 'right' }}>{tSync(PLATFORM_LABEL[p.platform] || p.platform, curLang())}</Text>
           </View>
-          <Text style={{ color: LP.MUTED, fontSize: 11, marginTop: 6, textAlign: 'right' }} numberOfLines={2}>{p.preview}</Text>
+          <TranslatableName text={p.preview} style={{ color: LP.MUTED, fontSize: 11, marginTop: 6, textAlign: 'right' }} numberOfLines={2} inline={false} />
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
             <Text style={{ color: LP.INFO, fontSize: 11, fontWeight: '800' }}>👁 {KM(p.clicks)} {tSync('نقرة', lang)}</Text>
             <Text style={{ color: LP.SUCCESS, fontSize: 11, fontWeight: '800' }}>💰 {KM(p.revenue)} {tSync('ر.س', lang)}</Text>
@@ -540,9 +541,9 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
 
       <View style={st.tabRow}>
         {[{ k: 'stats', l: 'الأداء', i: 'stats-chart' }, { k: 'attendance', l: 'الحضور', i: 'calendar' }, { k: 'notes', l: 'ملاحظات المشرف', i: 'clipboard' }].map(t => (
-          <TouchableOpacity key={t.k} onPress={() => setTab(t.k as any)} style={[st.tab, tab === t.k && st.tabActive]}>
+          <TouchableOpacity key={t.k} testID={`sheet-tab-${t.k}`} onPress={() => setTab(t.k as any)} style={[st.tab, tab === t.k && st.tabActive]}>
             <Ionicons name={t.i as any} size={12} color={tab === t.k ? LP.BG : LP.MUTED} />
-            <Text style={[st.tabText, tab === t.k && { color: LP.BG, fontWeight: '900' }]}>{t.l}</Text>
+            <Text style={[st.tabText, tab === t.k && { color: LP.BG, fontWeight: '900' }]}>{tSync(t.l, curLang())}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -558,20 +559,20 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
           </View>
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
             <KpiCard icon="cart" label={tSync('طلبات مُنجزة', curLang())} value={K(e.kpis.orders_handled)} color={LP.INFO} />
-            <KpiCard icon="cash" label={tSync('مبيعات إجمالية', curLang())} value={`${KM(e.kpis.invoices_total)} ر.س`} color={LP.GOLD} />
+            <KpiCard icon="cash" label={tSync('مبيعات إجمالية', curLang())} value={`${KM(e.kpis.invoices_total)} ${tSync('ر.س', curLang())}`} color={LP.GOLD} />
             <KpiCard icon="people" label={tSync('عملاء', curLang())} value={K(e.kpis.customers_served)} color={LP.SUCCESS} />
-            <KpiCard icon="stats-chart" label={tSync('متوسط الفاتورة', curLang())} value={`${K(e.kpis.avg_ticket)} ر.س`} color={LP.MAGENTA} />
+            <KpiCard icon="stats-chart" label={tSync('متوسط الفاتورة', curLang())} value={`${K(e.kpis.avg_ticket)} ${tSync('ر.س', curLang())}`} color={LP.MAGENTA} />
           </View>
 
           <Section icon="wallet" title={tSync('الأجر', curLang())} />
           <View style={st.infoBox}>
             <Row label={tSync('النظام', curLang())} value={e.salary_type === 'monthly' ? tSync('راتب شهري', curLang()) : tSync('بالساعة', curLang())} />
             {e.salary_type === 'monthly' ? (
-              <Row label={tSync('الراتب الشهري', curLang())} value={`${K(e.salary_monthly)} ر.س`} valueColor={LP.GOLD} />
+              <Row label={tSync('الراتب الشهري', curLang())} value={`${K(e.salary_monthly)} ${tSync('ر.س', curLang())}`} valueColor={LP.GOLD} />
             ) : (
-              <Row label={tSync('أجر الساعة', curLang())} value={`${K(e.hourly_rate)} ر.س`} valueColor={LP.GOLD} />
+              <Row label={tSync('أجر الساعة', curLang())} value={`${K(e.hourly_rate)} ${tSync('ر.س', curLang())}`} valueColor={LP.GOLD} />
             )}
-            <Row label={tSync('ساعات الدوام يومياً', curLang())} value={`${e.shift_hours} ساعة`} />
+            <Row label={tSync('ساعات الدوام يومياً', curLang())} value={tf('{0} ساعة', curLang(), [e.shift_hours])} />
             <Row label={tSync('الدوام', curLang())} value={`${e.shift_start} - ${e.shift_end}`} />
             <Row label={tSync('تاريخ التوظيف', curLang())} value={e.hire_date || '—'} />
           </View>
@@ -585,7 +586,7 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
                     <View style={[st.dedIcon, { backgroundColor: LP.SUCCESS + '30' }]}>
                       <Ionicons name="add" size={12} color={LP.SUCCESS} />
                     </View>
-                    <Text style={{ color: LP.TEXT, fontSize: 11, flex: 1, textAlign: 'right' }}>{b.reason}</Text>
+                    <TranslatableName text={b.reason} style={{ color: LP.TEXT, fontSize: 11, textAlign: 'right' }} containerStyle={{ flex: 1 }} />
                     <Text style={{ color: LP.SUCCESS, fontSize: 12, fontWeight: '900' }}>+{K(b.amount)}</Text>
                   </View>
                 ))}
@@ -594,7 +595,7 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
                     <View style={[st.dedIcon, { backgroundColor: LP.DANGER + '30' }]}>
                       <Ionicons name="remove" size={12} color={LP.DANGER} />
                     </View>
-                    <Text style={{ color: LP.TEXT, fontSize: 11, flex: 1, textAlign: 'right' }}>{d.reason}</Text>
+                    <TranslatableName text={d.reason} style={{ color: LP.TEXT, fontSize: 11, textAlign: 'right' }} containerStyle={{ flex: 1 }} />
                     <Text style={{ color: LP.DANGER, fontSize: 12, fontWeight: '900' }}>−{K(d.amount)}</Text>
                   </View>
                 ))}
@@ -606,7 +607,7 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
             <>
               <Section icon="business" title={tSync('الفروع', curLang())} />
               {e.branches.map((b: any) => (
-                <EntityPill key={b.id} image={b.image} name={b.name} subtitle={b.city} icon="business"
+                <EntityPill key={b.id} image={b.image} name={b.name} subtitle={tSync(b.city || '', curLang())} icon="business"
                   onPress={() => onOpenBranch && onOpenBranch(b.id)} />
               ))}
             </>
@@ -652,7 +653,7 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
           )}
           {e.supervisor_notes.map((n: any, i: number) => {
             const color = n.type === 'positive' ? LP.SUCCESS : n.type === 'warning' ? LP.DANGER : n.type === 'improvement' ? LP.WARN : LP.INFO;
-            const label = n.type === 'positive' ? '👍 إيجابي' : n.type === 'warning' ? '⚠️ تحذير' : n.type === 'improvement' ? tSync('📈 يحتاج تحسين', curLang()) : tSync('💬 عام', curLang());
+            const label = tSync(n.type === 'positive' ? '👍 إيجابي' : n.type === 'warning' ? '⚠️ تحذير' : n.type === 'improvement' ? '📈 يحتاج تحسين' : '💬 عام', curLang());
             return (
               <View key={i} style={[st.noteCard, { borderLeftColor: color }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -662,10 +663,10 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
                     {[1,2,3,4,5].map(s => <Ionicons key={s} name="star" size={10} color={s <= (n.rating || 0) ? LP.GOLD : LP.BORDER} />)}
                   </View>
                 </View>
-                <Text style={{ color: LP.TEXT, fontSize: 12, marginTop: 6, textAlign: 'right' }}>{n.note}</Text>
+                <TranslatableName text={n.note} style={{ color: LP.TEXT, fontSize: 12, marginTop: 6, textAlign: 'right' }} inline={false} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
                   <Ionicons name="person-circle" size={12} color={LP.MUTED} />
-                  <Text style={{ color: LP.MUTED, fontSize: 10, marginStart: 4 }}>{n.supervisor_name}</Text>
+                  <TranslatableName text={n.supervisor_name} style={{ color: LP.MUTED, fontSize: 10, marginStart: 4 }} />
                   <View style={{ flex: 1 }} />
                   <Text style={{ color: LP.MUTED, fontSize: 10 }}>{(n.created_at || '').slice(0, 10)}</Text>
                 </View>
@@ -693,7 +694,7 @@ export function EmployeeDetailSheet({ employeeId, apiCall, onClose, onOpenBranch
                 ].map((t: any) => (
                   <TouchableOpacity key={t.k} onPress={() => setNoteType(t.k)}
                     style={[st.typeChip, noteType === t.k && { backgroundColor: t.c + '30', borderColor: t.c }]}>
-                    <Text style={{ color: noteType === t.k ? t.c : LP.MUTED, fontSize: 11, fontWeight: '900' }}>{t.l}</Text>
+                    <Text style={{ color: noteType === t.k ? t.c : LP.MUTED, fontSize: 11, fontWeight: '900' }}>{tSync(t.l, curLang())}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -741,7 +742,7 @@ function Row({ label, value, icon, valueColor, onPress }: any) {
   return (
     <Wrap onPress={onPress} activeOpacity={0.7} style={st.row}>
       <Text style={{ color: LP.MUTED, fontSize: 12, flex: 1, textAlign: 'right' }}>{label}</Text>
-      <Text style={{ color: valueColor || LP.TEXT, fontSize: 12, fontWeight: '800', textAlign: 'left', maxWidth: '60%' }} numberOfLines={2}>{value}</Text>
+      <TranslatableName text={String(value ?? '')} style={{ color: valueColor || LP.TEXT, fontSize: 12, fontWeight: '800', textAlign: 'left' }} numberOfLines={2} containerStyle={{ maxWidth: '60%' }} />
       {icon && <Ionicons name={icon} size={14} color={LP.GOLD} style={{ marginStart: 6 }} />}
     </Wrap>
   );

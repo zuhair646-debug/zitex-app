@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polyline, Defs, LinearGradient as SvgGrad, Stop, Polygon, Circle, Rect } from 'react-native-svg';
 import { LP } from './theme';
 import { TX, tSync } from '../../useAutoT';
+import TranslatableName from '../TranslatableName';
 
 const { width: SCREEN } = Dimensions.get('window');
 
@@ -145,8 +146,8 @@ export function EntityPill({ image, name, subtitle, icon, onPress }: any) {
         </View>
       )}
       <View style={{ flex: 1, marginHorizontal: 8 }}>
-        <Text style={{ color: LP.TEXT, fontSize: 12, fontWeight: '800', textAlign: 'right' }} numberOfLines={1}>{name}</Text>
-        {!!subtitle && <Text style={{ color: LP.MUTED, fontSize: 10, textAlign: 'right', marginTop: 2 }} numberOfLines={1}>{subtitle}</Text>}
+        <TranslatableName text={name} style={{ color: LP.TEXT, fontSize: 12, fontWeight: '800', textAlign: 'right' }} numberOfLines={1} iconSize={11} />
+        {!!subtitle && <TranslatableName text={subtitle} style={{ color: LP.MUTED, fontSize: 10, textAlign: 'right', marginTop: 2 }} numberOfLines={1} />}
       </View>
       <Ionicons name="chevron-back" size={16} color={LP.MUTED} />
     </TouchableOpacity>

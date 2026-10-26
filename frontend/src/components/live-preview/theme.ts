@@ -48,7 +48,15 @@ export const PLATFORM_ICON: Record<string, string> = {
 export const K = (v: any) => Number(v || 0).toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US');
 export const KM = (v: any) => {
   const n = Number(v || 0);
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}م`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}ك`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}${curLang() === 'ar' ? 'م' : 'M'}`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}${curLang() === 'ar' ? 'ك' : 'K'}`;
   return K(n);
+};
+
+/** Localized short weekday name. offset 0 = Saturday (Sat-first) ; use base=1 for Monday-first arrays. */
+export const weekdayShort = (i: number, firstDay: 'sat' | 'mon' = 'sat') => {
+  const start = firstDay === 'sat' ? 6 : 8; // 2024-01-06 = Saturday, 2024-01-08 = Monday
+  try {
+    return new Date(Date.UTC(2024, 0, start + i)).toLocaleDateString(curLang(), { weekday: 'short', timeZone: 'UTC' });
+  } catch { return String(i + 1); }
 };

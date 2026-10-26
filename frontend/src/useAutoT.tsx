@@ -159,6 +159,9 @@ export function tf(source: string, lang: Lang, values: unknown[]): string {
 
 export function tSync(source: string, lang: Lang): string {
   if (!source || lang === 'ar') return source;
+  // UI source strings are Arabic — anything without Arabic letters is already translated
+  // (or a number / brand) and must never be sent back to the translator.
+  if (!/[\u0600-\u06FF]/.test(source)) return source;
   const s = staticLookup(source, lang);
   if (s) return s;
   // Keys are stored trimmed — keep the caller's surrounding spaces.

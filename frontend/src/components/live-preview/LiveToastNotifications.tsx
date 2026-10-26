@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LP } from './theme';
 import { TX } from '../../useAutoT';
+import TranslatableName from '../TranslatableName';
 
 const SEVERITY_COLORS: any = {
   info: LP.INFO,
@@ -82,7 +83,7 @@ export default function LiveToastNotifications({ apiCall, insetTop = 0 }: any) {
           <View style={{ flex: 1, marginHorizontal: 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View style={[st.pulseDot, { backgroundColor: color }]} />
-              <Text style={[st.title, { color }]} numberOfLines={1}>{active.title}</Text>
+              <TranslatableName text={active.title} style={[st.title, { color }] as any} numberOfLines={1} />
               <View style={{ flex: 1 }} />
               <TX style={st.newBadge}>جديد</TX>
             </View>

@@ -627,3 +627,9 @@ Instead of manually rewriting the 50+ files that still use `<TX>`, `useAutoT`, o
 
 - GitHub: new GITHUB_TOKEN (backend/.env) set in git remote; v1.19.0 pushed to main (d50e286). Read token with tr -d quotes/CR.
 - iOS + Android v1.19.0 both submitted OK (TestFlight + Play internal).
+
+## Smart translation of merchant names + Live Preview (iterations 39-41, June 2026)
+- Backend translate rules r2: merges duplicated Arabic/English wording, keeps brands in Latin (Xiaomi, Dell, Lenovo...), rejects LLM chatter, and returns text with no Arabic unchanged when source_lang=ar. Cache keys are versioned with _RULES_VERSION.
+- TranslatableName: mixed Arabic+Latin text is always unified. tSync skips text that has no Arabic letters. Translate button is larger.
+- Live preview, product-analytics, DetailSheets, social feed, competitions and heatmap: all dynamic names and texts are translatable; weekdays use locale names; K/M number suffix.
+- Audit script: scripts/audit_product_names.py checked 105 names x 20 languages, 0 real issues. scripts/clean_bad_translations.py removes bad cached translations.

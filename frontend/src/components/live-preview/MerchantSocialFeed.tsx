@@ -5,8 +5,8 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LP, K, KM } from './theme';
 import MediaCarousel from '../MediaCarousel';
-import TranslateButton from '../TranslateButton';
 import { TX, tSync, tf } from '../../useAutoT';
+import TranslatableName from '../TranslatableName';
 import { useT, curLang } from '../../i18n';
 
 const { width } = Dimensions.get('window');
@@ -224,7 +224,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
                 </View>
               </View>
 
-              {!!post.text && <TranslateButton text={post.text} sourceLang="ar" textStyle={s.postText} />}
+              {!!post.text && <TranslatableName text={post.text} style={s.postText} inline={false} />}
 
               {(() => {
                 // Assemble media array: images[] first, then video at end if present
@@ -267,7 +267,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
                 return (
                   <TouchableOpacity key={i} style={[s.pollOption, isSelected && s.pollSelected]} onPress={() => votePoll(postId, i)}>
                     <View style={[s.pollBarFill, { width: `${pct}%`, backgroundColor: isSelected ? '#8833FF40' : '#FFF7DA' }]} />
-                    <Text style={[s.pollOptionText, isSelected && { fontWeight: '800' }]}>{opt.text}</Text>
+                    <TranslatableName text={opt.text} style={[s.pollOptionText, isSelected && { fontWeight: '800' }] as any} />
                     <Text style={[s.pollPct, isSelected && { color: '#F5C518' }]}>{pct}%</Text>
                   </TouchableOpacity>
                 );
@@ -275,15 +275,15 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
               {isPoll && <Text style={s.totalVotesText}>{totalVotes} {tSync('صوت', lang)}</Text>}
 
               <View style={s.postActions}>
-                <TouchableOpacity style={s.actionItem} onPress={() => openInsights(post, 'likers')}>
+                <TouchableOpacity testID={`social-action-likers`} style={s.actionItem} onPress={() => openInsights(post, 'likers')}>
                   <Ionicons name="heart" size={22} color="#EF4444" />
                   <Text style={s.actionCount}>{KM(post.likes || 0)}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={s.actionItem} onPress={() => openInsights(post, 'comments')}>
+                <TouchableOpacity testID={`social-action-comments`} style={s.actionItem} onPress={() => openInsights(post, 'comments')}>
                   <Ionicons name="chatbubble-outline" size={20} color="#52525B" />
                   <Text style={s.actionCount}>{commentCount}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={s.actionItem} onPress={() => openInsights(post, 'sharers')}>
+                <TouchableOpacity testID={`social-action-sharers`} style={s.actionItem} onPress={() => openInsights(post, 'sharers')}>
                   <Ionicons name="share-social-outline" size={20} color="#52525B" />
                   <Text style={s.actionCount}>{KM(post.shares || 0)}</Text>
                 </TouchableOpacity>
@@ -306,7 +306,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
           {storyOpen?.image && <Image source={{ uri: storyOpen.image }} style={s.storyImage} resizeMode="contain" />}
           <View style={s.storyFooter}>
             <Text style={s.storyAuthor}>📖 {storyOpen?.author || 'Store'}</Text>
-            {!!storyOpen?.text && <Text style={s.storyText}>{storyOpen.text}</Text>}
+            {!!storyOpen?.text && <TranslatableName text={storyOpen.text} style={s.storyText} inline={false} />}
             <Text style={s.storyTime}>{timeAgo(storyOpen?.created_at)}</Text>
           </View>
         </View>
@@ -332,9 +332,9 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
                   { k: 'comments', l: 'التعليقات', i: 'chatbubbles', count: (insightsDetail?.comments || insightsPost.comments || []).length },
                   { k: 'sharers', l: 'المشاركات', i: 'share-social', count: (insightsDetail?.sharers || insightsPost.shared_by || []).length },
                 ].map((t: any) => (
-                  <TouchableOpacity key={t.k} onPress={() => setInsightsTab(t.k)} style={[s.insightsTab, insightsTab === t.k && s.insightsTabActive]}>
+                  <TouchableOpacity key={t.k} testID={`social-insights-tab-${t.k}`} onPress={() => setInsightsTab(t.k)} style={[s.insightsTab, insightsTab === t.k && s.insightsTabActive]}>
                     <Ionicons name={t.i as any} size={12} color={insightsTab === t.k ? LP.BG : LP.MUTED} />
-                    <Text style={[s.insightsTabText, insightsTab === t.k && { color: LP.BG, fontWeight: '900' }]}>{t.l}</Text>
+                    <Text style={[s.insightsTabText, insightsTab === t.k && { color: LP.BG, fontWeight: '900' }]}>{tSync(t.l, curLang())}</Text>
                     {t.count != null && t.count > 0 && (
                       <View style={[s.tabBadge, insightsTab === t.k && { backgroundColor: LP.BG + 'AA' }]}>
                         <Text style={[s.tabBadgeText, insightsTab === t.k && { color: LP.GOLD }]}>{t.count}</Text>
@@ -355,7 +355,7 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
                         {(insightsPost.image || insightsPost.images?.[0]) && (
                           <Image source={{ uri: insightsPost.image || insightsPost.images[0] }} style={{ width: '100%', height: 150, borderRadius: 12, marginBottom: 8 }} />
                         )}
-                        {!!insightsPost.text && <Text style={{ color: LP.TEXT, fontSize: 13, textAlign: 'right' }} numberOfLines={3}>{insightsPost.text}</Text>}
+                        {!!insightsPost.text && <TranslatableName text={insightsPost.text} style={{ color: LP.TEXT, fontSize: 13, textAlign: 'right' }} numberOfLines={3} inline={false} />}
                       </View>
                       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
                         <StatMini icon="eye" label={tSync('مشاهدات', lang)} value={KM(insightsDetail?.kpis?.views ?? insightsPost.views ?? 0)} color={LP.INFO} onPress={null} />
@@ -462,7 +462,7 @@ function LikersView({ likers, totalLikes }: any) {
               <Text style={{ color: '#EF4444', fontWeight: '900', fontSize: 14 }}>{(u.user_name || '?')[0]}</Text>}
           </View>
           <View style={{ flex: 1, marginHorizontal: 10 }}>
-            <Text style={s.userName}>{u.user_name || tSync('مستخدم', curLang())}</Text>
+            <TranslatableName text={u.user_name || tSync('مستخدم', curLang())} style={s.userName} />
             <Text style={s.userMeta}>❤️ {timeAgo(u.created_at)}</Text>
           </View>
           <Ionicons name="heart" size={16} color="#EF4444" />
@@ -529,7 +529,7 @@ function SharersView({ sharers, totalShares }: any) {
               <View style={[s.platformIcon2, { backgroundColor: meta.color + '25' }]}>
                 <Ionicons name={meta.icon} size={12} color={meta.color} />
               </View>
-              <Text style={[s.groupTitle, { color: meta.color }]}>{meta.label} ({list.length})</Text>
+              <Text style={[s.groupTitle, { color: meta.color }]}>{tSync(meta.label || '', curLang())} ({list.length})</Text>
             </View>
             {list.map((sh: any, i: number) => (
               <View key={i} style={s.userRow}>
@@ -537,8 +537,8 @@ function SharersView({ sharers, totalShares }: any) {
                   <Text style={{ color: meta.color, fontWeight: '900', fontSize: 14 }}>{(sh.user_name || '?')[0]}</Text>
                 </View>
                 <View style={{ flex: 1, marginHorizontal: 10 }}>
-                  <Text style={s.userName}>{sh.user_name || tSync('مستخدم', curLang())}</Text>
-                  <Text style={s.userMeta}>{tSync('شارك عبر', lang)} {meta.label} · {timeAgo(sh.created_at)}</Text>
+                  <TranslatableName text={sh.user_name || tSync('مستخدم', curLang())} style={s.userName} />
+                  <Text style={s.userMeta}>{tSync('شارك عبر', lang)} {tSync(meta.label || '', lang)} · {timeAgo(sh.created_at)}</Text>
                 </View>
                 <Ionicons name={meta.icon} size={16} color={meta.color} />
               </View>
@@ -574,10 +574,10 @@ function CommentsView({ comments, onReply }: any) {
           </View>
           <View style={{ flex: 1, marginHorizontal: 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ color: LP.GOLD, fontSize: 12, fontWeight: '900' }}>{c.user_name}</Text>
+              <TranslatableName text={c.user_name} style={{ color: LP.GOLD, fontSize: 12, fontWeight: '900' }} />
               <Text style={{ color: LP.MUTED, fontSize: 10 }}>· {timeAgo(c.created_at)}</Text>
             </View>
-            <Text style={{ color: LP.TEXT, fontSize: 12, marginTop: 3, textAlign: 'right' }}>{c.text}</Text>
+            <TranslatableName text={c.text} style={{ color: LP.TEXT, fontSize: 12, marginTop: 3, textAlign: 'right' }} inline={false} />
             {!!c.store_reply && (
               <View style={s.storeReply}>
                 <Ionicons name="checkmark-circle" size={11} color={LP.GOLD} />

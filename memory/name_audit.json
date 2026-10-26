@@ -1,0 +1,166 @@
+{
+ "texts": 105,
+ "checks": 2100,
+ "issues": [
+  {
+   "lang": "en",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "ar",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "ur",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "fa",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "he",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "es",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "fr",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "de",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "it",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "pt",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "ru",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "tr",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "zh",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "ja",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "ko",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "hi",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "bn",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "id",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "ms",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  },
+  {
+   "lang": "th",
+   "src": "MacBook Pro M3 + AirPods Pro",
+   "out": "MacBook Pro M3 + AirPods Pro",
+   "problems": [
+    "dup:pro"
+   ]
+  }
+ ]
+}

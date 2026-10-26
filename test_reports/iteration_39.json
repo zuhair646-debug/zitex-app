@@ -1,0 +1,45 @@
+{
+  "summary": "Translation of the merchant Live Preview (/merchant/live-preview) was tested at 390x844 as merchant 0509999999, plus the r2 dedupe rules in the backend. BACKEND: 10/10 pytest pass. 'آيفون 16 iPhone 16 برو 256 جيجا' -> zh 'iPhone 16 Pro 256GB'. en/ru/hi/fr/ja have no duplicates and no Arabic. Dell/Xiaomi/Lenovo/MacBook stay in Latin in zh and ja (no 小米 or 戴尔). All 20 product name_ar values came back clean in zh/hi/ru. FRONTEND Store tab: in zh, en, ru, hi, fr and ja there is no Arabic left, no duplicate words and no brands in CJK script (24 auto-translated names). The globe/undo toggle works in both directions (zh: 'MacBook Pro 16 M3 Max' <-> 'ماك بوك برو 16 M3 Max'; it also works in ar). Overview drivers/branches/marketers/employees leaderboards are clean in every language once the cache is warm. On a cold ru/ja load, Arabic driver names and 'X اليوم' were still visible about 25s after the page opened, then fixed on a later load. Arabic renders correctly with no page errors. REMAINING ARABIC (all non-ar languages): (1) Maintenance: review author names and review comments are raw <Text>. (2) Competitions: winner/participant names are raw <Text>. (3) Social: post body is shown in Arabic until the user taps the manual 'Translate' button (which works). View counts use the Arabic suffix 'ك', e.g. '12.6ك'. (4) Overview detail sheets have many hardcoded Arabic strings: 'ر.س' in template literals, the 'ك'/'م' compact suffix, '(12 ساعة)', 'توصيلة'/'طلب' KPI sub-labels, PLATFORM_LABEL (تيك توك/إنستقرام/سناب شات/واتساب/إكس), marketer campaign titles, branch address/district, employee note titles ('أفضل موظف الشهر', 'تأخر عن الدوام') and the plate 'أ ب ج 1234'. The driver 7-day chart weekday labels are translated wrongly in zh ('两个三个…收集'). No deprecated Expo packages were found.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Maintenance reviews (ServicesSection)", "issue": "r.user_name and r.comment are raw <Text>, so they stay Arabic in zh/en/ru/hi/fr/ja (e.g. 'منى العتيبي', 'خدمة ممتازة جداً، سرعة وإتقان! 🌟'). Reference: app/merchant/live-preview.tsx:443,458", "testID": "lp-section-services", "priority": "HIGH"},
+      {"component": "Competitions winners/participants", "issue": "w.user_name is raw <Text>, so 15 Arabic names stay (e.g. 'محمد الشمري'). Reference: app/merchant/live-preview.tsx:627,1237 (also 917/919/934/956/1280/1370/1378/1388/1395/1401/1411/1489 user_name/text in other lists)", "testID": "lp-section-competitions", "priority": "HIGH"},
+      {"component": "KM compact number formatter", "issue": "Returns `${x}ك` / `${x}م` for every language. Shows '12.6ك' on social view counts and '377.2ك' in branch/marketer sheets. Reference: src/components/live-preview/theme.ts:49-53", "testID": "n/a", "priority": "HIGH"},
+      {"component": "Social post body", "issue": "Post text uses the manual TranslateButton (works), but it does not auto-translate the way TranslatableName does, so all posts show Arabic by default in non-ar languages. Reference: src/components/live-preview/MerchantSocialFeed.tsx:228", "testID": "lp-section-social", "priority": "MEDIUM"},
+      {"component": "DetailSheets (Driver/Branch/Marketer/Employee)", "issue": "Hardcoded Arabic in template literals: `${K(..)} ر.س` (lines 208-211, 299-302, 418-436, 562-573), `(${d.shift_hours} ساعة)` (138, 575), PLATFORM_LABEL raw (408, 442, 454; theme.ts:31 / MerchantSocialFeed.tsx:477). Raw DB values: b.address (329), campaign titles, employee notes, vehicle_plate (145). KPI sub-labels 'توصيلة'/'طلب' are not translated. Reference: src/components/live-preview/DetailSheets.tsx", "testID": "lp-leader-row-0", "priority": "HIGH"},
+      {"component": "Driver sheet 7-day chart", "issue": "Weekday labels are translated word by word in zh ('周六周日两个三个周三周四收集': اثنين->'two', جمعة->'collect'). Use locale weekday names (Intl/i18n keys) instead of LLM translation.", "testID": "lp-leader-row-0", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Cold first load in a new language (ru/ja Overview)", "issue": "Driver names and tf('{0} اليوم') were still Arabic about 25s after load on a cold cache, and were fine on a later load. This is LLM latency, not a logic bug, but users see Arabic for a long time on first view.", "affected_testIDs": ["lp-section-overview"]}
+    ],
+    "design_issues": [
+      {"screen": "Live preview", "issues": ["The translate toggle chip is 21x18px (41x38 with hitSlop), below the 44pt minimum.", "Seed images do not match the products: 'iPhone 15 Pro' products show a photo of two women holding drinks, and the first social post (iPhone vs Samsung comparison) shows a pizza photo."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_translate_dedupe_r2.py", "/app/test_reports/pytest/pytest_translate_r2.xml"],
+  "action_items": [
+    "Wrap ServicesSection review r.user_name / r.comment (live-preview.tsx:443,458) and competition winner/participant names (627, 1237) with TranslatableName. Check the other raw user_name/text lists too (917-956, 1280, 1370-1411, 1489).",
+    "Make KM() in live-preview/theme.ts locale-aware: use 'K'/'M' (or Intl compact notation) for non-ar languages.",
+    "DetailSheets.tsx: replace the hardcoded 'ر.س' and 'ساعة' in template literals with tSync/tf. Translate PLATFORM_LABEL through tSync. Wrap address, campaign titles, employee notes and KPI sub-labels ('توصيلة'/'طلب') with TranslatableName/tSync.",
+    "Driver chart weekday labels: use i18n/Intl weekday names instead of translating Arabic abbreviations with the LLM.",
+    "Social post body: auto-translate it (TranslatableName or auto mode in TranslateButton) so non-ar viewers do not see Arabic by default.",
+    "Optional: pre-warm the translation cache per language (bulk on screen mount) to cut the 20-25s cold-load delay."
+  ],
+  "critical_code_review_comments": [
+    "needsTranslation() returns true for mixed Arabic+Latin text even when lang='ar'. So Arabic viewers see the Latin-only version (e.g. merchant 'ماك بوك برو 16 M3 Max' shows as 'MacBook Pro 16 M3 Max' with the undo icon). This matches the r2 rules (brands in Latin) but may surprise Arabic merchants. The toggle restores the original.",
+    "In flush(), results identical to the source are not cached (same -> resolve null), so they are queued again on every mount. This is harmless but adds extra bulk requests.",
+    "live-preview.tsx is 2060 lines and DetailSheets.tsx is 786. Both exceed the 700-line guideline."
+  ],
+  "updated_files": [
+    "/app/frontend/app/merchant/live-preview.tsx (added testIDs lp-section-{id}, lp-lb-tab-{k}, lp-leader-row-{rank})",
+    "/app/frontend/src/components/TranslatableName.tsx (added testID translatable-name-toggle)",
+    "/app/backend/tests/test_translate_dedupe_r2.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "60% (Store, Overview lists, filter chips, toggle and Arabic all pass; Maintenance reviews, Competition names, Social and detail sheets still show Arabic)"},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login: fetch POST /api/auth/login {phone,password} -> localStorage 'token'. Set localStorage 'app_lang', then goto /merchant/live-preview. New testIDs: lp-section-products|services|competitions|social|overview, lp-lb-tab-drivers|branches|marketers|employees, lp-leader-row-0, translatable-name-toggle. Arabic leaf-text scan: elements with no children whose text matches /[\\u0600-\\u06FF]/. Headless Chromium draws Arabic glyphs disconnected (letter-spacing is normal). This is a font-environment artifact, not an app bug. Wait 15-25s on a cold language."
+}

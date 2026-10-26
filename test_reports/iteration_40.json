@@ -1,0 +1,45 @@
+{
+  "summary": "Frontend retest at 390x844 as merchant 0509999999, in zh and ru, plus an Arabic sanity check. PASS: (1) Branch sheet KPI sub-label 'طلب' now shows as 订单. (2) Employee bonus/deduction reasons are clean in zh and ru. (4) Driver and branch review names plus social comment authors and comment text auto-translate (a cold load needs about 20s). Product analytics overview and compare tabs are clean in zh and ru, including KPI labels, 'ر.س', 'قطعة', traffic sources and funnel labels. Store tab is clean in zh and the toggle works both ways. Arabic renders with no page errors. FAIL: (5) The branch Address label shows 'Title' in en and '标题' in zh, because the static dictionary in i18n-generated.json translates 'العنوان' as title. (3) The analytics screens still show a lot of raw Arabic in zh and ru: the hero pill on service/competition/post; user names in visitors, buyers, shares, reviews and winners; share platform names; buyer address and payment method; complaint category; competition winner city; video titles; compare table headers for service and competition; and the current-item name in the compare table. Employee notes tab: the note-type labels '👍 إيجابي' and '⚠️ تحذير', and the supervisor name, are raw. Social insights likers and sharers names are raw. Deprecated packages: none checked this round, none reported earlier.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Branch detail sheet > Branch info Row", "issue": "The label tSync('العنوان') comes from STATIC_TRANSLATIONS, where en='Title', zh='标题', bn='শিরোনাম', it='Titolo', ms='Tajuk' (the 'title' meaning). It renders 'Title' and '标题' instead of Address. ru, fr and ja are correct. Reference: src/i18n-generated.json key 'العنوان'; src/components/live-preview/DetailSheets.tsx:329", "testID": "lp-leader-row-1 (branches)", "priority": "HIGH"},
+      {"component": "product-analytics hero pill", "issue": "L.heroPill ('خدمة' / 'مسابقة' / 'منشور') is rendered raw, without tSync, in every non-ar language. Reference: app/merchant/product-analytics.tsx:183", "testID": "-", "priority": "HIGH"},
+      {"component": "product-analytics compare tab headers", "issue": "In the ternaries, only the post/product branches are wrapped in tSync. Service shows 'الخدمة' / 'حجوزات' / 'مكتمل' raw and competition shows 'المسابقة' / 'مشاركون' / 'دخل' raw. The current-row name is a composed string, '{pName(p)} ← هذه ...', so the name part stays Arabic, e.g. 'دعوة صديق واربح 🎁 ← 本次竞赛'. Reference: product-analytics.tsx:647,649,650,655", "testID": "pa-tab-compare", "priority": "HIGH"},
+      {"component": "product-analytics lists", "issue": "Raw Arabic in zh and ru: user_name in visitors (369), abandoned (389), buyers (408), shares (447), reviews (490), questions (509), returns (531), complaints (559) and winners (590). Share platform names sp.platform / r.platform (433, 448): انستقرام / واتساب / تويتر / تيليجرام / سنابشات. Buyer b.address (409), e.g. 'الرياض حي العليا', and for services the service name. b.payment_method (411): 'الدفع عند الاستلام'. Complaint c.category (560): 'تواصل الموظف'. Winner w.city (598): القصيم / أبها / تبوك. Video v.title (633). Competition buyers pill 'مجاني'. Lines kindLabel 49-50 and buyersLabel 54-55 also leave the service/competition branches without tSync, although the header did render translated.", "testID": "pa-tab-visitors|buyers|shares|reviews|complaints|winners|videos", "priority": "HIGH"},
+      {"component": "Employee sheet > Notes tab", "issue": "The note-type label for 'positive' / 'warning' is not wrapped in tSync, so '👍 إيجابي' / '⚠️ تحذير' show raw. n.supervisor_name ('خالد مدير الفرع') is raw <Text>. Reference: DetailSheets.tsx:656, 669", "testID": "sheet-tab-notes", "priority": "MEDIUM"},
+      {"component": "MerchantSocialFeed insights likers/sharers", "issue": "u.user_name and sh.user_name are raw <Text>, so names stay Arabic in zh. Only comment authors use TranslatableName. Reference: src/components/live-preview/MerchantSocialFeed.tsx:465, 540", "testID": "social-insights-tab-likers / social-insights-tab-sharers", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "post-analytics compare tab (zh)", "issues": ["In the compare table, long translated post names with an inline TranslatableName toggle overlap the numeric columns (e.g. '来自胡拜尔分店的直播 15:53' runs into the views/likes cells). The name cell needs flex:2 with overflow hidden / numberOfLines on the container."]},
+      {"screen": "Social insights / analytics avatars", "issues": ["Avatar initials still show the first Arabic letter (ل, م, ب) after the name is translated. Derive the initial from the translated name."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix 'العنوان' in src/i18n-generated.json: en Address, zh 地址, bn ঠিকানা, it Indirizzo, ms Alamat, fa آدرس, ur پتہ. Or use a less ambiguous source string such as 'عنوان الفرع' in DetailSheets.tsx:329",
+    "product-analytics.tsx: wrap L.heroPill in tSync (line 183). Wrap every branch of the ternaries at 49-50, 54-55, 647, 649 and 650 in tSync, not just the last ones.",
+    "product-analytics.tsx: render every user_name, w.city, v.title, c.category and b.address with TranslatableName. Map platform codes and Arabic platform names to translated labels (as in PLATFORM_LABEL in the live preview). Translate b.payment_method and b.status.",
+    "product-analytics.tsx:655: render pName(p) with TranslatableName and put the '← this item' suffix in a separate tSync Text.",
+    "DetailSheets.tsx:656: wrap '👍 إيجابي' and '⚠️ تحذير' in tSync. Line 669: make supervisor_name a TranslatableName.",
+    "MerchantSocialFeed.tsx:465,540: make likers' and sharers' user_name a TranslatableName.",
+    "Fix the compare-table name cell overlapping the number columns in post/product analytics."
+  ],
+  "critical_code_review_comments": [
+    "Recurring pattern: in a ternary chain, only the last branch or two get tSync. Wrap the whole expression once: tSync(kind === ... ? 'a' : 'b', lang).",
+    "product-analytics.tsx (781 lines) and live-preview.tsx (2060 lines) are over the 700-line guideline.",
+    "CompetitionDetailSheet in live-preview.tsx:119 looks unreachable: setCompAnalyticsFor is never called with a value, because competitions route to /merchant/competition-analytics instead."
+  ],
+  "updated_files": [
+    "/app/frontend/app/merchant/product-analytics.tsx (testID pa-tab-{code} on tabs)",
+    "/app/frontend/src/components/live-preview/DetailSheets.tsx (testID sheet-tab-{k} on sheet tabs)",
+    "/app/frontend/src/components/live-preview/MerchantSocialFeed.tsx (testID social-action-likers|comments|sharers, social-insights-tab-{k})"
+  ],
+  "success_rate": {"backend": "N/A", "frontend": "~55% (items 1, 2, 4 partly, no-regression: pass; items 3, 5: fail)"},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login: in the page, fetch POST /api/auth/login {phone:'0509999999',password:'merchant2025'} and store localStorage token + app_lang. Analytics URLs: /merchant/product-analytics?id=6ab6de22e0ac8916314aa31a, /merchant/service-analytics?id=6ab6206a71b6ad54069c12cc, /merchant/competition-analytics?id=6ab6206a71b6ad54069c12bc, /merchant/post-analytics?id=6ab70fe81e012b45f42795ed. IMPORTANT: on the analytics page the tab row can sit under the bottom tab bar. A force=True click then lands on the Home/More tab, which navigates away. Call el.scrollIntoView({block:'center'}) and click without force. Sheet tabs: sheet-tab-{stats|reviews|staff|attendance|notes|earnings}. Open sheets with lp-section-overview, then lp-lb-tab-{drivers|branches|employees}, then lp-leader-row-1. Social: lp-section-social, then social-action-comments, then social-insights-tab-{comments|likers|sharers}. TranslatableName auto-translation via /api/translate/bulk needs about 20s on a cold cache. Scan for Arabic in leaf elements and ignore 1-character avatar initials."
+}

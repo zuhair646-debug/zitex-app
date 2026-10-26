@@ -17,6 +17,10 @@ import CompetitionDetailSheet from '../../src/components/live-preview/Competitio
 import LiveToastNotifications from '../../src/components/live-preview/LiveToastNotifications';
 import { useT, curLang } from '../../src/i18n';
 import { TX, tSync, tf } from '../../src/useAutoT';
+import TranslatableName from '../../src/components/TranslatableName';
+
+/** Product name in the viewer's language (merchant-entered field), auto-unified by TranslatableName. */
+const pName = (p: any, lang: string) => (lang === 'ar' ? (p?.name_ar || p?.name) : (p?.name_en || p?.name || p?.name_ar)) || '';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -80,7 +84,7 @@ export default function LivePreview() {
             { id: 'social', name: t('merchant.social','السوشيال ميديا'), icon: 'chatbubbles' },
             { id: 'overview', name: t('merchant.overview','العام'), icon: 'grid' },
           ].map(t2 => (
-            <TouchableOpacity key={t2.id} onPress={() => { setSection(t2.id as Section); setCompareMode(false); setSelectedIds([]); }}
+            <TouchableOpacity key={t2.id} testID={`lp-section-${t2.id}`} onPress={() => { setSection(t2.id as Section); setCompareMode(false); setSelectedIds([]); }}
               style={[s.sectionBtn, section === t2.id && s.sectionBtnActive]}>
               <Ionicons name={t2.icon as any} size={18} color={section === t2.id ? BG : GOLD} />
               <Text style={[s.sectionText, section === t2.id && { color: BG }]}>{t2.name}</Text>
@@ -211,7 +215,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
               <TouchableOpacity key={t.product_id} onPress={() => onAnalytics({ id: t.product_id, name_ar: t.name, images: t.image ? [t.image] : [] })} style={s.topCard}>
                 <View style={s.topRank}><Text style={s.topRankText}>{idx + 1}</Text></View>
                 {!!t.image && <Image source={{ uri: mediaUrlSync(t.image) }} style={s.topImg} contentFit="cover" />}
-                <TX style={s.topName} numberOfLines={1}>{t.name || ''}</TX>
+                <TranslatableName text={t.name || ''} style={s.topName} numberOfLines={1} iconSize={11} />
                 <Text style={s.topRev}>{Math.round(t.revenue).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                 <View style={s.topSplit}>
                   <Text style={s.topSplitPos}>POS {t.pos_orders}</Text>
@@ -251,7 +255,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                       style={{ marginRight: 10, width: 130, backgroundColor: CARD, borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: BORDER }}>
                       {!!f.images?.[0] && <Image source={{ uri: mediaUrlSync(f.images[0]) }} style={{ width: 130, height: 100 }} contentFit="cover" />}
                       <View style={{ padding: 6 }}>
-                        <Text numberOfLines={1} style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800', textAlign: 'right' }}>{lang === 'ar' ? f.name_ar : (f.name_en || f.name_ar)}</Text>
+                        <TranslatableName text={pName(f, lang)} numberOfLines={1} iconSize={11} style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800', textAlign: 'right', flexShrink: 1 }} />
                         <Text style={{ color: GOLD, fontSize: 12, fontWeight: '900', marginTop: 2 }}>{f.price} {tSync(" ر.س", lang)}</Text>
                       </View>
                     </TouchableOpacity>
@@ -297,7 +301,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                 </View>
               )}
               <View style={{ padding: 10 }}>
-                <Text style={s.pName} numberOfLines={2}>{lang === 'ar' ? (item.name_ar || item.name) : (item.name_en || item.name || item.name_ar)}</Text>
+                <TranslatableName text={pName(item, lang)} style={s.pName} numberOfLines={2} iconSize={12} />
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
                   <Text style={s.pPrice}>{item.price} {tSync(" ر.س", lang)}</Text>
                   {(item.rating || 0) > 0 && (
@@ -403,9 +407,9 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
               </View>
             </View>
             <View style={{ padding: 12, gap: 4 }}>
-              <Text style={s.svcName2}>{item.title || item.name}</Text>
+              <TranslatableName text={item.title || item.name} style={s.svcName2} />
               {!!(item.description || item.desc) && (
-                <Text style={s.svcDesc2} numberOfLines={2}>{item.description || item.desc}</Text>
+                <TranslatableName text={item.description || item.desc} style={s.svcDesc2} numberOfLines={2} inline={false} />
               )}
               <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
                 <Text style={s.svcPrice2}>{item.base_price || item.price || 0} {tSync(" ر.س", lang)}</Text>
@@ -436,7 +440,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                   {item.reviews.slice(0, 3).map((r: any) => (
                     <View key={r.id} style={s.svcReview}>
                       <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                        <Text style={s.svcReviewName}>{r.user_name || tSync('زائر', lang)}</Text>
+                        <TranslatableName text={r.user_name || tSync('زائر', lang)} style={s.svcReviewName} />
                         <View style={{ flexDirection: 'row' }}>
                           {[1,2,3,4,5].map(n => (
                             <Ionicons key={n} name="star" size={9} color={n <= (r.stars||0) ? GOLD : BORDER} />
@@ -451,7 +455,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
                           </TouchableOpacity>
                         )}
                       </View>
-                      {!!r.comment && <Text style={s.svcReviewText}>{r.comment}</Text>}
+                      {!!r.comment && <TranslatableName text={r.comment} style={s.svcReviewText} inline={false} />}
                       {!!r.merchant_reply && (
                         <View style={s.replyBadge}>
                           <Ionicons name="checkmark-circle" size={11} color={GOLD} />
@@ -577,11 +581,11 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={s.compTitle} numberOfLines={1}>{item.title}</Text>
+                    <TranslatableName text={item.title} style={s.compTitle} numberOfLines={1} containerStyle={{ flexShrink: 1 }} />
                     {isLive && <View style={s.liveTag}><View style={s.livePulse} /><TX style={s.liveTagText}>مباشرة</TX></View>}
                     {isEnded && <View style={[s.liveTag, { backgroundColor: '#3B82F6' }]}><TX style={[s.liveTagText, { color: '#FFF' }]}>انتهت</TX></View>}
                   </View>
-                  <Text style={s.compPrize}>🎁 {item.prize}{item.prize_count > 1 ? tf(' ({0} جوائز)', lang, [item.prize_count]) : ''}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}><Text style={s.compPrize}>🎁 </Text><TranslatableName text={item.prize} style={s.compPrize} /><Text style={s.compPrize}>{item.prize_count > 1 ? tf(' ({0} جوائز)', lang, [item.prize_count]) : ''}</Text></View>
                 </View>
               </View>
 
@@ -620,7 +624,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
                   {item.winners.slice(0, 3).map((w: any, i: number) => (
                     <View key={i} style={s.winnerRow}>
                       <View style={s.winnerRank}><Text style={{ color: BG, fontWeight: '900', fontSize: 11 }}>{i + 1}</Text></View>
-                      <Text style={s.winnerName}>{w.user_name}</Text>
+                      <TranslatableName text={w.user_name} style={s.winnerName} />
                       <Text style={s.winnerPhone}>{(w.user_phone || '').slice(-4).padStart(4, '•')}</Text>
                     </View>
                   ))}
@@ -749,8 +753,8 @@ function SocialSection({ apiCall, onOpenPost }: any) {
             {visibleComments.map((c: any) => (
               <View key={c.id} style={s.comment}>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.commentAuthor}>{c.user_name}</Text>
-                  <Text style={s.commentText}>{c.text}</Text>
+                  <TranslatableName text={c.user_name} style={s.commentAuthor} />
+                  <TranslatableName text={c.text} style={s.commentText} inline={false} />
                   {!!c.store_reply && (
                     <View style={s.replyBadge}>
                       <Ionicons name="checkmark-circle" size={11} color={GOLD} />
@@ -887,7 +891,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
           <View style={s.sheetHandle} />
           <View style={s.sheetHead}>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={GOLD} /></TouchableOpacity>
-            <Text style={s.sheetTitle} numberOfLines={1}>📊 {lang === 'ar' ? data.product.name_ar : (data.product.name_en || data.product.name_ar)}</Text>
+            <TranslatableName text={`📊 ${pName(data.product, lang)}`} style={s.sheetTitle} numberOfLines={1} containerStyle={{ flexShrink: 1 }} />
             <View style={{ width: 24 }} />
           </View>
           <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }}>
@@ -912,7 +916,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
               <View key={i} style={s.visitor}>
                 <View style={s.visitorAvatar}><Text style={{ color: BG, fontWeight: '900' }}>{(v.user_name || tSync('ز', curLang()))[0]}</Text></View>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.visitorName}>{v.user_name}</Text>
+                  <TranslatableName text={v.user_name} style={s.visitorName} />
                   <Text style={s.visitorMeta}>⏱ {v.duration_seconds || 0}{tSync('ث', lang)} • {v.added_to_cart ? `🛒 ${tSync('أضاف للسلة', lang)} ` : ''}{v.reached_checkout ? `✅ ${tSync('وصل الدفع', lang)}` : ''}</Text>
                 </View>
                 <Text style={s.visitorTime}>{(v.created_at || '').slice(5, 10)}</Text>
@@ -927,7 +931,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                   <View key={a.user_id} style={s.abandoned}>
                     <Ionicons name="cart" size={18} color="#EF4444" />
                     <View style={{ flex: 1 }}>
-                      <Text style={s.visitorName}>{a.user_name}</Text>
+                      <TranslatableName text={a.user_name} style={s.visitorName} />
                       <Text style={s.visitorMeta}>{(a.created_at || '').slice(0, 10)}</Text>
                     </View>
                     <TouchableOpacity onPress={() => sendOffer(a.user_id, a.user_name)} style={s.offerBtn}>
@@ -949,7 +953,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                       <Ionicons name={b.source === 'pos' ? 'cart' : 'phone-portrait'} size={14} color={BG} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={s.visitorName}>{b.user_name}</Text>
+                      <TranslatableName text={b.user_name} style={s.visitorName} />
                       <Text style={s.visitorMeta}>{b.channel} · {b.quantity} {tSync('قطعة', lang)} · {(b.created_at || '').slice(0, 10)}{b.branch ? ` · ${b.branch}` : ''}</Text>
                     </View>
                     <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(b.total).toLocaleString()} {tSync(" ر.س", lang)}</Text>
@@ -968,8 +972,8 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                       <Text style={{ color: BG, fontWeight: '900', fontSize: 11 }}>{i + 1}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={s.visitorName}>{tb.name}</Text>
-                      <Text style={s.visitorMeta}>{tb.city} · {tb.units} {tSync('قطعة', lang)} · {tb.orders} {tSync('فاتورة', lang)}</Text>
+                      <TranslatableName text={tb.name} style={s.visitorName} />
+                      <Text style={s.visitorMeta}>{tSync(tb.city || '', lang)} · {tb.units} {tSync('قطعة', lang)} · {tb.orders} {tSync('فاتورة', lang)}</Text>
                     </View>
                     <Text style={{ color: '#F5C518', fontSize: 12, fontWeight: '900' }}>{Number(tb.revenue).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                   </View>
@@ -989,7 +993,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
                     return (
                       <View key={ps.source} style={{ marginBottom: 8 }}>
                         <View style={{ flexDirection: 'row' }}>
-                          <Text style={{ color: '#FFF', fontSize: 11, flex: 1, textAlign: 'right', fontWeight: '700' }}>{labelMap[ps.source] || ps.source}</Text>
+                          <Text style={{ color: '#FFF', fontSize: 11, flex: 1, textAlign: 'right', fontWeight: '700' }}>{tSync(labelMap[ps.source] || ps.source || '', lang)}</Text>
                           <Text style={{ color: '#F5C518', fontSize: 11, fontWeight: '900' }}>{ps.count} ({pct.toFixed(1)}%)</Text>
                         </View>
                         <View style={{ height: 6, backgroundColor: '#2A2D38', borderRadius: 3, marginTop: 3, overflow: 'hidden' }}>
@@ -1025,7 +1029,7 @@ function CompareSheet({ items, onClose }: any) {
             {items.map((it: any) => (
               <View key={it.id} style={s.cmpCard}>
                 {!!it.image && <Image source={{ uri: mediaUrlSync(it.image) }} style={s.cmpImg} contentFit="cover" />}
-                <Text style={s.cmpName} numberOfLines={2}>{lang === 'ar' ? it.name_ar : (it.name_en || it.name_ar)}</Text>
+                <TranslatableName text={pName(it, lang)} style={s.cmpName} numberOfLines={2} iconSize={11} />
                 <Text style={s.cmpPrice}>{it.price} {tSync(" ر.س", lang)}</Text>
                 <View style={s.cmpRow}><TX style={s.cmpLbl}>مشاهدات</TX><Text style={s.cmpVal}>{it.views_count}</Text></View>
                 <View style={s.cmpRow}><TX style={s.cmpLbl}>أضيف للسلة</TX><Text style={s.cmpVal}>{it.cart_count}</Text></View>
@@ -1084,9 +1088,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
             <TX style={s.sheetTitle}>📊 إحصائيات الخدمة</TX>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={22} color="#FFF" /></TouchableOpacity>
           </View>
-          <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right', marginBottom: 8 }}>
-            {service.title || service.name}
-          </Text>
+          <TranslatableName text={service.title || service.name} style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right' }} containerStyle={{ marginBottom: 8 }} />
           {loading ? <ActivityIndicator color={GOLD} style={{ marginTop: 30 }} /> : !data ? (
             <TX style={s.empty}>لا تتوفر بيانات</TX>
           ) : (
@@ -1115,7 +1117,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
                         <Ionicons name="construct" size={16} color={GOLD} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800', textAlign: 'right' }}>{t.name}</Text>
+                        <TranslatableName text={t.name} style={{ color: '#FFF', fontSize: 12, fontWeight: '800', textAlign: 'right' }} />
                         <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
                           <Text style={{ color: '#A1A1AA', fontSize: 10 }}>✅ {t.completed}/{t.count} {tSync('حجز', lang)}</Text>
                           {t.avg_duration_hours > 0 && <Text style={{ color: '#A1A1AA', fontSize: 10 }}>⏱ {t.avg_duration_hours}{tSync('س', lang)}</Text>}
@@ -1160,7 +1162,7 @@ function ServiceAnalyticsSheet({ service, onClose, apiCall }: any) {
                   <TX style={s.sheetSectionTitle}>💬 آخر التقييمات</TX>
                   {data.recent_reviews.map((r: any) => (
                     <View key={r.id} style={s.listRow}>
-                      <Text style={s.listRowText}>{r.user_name}: {r.comment}</Text>
+                      <TranslatableName text={`${r.user_name}: ${r.comment}`} style={s.listRowText} inline={false} />
                       <Text style={s.listRowMeta}>{r.stars}★</Text>
                     </View>
                   ))}
@@ -1196,9 +1198,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
             <TX style={s.sheetTitle}>🏆 إحصائيات المسابقة</TX>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={22} color="#FFF" /></TouchableOpacity>
           </View>
-          <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right', marginBottom: 8 }}>
-            {competition.title}
-          </Text>
+          <TranslatableName text={competition.title} style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right' }} containerStyle={{ marginBottom: 8 }} />
           {loading ? <ActivityIndicator color={GOLD} style={{ marginTop: 30 }} /> : !data ? (
             <TX style={s.empty}>لا تتوفر بيانات</TX>
           ) : (
@@ -1234,7 +1234,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
                         <Text style={{ color: BG, fontWeight: '900' }}>{i + 1}</Text>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800', textAlign: 'right' }}>{w.user_name}</Text>
+                        <TranslatableName text={w.user_name} style={{ color: '#FFF', fontSize: 12, fontWeight: '800', textAlign: 'right' }} />
                         <Text style={{ color: '#A1A1AA', fontSize: 10, textAlign: 'right' }}>{(w.user_phone || '').slice(-4).padStart(4, '•')} · {(w.picked_at || '').slice(0, 10)}</Text>
                       </View>
                     </View>
@@ -1264,7 +1264,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
                     const pct = max > 0 ? (row.count * 100) / max : 0;
                     return (
                       <View key={row.city} style={s.barRow}>
-                        <Text style={s.barLabel}>{row.city}</Text>
+                        <Text style={s.barLabel}>{tSync(row.city || '', lang)}</Text>
                         <View style={s.barTrack}><View style={[s.barFill, { width: `${pct}%` }]} /></View>
                         <Text style={s.barValue}>{row.count}</Text>
                       </View>
@@ -1277,7 +1277,7 @@ function CompetitionAnalyticsSheet({ competition, onClose, apiCall }: any) {
                   <TX style={s.sheetSectionTitle}>👥 آخر المشاركين</TX>
                   {data.recent_participants.map((p: any, i: number) => (
                     <View key={i} style={s.listRow}>
-                      <Text style={s.listRowText}>{p.user_name} · {p.user_city}</Text>
+                      <TranslatableName text={p.user_name} style={s.listRowText} /><Text style={s.listRowText}>{tSync(p.user_city || '—', lang)}</Text>
                       <Text style={s.listRowMeta}>{p.source}</Text>
                     </View>
                   ))}
@@ -1367,7 +1367,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
                 {tab === 'comments' && data.comments.map((c: any) => (
                   <View key={c.id} style={s.sheetCard}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ color: GOLD, fontSize: 12, fontWeight: '800' }}>{c.user_name} · {c.user_city || ''}</Text>
+                      <TranslatableName text={c.user_name} style={{ color: GOLD, fontSize: 12, fontWeight: '800' }} />
                       {!c.store_reply && (
                         <TouchableOpacity onPress={() => { setReplyTo({ commentId: c.id, commentText: c.text }); setReplyText(''); }} style={s.replyBtn}>
                           <Ionicons name="arrow-undo" size={11} color={BG} />
@@ -1375,7 +1375,7 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
                         </TouchableOpacity>
                       )}
                     </View>
-                    <Text style={{ color: '#E5E7EB', fontSize: 12, textAlign: 'right', marginTop: 4 }}>{c.text}</Text>
+                    <TranslatableName text={c.text} style={{ color: '#E5E7EB', fontSize: 12, textAlign: 'right', marginTop: 4 }} inline={false} />
                     {!!c.store_reply && (
                       <View style={s.replyBadge}>
                         <Ionicons name="checkmark-circle" size={11} color={GOLD} />
@@ -1385,30 +1385,30 @@ function PostDetailSheet({ post, onClose, apiCall }: any) {
                     {(c.replies || []).map((r: any) => (
                       <View key={r.id} style={[s.replyBadge, { marginTop: 4, backgroundColor: r.is_store ? 'rgba(16,185,129,0.15)' : BG }]}>
                         <Ionicons name={r.is_store ? 'storefront' : 'person'} size={11} color={r.is_store ? '#10B981' : GOLD} />
-                        <Text style={s.replyBadgeText}>{r.user_name}: {r.text}</Text>
+                        <TranslatableName text={`${r.user_name}: ${r.text}`} style={s.replyBadgeText} inline={false} />
                       </View>
                     ))}
                   </View>
                 ))}
                 {tab === 'viewers' && data.viewers.map((v: any, i: number) => (
                   <View key={i} style={s.listRow}>
-                    <Text style={s.listRowText}>{v.user_name} · {v.user_city || '—'}</Text>
+                    <TranslatableName text={v.user_name} style={s.listRowText} /><Text style={s.listRowText}>{tSync(v.user_city || '—', lang)}</Text>
                     <Text style={s.listRowMeta}>{(v.viewed_at || '').slice(0, 10)}</Text>
                   </View>
                 ))}
                 {tab === 'likers' && data.likers.map((v: any, i: number) => (
                   <View key={i} style={s.listRow}>
-                    <Text style={s.listRowText}>{v.user_name} · {v.user_city || '—'}</Text>
+                    <TranslatableName text={v.user_name} style={s.listRowText} /><Text style={s.listRowText}>{tSync(v.user_city || '—', lang)}</Text>
                     <Text style={s.listRowMeta}>{(v.liked_at || '').slice(0, 10)}</Text>
                   </View>
                 ))}
                 {tab === 'poll' && data.poll?.options?.map((opt: any, i: number) => (
                   <View key={i} style={s.sheetCard}>
-                    <Text style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right' }}>{opt.text}</Text>
+                    <TranslatableName text={opt.text} style={{ color: GOLD, fontSize: 13, fontWeight: '800', textAlign: 'right' }} />
                     <Text style={{ color: '#E5E7EB', fontSize: 12, marginTop: 2, textAlign: 'right' }}>{opt.votes || 0} {tSync('صوت', lang)}</Text>
                     {(opt.voter_list || []).slice(0, 12).map((vt: any, k: number) => (
                       <View key={k} style={s.listRow}>
-                        <Text style={s.listRowText}>{vt.user_name} · {vt.user_city || '—'}</Text>
+                        <TranslatableName text={vt.user_name} style={s.listRowText} /><Text style={s.listRowText}>{tSync(vt.user_city || '—', lang)}</Text>
                         <Text style={s.listRowMeta}>{(vt.voted_at || '').slice(0, 10)}</Text>
                       </View>
                     ))}
@@ -1486,7 +1486,7 @@ function SharersView({ postId, apiCall }: any) {
           <View key={i} style={s.listRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
               <Ionicons name={meta.icon} size={14} color={meta.color} />
-              <Text style={s.listRowText}>{sh.user_name} · {sh.user_city || '—'}</Text>
+              <TranslatableName text={sh.user_name} style={s.listRowText} /><Text style={s.listRowText}>{tSync(sh.user_city || '—', lang)}</Text>
             </View>
             <Text style={s.listRowMeta}>{(sh.shared_at || '').slice(0, 10)}</Text>
           </View>
@@ -1508,7 +1508,7 @@ function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondary
   const s = useSStyles();
   const medal = MEDAL_COLORS[rank];
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={s.luxeRow}>
+    <TouchableOpacity onPress={onPress} testID={`lp-leader-row-${rank}`} activeOpacity={0.75} style={s.luxeRow}>
       {/* Avatar + medal */}
       {avatar ? (
         <View style={{ position: 'relative' }}>
@@ -1524,10 +1524,10 @@ function LeaderRow({ rank, name, subtitle, primaryValue, primaryLabel, secondary
       {/* Info */}
       <View style={{ flex: 1, marginHorizontal: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Text style={s.luxeRowName} numberOfLines={1}>{name}</Text>
+          <TranslatableName text={name} style={s.luxeRowName} numberOfLines={1} containerStyle={{ flexShrink: 1 }} />
           {isOnline && <View style={s.onlineDot} />}
         </View>
-        <Text style={s.luxeRowSub} numberOfLines={1}>{subtitle}</Text>
+        <TranslatableName text={subtitle} style={s.luxeRowSub} numberOfLines={1} />
         <View style={s.progressBg}>
           <LinearGradient
             colors={[GOLD, '#D4A017']}
@@ -1559,11 +1559,11 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
     rows.push({ icon: 'car', label: 'المركبة', value: entity.vehicle || '—' });
     rows.push({ icon: 'radio-button-on', label: 'الحالة', value: entity.online ? tSync('🟢 متصل الآن', curLang()) : tSync('⚪ غير متصل', curLang()), color: entity.online ? '#34D399' : MUTED });
     rows.push({ icon: 'star', label: 'التقييم', value: `⭐ ${(entity.rating || 0).toFixed(1)}` });
-    rows.push({ icon: 'briefcase', label: 'نظام الدفع', value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ${tSync(" ر.س", lang)}` : entity.salary_type === 'hourly' ? `أجر بالساعة: ${K(entity.hourly_rate)} ${tSync(" ر.س", lang)}` : 'عمولة على التوصيلات' });
+    rows.push({ icon: 'briefcase', label: 'نظام الدفع', value: entity.salary_type === 'monthly' ? tf('راتب شهري: {0} ر.س', lang, [K(entity.salary_monthly)]) : entity.salary_type === 'hourly' ? tf('أجر بالساعة: {0} ر.س', lang, [K(entity.hourly_rate)]) : tSync('عمولة على التوصيلات', lang) });
     rows.push({ icon: 'today', label: 'اليوم', value: tf('{0} توصيلة', lang, [K(entity.today_deliveries)]), color: GOLD });
-    rows.push({ icon: 'calendar', label: 'هذا الأسبوع', value: `${K(entity.week_deliveries)} توصيلة · ${K(entity.week_earnings)} ${tSync(" ر.س", lang)}` });
-    rows.push({ icon: 'calendar-outline', label: 'هذا الشهر', value: `${K(entity.month_deliveries)} توصيلة · ${K(entity.month_earnings)} ${tSync(" ر.س", lang)}` });
-    rows.push({ icon: 'trending-up', label: 'هذه السنة', value: `${K(entity.year_deliveries)} توصيلة · ${K(entity.year_earnings)} ${tSync(" ر.س", lang)}` });
+    rows.push({ icon: 'calendar', label: 'هذا الأسبوع', value: tf('{0} توصيلة · {1} ر.س', lang, [K(entity.week_deliveries), K(entity.week_earnings)]) });
+    rows.push({ icon: 'calendar-outline', label: 'هذا الشهر', value: tf('{0} توصيلة · {1} ر.س', lang, [K(entity.month_deliveries), K(entity.month_earnings)]) });
+    rows.push({ icon: 'trending-up', label: 'هذه السنة', value: tf('{0} توصيلة · {1} ر.س', lang, [K(entity.year_deliveries), K(entity.year_earnings)]) });
     rows.push({ icon: 'wallet', label: 'رصيد المحفظة', value: `${K(entity.wallet_balance)} ${tSync(" ر.س", lang)}`, color: '#34D399' });
     rows.push({ icon: 'call', label: 'الجوال', value: entity.phone });
   }
@@ -1602,7 +1602,7 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
     rows.push({ icon: 'hourglass', label: 'ساعات العمل يومياً', value: tf('{0} ساعة', lang, [entity.shift_hours]) });
     rows.push({ icon: 'calendar', label: 'تاريخ التوظيف', value: entity.hire_date || '—' });
     rows.push({ icon: 'wallet', label: 'نظام الأجر',
-      value: entity.salary_type === 'monthly' ? `راتب شهري: ${K(entity.salary_monthly)} ${tSync(" ر.س", lang)}` : `أجر بالساعة: ${K(entity.hourly_rate)} ${tSync(" ر.س", lang)}`,
+      value: entity.salary_type === 'monthly' ? tf('راتب شهري: {0} ر.س', lang, [K(entity.salary_monthly)]) : tf('أجر بالساعة: {0} ر.س', lang, [K(entity.hourly_rate)]),
       color: GOLD });
     rows.push({ icon: 'receipt', label: 'إجمالي الفواتير', value: `${K(entity.invoices_total)} ${tSync(" ر.س", lang)}`, color: '#34D399' });
     rows.push({ icon: 'cart', label: 'الطلبات المُنجزة', value: tf('{0} طلب', lang, [K(entity.orders_handled)]) });
@@ -1615,7 +1615,7 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
         <View style={[s.sheet, { maxHeight: '86%' }]}>
           <View style={s.sheetHead}>
             <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={GOLD} /></TouchableOpacity>
-            <Text style={s.sheetTitle}>{entity.name}</Text>
+            <TranslatableName text={entity.name} style={s.sheetTitle} />
           </View>
           {/* Hero */}
           <View style={{ alignItems: 'center', paddingVertical: 12 }}>
@@ -1634,7 +1634,7 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
                   <Ionicons name={r.icon as any} size={16} color={r.color || GOLD} />
                 </View>
                 <Text style={s.detailLabel}>{tSync(r.label || '', curLang())}</Text>
-                <Text style={[s.detailValue, r.color ? { color: r.color } : null]}>{r.value}</Text>
+                <TranslatableName text={String(r.value ?? '')} style={[s.detailValue, r.color ? { color: r.color } : null] as any} containerStyle={{ flexShrink: 1 }} />
               </View>
             ))}
           </ScrollView>
@@ -1728,7 +1728,7 @@ function OverviewSection({ apiCall }: any) {
           { k: 'marketers', label: 'المسوّقون', icon: 'megaphone' },
           { k: 'employees', label: 'الموظفون', icon: 'people' },
         ].map(t => (
-          <TouchableOpacity key={t.k} onPress={() => setTab(t.k as any)}
+          <TouchableOpacity key={t.k} testID={`lp-lb-tab-${t.k}`} onPress={() => setTab(t.k as any)}
             style={[s.luxeTab, tab === t.k && s.luxeTabActive]}>
             <Ionicons name={t.icon as any} size={16} color={tab === t.k ? BG : GOLD} />
             <Text style={[s.luxeTabText, tab === t.k && { color: BG, fontWeight: '900' }]}>{tSync(t.label || '', curLang())}</Text>
@@ -1750,8 +1750,8 @@ function OverviewSection({ apiCall }: any) {
                   avatar={d.avatar}
                   subtitle={`${d.vehicle || d.phone}${d.rating ? ` · ⭐ ${d.rating.toFixed(1)}` : ''}`}
                   primaryValue={d.total_deliveries}
-                  primaryLabel="توصيلة"
-                  secondaryValue={`${d.today_deliveries} اليوم`}
+                  primaryLabel={tSync('توصيلة', lang)}
+                  secondaryValue={tf('{0} اليوم', lang, [d.today_deliveries])}
                   progressPct={(d.total_deliveries / maxDrivers) * 100}
                   isOnline={d.online}
                   onPress={() => setDriverId(d.id)}
@@ -1768,10 +1768,10 @@ function OverviewSection({ apiCall }: any) {
                 <LeaderRow key={b.id} rank={i}
                   name={b.name}
                   avatar={b.image}
-                  subtitle={`${b.city} · ${b.employees_count} موظف · ${b.open_hours}`}
+                  subtitle={`${tSync(b.city || '', lang)} · ${tf('{0} موظف', lang, [b.employees_count])} · ${b.open_hours}`}
                   primaryValue={`${((b.pos_revenue + b.app_revenue) / 1000).toFixed(1)}K`}
                   primaryLabel={tSync(' ر.س', lang)}
-                  secondaryValue={`${b.orders_count} طلب`}
+                  secondaryValue={tf('{0} طلب', lang, [b.orders_count])}
                   progressPct={((b.pos_revenue + b.app_revenue) / maxBranches) * 100}
                   isOnline={b.active}
                   onPress={() => setBranchId(b.id)}
@@ -1794,7 +1794,7 @@ function OverviewSection({ apiCall }: any) {
                 <LeaderRow key={m.id} rank={i}
                   name={m.name}
                   avatar={m.avatar}
-                  subtitle={`رمز: ${m.referral_code} · ${m.clicks} نقرة · ${m.conversions} تحويل`}
+                  subtitle={tf('رمز: {0} · {1} نقرة · {2} تحويل', lang, [m.referral_code, m.clicks, m.conversions])}
                   primaryValue={`${(m.commission_earned / 1000).toFixed(1)}K`}
                   primaryLabel={tSync(' ر.س', lang)}
                   progressPct={(m.commission_earned / maxMarketers) * 100}
@@ -1815,7 +1815,7 @@ function OverviewSection({ apiCall }: any) {
                   subtitle={`${e.job_title} · ${e.shift_start}-${e.shift_end}`}
                   primaryValue={`${(e.invoices_total / 1000).toFixed(1)}K`}
                   primaryLabel={tSync(' ر.س', lang)}
-                  secondaryValue={`${e.orders_handled} طلب`}
+                  secondaryValue={tf('{0} طلب', lang, [e.orders_handled])}
                   progressPct={(e.invoices_total / maxEmployees) * 100}
                   onPress={() => setEmployeeId(e.id)}
                 />

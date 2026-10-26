@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useT, curLang } from '../../i18n';
 import { tSync, tf, TX } from '../../useAutoT';
+import TranslatableName from '../TranslatableName';
 import { View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { LP, K, KM } from './theme';
+import { LP, K, KM, weekdayShort } from './theme';
 import { KpiCard, Sparkline, HBar, Section } from './atoms';
 import { ExportButton } from './AlertsAndExport';
 
-const DAY_LABELS = ['اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت', 'أحد'];
 const SOURCE_LABEL: Record<string, string> = {
   link: 'رابط دعوة',
   organic: 'تصفح عادي',
@@ -101,13 +101,13 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   <Ionicons name="trophy" size={16} color={LP.GOLD} />
                   <Text style={st.prizeText} numberOfLines={1}>{comp.prize || tSync('جائزة قيّمة', curLang())}</Text>
                 </View>
-                <Text style={st.heroTitle} numberOfLines={2}>{comp.title}</Text>
+                <TranslatableName text={comp.title} style={st.heroTitle} numberOfLines={2} />
               </View>
             </View>
           ) : (
             <LinearGradient colors={[LP.GOLD + '30', LP.BG]} style={{ padding: 20, alignItems: 'center' }}>
               <Ionicons name="trophy" size={50} color={LP.GOLD} />
-              <Text style={st.heroTitle}>{comp.title}</Text>
+              <TranslatableName text={comp.title} style={st.heroTitle} />
               {!!comp.prize && <Text style={st.prizeText}>🏆 {comp.prize}</Text>}
             </LinearGradient>
           )}
@@ -122,7 +122,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
             ].map((t: any) => (
               <TouchableOpacity key={t.k} onPress={() => setTab(t.k)} style={[st.tab, tab === t.k && st.tabActive]}>
                 <Ionicons name={t.i as any} size={12} color={tab === t.k ? LP.BG : LP.MUTED} />
-                <Text style={[st.tabText, tab === t.k && { color: LP.BG, fontWeight: '900' }]}>{t.l}</Text>
+                <Text style={[st.tabText, tab === t.k && { color: LP.BG, fontWeight: '900' }]}>{tSync(t.l, curLang())}</Text>
                 {t.c != null && t.c > 0 && (
                   <View style={[st.tabBadge, tab === t.k && { backgroundColor: LP.BG + 'AA' }]}>
                     <Text style={[st.tabBadgeText, tab === t.k && { color: LP.GOLD }]}>{t.c}</Text>
@@ -153,7 +153,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   <View style={st.peakChip}>
                     <Ionicons name="calendar" size={12} color={LP.GOLD} />
                     <TX style={st.peakLabel}>ذروة اليوم</TX>
-                    <Text style={st.peakValue}>{tSync(DAY_LABELS[data.peak_day_of_week] || '', curLang()) || '—'}</Text>
+                    <Text style={st.peakValue}>{(data.peak_day_of_week != null ? weekdayShort(data.peak_day_of_week, 'mon') : '') || '—'}</Text>
                   </View>
                 </View>
 
@@ -175,7 +175,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                       const total = data.sources.reduce((a: number, b: any) => a + b.count, 0) || 1;
                       const pct = (row.count / total) * 100;
                       return (
-                        <HBar key={row.source} label={SOURCE_LABEL[row.source] || row.source}
+                        <HBar key={row.source} label={tSync(SOURCE_LABEL[row.source] || row.source || '', curLang())}
                           value={row.count} max={data.sources[0].count}
                           color={SOURCE_COLOR[row.source] || LP.GOLD}
                           secondary={`${pct.toFixed(1)}%`} />
@@ -189,7 +189,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                   <>
                     <Section icon="map" title={tSync('أكثر المدن مشاركة', lang)} />
                     {data.top_cities.map((c: any, i: number) => (
-                      <HBar key={c.city} label={c.city} value={c.count} max={data.top_cities[0].count}
+                      <HBar key={c.city} label={tSync(c.city || '', curLang())} value={c.count} max={data.top_cities[0].count}
                         color={i === 0 ? LP.GOLD : LP.INFO} />
                     ))}
                   </>
@@ -216,10 +216,10 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                       <Text style={{ color: LP.BG, fontWeight: '900', fontSize: 14 }}>{(p.user_name || '?')[0]}</Text>
                     </View>
                     <View style={{ flex: 1, marginHorizontal: 10 }}>
-                      <Text style={st.userName}>{p.user_name || tSync('مستخدم', curLang())}</Text>
+                      <TranslatableName text={p.user_name || tSync('مستخدم', curLang())} style={st.userName} />
                       <Text style={st.userMeta}>
                         {p.user_city ? `${p.user_city} · ` : ''}
-                        {SOURCE_LABEL[p.source] || p.source} · {timeAgo(p.created_at)}
+                        {tSync(SOURCE_LABEL[p.source] || p.source || '', curLang())} · {timeAgo(p.created_at)}
                       </Text>
                     </View>
                     {p.user_phone && (
@@ -252,7 +252,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                           <Text style={{ color: LP.BG, fontWeight: '900', fontSize: 18 }}>{i + 1}</Text>
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={st.winnerName}>{w.user_name}</Text>
+                          <TranslatableName text={w.user_name} style={st.winnerName} />
                           <Text style={st.winnerMeta}>
                             {w.user_city ? `${w.user_city} · ` : ''}
                             {(w.user_phone || '').slice(-4).padStart(4, '•')}
@@ -277,7 +277,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 <Section icon="information-circle" title={tSync('عن المسابقة', lang)} />
                 <View style={st.infoBox}>
                   {comp.description ? (
-                    <Text style={st.descText}>{comp.description}</Text>
+                    <TranslatableName text={comp.description} style={st.descText} inline={false} />
                   ) : (
                     <TX style={[st.descText, { color: LP.MUTED }]}>لا يوجد وصف مضاف</TX>
                   )}
@@ -324,11 +324,11 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 <Section icon="options" title={tSync('نوع المسابقة', lang)} />
                 <View style={st.infoBox}>
                   <Text style={{ color: LP.TEXT, fontSize: 13, textAlign: 'right' }}>
-                    {comp.competition_type === 'story_share' ? '📸 مشاركة قصة' :
+                    {tSync(comp.competition_type === 'story_share' ? '📸 مشاركة قصة' :
                      comp.competition_type === 'referral' ? '🔗 دعوة أصدقاء' :
                      comp.competition_type === 'ugc' ? '🎬 محتوى مستخدم' :
                      comp.competition_type === 'simple' ? '✨ مشاركة بسيطة' :
-                     comp.competition_type || tSync('مسابقة عامة', curLang())}
+                     'مسابقة عامة', curLang())}
                   </Text>
                 </View>
               </>

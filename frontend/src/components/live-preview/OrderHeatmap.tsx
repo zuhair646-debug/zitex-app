@@ -3,9 +3,8 @@ import { useT, curLang } from '../../i18n';
 import { tSync, TX } from '../../useAutoT';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LP, KM } from './theme';
+import { LP, KM, weekdayShort } from './theme';
 
-const DAY_LABELS = ['اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت', 'أحد'];
 const HOUR_LABELS = ['12ص', '3', '6', '9', '12ظ', '3', '6', '9'];
 
 export default function OrderHeatmap({ apiCall }: any) {
@@ -29,7 +28,7 @@ export default function OrderHeatmap({ apiCall }: any) {
   if (loading) return <View style={{ padding: 20 }}><ActivityIndicator color={LP.GOLD} /></View>;
   if (!data) return null;
 
-  const peakDayLabel = tSync(DAY_LABELS[data.peak_day_of_week] || '', curLang()) || '—';
+  const peakDayLabel = (data.peak_day_of_week != null ? weekdayShort(data.peak_day_of_week, 'mon') : '') || '—';
   const peakHour = data.peak_hour;
   const peakHourLabel = `${peakHour === 0 ? 12 : peakHour > 12 ? peakHour - 12 : peakHour}${peakHour < 12 ? tSync(' ص', curLang()) : tSync(' م', curLang())}`;
 
@@ -68,7 +67,7 @@ export default function OrderHeatmap({ apiCall }: any) {
           {data.grid.map((row: any[], dowIdx: number) => (
             <View key={dowIdx} style={s.row}>
               <View style={s.dayLabel}>
-                <Text style={s.dayLabelText}>{tSync(DAY_LABELS[dowIdx], curLang())}</Text>
+                <Text style={s.dayLabelText}>{weekdayShort(dowIdx, 'mon')}</Text>
               </View>
               {row.map((cell: any) => (
                 <View key={cell.hour}

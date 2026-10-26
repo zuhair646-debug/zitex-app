@@ -40,7 +40,7 @@ _MEM_CACHE_MAX = 10000
 
 
 def _hash(text: str) -> str:
-    return hashlib.sha1(text.strip().encode('utf-8')).hexdigest()
+    return hashlib.sha1(f"{_RULES_VERSION}|{text.strip()}".encode('utf-8')).hexdigest()
 
 
 def _put_mem(key: str, value: str):
@@ -60,8 +60,16 @@ _RULES = (
     "Use the standard spelling of Saudi city names in the target language. 'Balance' means money balance. Keep courier/brand names as names (Naqel Express, SMSA, Aramex, SPL, Sony). "
     "The source may MIX Arabic and English words and numbers (e.g. 'آيفون 15 Pro Max أسود 256 جيجا'): rewrite it as ONE "
     "natural phrase fully in the target language — translate every common word (colours, storage, condition, "
-    "descriptions), keep only brand/model names and numbers (e.g. 'iPhone 15 Pro Max Black 256GB')."
+    "descriptions), keep only brand/model names and numbers (e.g. 'iPhone 15 Pro Max Black 256GB'). "
+    "If the merchant wrote the SAME thing twice in two languages (e.g. 'آيفون 16 iPhone 16' or 'ساعة أبل Apple Watch'), "
+    "say it ONCE — never repeat a brand, model or word. Keep every extra detail (capacity, colour, condition, warranty) once. "
+    "NEVER translate or transliterate brand names into another script: always write Xiaomi, Dell, Lenovo, HP, Apple, "
+    "Samsung, Huawei, Sony, Asus, Acer, Oppo, Honor, AirPods, MacBook, iPad, ThinkPad, Galaxy in Latin letters "
+    "(not 小米, 戴尔, 联想, 三星, 苹果, شاومي, ديل, سامسونج). For an Arabic target, write the brand/model in Latin and the rest in Arabic."
 )
+# Bump when the rules change so stale cached translations are regenerated.
+_AR_RX = __import__('re').compile(r'[\u0600-\u06FF]')
+_RULES_VERSION = 'r2'
 
 _SCRIPT_RX = {
     'arab': r'[\u0600-\u06FF]', 'heb': r'[\u0590-\u05FF]', 'cyr': r'[\u0400-\u04FF]', 'cjk': r'[\u4E00-\u9FFF]',
@@ -76,13 +84,19 @@ _ALLOWED = {
 
 _NATIVE = {'ur': 'arab', 'fa': 'arab', 'he': 'heb', 'ru': 'cyr', 'zh': 'cjk', 'ja': 'kana|cjk', 'ko': 'hangul',
            'hi': 'deva', 'bn': 'beng', 'th': 'thai'}
-_BRANDS = ('Zenrex', 'iPhone', 'Samsung', 'Galaxy', 'Huawei', 'Apple', 'POS', 'SAR', 'WhatsApp', 'Tamara', 'Tabby')
+_BRANDS = ('Zenrex', 'iPhone', 'Samsung', 'Galaxy', 'Huawei', 'Apple', 'POS', 'SAR', 'WhatsApp', 'Tamara', 'Tabby',
+           'MacBook', 'iPad', 'AirPods', 'iMac', 'Xiaomi', 'Redmi', 'Dell', 'Lenovo', 'ThinkPad', 'HP', 'Sony',
+           'Asus', 'Acer', 'Oppo', 'Honor', 'Nokia', 'PlayStation', 'Xbox', 'Nintendo', 'Anker', 'JBL', 'Beats')
 
 
 def _clean_ok(target: str, text: str, source: str = '') -> bool:
     """True when the translation only uses scripts valid for the target language and,
     for non-Latin languages, actually contains the target script (unless it's a pure brand/model name)."""
     import re
+    # Reject LLM chatter / meta replies instead of a translation.
+    if re.search(r"(?i)\b(I need to|I'll translate|translate (it|this|TO)|here is the|translation:|Wait\b|I cannot|I can't|please provide)", text) \
+            or re.search(r'ฉันพร้อม|我需要翻译|请提供', text):
+        return False
     allowed = _ALLOWED.get(target, [])
     if any(re.search(rx, text) for name, rx in _SCRIPT_RX.items() if name not in allowed):
         return False
@@ -183,6 +197,9 @@ def build_router(db=None):
         # Same language — no-op
         if req.source_lang and req.source_lang == req.target_lang:
             return {"translated": text, "source": req.source_lang, "target": req.target_lang, "cached": True}
+        # Declared Arabic source but no Arabic letters → already translated / brand / number: return as-is
+        if req.source_lang == 'ar' and not _AR_RX.search(text):
+            return {"translated": text, "source": "ar", "target": req.target_lang, "cached": True}
 
         # 1) cache
         hit = await _cache_get(text, req.target_lang)
@@ -242,7 +259,7 @@ def build_router(db=None):
             if not t:
                 results[raw] = raw
                 continue
-            if req.source_lang and req.source_lang == req.target_lang:
+            if (req.source_lang and req.source_lang == req.target_lang) or (req.source_lang == 'ar' and not _AR_RX.search(t)):
                 results[raw] = t
                 continue
             hit = await _cache_get(t, req.target_lang)

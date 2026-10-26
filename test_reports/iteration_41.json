@@ -1,0 +1,40 @@
+{
+  "summary": "Short frontend retest of the iteration_40 failures at 390x844 as merchant 0509999999, in zh and ru, plus an Arabic sanity check. A DOM scan collected every visible leaf text node containing Arabic, on every pa-tab of all 4 analytics pages (service, competition, post, product), after warming the cache and reloading. PASS: (1) Analytics in zh and ru: no Arabic left in the hero pill, compare headers for all 4 kinds, user names in visitors/buyers/shares/reviews/questions/returns/complaints/winners, platform names, buyer address and payment method, complaint category, status and reply, winner city, video titles, or the competition 'مجاني' pill. The current-item row in the compare table shows the name on its own line and '← 此产品 / ← Этот продукт' on a second line, with no overlap. (2) Employee notes tab: note types (👍 正面, 📈 需要改进) and supervisor name (哈立德 - 分店经理) are translated in zh and ru. (3) Social insights likers and sharers names are translated in zh and ru. (4) The branch sheet shows 分店地址 / Адрес филиала; 'Title' and '标题' are gone. (5) In Arabic, all 4 analytics pages load with 6-8 tabs, compare works, and there are no page errors. FAIL / NEW: (a) On the product shares tab, `→ ${r.shared_to}` is raw, so recipient names stay Arabic in zh and ru (e.g. '通过以下方式分享 → عبدالعزيز المطيري'). (b) Double translation poisons the cache. In the compare tab, SectionTitle runs tSync again on a label that is already translated. The zh string '与类似产品相比' was sent to the LLM as source_lang=ar and came back as LLM chatter. The product compare title in zh now renders 3 lines: 'Compared to similar products / Wait - I need to translate TO Chinese (Simplified), not from Chinese. / 与类似产品相比'. translations_cache holds 6315 entries whose source has no Arabic, plus another garbage entry for th ('เสร็จสมบูรณ์' became an assistant reply). (c) Compare table overlap is still there on non-current rows: long names and the TranslatableName toggle run into the views column (post compare in zh, ru and ar; product 'Apple Watch Series 9 45mm' over '27'). No deprecated packages were checked this round.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/translate (bulk) + translations_cache", "issue": "Strings with no Arabic, i.e. text already in the target language, are still sent to the LLM as source_lang='ar', and the LLM's meta-chatter gets cached. Example: zh '与类似产品相比' became 'Compared to similar products\\n\\nWait - I need to translate TO Chinese...'. Similarly th 'เสร็จสมบูรณ์' became 'ฉันพร้อมที่จะแปล...'. The cache holds 6315 entries whose source has no Arabic."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "product-analytics compare SectionTitle", "issue": "Line 644 passes tSync(...) output to SectionTitle, which runs tSync again at line 706. The already-translated zh text then goes through the LLM, and the garbage result renders as a 3-line title in zh. Reference: app/merchant/product-analytics.tsx:644,706", "testID": "pa-tab-compare", "priority": "HIGH"},
+      {"component": "product-analytics shares list", "issue": "The r.shared_to recipient name is rendered raw inside `→ ${r.shared_to}`, so the names stay Arabic in zh and ru. Reference: app/merchant/product-analytics.tsx:448", "testID": "pa-tab-shares", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "analytics compare tab (all langs)", "issues": ["Non-current rows: the TranslatableName at line 665 has no containerStyle {flex:1/flexShrink:1, overflow:'hidden'}, so long names and the toggle button overlap the views and likes numbers (post compare in zh, ru and ar; product 'Apple Watch Series 9 45mm' over 27; Samsung Galaxy Watch 6 Classic over 66)."]},
+      {"screen": "Social insights / analytics avatars", "issues": ["Avatar initials still use the first Arabic letter when the name is shown translated (carried over from iteration_40)."]},
+      {"screen": "Social insights tabs (ru)", "issues": ["The count badges ('24', '10') overlap the next tab's label and icon on a 390px width."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/tests/pa_scan.py", "/app/tests/lp_scan.py", "/app/tests/shot_zh_post_compare.jpg", "/app/tests/lp_zh_notes.jpg"],
+  "action_items": [
+    "product-analytics.tsx:644 — pass raw Arabic source strings to SectionTitle (drop the inner tSync), or stop SectionTitle from re-translating. Audit other double tSync/TX wrapping.",
+    "src/useAutoT.tsx tSync/translate (and the backend /api/translate): if the source has no Arabic character ([\\u0600-\\u06FF]), return it unchanged and never call the LLM. On the backend, reject or strip LLM outputs containing meta-chatter (e.g. multiline output when the input is a single line).",
+    "Purge the bad translations_cache entries: those whose source_preview has no Arabic, and those whose translated text contains 'I need to translate' / 'ฉันพร้อมที่จะแปล'. Clear the matching AsyncStorage client cache key if it is persisted.",
+    "product-analytics.tsx:448 — render r.shared_to with TranslatableName.",
+    "product-analytics.tsx:665 — add containerStyle={{ flex: 1, flexShrink: 1 }} and overflow hidden on the name cell (wrap it in <View style={{flex:1}}> as was done for the current row)."
+  ],
+  "critical_code_review_comments": [
+    "tSync on dynamic data (b.user_name, b.address, w.city, platform) only warms the cache in the background with no re-render, so a cold first view shows Arabic until a reload. TranslatableName is the better fit for names and addresses."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "90% (all 5 requested retest items pass; 2 new translation bugs + 1 overlap remain)"},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login: fetch POST /api/auth/login {phone:'0509999999', password:'merchant2025'} from the page, then store localStorage token + app_lang. Reusable scripts: /app/tests/pa_scan.py (template with __LANG__ and other placeholders; pa_zh.py and pa_ru.py are the filled versions) and /app/tests/lp_scan.py. Run them via exec inside browser_automation. Scroll tabs into view and click without force. Check the zh product compare SectionTitle for the LLM garbage. Mongo collection: translations_cache (fields: target, source_preview, translated).",
+  "rca_of_issue": "Garbage compare title: SectionTitle(label=tSync(ar,'zh')) applies tSync again to the zh string. That string is not in the static dict, so translate('与类似产品相比','zh') was called with source_lang ar. The LLM answered with meta text, and the result was cached in Mongo (created 2026-10-26 14:51) and is now served. Fix: add a no-Arabic guard and remove the double wrapping, then purge the cache."
+}
