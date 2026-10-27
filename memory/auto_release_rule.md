@@ -90,3 +90,9 @@ Feature category → semver bump:
 - Commit: 6fe00dc. Backend deployed to Hetzner (api.zenrex.ai), bad cached translations cleaned.
 - Poller log: /tmp/eas_release_v1.20.0.log
 - Changes: smart bilingual name translation (dedupe + brands Latin), full Live Preview + analytics i18n
+
+## v1.20.1 release — 2026-10-27
+- iOS build: 6e2627ad-2b04-4593-a269-ce743b1d1a29 (buildNumber 71)
+- Android build: 761f479b-5012-4db1-9552-e39d04517733 (versionCode 76)
+- Change: version label now reads from Constants.expoConfig.version (was hardcoded v1.14.3)
+- NOTE: `eas update` (OTA) cannot run in this container (aarch64; hermesc binary fails). Use full EAS builds.
