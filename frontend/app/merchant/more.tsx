@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
 import { useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
@@ -157,7 +158,7 @@ export default function MerchantMore() {
             <ListItem icon="log-out" title={t('auth.logout')} onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zenrex Store Merchant v1.14.3</Text>
+          <Text style={styles.version}>Zenrex Store Merchant v{Constants.expoConfig?.version}</Text>
         </ScrollView>
       </SafeAreaView>
 

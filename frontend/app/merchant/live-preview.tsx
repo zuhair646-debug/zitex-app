@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator, Alert, Dimensions, FlatList, TextInput, RefreshControl } from 'react-native';
 import { Image } from 'expo-image';
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -61,7 +62,7 @@ export default function LivePreview() {
       {/* Preview banner */}
       <View style={s.previewPill}>
         <View style={s.liveDot} />
-        <TX style={s.previewText}>🔴 وضع البث المباشر — v1.14.3 ✨</TX>
+        <Text style={s.previewText}>🔴 {tSync('وضع البث المباشر', lang)} — v{Constants.expoConfig?.version} ✨</Text>
         <AlertsBell apiCall={apiCall} />
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
