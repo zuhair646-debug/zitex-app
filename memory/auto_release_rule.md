@@ -104,3 +104,7 @@ Feature category → semver bump:
 ## v1.22.0 release — 2026-10-27
 - iOS 26aeff92-2523-4cf5-9841-52c761ad949e (build 73), Android 9a544748-3e39-4269-aeb5-f16a685ff87a (versionCode 78)
 - Rules r4: fully native script (no Latin words except digit codes / <=4-letter acronyms), zh glossary fallback; toggle larger. Audit 2880 checks clean; UI toggle verified in all 20 languages (iteration_43).
+
+## v1.22.1 release — 2026-10-27
+- iOS 1db05d8f-e9f2-4429-9a47-83d21d4b90f3 (build 74), Android 71f40178-2b1a-453c-8322-c717eaf31e84 (versionCode 79)
+- Fix: devices kept stale r3 translations (cache key unchanged). Now GET /api/translate/rules; device wipes its translation cache when rules version changes.
