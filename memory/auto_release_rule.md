@@ -100,3 +100,7 @@ Feature category → semver bump:
 ## v1.21.0 release — 2026-10-27
 - iOS c20bb1b3-71bd-49bd-a138-3c91b7f2ba39 (build 72), Android 17db38ae-9859-492a-9763-17a54024b486 (versionCode 77)
 - Viewer-language translation engine r3: brands in target script, names transliterated, single name field, no dead toast, failed lines not cached; crash fixes; English demo customers; prewarm on product save + prewarm_all_names.py (run on VPS with API=http://127.0.0.1:8100)
+
+## v1.22.0 release — 2026-10-27
+- iOS 26aeff92-2523-4cf5-9841-52c761ad949e (build 73), Android 9a544748-3e39-4269-aeb5-f16a685ff87a (versionCode 78)
+- Rules r4: fully native script (no Latin words except digit codes / <=4-letter acronyms), zh glossary fallback; toggle larger. Audit 2880 checks clean; UI toggle verified in all 20 languages (iteration_43).
