@@ -48,7 +48,7 @@ interface Props {
 }
 
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_BACKEND_URL || '';
-const CACHE_KEY = '@zenrex_dyn_tr_multi_v4';
+const CACHE_KEY = '@zenrex_dyn_tr_multi_v5';
 const memCache: Record<string, string> = {};
 const inflight: Map<string, Promise<string | null>> = new Map();
 let diskLoaded = false;
@@ -57,6 +57,18 @@ async function loadDiskOnce() {
   if (diskLoaded) return;
   diskLoaded = true;
   try {
+    // Server-side translation rules version: when it changes, old device translations are stale → drop them.
+    let rules: string | null = null;
+    try {
+      const r = await fetch(`${BACKEND}/api/translate/rules`);
+      if (r.ok) rules = (await r.json())?.rules || null;
+    } catch { /* offline → keep the cache */ }
+    const stored = await AsyncStorage.getItem(`${CACHE_KEY}:rules`);
+    if (rules && stored !== rules) {
+      await AsyncStorage.multiRemove([CACHE_KEY]);
+      await AsyncStorage.setItem(`${CACHE_KEY}:rules`, rules);
+      return;
+    }
     const raw = await AsyncStorage.getItem(CACHE_KEY);
     if (raw) Object.assign(memCache, JSON.parse(raw));
   } catch { /* ignore */ }

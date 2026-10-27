@@ -368,6 +368,11 @@ def build_router(db=None):
 
         return {"translations": results, "cached": False, "failed": failed}
 
+    @router.get("/translate/rules")
+    async def translate_rules():
+        """Current translation-rules version — devices wipe their local cache when it changes."""
+        return {"rules": _RULES_VERSION}
+
     @router.get("/translate/cache/stats")
     async def cache_stats():
         """Observability for the translation cache."""
