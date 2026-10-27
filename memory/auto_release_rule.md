@@ -96,3 +96,7 @@ Feature category → semver bump:
 - Android build: 761f479b-5012-4db1-9552-e39d04517733 (versionCode 76)
 - Change: version label now reads from Constants.expoConfig.version (was hardcoded v1.14.3)
 - NOTE: `eas update` (OTA) cannot run in this container (aarch64; hermesc binary fails). Use full EAS builds.
+
+## v1.21.0 release — 2026-10-27
+- iOS c20bb1b3-71bd-49bd-a138-3c91b7f2ba39 (build 72), Android 17db38ae-9859-492a-9763-17a54024b486 (versionCode 77)
+- Viewer-language translation engine r3: brands in target script, names transliterated, single name field, no dead toast, failed lines not cached; crash fixes; English demo customers; prewarm on product save + prewarm_all_names.py (run on VPS with API=http://127.0.0.1:8100)
