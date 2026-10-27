@@ -1,0 +1,49 @@
+{
+  "summary": "I checked translation rules r3 on the merchant screens in ar, ur, zh, en and hi. Backend: 7 of 7 pytest checks pass for POST /api/translate/bulk. Arabic gets Arabic script ('ماك بوك برو 16 M3 ماكس', 'آيفون 15 برو', 'جون سميث'). English gets 'Fahad Al-Otaibi'. 'Watch S3 · Xiaomi Watch S3' comes back as one name, and ur, hi and zh come back in their own script. Frontend: on /merchant/products each product shows one name in every language, with no ' · ' joins. The toggle works on products, home and orders: tap shows the original (e.g. 'ساعة أبل Watch Ultra 2' or 'John Smith'), tap again shows the translation. No 'does not change' toast or alert appeared, and the toast code is gone. Customer names on home and orders: 'جون سميث' in ar, 'جان سمتھ' in ur, 'जॉन स्मिथ' in hi, '约翰·史密斯' in zh. In en: 'Fahad Al-Otaibi', 'Rashid Al-Dosari', 'Abdullah Al-Qahtani'. The live-preview Store tab follows the same rules. Both crash fixes work: /merchant/marketer-stats renders without 's is not defined', and the /merchant/branches edit modal opens with no page errors. Urdu static labels on home, products, orders and more are in Urdu, with no Arabic-only letters (ة ي ك ى) found. Remaining problems: 2 product names never translate in ar/ur/hi because of a backend validation bug, the frontend saves failed translations to device storage as if they were final, Urdu dates show in English, and a few Arabic/Latin leftovers remain.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/translate/bulk and /api/translate (_clean_ok in /app/backend/translate.py:108-110)", "issue": "Valid translations are rejected, so 'Lenovo Yoga Slim 7i' and 'AirPods Pro 2 USB-C' always fail for ar/ur/hi (failed=[...]; the prewarm log also shows 'ar failed 2', 'ur failed 5'). Cause 1: the regex [A-Za-z][A-Za-z0-9\\-]* pulls the lone word 'i' out of '7i', and 'i' fails the code check. Cause 2: 'USB-C' is 5 characters, so it fails the 'isupper and len<=4' rule, even though the prompt says USB-C stays. Effects: the LLM answers correctly ('لينوفو يوغا سليم 7i', 'إيربودز برو 2 USB-C') but the result is discarded and never cached. Every products/live-preview load re-runs the retry passes (r + rs) for these names, and that delays the whole bulk response.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/translate/bulk (strict_note, translate.py:291-295)", "issue": "zh: 'MacBook Pro 16 M3 Max' -> '苹果笔记本电脑专业版 16 M3 最大'. 'Max' is translated literally as 最大 because strict_note calls '苹果笔记本电脑 Pro 16 M3 Max' WRONG. That contradicts the owner rule that zh/ja/ko may keep Pro/Max. zh output is also inconsistent: '苹果 iPhone 14（九成新）' and 'iPhone 15 Pro 皮革保护壳' next to '苹果手机 15 Pro'."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "TranslatableName.flush (src/components/TranslatableName.tsx:166-170)", "issue": "When bulk translation fails, the backend returns the source text, and the frontend accepts it as the translation. It saves it in memory and in AsyncStorage '@zenrex_dyn_tr_v5' (confirmed: 'ar::Lenovo Yoga Slim 7i' and 'ar::AirPods Pro 2 USB-C' are stored as unchanged text). The name then shows in Latin in Arabic with NO toggle (hideIcon because translated===original) and is never retried, even after the backend is fixed or the cache fills. Fix: skip texts listed in j.failed, and do not cache a result equal to the source when needsTranslation() is true.", "testID": "translatable-toggle", "priority": "HIGH"},
+      {"component": "Orders date format (app/merchant/orders.tsx:62)", "issue": "localeMap only covers ar/en/fa/hi/zh, so ur (and the other 15 languages) show English dates such as 'Sep 25, 06:13 PM' on /merchant/orders in Urdu.", "testID": "", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Products/live-preview first load while names are not cached", "issue": "On the first load in ar, names stayed in mixed Arabic/Latin for more than 9 s. All names arrive in one bulk response, and that response waits for the retry passes of the 2 names that always fail (backend issue above). Once the backend bug is fixed, the delay should only happen for genuinely uncached names.", "affected_testIDs": ["translatable-toggle", "translatable-name-toggle"]}
+    ],
+    "design_issues": [
+      {"screen": "merchant home recent orders / orders list (ar, ur RTL)", "issues": ["The toggle has 0px gap from the name: text right edge = icon left edge (e.g. textR 137 = iconL 137). TranslatableName applies marginRight:6 when isRTL, but on web the icon renders to the RIGHT of the text, so the margin lands on the wrong side. Use marginStart/marginHorizontal or base it on actual layout direction.", "The visible toggle is 26x24 (hitSlop of 12 brings the tap area to about 50x48, which is acceptable)."]},
+      {"screen": "Urdu leftovers (ur)", "issues": ["/merchant/marketer-stats: the header shows the affiliate name 'نواف المسوّق' as plain Text, Arabic in Urdu (marketer-stats.tsx:53). It should use TranslatableName.", "/merchant/branches: the branch address/city line 'شارع الملك فهد، حي العليا • الرياض' is plain Arabic in Urdu (branches.tsx:146, not translated).", "Currency shows as Latin 'SAR' in Urdu on home, products, orders, live-preview and marketer-stats. The rule asks for the target-language word for non-Latin languages ('ریال' / 'ر.س'). The same happens in hi/zh ('SAR').", "/merchant/more: 'KSA لائلٹی پروگرامز' mixes Latin and Urdu."]},
+      {"screen": "live-preview Store tab, best sellers (ar, ur)", "issues": ["Static labels 'App 12' and 'POS 0' are hardcoded Latin (live-preview.tsx:222-223) and show in ar and ur."]},
+      {"screen": "products / live-preview images", "issues": ["'هواوي Mate 60 Pro' has an empty, broken image in the products list.", "iPhone 15 Pro / 15 Pro Max cards use a stock photo of two people instead of the product."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_translate_r3_viewer_lang.py", "/app/test_reports/pytest/pytest_iter42.xml"],
+  "action_items": [
+    "HIGH: Fix _clean_ok in backend/translate.py. Treat alphanumeric tokens attached to digits as codes (e.g. use the regex \\b[A-Za-z0-9][A-Za-z0-9\\-]*\\b and accept any token containing a digit, such as '7i'). Accept uppercase codes with a hyphen such as 'USB-C'. Then re-run the prewarm for ar/ur/hi so 'Lenovo Yoga Slim 7i' and 'AirPods Pro 2 USB-C' get cached.",
+    "HIGH: In TranslatableName.flush, ignore entries in j.failed and do not save a result equal to the source when needsTranslation() is true. Bump CACHE_KEY (e.g. '@zenrex_dyn_tr_v6') so devices drop the bad unchanged-text entries already saved.",
+    "MEDIUM: orders.tsx dateFmt: add ur ('ur-PK') and the other 15 languages to localeMap, or map them generically.",
+    "MEDIUM: marketer-stats.tsx:53: render a.name with TranslatableName. branches.tsx:146: translate address and city (TranslatableName / tSync for the city).",
+    "LOW: Localize the currency label 'SAR' for non-Latin languages (ur/hi/zh/...). Localize 'App'/'POS' in the live-preview best sellers and 'KSA' in more.",
+    "LOW: Remove 最大 for 'Max' in zh by aligning strict_note with the CJK exemption.",
+    "LOW: TranslatableName RTL gap: use marginStart instead of isRTL ? marginRight : marginLeft."
+  ],
+  "critical_code_review_comments": [
+    "TranslatableName.tsx header comment (lines 10-13) still describes the removed 'لا تغيير' toast. Update it to avoid confusion.",
+    "translate.py: _AR_RX is built with __import__('re') and 're' is imported inside functions. Import re once at module top.",
+    "Bulk endpoint: with no remaining items it returns 'cached': True, otherwise False even when only 2 of 40 were uncached. Fine, but the frontend never uses 'failed' (see the HIGH item)."
+  ],
+  "updated_files": ["/app/frontend/src/components/Translatable.tsx (added testID=\"translatable-toggle\" to the toggle button)"],
+  "success_rate": {"backend": "100% (7/7 pytest); bulk validation bug found in a separate live check (2/40 names fail in ar/ur/hi)", "frontend": "~88% (core flows pass; 2 HIGH, 2 MEDIUM and several LOW leftovers)"},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login: POST /api/auth/login {phone:'0509999999',password:'merchant2025'}. Put token and user in localStorage keys 'token' and 'user', and the language in 'app_lang'. The frontend .env only has EXPO_PUBLIC_BACKEND_URL (no EXPO_BACKEND_URL), so export EXPO_BACKEND_URL=https://mobile-builder-146.preview.emergentagent.com before running the pytest file. Toggle testIDs: 'translatable-name-toggle' (TranslatableName) and 'translatable-toggle' (Translatable, products list). /tmp/chk_ar.py <lang> lists merchant product names and their bulk translations. Urdu check: look for Arabic-only letters [ة ي ك ى].",
+  "rca_of_issue": "'Lenovo Yoga Slim 7i' and 'AirPods Pro 2 USB-C' never translate because _clean_ok (translate.py:108) splits '7i' and rejects the lone 'i', and rejects 'USB-C' as too long for a code. Every attempt fails, nothing is cached, and the bulk endpoint returns the source text. TranslatableName.flush then saves that unchanged text to device storage, so the names stay Latin for good and have no toggle. Reproduce: POST /api/translate/bulk {texts:['AirPods Pro 2 USB-C'],target_lang:'ar'} returns failed:['AirPods Pro 2 USB-C']; POST /api/translate gives 'إيربودز برو 2 USB-C' with cached:false every time."
+}

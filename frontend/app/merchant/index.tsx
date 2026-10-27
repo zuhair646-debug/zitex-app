@@ -8,6 +8,7 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, gradients } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { useT } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 import {
   StatCard, ActionCard, SectionHeader, PrimaryButton, EmptyState, SkeletonBox, Badge,
 } from '../../src/components/ui';
@@ -224,9 +225,10 @@ export default function MerchantHome() {
                       <Text style={styles.orderId}>#{String(o.id).slice(-6).toUpperCase()}</Text>
                       <Badge label={orderStatusLabel(o.status)} tone={orderStatusTone(o.status)} />
                     </View>
-                    <Text style={styles.orderCustomer} numberOfLines={1}>
-                      {o.customer_name || t('mh.customerFallback')} • {o.items?.length || 0} {t('mh.itemWord')}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <TranslatableName text={o.customer_name || t('mh.customerFallback')} style={styles.orderCustomer} numberOfLines={1} iconSize={11} />
+                      <Text style={styles.orderCustomer}> • {o.items?.length || 0} {t('mh.itemWord')}</Text>
+                    </View>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.orderAmount}>{money(o.total)}</Text>

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import TranslatableName from '../../src/components/TranslatableName';
 
 export default function MerchantDrivers() {
   const { lang } = useT();
@@ -47,7 +48,7 @@ export default function MerchantDrivers() {
             <View key={d.id} style={s.card}>
               <View style={[s.statusDot, { backgroundColor: d.online ? '#10B981' : '#9CA3AF' }]} />
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={s.name}>{d.name}</Text>
+                <TranslatableName text={d.name || ''} style={s.name} />
                 <Text style={s.phone}>{d.phone} • {d.vehicle_info || tSync('لا توجد مركبة', curLang())}</Text>
                 <Text style={s.payment}>{d.payment_model === 'salary' ? tf('راتب {0} ر.س / شهرياً', lang, [d.salary_monthly]) : tf('عمولة: {0} لكل طلب', lang, [d.commission_type === 'percentage' ? d.merchant_commission_value + '%' : d.merchant_commission_value + ' ' + tSync('ر.س', lang)])}</Text>
                 <Text style={s.stats}>{tSync('الإجمالي:', lang)} {d.total_deliveries || 0} {tSync('• اليوم:', lang)} {d.today_deliveries || 0} {tSync('• المحفظة:', lang)} {(d.wallet_balance || 0).toFixed(0)} {tSync('ر.س', lang)}</Text>

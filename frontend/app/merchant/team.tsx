@@ -9,6 +9,7 @@ import { ScreenHeader, StatCard, EmptyState, SkeletonBox, Badge, PrimaryButton }
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 
 export default function MerchantTeam() {
   const { lang } = useT();
@@ -82,7 +83,7 @@ export default function MerchantTeam() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                      <Text style={s.name}>{e.name}</Text>
+                      <TranslatableName text={e.name || ''} style={s.name} />
                       {e.online ? <Badge label={tSync("🟢 متصل", lang)} tone="success" /> : <Badge label={tSync("غير متصل", lang)} tone="default" />}
                     </View>
                     <Text style={s.meta}>{e.job_title || e.department || tSync('موظف', curLang())} • {e.phone}</Text>

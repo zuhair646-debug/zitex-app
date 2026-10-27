@@ -161,7 +161,7 @@ export default function POSTerminal() {
               <TX style={s.sec}>🧾 الفاتورة</TX>
               {cart.map(x => (
                 <View key={x.product_id} style={s.line}>
-                  <Text style={s.lineName} numberOfLines={1}>{x.name}</Text>
+                  <TranslatableName text={x.name || ''} style={s.lineName} numberOfLines={1} />
                   <Text style={s.lineQty}>×{x.quantity}</Text>
                   <Text style={s.lineAmt}>{(x.price * x.quantity).toFixed(2)}</Text>
                 </View>

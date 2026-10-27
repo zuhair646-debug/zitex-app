@@ -10,6 +10,7 @@ import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 
 const TYPES = [
   { id: 'general', name: 'سحب عام', icon: 'people', desc: 'أي مستخدم مسجّل يمكنه الانضمام' },
@@ -227,7 +228,7 @@ export default function CompetitionForm() {
               {employees.length === 0 && <Text style={{ color: '#9CA3AF', padding: 8 }}>No chamber employees. Tap + New to create one.</Text>}
               {employees.map(e => (
                 <TouchableOpacity key={e.id} onPress={() => setData({ ...data, assigned_chamber_employee_id: e.id })} style={[s.empChip, data.assigned_chamber_employee_id === e.id && s.empChipActive]}>
-                  <Text style={[s.empName, data.assigned_chamber_employee_id === e.id && { color: 'white' }]}>{e.name}</Text>
+                  <TranslatableName text={e.name || ''} style={[s.empName, data.assigned_chamber_employee_id === e.id && { color: 'white' }]} />
                   <Text style={[s.empPhone, data.assigned_chamber_employee_id === e.id && { color: 'white' }]}>{e.phone}</Text>
                 </TouchableOpacity>
               ))}

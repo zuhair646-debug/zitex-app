@@ -10,6 +10,7 @@ import { useAuth } from './_layout';
 import { uploadMedia, mediaUrlSync } from '../src/utils/upload';
 import { TX, tSync, tf } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
+import TranslatableName from '../src/components/TranslatableName';
 
 export default function UGCContest() {
   const { lang } = useT();
@@ -283,7 +284,7 @@ export default function UGCContest() {
                 <View key={c.id} style={s.commentRow}>
                   <View style={s.avatar}><Text style={s.avatarText}>{(c.user_name || '?').charAt(0)}</Text></View>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.userName}>{c.user_name}</Text>
+                    <TranslatableName text={c.user_name || ''} style={s.userName} />
                     <Text style={s.commentText}>{c.text}</Text>
                     <Text style={s.dateText}>{new Date(c.created_at).toLocaleDateString('ar')}</Text>
                   </View>

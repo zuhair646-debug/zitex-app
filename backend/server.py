@@ -8,6 +8,7 @@ from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
+import asyncio
 import os
 import logging
 import bcrypt
@@ -1663,6 +1664,24 @@ class ProductInput(BaseModel):
     manufacturing_defect_days: int = 365  # defect claim window
     return_conditions: str = ""           # merchant-defined terms shown to customer
 
+# ── Pre-translate product names into all 20 languages on save (warms translations_cache) ──
+TR_LANGS = ['en', 'ar', 'ur', 'fa', 'he', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'tr', 'zh', 'ja', 'ko', 'hi', 'bn', 'id', 'ms', 'th']
+
+
+async def _prewarm_translations(texts: list):
+    import httpx
+    texts = [t.strip() for t in texts if t and t.strip()]
+    if not texts:
+        return
+    base = f"http://127.0.0.1:{os.environ.get('PORT', '8001')}/api/translate/bulk"
+    try:
+        async with httpx.AsyncClient(timeout=180) as cl:
+            for lang in TR_LANGS:
+                await cl.post(base, json={"texts": texts, "target_lang": lang})
+    except Exception as e:  # best effort — on-demand translation still works
+        logging.getLogger(__name__).warning(f"prewarm translations failed: {e}")
+
+
 @api_router.post("/merchant/products")
 async def merchant_create_product(data: ProductInput, user=Depends(get_current_user)):
     require_merchant(user)
@@ -1680,12 +1699,14 @@ async def merchant_create_product(data: ProductInput, user=Depends(get_current_u
                           "updated_at": datetime.now(timezone.utc).isoformat()}},
                 upsert=True,
             )
+    asyncio.create_task(_prewarm_translations([doc.get("name_ar", ""), doc.get("name_en", "")]))
     return {"id": pid, "message": "Product created"}
 
 @api_router.put("/merchant/products/{pid}")
 async def merchant_update_product(pid: str, data: ProductInput, user=Depends(get_current_user)):
     require_merchant(user)
     await db.products.update_one({"_id": ObjectId(pid)}, {"$set": data.model_dump()})
+    asyncio.create_task(_prewarm_translations([data.name_ar or "", getattr(data, "name_en", "") or ""]))
     for bs in data.branch_stock:
         if bs.get("branch_id") and bs.get("quantity") is not None:
             await db.branch_inventory.update_one(

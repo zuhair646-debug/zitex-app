@@ -53,23 +53,25 @@ def _put_mem(key: str, value: str):
 
 # Rules shared by single + bulk prompts (June 2026 quality pass).
 _RULES = (
-    "Context: UI text and product/branch/service names in 'Zenrex Store', a Saudi electronics store app. "
-    "Write ONLY in the target language and its normal script; never leave Arabic words and never mix in another "
-    "script. Keep placeholders like {n} exactly. Keep emoji and numbers. Saudi riyal (ر.س / ريال) => 'SAR'. "
-    "Keep brand/model names in Latin (iPhone, Samsung, Galaxy, Huawei, Zenrex Store, WhatsApp, POS). "
-    "Use the standard spelling of Saudi city names in the target language. 'Balance' means money balance. Keep courier/brand names as names (Naqel Express, SMSA, Aramex, SPL, Sony). "
+    "Context: UI text, product names and people's names in 'Zenrex Store', a Saudi electronics store app. "
+    "Write ONLY in the target language and its normal script; never leave words in another script. "
+    "Keep placeholders like {n} exactly. Keep emoji and numbers. Saudi riyal (ر.س / ريال) => the target-language word or 'SAR' for Latin-script languages. "
+    "BRANDS: for targets with a non-Latin script (Arabic, Urdu, Persian, Hebrew, Russian, Chinese, Japanese, Korean, Hindi, Bengali, Thai) "
+    "write brand and product-line names in the TARGET script exactly as native speakers usually write them "
+    "(Arabic: آيفون، ماك بوك برو، شاومي، سامسونج جالكسي، ديل، لينوفو، هواوي، أنكر، ساعة أبل; Urdu: آئی فون، میک بک; Chinese: 苹果手机/iPhone→苹果, 小米, 戴尔, 联想, 三星, 华为; "
+    "Hindi: आईफ़ोन, सैमसंग; Russian: Айфон, Самсунг). Only short model codes that contain digits or are 2-4 capital letters stay as-is "
+    "(M3, S3, 15, 128GB, XPS, GT, USB-C, 5G). For Latin-script targets (English, French, Spanish, German, Italian, Portuguese, Turkish, Indonesian, Malay) "
+    "keep brand names in their normal Latin spelling (iPhone, Xiaomi, Dell). The app name 'Zenrex' always stays 'Zenrex'. "
+    "PEOPLE'S NAMES (customers, employees, drivers): transliterate into the target script (e.g. 'محمد العتيبي' → 'Mohammed Al-Otaibi'; 'John Smith' → 'جون سميث'). "
+    "Use the standard spelling of Saudi city names in the target language. 'Balance' means money balance. "
     "The source may MIX Arabic and English words and numbers (e.g. 'آيفون 15 Pro Max أسود 256 جيجا'): rewrite it as ONE "
-    "natural phrase fully in the target language — translate every common word (colours, storage, condition, "
-    "descriptions), keep only brand/model names and numbers (e.g. 'iPhone 15 Pro Max Black 256GB'). "
-    "If the merchant wrote the SAME thing twice in two languages (e.g. 'آيفون 16 iPhone 16' or 'ساعة أبل Apple Watch'), "
-    "say it ONCE — never repeat a brand, model or word. Keep every extra detail (capacity, colour, condition, warranty) once. "
-    "NEVER translate or transliterate brand names into another script: always write Xiaomi, Dell, Lenovo, HP, Apple, "
-    "Samsung, Huawei, Sony, Asus, Acer, Oppo, Honor, AirPods, MacBook, iPad, ThinkPad, Galaxy in Latin letters "
-    "(not 小米, 戴尔, 联想, 三星, 苹果, شاومي, ديل, سامسونج). For an Arabic target, write the brand/model in Latin and the rest in Arabic."
+    "natural phrase fully in the target language — translate every common word (colours, storage, condition, descriptions). "
+    "If the merchant wrote the SAME thing twice in two languages (e.g. 'آيفون 16 iPhone 16' or 'ساعة أبل Apple Watch' or 'Watch S3 · Xiaomi Watch S3'), "
+    "say it ONCE — never repeat a brand, model or word. Keep every extra detail (capacity, colour, condition, warranty) once."
 )
 # Bump when the rules change so stale cached translations are regenerated.
 _AR_RX = __import__('re').compile(r'[\u0600-\u06FF]')
-_RULES_VERSION = 'r2'
+_RULES_VERSION = 'r3'
 
 _SCRIPT_RX = {
     'arab': r'[\u0600-\u06FF]', 'heb': r'[\u0590-\u05FF]', 'cyr': r'[\u0400-\u04FF]', 'cjk': r'[\u4E00-\u9FFF]',
@@ -101,13 +103,16 @@ def _clean_ok(target: str, text: str, source: str = '') -> bool:
     if any(re.search(rx, text) for name, rx in _SCRIPT_RX.items() if name not in allowed):
         return False
     native = _NATIVE.get(target)
-    if native and re.search(r'[A-Za-z]{4,}', text):
-        has_native = any(re.search(_SCRIPT_RX[n], text) for n in native.split('|'))
-        if not has_native and not any(b in text for b in _BRANDS):
-            # Latin-only output is fine for short proper names (e.g. "Sony", "Naqel Express")
-            # but not for real sentences that should have been translated.
-            if re.search(r'[\u0600-\u06FF]', text) or len(text.split()) > 3:
-                return False
+    if target == 'ar' or native:
+        # Non-Latin target: every Latin word must be a short code (M3, XPS, 128GB, USB-C) or the app name.
+        bad = [w for w in re.findall(r'[A-Za-z0-9][A-Za-z0-9\-]*', text)
+               if re.search(r'[A-Za-z]', w) and not re.search(r'\d', w) and not (w.replace('-', '').isupper() and len(w) <= 6) and w.lower() not in ('zenrex', 'store')
+               and not (target in ('zh', 'ja', 'ko') and w.lower() in ('iphone', 'ipad', 'airpods', 'imac'))]
+        # Chinese/Japanese/Korean natively keep model words (华为 Mate 60 Pro): fine once the brand is in native script.
+        if bad and target in ('zh', 'ja', 'ko') and any(re.search(_SCRIPT_RX[n], text) for n in _NATIVE[target].split('|')):
+            bad = []
+        if bad:
+            return False
     return True
 
 
@@ -232,11 +237,13 @@ def build_router(db=None):
                 translated = translated[1:-1]
             if not translated:
                 translated = text
-            translated = translated.replace('ر.س', 'SAR')
+            if req.target_lang not in ('ar', 'ur', 'fa'):
+                translated = translated.replace('ر.س', 'SAR')
             if not _clean_ok(req.target_lang, translated, text):
                 retry = await chat.send_message(UserMessage(text=(
-                    f"Your answer mixed scripts or kept Arabic. Translate again, ONLY in {target_name}: {text}")))
-                retry = (retry or '').strip().strip('"').replace('ر.س', 'SAR')
+                    f"Your answer mixed scripts. Translate again, ONLY in {target_name} script — write brand and product-line "
+                    f"names in {target_name} script too; only digit codes like M3 or 20K stay: {text}")))
+                retry = (retry or '').strip().strip('"')
                 if retry and _clean_ok(req.target_lang, retry, text):
                     translated = retry
                 else:
@@ -281,6 +288,12 @@ def build_router(db=None):
 
         CHUNK = 40
 
+        strict_note = (
+            f" STRICT: the previous attempt left Latin words. In {target_name} you MUST write every brand and product-line "
+            f"name (MacBook, Pro, Max, iPhone, Watch, Anker, PowerCore...) in {target_name} script — e.g. Arabic 'ماك بوك برو 16 M3 ماكس', "
+            "Chinese '苹果笔记本电脑 Pro 16 M3 Max' is WRONG, write it fully in Chinese characters. Only digit codes like M3, 16, 20K stay."
+        )
+
         async def run_chunk(batch: list, tag: str) -> list:
             """Translate one chunk; returns the items that failed validation."""
             numbered = "\n".join(f"{j + 1}. {s}" for j, s in enumerate(batch))
@@ -294,6 +307,7 @@ def build_router(db=None):
                         f"(language code '{req.target_lang}'). Output MUST be written in {target_name}. "
                         "Return ONLY the translations in the same order, each on its own line, prefixed with the "
                         "same number and a dot. No explanations, no extra text, no quotes. " + _RULES
+                        + (strict_note if tag.startswith('r') and (req.target_lang == 'ar' or req.target_lang in _NATIVE) and req.target_lang not in ('zh', 'ja', 'ko') else '')
                     ),
                 ).with_model("anthropic", "claude-sonnet-4-6")
                 resp = await chat.send_message(UserMessage(
@@ -306,7 +320,7 @@ def build_router(db=None):
                     idx = int(head.strip()) - 1
                     if not (0 <= idx < len(batch)):
                         continue
-                    tr = tail.strip().strip('"').replace('ر.س', 'SAR')
+                    tr = tail.strip().strip('"')
                     src = batch[idx]
                     if tr and _clean_ok(req.target_lang, tr, src):
                         results[src] = tr
@@ -322,6 +336,9 @@ def build_router(db=None):
         retry = [x for fl in failed_lists for x in fl]
         if retry:  # one retry for lines the model answered in the wrong language
             await _asyncio.gather(*[run_chunk(retry[i:i + 20], f"r{i}") for i in range(0, len(retry), 20)])
+            last = [x for x in retry if x not in results][:20]
+            if last:  # final pass: one line per request for the stubborn ones
+                await _asyncio.gather(*[run_chunk([x], f"rs{i}") for i, x in enumerate(last)])
         failed = [raw for raw in req.texts if raw not in results]
 
         # Fallback: any text we couldn't translate — return source

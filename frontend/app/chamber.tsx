@@ -181,7 +181,7 @@ export default function ChamberScreen() {
                 {drawResult.winners?.map((w: any, i: number) => (
                   <View key={i} style={s.resultWinner}>
                     <View style={s.resultRank}><Text style={s.rankNum}>#{i + 1}</Text></View>
-                    <Text style={s.resultName}>{w.user_name}</Text>
+                    <TranslatableName text={w.user_name || ''} style={s.resultName} />
                     <Text style={s.resultPhone}>{w.user_phone}</Text>
                   </View>
                 ))}
@@ -215,7 +215,7 @@ export default function ChamberScreen() {
                   <Text style={s.pNum}>{i + 1}</Text>
                   <View style={s.pAvatar}><Text style={s.pAvatarText}>{p.user_name?.[0]}</Text></View>
                   <View style={s.pInfo}>
-                    <Text style={s.pName}>{p.user_name}</Text>
+                    <TranslatableName text={p.user_name || ''} style={s.pName} />
                     <Text style={s.pPhone}>{p.user_phone}</Text>
                   </View>
                   <Text style={s.pDate}>{p.joined_at?.split('T')[0]}</Text>

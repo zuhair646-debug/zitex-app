@@ -118,7 +118,7 @@ export default function CompetitionDetailScreen() {
               <View key={i} style={s.participantRow}>
                 <View style={s.participantAvatar}><Text style={s.avatarText}>{p.user_name?.[0] || '?'}</Text></View>
                 <View style={s.participantInfo}>
-                  <Text style={s.participantName}>{p.user_name}</Text>
+                  <TranslatableName text={p.user_name || ''} style={s.participantName} />
                   <Text style={s.participantPhone}>{p.user_phone}</Text>
                 </View>
                 {comp.winners?.some((w: any) => w.user_name === p.user_name) && (
@@ -135,7 +135,7 @@ export default function CompetitionDetailScreen() {
                 <View key={i} style={s.winnerRow}>
                   <View style={s.winnerRank}><Text style={s.rankText}>#{i + 1}</Text></View>
                   <View style={s.winnerInfo}>
-                    <Text style={s.winnerName}>{w.user_name}</Text>
+                    <TranslatableName text={w.user_name || ''} style={s.winnerName} />
                     <Text style={s.winnerPhone}>{w.user_phone}</Text>
                   </View>
                   <TouchableOpacity style={s.giftBtn}><Text style={s.giftBtnText}>{tSync('احصل على الهدية', curLang())}</Text></TouchableOpacity>
@@ -190,7 +190,7 @@ export default function CompetitionDetailScreen() {
             {drawResult.map((w, i) => (
               <View key={i} style={s.drawWinner}>
                 <Text style={s.drawRank}>#{i + 1}</Text>
-                <Text style={s.drawName}>{w.user_name}</Text>
+                <TranslatableName text={w.user_name || ''} style={s.drawName} />
               </View>
             ))}
             <TouchableOpacity style={s.closeDrawBtn} onPress={() => setShowDraw(false)}>

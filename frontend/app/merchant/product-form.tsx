@@ -16,6 +16,7 @@ import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 
 type Variant = { name: string; value: string };
 type BranchStock = { branch_id: string; branch_name: string; quantity: number };
@@ -412,7 +413,7 @@ export default function ProductForm() {
                         <Ionicons name="close" size={12} color="white" />
                       </TouchableOpacity>
                     </View>
-                    <Text style={{ fontSize: 10, color: colors.onSurface, maxWidth: 60 }} numberOfLines={1}>{c.name}</Text>
+                    <TranslatableName text={c.name || ''} style={{ fontSize: 10, color: colors.onSurface, maxWidth: 60 }} numberOfLines={1} />
                   </View>
                 ))}
               </View>
@@ -520,7 +521,7 @@ export default function ProductForm() {
               {branches.map(b => (
                 <View key={b.id} style={s.branchRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.branchName}>{b.name}</Text>
+                    <TranslatableName text={b.name || ''} style={s.branchName} />
                     <Text style={s.branchCode}>{b.branch_code || b.city}</Text>
                   </View>
                   <TextInput

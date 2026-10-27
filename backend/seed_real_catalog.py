@@ -42,6 +42,12 @@ CUSTOMERS = [
     ("لجين الأحمدي",      "0501234516"),
     ("سارة القرني",       "0501234517"),
     ("هدى الجهني",        "0501234518"),
+    # English-named customers (expats) — lets merchants test translating Latin names
+    ("John Smith",        "0501234519"),
+    ("Emily Johnson",     "0501234520"),
+    ("Michael Brown",     "0501234521"),
+    ("Sarah Williams",    "0501234522"),
+    ("David Miller",      "0501234523"),
 ]
 
 # ─── Real product catalog (KSA market) ─────────────────────────────────

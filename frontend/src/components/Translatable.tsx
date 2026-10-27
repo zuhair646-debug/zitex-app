@@ -18,7 +18,7 @@
  *
  * Tapping again restores the original representation (same join rules).
  */
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, ActivityIndicator, StyleSheet,
   TextStyle, ViewStyle, ToastAndroid, Platform, Alert,
@@ -48,7 +48,7 @@ interface Props {
 }
 
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_BACKEND_URL || '';
-const CACHE_KEY = '@zenrex_dyn_tr_multi_v3';
+const CACHE_KEY = '@zenrex_dyn_tr_multi_v4';
 const memCache: Record<string, string> = {};
 const inflight: Map<string, Promise<string | null>> = new Map();
 let diskLoaded = false;
@@ -78,10 +78,16 @@ function showToast(msg: string) {
   }
 }
 
-function normalize(value: AnyValue, joiner: string): string {
+function normalize(value: AnyValue, joiner: string, lang: string): string {
   if (!value) return '';
   if (typeof value === 'string') return value;
   if (Array.isArray(value)) return value.filter(Boolean).join(joiner);
+  // {ar, en} = the SAME name in two languages → pick ONE (never "name_ar · name_en").
+  const fm = value as FieldMap;
+  if (fm.ar || fm.en) {
+    const pick = lang === 'ar' ? (fm.ar || fm.en) : (fm[lang] || fm.en || fm.ar);
+    return (pick || '').toString();
+  }
   // object: prefer ar/en in that order, then other keys
   const parts: string[] = [];
   const seen = new Set<string>();
@@ -148,17 +154,15 @@ export default function Translatable({
   onToggle,
 }: Props) {
   const { lang, isRTL, t } = useT();
-  const original = normalize(value, joiner);
+  const original = normalize(value, joiner, lang);
   const [translated, setTranslated] = useState<string | null>(null);
   const [showing, setShowing] = useState<'original' | 'translated'>('original');
   const [loading, setLoading] = useState(false);
-  const toastedSameRef = useRef(false);
 
   useEffect(() => {
     setTranslated(null);
     setShowing('original');
     setLoading(false);
-    toastedSameRef.current = false;
   }, [original, lang]);
 
   // Preload from cache
@@ -182,10 +186,6 @@ export default function Translatable({
     }
     if (translated !== null) {
       setShowing('translated');
-      if (translated === original && !toastedSameRef.current) {
-        toastedSameRef.current = true;
-        showToast(t('tn.sameName', 'This name does not change when translated'));
-      }
       onToggle?.(true, translated);
       return;
     }
@@ -195,10 +195,6 @@ export default function Translatable({
     if (tr !== null) {
       setTranslated(tr);
       setShowing('translated');
-      if (tr === original && !toastedSameRef.current) {
-        toastedSameRef.current = true;
-        showToast(t('tn.sameName', 'This name does not change when translated'));
-      }
       onToggle?.(true, tr);
     } else {
       showToast(t('tn.networkError', 'Could not reach the translation service. Please retry.'));
@@ -206,19 +202,20 @@ export default function Translatable({
   }, [original, lang, showing, translated, sourceLang, onToggle, t]);
 
   const tooShort = !original || original.trim().length < 2;
-  const hideIcon = tooShort || (!needsTranslation(original, lang) && translated === null);
+  const hideIcon = tooShort || translated === original || (!needsTranslation(original, lang) && translated === null);
   const displayText = showing === 'translated' && translated !== null ? translated : original;
   const isTr = showing === 'translated' && translated !== null;
 
   const IconBtn = (
     <TouchableOpacity
+      testID="translatable-toggle"
       onPress={toggle}
       activeOpacity={0.6}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       style={[
         styles.iconBtn,
         isTr && styles.iconBtnActive,
-        isRTL ? { marginRight: 6 } : { marginLeft: 6 },
+        { marginStart: 6 },
       ]}
       accessibilityLabel={isTr ? t('tn.backToOriginal', 'Back to original') : t('tn.translate', 'Translate')}
     >

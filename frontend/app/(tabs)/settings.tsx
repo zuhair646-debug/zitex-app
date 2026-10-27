@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { useT, LANGUAGES } from '../../src/i18n';
 import { useThemeMode } from '../../src/theme/mode';
 import { useTheme } from '../../src/theme/ThemeContext';
+import TranslatableName from '../../src/components/TranslatableName';
 
 export default function SettingsScreen() {
   const { colors, mode } = useTheme();
@@ -68,7 +69,7 @@ export default function SettingsScreen() {
             <Ionicons name="person" size={32} color={colors.gold} />
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName} numberOfLines={1}>{user?.name}</Text>
+            <TranslatableName text={user?.name || ''} style={styles.profileName} numberOfLines={1} />
             <Text style={styles.profilePhone}>{user?.phone}</Text>
           </View>
           <Ionicons name={chevronForward} size={20} color={colors.textSecondary} />

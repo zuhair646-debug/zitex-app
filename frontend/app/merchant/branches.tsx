@@ -142,9 +142,7 @@ export default function MerchantBranches() {
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                         <Ionicons name="location" size={11} color={colors.onSurfaceSecondary} />
-                        <Text style={s.cardAddress} numberOfLines={2}>
-                          {b.address}{b.city ? ` • ${b.city}` : ''}
-                        </Text>
+                        <TranslatableName text={`${b.address || ''}${b.city ? ` • ${b.city}` : ''}`} style={s.cardAddress} numberOfLines={2} containerStyle={{ flexShrink: 1 }} iconSize={11} />
                       </View>
                       {b.phone && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
@@ -263,6 +261,7 @@ export default function MerchantBranches() {
 }
 
 function Field({ label, value, onChange, placeholder, multiline, keyboardType }: any) {
+  const s = useSStyles();
   return (
     <View>
       <Text style={s.fieldLabel}>{label}</Text>

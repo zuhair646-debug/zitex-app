@@ -220,7 +220,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
                 <Text style={s.topRev}>{Math.round(t.revenue).toLocaleString()} {tSync(" ر.س", lang)}</Text>
                 <View style={s.topSplit}>
                   <Text style={s.topSplitPos}>POS {t.pos_orders}</Text>
-                  <Text style={s.topSplitApp}>App {t.app_orders}</Text>
+                  <Text style={s.topSplitApp}>{tSync('التطبيق', lang)} {t.app_orders}</Text>
                 </View>
               </TouchableOpacity>
             ))}

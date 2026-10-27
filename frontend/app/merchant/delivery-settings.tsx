@@ -7,6 +7,7 @@ import { useAuth } from '../_layout';
 import ZitexMap from '../../src/components/MapView';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 
 type Zone = {
   name: string;
@@ -190,7 +191,7 @@ export default function DeliverySettings() {
           {data.zones.map((z: Zone, i: number) => (
             <View key={i} style={s.zoneCard}>
               <View style={{ flex: 1 }}>
-                <Text style={s.zoneName}>{z.name}</Text>
+                <TranslatableName text={z.name || ''} style={s.zoneName} />
                 <Text style={s.zoneInfo}>
                   {z.polygon && z.polygon.length >= 3 ? tf('مضلع ({0} نقاط)', lang, [z.polygon.length]) : tf('دائرة نصف قطر {0} كم', lang, [z.radius_km])}
                 </Text>

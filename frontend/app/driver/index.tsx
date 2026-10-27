@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { useAuth } from '../_layout';
+import TranslatableName from '../../src/components/TranslatableName';
 
 export default function DriverDashboard() {
   useT(); // re-render when language or on-demand translations change
@@ -79,7 +80,7 @@ export default function DriverDashboard() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <View>
-          <Text style={s.welcome}>{user?.name}</Text>
+          <TranslatableName text={user?.name || ''} style={s.welcome} />
           <Text style={s.role}>{tSync('لوحة تحكم السائق', curLang())}</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>

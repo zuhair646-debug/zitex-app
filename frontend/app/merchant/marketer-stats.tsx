@@ -1,3 +1,4 @@
+import TranslatableName from '../../src/components/TranslatableName';
 import { useState, useEffect, useCallback, useMemo} from 'react';
 import { useT, curLang } from '../../src/i18n';
 import { tSync, tf, TX } from '../../src/useAutoT';
@@ -50,7 +51,7 @@ export default function MarketerStats() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.brand} /></TouchableOpacity>
-        <Text style={s.title}>{a.name || tSync('المسوّق', curLang())}</Text>
+        <TranslatableName text={a.name || tSync('المسوّق', curLang())} style={s.title} />
         <TouchableOpacity onPress={shareCode}><Ionicons name="share-social" size={22} color={colors.brand} /></TouchableOpacity>
       </View>
 
@@ -128,6 +129,7 @@ export default function MarketerStats() {
 }
 
 function Kpi({ icon, label, value, highlight }: any) {
+  const s = useSStyles();
   return (
     <View style={[s.kpi, highlight && s.kpiHi]}>
       <Ionicons name={icon} size={18} color={highlight ? '#0A0A0A' : colors.brand} />

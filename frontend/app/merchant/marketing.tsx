@@ -15,6 +15,7 @@ import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 
 type Tab = 'ads' | 'affiliates';
 type CampaignType = 'ad' | 'affiliate';
@@ -319,7 +320,7 @@ export default function MarketingPanel() {
                 <TouchableOpacity key={af.id} style={s.affRow} onPress={() => router.push(`/merchant/marketer-stats?id=${af.id}` as any)}>
                   <View style={s.affRank}><Text style={s.affRankText}>#{affiliates.indexOf(af) + 1}</Text></View>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.affName}>{af.name}</Text>
+                    <TranslatableName text={af.name || ''} style={s.affName} />
                     <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 2 }}>
                       <View style={s.codePill}><Text style={s.codeText}>{af.referral_code}</Text></View>
                       <Text style={s.affCommission}>{af.commission_percent}%</Text>

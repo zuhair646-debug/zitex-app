@@ -16,7 +16,7 @@
  *   - Translations are cached in-memory, on-device (AsyncStorage), AND on
  *     the backend MongoDB — one LLM call ever per text+target_lang.
  */
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, TextStyle, ViewStyle, ToastAndroid, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -40,7 +40,7 @@ interface Props {
 
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_BACKEND_URL || '';
 
-const CACHE_KEY = '@zenrex_dyn_tr_v4';
+const CACHE_KEY = '@zenrex_dyn_tr_v6';
 const memCache: Record<string, string> = {}; // `${lang}::${text}` → translated (identical-to-source stored as same text)
 const inflight: Map<string, Promise<string | null>> = new Map();
 let diskLoaded = false;
@@ -111,21 +111,38 @@ async function fetchTranslation(text: string, target: Lang, source?: string): Pr
 // ───────────── Automatic translation (batched) ─────────────
 const BRAND_RX = /^(iphone|ipad|macbook|airpods|apple|samsung|galaxy|huawei|xiaomi|redmi|oppo|vivo|realme|honor|nokia|sony|lg|lenovo|hp|dell|asus|acer|pro|max|ultra|plus|mini|lite|note|fold|flip|watch|pad|tab|buds|gb|tb|mah|5g|4g|usb|type-c|zenrex|store|pos|sar|smsa|aramex|spl|tabby|tamara|stc|mada|apple pay|x)$/i;
 const AR_RX = /[\u0600-\u06FF]/;
-const LATIN_LANGS = new Set(['en', 'es', 'fr', 'de', 'it', 'pt', 'tr', 'id', 'ms']);
 
-/** Does `text` need translating to be fully in `lang`? (keeps brand/model words) */
+// Script that each language is written in.
+const LANG_SCRIPT: Record<string, RegExp> = {
+  ar: /[\u0600-\u06FF]/, ur: /[\u0600-\u06FF]/, fa: /[\u0600-\u06FF]/, he: /[\u0590-\u05FF]/,
+  ru: /[\u0400-\u04FF]/, zh: /[\u4E00-\u9FFF]/, ja: /[\u3040-\u30FF\u4E00-\u9FFF]/, ko: /[\uAC00-\uD7AF]/,
+  hi: /[\u0900-\u097F]/, bn: /[\u0980-\u09FF]/, th: /[\u0E00-\u0E7F]/,
+};
+const ANY_NON_LATIN = /[\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF\u0900-\u09FF\u0E00-\u0E7F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/;
+/** Latin words that are not pure codes (M3, 128GB, XPS, USB-C). */
+const latinWords = (s: string) =>
+  (s.match(/[A-Za-z][A-Za-z0-9\-]*/g) || []).filter((w) => !/\d/.test(w) && !(w === w.toUpperCase() && w.length <= 4));
+
+/** Does `text` need translating to be fully in `lang`? The viewer's language is always the target. */
 export function needsTranslation(text: string, lang: Lang): boolean {
   const s = (text || '').trim();
   if (s.length < 2) return false;
   const hasAr = AR_RX.test(s);
-  // Mixed Arabic + Latin (e.g. "آيفون 16 iPhone 16 أسود") → always unify into one clean phrase
-  // in the viewer's language (removes the duplicated bilingual words).
-  if (hasAr && /[A-Za-z]{2,}/.test(s)) return true;
-  const realLatinWords = (s.match(/[A-Za-z][A-Za-z\-]{2,}/g) || []).filter((w) => !BRAND_RX.test(w));
-  if (lang === 'ar') return realLatinWords.length > 0; // English words (not brands/models) → Arabic
-  if (lang === 'en') return hasAr;
-  if (LATIN_LANGS.has(lang)) return hasAr || realLatinWords.length > 0;
-  return hasAr || realLatinWords.length > 0; // non-Latin target scripts
+  if (hasAr && /[A-Za-z]{2,}/.test(s)) return true; // mixed Arabic + English → one clean phrase
+  const native = LANG_SCRIPT[lang];
+  if (native) {
+    // Non-Latin target (ar, ur, fa, he, ru, zh, ja, ko, hi, bn, th)
+    if (latinWords(s).length > 0) return true; // English words / brands → target script
+    if (lang === 'ar') return false;
+    if (lang === 'ur' || lang === 'fa') return hasAr; // Arabic text → Urdu / Persian
+    // Any letters from another script
+    const stripped = s.replace(new RegExp(native.source, 'g'), '');
+    return ANY_NON_LATIN.test(stripped);
+  }
+  // Latin-script targets
+  if (ANY_NON_LATIN.test(s)) return true;
+  if (lang === 'en') return false;
+  return latinWords(s).filter((w) => !BRAND_RX.test(w)).length > 0; // English words → French, Spanish…
 }
 
 type Waiter = { resolve: (v: string | null) => void };
@@ -146,12 +163,13 @@ async function flush(lang: Lang) {
     });
     const j = res.ok ? await res.json() : null;
     const out: Record<string, string> = j?.translations || {};
+    const failed = new Set<string>(j?.failed || []);
     texts.forEach((tx) => {
       const tr = (out[tx] ?? '').toString().trim();
-      const ok = !!tr && !(lang !== 'ar' && lang !== 'fa' && lang !== 'ur' && AR_RX.test(tr));
-      const same = tr === tx;
-      if (ok && !same) { memCache[`${lang}::${tx}`] = tr; }
-      q.get(tx)?.forEach((w) => w.resolve(ok && !same ? tr : null));
+      // Failed lines come back as the source — never cache them as final (retry next time).
+      const ok = !!tr && !failed.has(tx) && !(lang !== 'ar' && lang !== 'fa' && lang !== 'ur' && AR_RX.test(tr));
+      if (ok) { memCache[`${lang}::${tx}`] = tr; }
+      q.get(tx)?.forEach((w) => w.resolve(ok ? tr : null));
     });
     schedulePersist();
   } catch {
@@ -191,14 +209,12 @@ export default function TranslatableName({
   const [translated, setTranslated] = useState<string | null>(null);
   const [showing, setShowing] = useState<'original' | 'translated'>('original');
   const [loading, setLoading] = useState(false);
-  const toastedSameRef = useRef(false);
 
   // Reset when source text or lang changes
   useEffect(() => {
     setTranslated(null);
     setShowing('original');
     setLoading(false);
-    toastedSameRef.current = false;
   }, [original, lang]);
 
   // Preload from cache without triggering LLM
@@ -223,10 +239,6 @@ export default function TranslatableName({
     }
     if (translated !== null) {
       setShowing('translated');
-      if (translated === original && !toastedSameRef.current) {
-        toastedSameRef.current = true;
-        showToast(t('tn.sameName', 'This name does not change when translated'));
-      }
       onToggle?.(true, translated);
       return;
     }
@@ -236,10 +248,6 @@ export default function TranslatableName({
     if (tr !== null) {
       setTranslated(tr);
       setShowing('translated');
-      if (tr === original && !toastedSameRef.current) {
-        toastedSameRef.current = true;
-        showToast(t('tn.sameName', 'This name does not change when translated'));
-      }
       onToggle?.(true, tr);
     } else {
       // Hard network / server failure — do NOT revert silently
@@ -253,7 +261,7 @@ export default function TranslatableName({
   // benefits from a translate option.
   // Icon only matters when a translation exists/needed (lets the user see the original).
   const tooShort = !original || original.trim().length < 2;
-  const hideIcon = tooShort || (!needsTranslation(original, lang) && translated === null);
+  const hideIcon = tooShort || translated === original || (!needsTranslation(original, lang) && translated === null);
 
   const displayText = showing === 'translated' && translated !== null ? translated : original;
   const isTr = showing === 'translated' && translated !== null;
@@ -267,7 +275,7 @@ export default function TranslatableName({
       style={[
         styles.iconBtn,
         isTr && styles.iconBtnActive,
-        isRTL ? { marginRight: 6 } : { marginLeft: 6 },
+        { marginStart: 6 },
       ]}
       accessibilityLabel={isTr ? t('tn.backToOriginal', 'Back to original') : t('tn.translate', 'Translate')}
     >

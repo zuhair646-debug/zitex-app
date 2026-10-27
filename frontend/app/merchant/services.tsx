@@ -10,6 +10,7 @@ import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import TranslatableName from '../../src/components/TranslatableName';
 
 const GOLD = '#F5C518';
 const BG = '#0A0A0A';
@@ -214,7 +215,7 @@ export default function MerchantServices() {
                 <TouchableOpacity key={c.id} onPress={() => setForm({ ...form, category: c.id, icon: c.icon })}
                   style={[s.catPill, form.category === c.id && s.catPillActive]}>
                   <Ionicons name={c.icon as any} size={16} color={form.category === c.id ? BG : GOLD} />
-                  <Text style={[s.catPillText, form.category === c.id && { color: BG }]}>{c.name}</Text>
+                  <TranslatableName text={c.name || ''} style={[s.catPillText, form.category === c.id && { color: BG }]} />
                 </TouchableOpacity>
               ))}
             </ScrollView>

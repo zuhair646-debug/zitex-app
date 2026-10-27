@@ -59,8 +59,8 @@ export default function MerchantOrders() {
   const money = (n: number) => new Intl.NumberFormat('en').format(n || 0);
   const dateFmt = (d: any) => {
     try {
-      const localeMap: any = { ar: 'ar', en: 'en', fa: 'fa-IR', hi: 'hi-IN', zh: 'zh-CN' };
-      const l = localeMap[lang] || 'en';
+      const localeMap: any = { ar: 'ar-SA', fa: 'fa-IR', hi: 'hi-IN', zh: 'zh-CN', ur: 'ur-PK', bn: 'bn-BD', he: 'he-IL' };
+      const l = localeMap[lang] || lang || 'en';
       return new Date(d).toLocaleString(l, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     } catch { return ''; }
   };
