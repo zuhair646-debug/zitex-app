@@ -1,0 +1,60 @@
+{
+  "summary": "Ran a UI audit of the translate toggle in all 20 languages. Logged in as merchant 0509999999 and drove the Expo web preview at 390x844 via localStorage token/app_lang. For each language we checked /merchant/products (first 6 names, 2 toggles), /merchant home recent orders (5 names) and /merchant/orders (first 22 names, toggles on #0, #1 and #15 = first Arabic-origin name). No language had a disallowed Latin word in a product or customer name. Latin-script languages had no Arabic or other-script text left. Every toggle shown went translation -> exact merchant/customer original -> back to the same translation. No toast, alert or dialog appeared. All translations showed in about 2-5s. 'NO-TOGGLE' only happens when the shown text is already the original in the viewer's language (English names for Latin languages, pure-Arabic names for ar), which is by design.",
+  "per_language_table": [
+    {"lang": "en", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "Product and English customer names are originals, so no toggle. Arabic customer 'Rashed Al-Dosari' <-> 'راشد الدوسري' works."},
+    {"lang": "ar", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'ساعة أبل ألترا 2' <-> original 'ساعة أبل Watch Ultra 2'. Product #2 'شاحن سامسونج سوبر فاست 45W' is pure Arabic, so no toggle. 'جون سميث' <-> 'John Smith', 'إيميلي جونسون' <-> 'Emily Johnson'."},
+    {"lang": "ur", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'HP سپیکٹر x360 14' keeps HP (allowed acronym). 'راشد الدوسری' <-> 'راشد الدوسري'."},
+    {"lang": "fa", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'جان اسمیت' <-> 'John Smith'."},
+    {"lang": "he", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'HP ספקטר x360 14' (HP allowed). 'ראשד אל-דוסרי' <-> 'راشد الدوسري'."},
+    {"lang": "es", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "First 6 product names stay in Latin script (brands). 'Samsung Super Fast 45W' is kept as-is, while tr translates it. Arabic customer toggle works."},
+    {"lang": "fr", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "Same as es."},
+    {"lang": "de", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "Same as es."},
+    {"lang": "it", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "Same as es."},
+    {"lang": "pt", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "Same as es. Shows 'Khaled Al-Shamri' where es shows 'Khalid Al-Shammari'."},
+    {"lang": "ru", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'Эпл Вотч Ультра 2' <-> 'Apple Watch Ultra 2'. 'Джон Смит' <-> 'John Smith'. 'HP Спектр x360 14'."},
+    {"lang": "tr", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'Samsung Süper Hızlı 45W' <-> 'Samsung Super Fast 45W'."},
+    {"lang": "zh", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'苹果手表 至尊版 2', '三星超级快充 45W', '华为麦特 60 专业版', '三星盖乐世 智能手表 6 经典版', '惠普幽灵 x360 14', '戴尔纬度 7440'. All Chinese, x360 is a code. '约翰·史密斯' <-> 'John Smith'."},
+    {"lang": "ja", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'アップル ウォッチ ウルトラ 2'. 'HP スペクトル x360 14' (HP allowed). 'ジョン・スミス' <-> 'John Smith'."},
+    {"lang": "ko", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'애플 워치 울트라 2'. '존 스미스' <-> 'John Smith'."},
+    {"lang": "hi", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'एप्पल वॉच अल्ट्रा 2'. 'जॉन स्मिथ' <-> 'John Smith'."},
+    {"lang": "bn", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'অ্যাপল ওয়াচ আল্ট্রা 2'. HP is written as 'এইচপি'."},
+    {"lang": "id", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "Same as es."},
+    {"lang": "ms", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "Same as es."},
+    {"lang": "th", "products_ok": true, "customers_ok": true, "toggle_ok": true, "leftovers": [], "notes": "'แอปเปิล วอทช์ อัลตร้า 2'. HP is written as 'เอชพี'. 'จอห์น สมิธ' <-> 'John Smith'."}
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/translate/bulk", "issue": "Inconsistent across Latin-script languages: 'Samsung Super Fast 45W' is translated only for tr ('Süper Hızlı'). es/fr/de/it/pt/id/ms keep 'Super Fast' in English. Other product names do translate their generic words (e.g. es 'Funda de Cuero para iPhone 15 Pro', 'Cargador MagSafe de Apple')."},
+      {"endpoint": "/api/translate/bulk", "issue": "Names are romanised differently per language (es/de/it/id 'Khalid Al-Shammari' vs fr/en 'Khaled Al-Shammari' vs pt/tr 'Khaled Al-Shamri'). 'HP' is kept in ur/he/ru/ja/ko/hi but transliterated in bn/th/zh. Both are allowed by the rules; this is cosmetic only."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/merchant/products", "issues": ["Translatable toggle button is visually about 22x18px (paddingHorizontal 4 / paddingVertical 2), smaller than the TranslatableName one (minHeight 24, padding 6/4). hitSlop 10 lifts the tap area to about 42x38, still a little under 44pt. Suggest copying the TranslatableName iconBtn style."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/tests/ui/lang_audit_body.py"],
+  "action_items": [
+    "Optional: decide whether 'Super Fast' in 'Samsung Super Fast 45W' should be translated for all Latin languages (only tr does it now) and make the rule consistent.",
+    "Optional: bring the Translatable (products) toggle size up to match TranslatableName (minHeight 24 + hitSlop 12).",
+    "Optional: showToast() does nothing on web, so a failed manual translation gives no feedback in the web preview."
+  ],
+  "critical_code_review_comments": [
+    "Translatable.tsx and TranslatableName.tsx repeat about 60 lines (fetchTranslation, the disk cache and the IconBtn render). Consider moving them into a shared hook.",
+    "For products, Translatable picks name_en for every non-ar viewer, so the 'original' shown by the toggle is the merchant's English name, not name_ar. This seems intended, but for Latin-language viewers there is never a toggle on product names."
+  ],
+  "updated_files": [
+    "/app/frontend/src/components/Translatable.tsx (added testID='translatable-text' to the name Text)",
+    "/app/frontend/src/components/TranslatableName.tsx (added testID='translatable-name-text' to the name Text)"
+  ],
+  "success_rate": {"backend": "N/A (frontend-only request; spot-checked bulk translate for es/de/tr, 0 failures)", "frontend": "100% (20/20 languages: products, customers and toggles pass)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Use the testIDs translatable-text and translatable-name-text to read names, and the toggle is a sibling in the same parent View. Log in with an in-page fetch to /api/auth/login, then set localStorage 'token' and 'app_lang'. Orders index 15 is the first Arabic-origin customer (راشد الدوسري). The reusable helper is at /app/tests/ui/lang_audit_body.py.",
+  "rca_of_issue": ""
+}

@@ -1,0 +1,81 @@
+[Tue Oct 27 03:27:52 UTC 2026] v1.21.0 auto-submit polling started (ios=c20bb1b3-71bd-49bd-a138-3c91b7f2ba39 android=17db38ae-9859-492a-9763-17a54024b486)
+[Tue Oct 27 03:27:54 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:27:54 UTC 2026] ios c20bb1b3-71bd-49bd-a138-3c91b7f2ba39 status=IN_PROGRESS
+[Tue Oct 27 03:28:55 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:28:55 UTC 2026] ios c20bb1b3-71bd-49bd-a138-3c91b7f2ba39 status=IN_PROGRESS
+[Tue Oct 27 03:29:56 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:29:56 UTC 2026] ios c20bb1b3-71bd-49bd-a138-3c91b7f2ba39 status=IN_PROGRESS
+[Tue Oct 27 03:30:58 UTC 2026] ios c20bb1b3-71bd-49bd-a138-3c91b7f2ba39 status=IN_PROGRESS
+[Tue Oct 27 03:30:58 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:31:59 UTC 2026] ios c20bb1b3-71bd-49bd-a138-3c91b7f2ba39 status=FINISHED
+[Tue Oct 27 03:31:59 UTC 2026] ios submit attempt 1
+[Tue Oct 27 03:31:59 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+
+Using App Store Connect API Key from EAS credentials service.
+
+ASC App ID:  6773073572
+Project ID:  1c052dbd-e0cd-4688-bf30-856013a7068b
+Apple ID:    smartag.sa@gmail.com
+Build:       
+    Build ID    :  c20bb1b3-71bd-49bd-a138-3c91b7f2ba39
+    Build Date  :  10/27/2026, 3:26:08 AM
+    App Version :  1.21.0
+    Build number:  72
+
+- Scheduling iOS submission
+✔ Scheduled iOS submission
+
+Submission details: https://expo.dev/accounts/zuhair-7700/projects/zitex/submissions/4043c654-1006-43dd-bb30-b75062fa13b2
+
+Waiting for submission to complete. You can press Ctrl+C to exit.
+- Submitting
+[Tue Oct 27 03:33:00 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+✔ Submitted your app to Apple App Store Connect!
+
+Your binary has been successfully uploaded to App Store Connect!
+- It is now being processed by Apple - you will receive an email when the processing finishes.
+- It usually takes about 5-10 minutes depending on how busy Apple servers are.
+- When it's done, you can see your build here: https://appstoreconnect.apple.com/apps/6773073572/testflight/ios
+[Tue Oct 27 03:33:59 UTC 2026] ios ✅ submitted OK
+[Tue Oct 27 03:34:01 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:35:02 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:36:03 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:37:05 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:38:06 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:39:07 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:40:08 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:41:10 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:42:11 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:43:12 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:44:13 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:45:14 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=IN_PROGRESS
+[Tue Oct 27 03:46:16 UTC 2026] android 17db38ae-9859-492a-9763-17a54024b486 status=FINISHED
+[Tue Oct 27 03:46:16 UTC 2026] android submit attempt 1
+
+Project ID:                     1c052dbd-e0cd-4688-bf30-856013a7068b
+Release track:                  internal
+Changes not sent for a review:  false
+Release status:                 COMPLETED
+Google Service Account Key:     
+    Key Source   :  local
+    Key Path     :  ../zitex-upload-f1fcca92544c.json
+    Account Email:  zitex-upload@zitex-upload.iam.gserviceaccount.com
+Rollout:                        undefined
+Build:                          
+    Build ID    :  17db38ae-9859-492a-9763-17a54024b486
+    Build Date  :  10/27/2026, 3:25:59 AM
+    App Version :  1.21.0
+    Version code:  77
+
+- Scheduling Android submission
+✔ Scheduled Android submission
+
+Submission details: https://expo.dev/accounts/zuhair-7700/projects/zitex/submissions/201575c1-fd8c-4f89-a975-446f93a1bc3a
+
+Waiting for submission to complete. You can press Ctrl+C to exit.
+- Submitting
+✔ Submitted your app to Google Play Store!
+
+All done!
+[Tue Oct 27 03:47:30 UTC 2026] android ✅ submitted OK
+[Tue Oct 27 03:47:30 UTC 2026] v1.21.0 submissions job finished

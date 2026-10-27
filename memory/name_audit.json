@@ -1,6 +1,6 @@
 {
- "texts": 105,
- "checks": 2100,
+ "texts": 144,
+ "checks": 2880,
  "issues": [
   {
    "lang": "en",
@@ -12,34 +12,10 @@
   },
   {
    "lang": "ar",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
+   "src": "Zenrex Store",
+   "out": "Zenrex Store",
    "problems": [
-    "dup:pro"
-   ]
-  },
-  {
-   "lang": "ur",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
-   "problems": [
-    "dup:pro"
-   ]
-  },
-  {
-   "lang": "fa",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
-   "problems": [
-    "dup:pro"
-   ]
-  },
-  {
-   "lang": "he",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
-   "problems": [
-    "dup:pro"
+    "latin-left:Store"
    ]
   },
   {
@@ -84,54 +60,14 @@
   },
   {
    "lang": "ru",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
+   "src": "Zenrex Store",
+   "out": "Zenrex Store",
    "problems": [
-    "dup:pro"
+    "latin-left:Store"
    ]
   },
   {
    "lang": "tr",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
-   "problems": [
-    "dup:pro"
-   ]
-  },
-  {
-   "lang": "zh",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
-   "problems": [
-    "dup:pro"
-   ]
-  },
-  {
-   "lang": "ja",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
-   "problems": [
-    "dup:pro"
-   ]
-  },
-  {
-   "lang": "ko",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
-   "problems": [
-    "dup:pro"
-   ]
-  },
-  {
-   "lang": "hi",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
-   "problems": [
-    "dup:pro"
-   ]
-  },
-  {
-   "lang": "bn",
    "src": "MacBook Pro M3 + AirPods Pro",
    "out": "MacBook Pro M3 + AirPods Pro",
    "problems": [
@@ -156,10 +92,10 @@
   },
   {
    "lang": "th",
-   "src": "MacBook Pro M3 + AirPods Pro",
-   "out": "MacBook Pro M3 + AirPods Pro",
+   "src": "Zenrex Store",
+   "out": "Zenrex Store",
    "problems": [
-    "dup:pro"
+    "latin-left:Store"
    ]
   }
  ]

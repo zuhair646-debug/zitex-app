@@ -121,7 +121,7 @@ const LANG_SCRIPT: Record<string, RegExp> = {
 const ANY_NON_LATIN = /[\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF\u0900-\u09FF\u0E00-\u0E7F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/;
 /** Latin words that are not pure codes (M3, 128GB, XPS, USB-C). */
 const latinWords = (s: string) =>
-  (s.match(/[A-Za-z][A-Za-z0-9\-]*/g) || []).filter((w) => !/\d/.test(w) && !(w === w.toUpperCase() && w.length <= 4));
+  (s.match(/[A-Za-z][A-Za-z0-9\-]*/g) || []).filter((w) => !/\d/.test(w) && !(w === w.toUpperCase() && w.replace('-', '').length <= 4));
 
 /** Does `text` need translating to be fully in `lang`? The viewer's language is always the target. */
 export function needsTranslation(text: string, lang: Lang): boolean {
@@ -271,7 +271,7 @@ export default function TranslatableName({
       onPress={toggle}
       testID="translatable-name-toggle"
       activeOpacity={0.6}
-      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
       style={[
         styles.iconBtn,
         isTr && styles.iconBtnActive,
@@ -306,6 +306,7 @@ export default function TranslatableName({
     return (
       <View style={[styles.rowInline, containerStyle]}>
         <Text
+          testID="translatable-name-text"
           style={[style, isTr ? translatedStyle : null]}
           numberOfLines={numberOfLines}
         >
@@ -318,7 +319,7 @@ export default function TranslatableName({
 
   return (
     <View style={containerStyle}>
-      <Text style={[style, isTr ? translatedStyle : null]} numberOfLines={numberOfLines}>
+      <Text testID="translatable-name-text" style={[style, isTr ? translatedStyle : null]} numberOfLines={numberOfLines}>
         {displayText}
       </Text>
       {hideIcon ? null : <View style={{ marginTop: 2, alignSelf: 'flex-start' }}>{IconBtn}</View>}

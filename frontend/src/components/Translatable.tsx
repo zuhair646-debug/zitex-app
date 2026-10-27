@@ -211,7 +211,7 @@ export default function Translatable({
       testID="translatable-toggle"
       onPress={toggle}
       activeOpacity={0.6}
-      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
       style={[
         styles.iconBtn,
         isTr && styles.iconBtnActive,
@@ -245,7 +245,7 @@ export default function Translatable({
   if (inline) {
     return (
       <View style={[styles.rowInline, containerStyle]}>
-        <Text style={[style, isTr ? translatedStyle : null]} numberOfLines={numberOfLines}>
+        <Text testID="translatable-text" style={[style, isTr ? translatedStyle : null]} numberOfLines={numberOfLines}>
           {displayText}
         </Text>
         {hideIcon ? null : IconBtn}
@@ -255,7 +255,7 @@ export default function Translatable({
 
   return (
     <View style={containerStyle}>
-      <Text style={[style, isTr ? translatedStyle : null]} numberOfLines={numberOfLines}>
+      <Text testID="translatable-text" style={[style, isTr ? translatedStyle : null]} numberOfLines={numberOfLines}>
         {displayText}
       </Text>
       {hideIcon ? null : <View style={{ marginTop: 2, alignSelf: 'flex-start' }}>{IconBtn}</View>}
@@ -274,6 +274,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    minWidth: 26,
+    minHeight: 24,
+    justifyContent: 'center',
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 6,

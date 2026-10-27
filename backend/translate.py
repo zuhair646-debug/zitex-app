@@ -16,6 +16,7 @@ Endpoints:
   POST /api/translate       — single text
   POST /api/translate/bulk  — up to 1000 texts in one call
 """
+import re
 import os
 import hashlib
 import logging
@@ -60,7 +61,7 @@ _RULES = (
     "write brand and product-line names in the TARGET script exactly as native speakers usually write them "
     "(Arabic: آيفون، ماك بوك برو، شاومي، سامسونج جالكسي، ديل، لينوفو، هواوي، أنكر، ساعة أبل; Urdu: آئی فون، میک بک; Chinese: 苹果手机/iPhone→苹果, 小米, 戴尔, 联想, 三星, 华为; "
     "Hindi: आईफ़ोन, सैमसंग; Russian: Айфон, Самсунг). Only short model codes that contain digits or are 2-4 capital letters stay as-is "
-    "(M3, S3, 15, 128GB, XPS, GT, USB-C, 5G). For Latin-script targets (English, French, Spanish, German, Italian, Portuguese, Turkish, Indonesian, Malay) "
+    "(M3, S3, 15, 128GB, USB-C, 5G). Product-line words like Pro, Max, Ultra, Plus, Mini, Air, Watch, Book MUST be translated/transliterated too. For Latin-script targets (English, French, Spanish, German, Italian, Portuguese, Turkish, Indonesian, Malay) "
     "keep brand names in their normal Latin spelling (iPhone, Xiaomi, Dell). The app name 'Zenrex' always stays 'Zenrex'. "
     "PEOPLE'S NAMES (customers, employees, drivers): transliterate into the target script (e.g. 'محمد العتيبي' → 'Mohammed Al-Otaibi'; 'John Smith' → 'جون سميث'). "
     "Use the standard spelling of Saudi city names in the target language. 'Balance' means money balance. "
@@ -71,7 +72,7 @@ _RULES = (
 )
 # Bump when the rules change so stale cached translations are regenerated.
 _AR_RX = __import__('re').compile(r'[\u0600-\u06FF]')
-_RULES_VERSION = 'r3'
+_RULES_VERSION = 'r4'
 
 _SCRIPT_RX = {
     'arab': r'[\u0600-\u06FF]', 'heb': r'[\u0590-\u05FF]', 'cyr': r'[\u0400-\u04FF]', 'cjk': r'[\u4E00-\u9FFF]',
@@ -106,11 +107,8 @@ def _clean_ok(target: str, text: str, source: str = '') -> bool:
     if target == 'ar' or native:
         # Non-Latin target: every Latin word must be a short code (M3, XPS, 128GB, USB-C) or the app name.
         bad = [w for w in re.findall(r'[A-Za-z0-9][A-Za-z0-9\-]*', text)
-               if re.search(r'[A-Za-z]', w) and not re.search(r'\d', w) and not (w.replace('-', '').isupper() and len(w) <= 6) and w.lower() not in ('zenrex', 'store')
-               and not (target in ('zh', 'ja', 'ko') and w.lower() in ('iphone', 'ipad', 'airpods', 'imac'))]
-        # Chinese/Japanese/Korean natively keep model words (华为 Mate 60 Pro): fine once the brand is in native script.
-        if bad and target in ('zh', 'ja', 'ko') and any(re.search(_SCRIPT_RX[n], text) for n in _NATIVE[target].split('|')):
-            bad = []
+               if re.search(r'[A-Za-z]', w) and not re.search(r'\d', w) and not (w.replace('-', '').isupper() and len(w.replace('-', '')) <= 4)
+               and w.lower() not in ('zenrex', 'store')]
         if bad:
             return False
     return True
@@ -291,8 +289,22 @@ def build_router(db=None):
         strict_note = (
             f" STRICT: the previous attempt left Latin words. In {target_name} you MUST write every brand and product-line "
             f"name (MacBook, Pro, Max, iPhone, Watch, Anker, PowerCore...) in {target_name} script — e.g. Arabic 'ماك بوك برو 16 M3 ماكس', "
-            "Chinese '苹果笔记本电脑 Pro 16 M3 Max' is WRONG, write it fully in Chinese characters. Only digit codes like M3, 16, 20K stay."
+            "Chinese '苹果笔记本电脑 Pro 16 M3 Max' is WRONG — write '苹果笔记本电脑 专业版 16 M3 顶配版'; 'iPhone 15 Pro' → '苹果手机 15 专业版'; 'Samsung Galaxy S24 Ultra' → '三星盖乐世 S24 至尊版'; 'Huawei Mate 60 Pro' → '华为麦特 60 专业版'; "
+            "Japanese 'アイフォーン 15 プロ'; Korean '아이폰 15 프로'. Only digit codes like M3, 16, 20K stay."
         )
+
+        _GLOSS = {'zh': {'xiaomi': '小米', 'redmi': '红米', 'note': '笔记版', 'pro': '专业版', 'max': '顶配版', 'ultra': '至尊版',
+                         'plus': '增强版', 'mini': '迷你版', 'air': '轻薄版', 'galaxy': '盖乐世', 'mate': '麦特', 'watch': '手表',
+                         'iphone': '苹果手机', 'ipad': '苹果平板', 'macbook': '苹果笔记本电脑', 'airpods': '苹果无线耳机',
+                         'apple': '苹果', 'samsung': '三星', 'huawei': '华为', 'honor': '荣耀', 'oppo': '欧珀', 'lenovo': '联想',
+                         'dell': '戴尔', 'asus': '华硕', 'anker': '安克', 'sony': '索尼', 'magic': '魔术版', 'buds': '耳机'}}
+
+        def _gloss_hint(line: str) -> str:
+            g = _GLOSS.get(req.target_lang)
+            if not g:
+                return ''
+            hits = {w: g[w.lower()] for w in re.findall(r'[A-Za-z]+', line) if w.lower() in g}
+            return (" Use this glossary: " + ", ".join(f"{k}={v}" for k, v in hits.items()) + ".") if hits else ''
 
         async def run_chunk(batch: list, tag: str) -> list:
             """Translate one chunk; returns the items that failed validation."""
@@ -307,11 +319,12 @@ def build_router(db=None):
                         f"(language code '{req.target_lang}'). Output MUST be written in {target_name}. "
                         "Return ONLY the translations in the same order, each on its own line, prefixed with the "
                         "same number and a dot. No explanations, no extra text, no quotes. " + _RULES
-                        + (strict_note if tag.startswith('r') and (req.target_lang == 'ar' or req.target_lang in _NATIVE) and req.target_lang not in ('zh', 'ja', 'ko') else '')
+                        + (strict_note if tag.startswith('r') and (req.target_lang == 'ar' or req.target_lang in _NATIVE) else '')
                     ),
                 ).with_model("anthropic", "claude-sonnet-4-6")
                 resp = await chat.send_message(UserMessage(
-                    text=f"Translate into {target_name} ({req.target_lang}) — write every line in {target_name}:\n{numbered}"))
+                    text=f"Translate into {target_name} ({req.target_lang}) — write every line in {target_name}."
+                         f"{_gloss_hint(numbered) if tag.startswith('rs') else ''}\n{numbered}"))
                 for line in (resp or "").strip().split("\n"):
                     line = line.strip()
                     head, dot, tail = line.partition(".")
@@ -339,6 +352,14 @@ def build_router(db=None):
             last = [x for x in retry if x not in results][:20]
             if last:  # final pass: one line per request for the stubborn ones
                 await _asyncio.gather(*[run_chunk([x], f"rs{i}") for i, x in enumerate(last)])
+            # Last resort for Chinese: deterministic glossary substitution of brand/model words.
+            g = _GLOSS.get(req.target_lang)
+            for x in [x for x in last if x not in results] if (last and g) else []:
+                sub = re.sub(r'[A-Za-z]+', lambda m: g.get(m.group(0).lower(), m.group(0)), x)
+                sub = re.sub(r'(?<=[\u4e00-\u9fff]) (?=[\u4e00-\u9fff])', '', sub)
+                if _clean_ok(req.target_lang, sub, x):
+                    results[x] = sub
+                    await _cache_put(x.strip(), req.target_lang, sub, req.source_lang)
         failed = [raw for raw in req.texts if raw not in results]
 
         # Fallback: any text we couldn't translate — return source
