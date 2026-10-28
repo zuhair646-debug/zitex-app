@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo} from 'react';
 import { useT, curLang } from '../../src/i18n';
 import { tSync, tf, TX } from '../../src/useAutoT';
+import { FilterTabs } from '../../src/components/ui/FilterTabs';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -84,17 +85,15 @@ export default function MerchantBookings() {
         </View>
 
         {/* Status tabs */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabsRow}>
-          <TouchableOpacity onPress={() => setFilter('all')} style={[s.tab, filter === 'all' && s.tabActive]}>
-            <Text style={[s.tabLabel, filter === 'all' && s.tabLabelActive]}>{tSync('الكل (', lang)}{bookings.length})</Text>
-          </TouchableOpacity>
-          {Object.keys(STATUSES).map(st => (
-            <TouchableOpacity key={st} onPress={() => setFilter(st)} style={[s.tab, filter === st && s.tabActive]}>
-              <View style={[s.dot, { backgroundColor: SCOLOR[st] }]} />
-              <Text style={[s.tabLabel, filter === st && s.tabLabelActive]}>{tSync(STATUSES[st], lang)} ({counts[st] || 0})</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <FilterTabs
+          testIDPrefix="booking-filter"
+          value={filter}
+          onChange={setFilter}
+          items={[
+            { key: 'all', label: tSync('الكل', lang), count: bookings.length },
+            ...Object.keys(STATUSES).map(st => ({ key: st, label: tSync(STATUSES[st], lang), count: counts[st] || 0 })),
+          ]}
+        />
 
         {loading ? (
           <ActivityIndicator size="large" color={colors.brand} style={{ marginTop: 40 }} />

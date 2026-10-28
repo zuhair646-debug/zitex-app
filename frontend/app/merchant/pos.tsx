@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
-import { ScreenHeader, PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, Badge, Chip } from '../../src/components/ui';
+import { ScreenHeader, PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, Badge, FilterTabs, Chip } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
@@ -91,11 +91,12 @@ export default function POSTerminal() {
         <ScreenHeader title={tSync("نقاط البيع POS", lang)} onBack={() => router.back()} rightIcon="receipt" onRight={() => router.push('/merchant/invoices')} subtitle={tf('{0} في السلة', lang, [cart.length])} />
 
         {branches.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.sm, paddingBottom: spacing.sm }}>
-            {branches.map((b: any) => (
-              <Chip key={b.id} label={tSync(b.name || '', lang)} icon="business" active={branchId === b.id} onPress={() => setBranchId(b.id)} />
-            ))}
-          </ScrollView>
+          <FilterTabs
+            testIDPrefix="pos-branch"
+            value={branchId || ''}
+            onChange={setBranchId}
+            items={branches.map((b: any) => ({ key: b.id, label: tSync(b.name || '', lang), icon: 'business' as const }))}
+          />
         )}
 
         <View style={s.searchWrap}>

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
+import { FilterTabs } from '../../src/components/ui/FilterTabs';
 import { useT, curLang } from '../../src/i18n';
 
 const GOLD = '#F5C518';
@@ -123,18 +124,12 @@ export default function MerchantReturnsScreen() {
         </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 8, gap: 6 }}>
-        {TABS.map((t) => (
-          <TouchableOpacity key={t.code || 'all'}
-            onPress={() => setFilter(t.code)}
-            style={[s.tab, filter === t.code && s.tabActive]}>
-            <Text style={[s.tabText, filter === t.code && { color: BG }]}>{tSync(t.label, lang)}</Text>
-            <View style={[s.tabBadge, filter === t.code && { backgroundColor: BG + '30' }]}>
-              <Text style={[s.tabBadgeText, filter === t.code && { color: BG }]}>{t.count}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <FilterTabs
+        testIDPrefix="rma-filter"
+        value={filter || 'all'}
+        onChange={(k) => setFilter(k === 'all' ? '' : k)}
+        items={TABS.map((t) => ({ key: t.code || 'all', label: tSync(t.label, lang), count: t.count }))}
+      />
 
       {loading ? (
         <ActivityIndicator color={GOLD} style={{ marginTop: 40 }} />

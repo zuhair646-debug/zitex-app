@@ -9,6 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, radius, typography, shadows, gradients } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
+import { FilterTabs } from './FilterTabs';
+export { FilterTabs } from './FilterTabs';
 
 // ─── PrimaryButton (Gold) ──────────────────────────────────────
 export function PrimaryButton({
@@ -157,28 +159,7 @@ export function SectionHeader({ title, subtitle, action, actionLabel }: {
 export function SegmentedControl<T extends string>({ options, value, onChange, labels }: {
   options: T[]; value: T; onChange: (v: T) => void; labels: Record<T, string>;
 }) {
-  const styles = useStyles();
-  const scrollable = options.length > 3;
-  const Wrap = scrollable ? ScrollView : View;
-  const wrapProps: any = scrollable
-    ? { horizontal: true, showsHorizontalScrollIndicator: false, contentContainerStyle: styles.segWrap, style: { flexGrow: 0 } }
-    : { style: styles.segWrap };
-  return (
-    <Wrap {...wrapProps}>
-      {options.map(opt => {
-        const active = value === opt;
-        return (
-          <TouchableOpacity
-            key={opt} activeOpacity={0.85}
-            onPress={() => { Haptics.selectionAsync().catch(()=>{}); onChange(opt); }}
-            style={[scrollable ? styles.segItemScroll : styles.segItem, active && styles.segItemActive]}
-          >
-            <Text style={[styles.segText, active && styles.segTextActive]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{labels[opt]}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </Wrap>
-  );
+  return <FilterTabs items={options.map(k => ({ key: k, label: labels[k] }))} value={value} onChange={onChange} testIDPrefix="seg" />;
 }
 
 // ─── ChipRow ──────────────────────────────────────────────────

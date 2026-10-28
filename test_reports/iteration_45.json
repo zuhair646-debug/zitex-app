@@ -1,0 +1,41 @@
+{
+  "summary": "Frontend-only test of the new shared FilterTabs bar + Live Preview full-page scroll + social FlatList, mobile viewport 375x667, AR (RTL) and EN. FilterTabs on /merchant/orders, /merchant/products, /merchant/live-preview (sections, competitions filter, overview leaderboard, social filters), customer /orders, /merchant/returns, /merchant/bookings, /merchant/inventory: no labels clipped (all tabs 40px tall, lg 46px, 14/15px font, scrollHeight==clientHeight). Tapping a tab makes it active, filters the list and scrolls it into view. In AR the first tab sits at the far right; in EN it sits at the far left and labels are in English. Live Preview: there is now one scroller per section. After scrolling 600px the 'وضع البث المباشر' banner (top 31 -> -569) and the section tabs scroll away in products, services, competitions, social and overview. Social uses a FlatList (initialNumToRender=3), its 3 filters work and 'التفاصيل' opens /merchant/post-analytics?id=... CRITICAL REGRESSION FOUND AND FIXED: /merchant/pos crashed with a red screen ('Chip is not defined') because the FilterTabs refactor removed Chip from the import while the payment-method chips still use it. I added it back; POS now loads and the pos-branch tabs work.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "POS terminal", "issue": "Red screen 'Chip is not defined' (pos.tsx:182). Chip import was removed during the FilterTabs migration but is still used for payment methods. FIXED by tester (added Chip back to the import).", "testID": "pos-branch-*", "priority": "CRITICAL (fixed)"},
+      {"component": "Live Preview Competitions filter", "issue": "The 'نشطة' (active) filter shows 6 competitions, and all 6 carry the 'انتهت' (ended) badge. The API returns status='open' with winners already drawn. The active filter (status==='open' || remaining_ms>0) does not exclude items with winners, but isEnded does treat winners as ended. So the same items show under active and ended. Reference: live-preview.tsx:527-531", "testID": "lp-comp-filter-active", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Live Preview (EN)", "issues": ["Machine-translated strings read oddly: '0 Direct visitor now' (should be 'live visitors now'), 'Application 7' (should be 'App 7'), 'Comparison' button (should be 'Compare')."]},
+      {"screen": "merchant/orders, products, returns, bookings (default filter = all)", "issues": ["Because the active tab is centred, in AR the screen opens on the left end (the 'All' tab) and the logically first tabs such as 'New' are off-screen to the right. In EN it opens on the right end. This works as designed; noting it in case the user expects the first tab to be visible."]}
+    ],
+    "react_native_issues": [
+      {"component": "FilterTabs direction style", "issue": "Metro logs a repeated 'ERROR Invalid style property of \"direction\". Did you mean \"writingDirection\"?' for the ScrollView style { direction: 'ltr' } (react-native-web validation). Web layout is correct and the prop is valid for Yoga on native. However, the Android RTL fix depends on it, with the app forcing RTL via I18nManager.forceRTL in i18n.tsx:6433, so it must be checked on a real Android device. Reference: src/components/ui/FilterTabs.tsx:100"},
+      {"component": "FilterTabs label lineHeight", "issue": "label uses fontSize 14 / lineHeight 20 with includeFontPadding:false. With Arabic fonts and maxFontSizeMultiplier 1.25, the risk of vertical glyph clipping on Android remains, and it cannot be verified on web. Consider dropping the fixed lineHeight or using a ~1.5x ratio. Reference: src/components/ui/FilterTabs.tsx:107"}
+    ]
+  },
+  "test_report_links": ["browser_automation scripts (inline): orders AR/EN, products, live-preview sections + scroll-away, competitions/overview/social filters, returns/bookings/inventory/pos, customer orders"],
+  "action_items": [
+    "Fix the competitions 'active' filter to exclude items with winners or status 'ended' so it matches the isEnded badge (live-preview.tsx:530).",
+    "Verify on a real Android device (forced RTL) that the FilterTabs ScrollView with direction:'ltr' starts at the right edge and keeps labels from clipping while swiping. Optionally relax the label lineHeight for Arabic.",
+    "Social feed performance: renderItem is an inline closure that builds MediaCarousel and TranslatableName with no memoised PostCard. Every state change (voted, expandedComments, replying) re-renders all visible posts. Extract a React.memo PostCard to cut scroll lag further (MerchantSocialFeed.tsx:190-307).",
+    "Remove the dead legacy SocialSection in live-preview.tsx (~lines 649-880, which still has the old ScrollView chip row) and split the 2068-line file.",
+    "Make the social-action-likers/comments/sharers testIDs unique per post and add a testID to the 'التفاصيل' button (social-post-details-{id}).",
+    "Fix the EN wording in the Live Preview toolbar and sales cards ('Direct visitor now', 'Application', 'Comparison')."
+  ],
+  "critical_code_review_comments": [
+    "pos.tsx: the FilterTabs migration removed the Chip import while Chip is still used, which crashed the whole screen. I checked the other migrated files with a removed-import scan and tsc (no TS2304) and found nothing else.",
+    "live-preview.tsx is 2068 lines (>700) and contains an unused SocialSection function.",
+    "FilterTabs: each Tab calls useMemo(makeStyles) to build its own StyleSheet. Hoist it to module or parent level.",
+    "Customer /orders filter 'processing' matches only status==='processing'. Statuses such as pending, confirmed and preparing will not appear under any tab except 'All' (app/orders.tsx:25)."
+  ],
+  "updated_files": ["/app/frontend/app/merchant/pos.tsx (added missing Chip import)"],
+  "success_rate": {"backend": "N/A", "frontend": "92% (all requested FilterTabs and scroll checks pass; POS crash fixed by tester; competitions active-filter logic bug open)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login: POST /api/auth/login, then set localStorage token, user, app_lang (ar/en) and location_prompted='1'. Active tab detection: the backgroundColor of the Pressable's grandchild is rgb(201,168,92). Live Preview has one scroll div (clientHeight 667); use mouse.wheel over y=500. Customer 0500000000 has 0 orders and merchant inventory is empty (data, not bugs). Metro 'Invalid style property direction' errors come from FilterTabs.",
+  "rca_of_issue": "POS crash: the commit replaced the branch Chip row with FilterTabs and dropped 'Chip' from the ui import, but the checkout modal's payment-method row (pos.tsx:181-183) still renders <Chip>. Modal children render on web, so the screen crashed on mount. Fix: re-add Chip to the import."
+}

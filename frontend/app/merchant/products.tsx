@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, ScrollView, TouchableOpacity, StyleSheet, Image, Alert, RefreshControl, TextInput, Switch, StatusBar } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Alert, RefreshControl, TextInput, Switch, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { Chip, EmptyState, SkeletonBox, Badge } from '../../src/components/ui';
+import { FilterTabs, EmptyState, SkeletonBox, Badge } from '../../src/components/ui';
 import { useT } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
 import Translatable from '../../src/components/Translatable';
@@ -99,13 +99,18 @@ export default function MerchantProducts() {
         </View>
 
         {/* Filters */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} style={{ flexGrow: 0, maxHeight: 44 }}>
-          <Chip label={t('mo.prod.f.all', { n: total })} active={filter === 'all'} onPress={() => setFilter('all')} />
-          <Chip label={t('mo.prod.f.available')} icon="checkmark-circle" active={filter === 'in_stock'} onPress={() => setFilter('in_stock')} />
-          <Chip label={t('mo.prod.f.low', { n: lowCount })} icon="warning" active={filter === 'low'} onPress={() => setFilter('low')} />
-          <Chip label={t('mo.prod.f.out', { n: outCount })} icon="close-circle" active={filter === 'out'} onPress={() => setFilter('out')} />
-          <Chip label={t('mo.prod.f.featured')} icon="star" active={filter === 'featured'} onPress={() => setFilter('featured')} />
-        </ScrollView>
+        <FilterTabs
+          testIDPrefix="prod-filter"
+          value={filter}
+          onChange={(k) => setFilter(k as any)}
+          items={[
+            { key: 'all', label: t('mo.prod.f.all', { n: total }) },
+            { key: 'in_stock', label: t('mo.prod.f.available'), icon: 'checkmark-circle' },
+            { key: 'low', label: t('mo.prod.f.low', { n: lowCount }), icon: 'warning' },
+            { key: 'out', label: t('mo.prod.f.out', { n: outCount }), icon: 'close-circle' },
+            { key: 'featured', label: t('mo.prod.f.featured'), icon: 'star' },
+          ]}
+        />
 
         {/* List */}
         {loading ? (

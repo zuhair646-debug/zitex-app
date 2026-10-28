@@ -641,3 +641,10 @@ Instead of manually rewriting the 50+ files that still use `<TX>`, `useAutoT`, o
 - Bulk: multi-line texts (social posts) now use single-text path (numbered-line format broke them). Units km/kg/cm allowed in non-Latin scripts. fa/ur outputs normalised ك→ک ي→ی.
 - scripts/bulk_translate.py no longer stores failed lines (they were saved as Arabic source); handles literal \n keys.
 - Full 20-language scan: tests/full_lang_scan.py (env ROUTES=, OUT=). Reports test_reports/lang_scan*.json.
+
+## UI polish round (Oct 28 2026) — owner goals
+1. One unified options/filter bar `src/components/ui/FilterTabs.tsx` (no fixed heights, no font shrinking, Android-RTL safe: LTR row + reversed items, auto-scroll active into view, spring animation). Used in merchant orders (via SegmentedControl), products, live-preview (sections, competitions, leaderboard, social), customer orders, returns, bookings, inventory, POS branches.
+2. Live Preview: banner + section tabs + toolbar + sales cards now scroll with content (passed as `header` into each section list).
+3. Social feed in live preview: FlatList + memoised PostCard, no BlurView per post, background refresh only re-renders on change.
+4. Competitions "active" filter excludes ended/with-winners.
+- Translation rules locked in /app/memory/TRANSLATION_RULES.md (final 20-lang scan at end of project).

@@ -19,6 +19,7 @@ import LiveToastNotifications from '../../src/components/live-preview/LiveToastN
 import { useT, curLang } from '../../src/i18n';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
+import { FilterTabs } from '../../src/components/ui/FilterTabs';
 
 /** Product name in the viewer's language (merchant-entered field), auto-unified by TranslatableName. */
 const pName = (p: any, lang: string) => (lang === 'ar' ? (p?.name_ar || p?.name) : (p?.name_en || p?.name || p?.name_ar)) || '';
@@ -57,46 +58,39 @@ export default function LivePreview() {
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
-  return (
-    <SafeAreaView style={s.safe}>
-      {/* Preview banner */}
+  // Everything above the content scrolls away with it (no fixed top area).
+  const header = (
+    <View>
       <View style={s.previewPill}>
         <View style={s.liveDot} />
         <Text style={s.previewText}>🔴 {tSync('وضع البث المباشر', lang)} — v{Constants.expoConfig?.version} ✨</Text>
         <AlertsBell apiCall={apiCall} />
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="close-circle" size={22} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
+      <FilterTabs
+        testIDPrefix="lp-section"
+        size="lg"
+        value={section}
+        onChange={(k) => { setSection(k as Section); setCompareMode(false); setSelectedIds([]); }}
+        items={[
+          { key: 'products', label: t('merchant.store', 'المتجر'), icon: 'storefront' },
+          { key: 'services', label: t('merchant.maintenance', 'الصيانة'), icon: 'construct' },
+          { key: 'competitions', label: t('merchant.competitions', 'المسابقات'), icon: 'trophy' },
+          { key: 'social', label: t('merchant.social', 'السوشيال ميديا'), icon: 'chatbubbles' },
+          { key: 'overview', label: t('merchant.overview', 'العام'), icon: 'grid' },
+        ]}
+      />
+    </View>
+  );
 
-      {/* Section tabs (Store → Maintenance → Competitions → Social → General) */}
-      <View style={s.sectionRowWrap}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={s.sectionRow}
-          bounces={false}
-          decelerationRate="fast"
-        >
-          {[
-            { id: 'products', name: t('merchant.store','المتجر'), icon: 'storefront' },
-            { id: 'services', name: t('merchant.maintenance','الصيانة'), icon: 'construct' },
-            { id: 'competitions', name: t('merchant.competitions','المسابقات'), icon: 'trophy' },
-            { id: 'social', name: t('merchant.social','السوشيال ميديا'), icon: 'chatbubbles' },
-            { id: 'overview', name: t('merchant.overview','العام'), icon: 'grid' },
-          ].map(t2 => (
-            <TouchableOpacity key={t2.id} testID={`lp-section-${t2.id}`} onPress={() => { setSection(t2.id as Section); setCompareMode(false); setSelectedIds([]); }}
-              style={[s.sectionBtn, section === t2.id && s.sectionBtnActive]}>
-              <Ionicons name={t2.icon as any} size={18} color={section === t2.id ? BG : GOLD} />
-              <Text style={[s.sectionText, section === t2.id && { color: BG }]}>{t2.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {section === 'overview' && <OverviewSection apiCall={apiCall} />}
+  return (
+    <SafeAreaView style={s.safe}>
+      {section === 'overview' && <OverviewSection apiCall={apiCall} header={header} />}
       {section === 'products' && (
         <ProductsSection
+          header={header}
           apiCall={apiCall}
           onAnalytics={(item: any) => router.push(`/merchant/product-analytics?id=${item.id}` as any)}
           compareMode={compareMode}
@@ -106,9 +100,9 @@ export default function LivePreview() {
           openCompare={openCompare}
         />
       )}
-      {section === 'services' && <ServicesSection apiCall={apiCall} onAnalytics={(svc: any) => router.push(`/merchant/service-analytics?id=${svc.id}` as any)} />}
-      {section === 'competitions' && <CompetitionsSection apiCall={apiCall} onAnalytics={(comp: any) => router.push(`/merchant/competition-analytics?id=${comp.id}` as any)} />}
-      {section === 'social' && <MerchantSocialFeed apiCall={apiCall} onOpenPost={(post: any) => router.push(`/merchant/post-analytics?id=${post.id || post._id}` as any)} />}
+      {section === 'services' && <ServicesSection header={header} apiCall={apiCall} onAnalytics={(svc: any) => router.push(`/merchant/service-analytics?id=${svc.id}` as any)} />}
+      {section === 'competitions' && <CompetitionsSection header={header} apiCall={apiCall} onAnalytics={(comp: any) => router.push(`/merchant/competition-analytics?id=${comp.id}` as any)} />}
+      {section === 'social' && <MerchantSocialFeed header={header} apiCall={apiCall} onOpenPost={(post: any) => router.push(`/merchant/post-analytics?id=${post.id || post._id}` as any)} />}
 
       {analyticsFor && (
         <ProductAnalyticsSheet product={analyticsFor} onClose={() => setAnalyticsFor(null)} apiCall={apiCall} />
@@ -133,7 +127,7 @@ export default function LivePreview() {
 }
 
 /* ─── Products grid with live viewers & comparison ─────────────────────── */
-function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSelectedIds, setCompareMode, openCompare }: any) {
+function ProductsSection({ header, apiCall, onAnalytics, compareMode, selectedIds, setSelectedIds, setCompareMode, openCompare }: any) {
   const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
@@ -169,10 +163,22 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
   const totalLive = useMemo(() => Object.values(live).reduce((s, v: any) => s + (v.count || 0), 0), [live]);
   const toggle = (id: string) => setSelectedIds((cur: string[]) => cur.includes(id) ? cur.filter(x => x !== id) : (cur.length < 4 ? [...cur, id] : cur));
 
-  if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
+  if (loading) return <View>{header}<ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} /></View>;
 
   return (
     <View style={{ flex: 1 }}>
+      <FlatList
+        data={items}
+        numColumns={2}
+        keyExtractor={(x, i) => x.id || String(i)}
+        columnWrapperStyle={{ gap: 10, paddingHorizontal: 12 }}
+        contentContainerStyle={{ paddingBottom: 120, gap: 10 }}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={7}
+        ListHeaderComponent={
+          <View>
+      {header}
       {/* Toolbar */}
       <View style={s.toolbar}>
         <View style={s.liveBadge}>
@@ -228,13 +234,6 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
         </View>
       )}
 
-      <FlatList
-        data={items}
-        numColumns={2}
-        keyExtractor={(x, i) => x.id || String(i)}
-        columnWrapperStyle={{ gap: 10, paddingHorizontal: 12 }}
-        contentContainerStyle={{ paddingBottom: 120, gap: 10 }}
-        ListHeaderComponent={
           <View style={{ paddingHorizontal: 12, gap: 10 }}>
             {/* Banners (like customer home) */}
             {banners.length > 0 && (
@@ -267,6 +266,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
             {items.length > 0 && (
               <TX style={{ color: GOLD, fontSize: 14, fontWeight: '900', marginTop: 6, textAlign: 'right' }}>🛍 كل المنتجات</TX>
             )}
+          </View>
           </View>
         }
         renderItem={({ item }) => {
@@ -333,7 +333,7 @@ function ProductsSection({ apiCall, onAnalytics, compareMode, selectedIds, setSe
   );
 }
 
-function ServicesSection({ apiCall, onAnalytics }: any) {
+function ServicesSection({ header, apiCall, onAnalytics }: any) {
   const { lang } = useT();
   const s = useSStyles();
   const router = useRouter();
@@ -365,14 +365,17 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
-  if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
+  if (loading) return <View>{header}<ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} /></View>;
 
   return (
     <>
       <FlatList
         data={items}
+        ListHeaderComponent={header}
         keyExtractor={(x, i) => x.id || String(i)}
-        contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        ListHeaderComponentStyle={{ marginHorizontal: -12 }}
+        style={{ paddingHorizontal: 12 }}
         renderItem={({ item }) => (
           <TouchableOpacity style={s.svcCard2} activeOpacity={0.85} onPress={() => onAnalytics && onAnalytics(item)}>
             {/* Cover image with badges */}
@@ -503,7 +506,7 @@ function ServicesSection({ apiCall, onAnalytics }: any) {
   );
 }
 
-function CompetitionsSection({ apiCall, onAnalytics }: any) {
+function CompetitionsSection({ header, apiCall, onAnalytics }: any) {
   const { lang } = useT();
   const s = useSStyles();
   const [items, setItems] = useState<any[]>([]);
@@ -524,7 +527,7 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
   const filtered = useMemo(() => {
     if (filter === 'all') return items;
     if (filter === 'ended') return items.filter(c => c.status === 'ended' || (c.winners || []).length > 0);
-    return items.filter(c => c.status === 'open' || (c.remaining_ms || 0) > 0);
+    return items.filter(c => c.status !== 'ended' && !(c.winners || []).length && (c.status === 'open' || (c.remaining_ms || 0) > 0));
   }, [items, filter]);
 
   const fmtRemaining = (ms: number | null | undefined) => {
@@ -538,26 +541,28 @@ function CompetitionsSection({ apiCall, onAnalytics }: any) {
     return tSync('ينتهي الآن', curLang());
   };
 
-  if (loading) return <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} />;
+  if (loading) return <View>{header}<ActivityIndicator size="large" color={GOLD} style={{ marginTop: 40 }} /></View>;
 
   return (
     <>
-      {/* Filter row — competitions */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, paddingEnd: 24 }}
-        style={{ height: 52, flexGrow: 0 }}>
-        {[
-          { k: 'active', label: 'نشطة' },
-          { k: 'ended', label: 'منتهية' },
-          { k: 'all', label: 'الكل' },
-        ].map((f: any) => (
-          <TouchableOpacity key={f.k} onPress={() => setFilter(f.k)}
-            style={[s.cmpBtn, filter === f.k && { backgroundColor: GOLD }]}>
-            <Text style={[s.cmpText, filter === f.k && { color: BG }]}>{tSync(f.label || '', curLang())}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      <FlatList data={filtered} keyExtractor={(x, i) => x.id || String(i)} contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
+      <FlatList data={filtered} keyExtractor={(x, i) => x.id || String(i)} contentContainerStyle={{ paddingBottom: 120 }}
+        style={{ paddingHorizontal: 12 }}
+        ListHeaderComponentStyle={{ marginHorizontal: -12 }}
+        ListHeaderComponent={
+          <View>
+            {header}
+            <FilterTabs
+              testIDPrefix="lp-comp-filter"
+              value={filter}
+              onChange={(k) => setFilter(k as any)}
+              items={[
+                { key: 'active', label: tSync('نشطة', lang) },
+                { key: 'ended', label: tSync('منتهية', lang) },
+                { key: 'all', label: tSync('الكل', lang) },
+              ]}
+            />
+          </View>
+        }
         renderItem={({ item }) => {
           const isEnded = item.status === 'ended' || (item.winners || []).length > 0;
           const isLive = !isEnded && (item.remaining_ms == null || item.remaining_ms > 0);
@@ -1645,7 +1650,7 @@ function EntityDetailSheet({ entity, kind, onClose }: any) {
   );
 }
 
-function OverviewSection({ apiCall }: any) {
+function OverviewSection({ apiCall, header }: any) {
   const { lang } = useT();
   const s = useSStyles();
   const [data, setData] = useState<any>(null);
@@ -1666,12 +1671,15 @@ function OverviewSection({ apiCall }: any) {
   useEffect(() => { load(); const iv = setInterval(() => load(true), 25000); return () => clearInterval(iv); }, [load]);
 
   if (loading) return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 60 }}>
-      <ActivityIndicator size="large" color={GOLD} />
-      <TX style={{ color: MUTED, marginTop: 12, fontSize: 12 }}>جاري تحميل داشبورد الأداء...</TX>
+    <View style={{ flex: 1 }}>
+      {header}
+      <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 60 }}>
+        <ActivityIndicator size="large" color={GOLD} />
+        <TX style={{ color: MUTED, marginTop: 12, fontSize: 12 }}>جاري تحميل داشبورد الأداء...</TX>
+      </View>
     </View>
   );
-  if (!data) return <TX style={s.empty}>لا تتوفر بيانات</TX>;
+  if (!data) return <View>{header}<TX style={s.empty}>لا تتوفر بيانات</TX></View>;
 
   const summary = [
     { icon: 'car', color: '#60A5FA', label: 'السائقون', value: data.drivers.total, sub: tf('{0} متصل الآن', lang, [data.drivers.online]) },
@@ -1691,6 +1699,7 @@ function OverviewSection({ apiCall }: any) {
       contentContainerStyle={{ paddingBottom: 100 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={GOLD} />}
     >
+      {header}
       {/* Hero header with gold streak */}
       <LinearGradient
         colors={['#1A1401', '#0B0C10']}
@@ -1722,20 +1731,17 @@ function OverviewSection({ apiCall }: any) {
       </View>
 
       {/* Tab pills - premium style */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.luxeTabRow}>
-        {[
-          { k: 'drivers', label: 'السائقون', icon: 'car' },
-          { k: 'branches', label: 'الفروع', icon: 'business' },
-          { k: 'marketers', label: 'المسوّقون', icon: 'megaphone' },
-          { k: 'employees', label: 'الموظفون', icon: 'people' },
-        ].map(t => (
-          <TouchableOpacity key={t.k} testID={`lp-lb-tab-${t.k}`} onPress={() => setTab(t.k as any)}
-            style={[s.luxeTab, tab === t.k && s.luxeTabActive]}>
-            <Ionicons name={t.icon as any} size={16} color={tab === t.k ? BG : GOLD} />
-            <Text style={[s.luxeTabText, tab === t.k && { color: BG, fontWeight: '900' }]}>{tSync(t.label || '', curLang())}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <FilterTabs
+        testIDPrefix="lp-lb-tab"
+        value={tab}
+        onChange={(k) => setTab(k as any)}
+        items={[
+          { key: 'drivers', label: tSync('السائقون', lang), icon: 'car' },
+          { key: 'branches', label: tSync('الفروع', lang), icon: 'business' },
+          { key: 'marketers', label: tSync('المسوّقون', lang), icon: 'megaphone' },
+          { key: 'employees', label: tSync('الموظفون', lang), icon: 'people' },
+        ]}
+      />
 
       {/* Order Heatmap - Best Times */}
       <OrderHeatmap apiCall={apiCall} />

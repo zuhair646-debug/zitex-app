@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useT, curLang } from '../src/i18n';
 import { useAuth } from './_layout';
 import { TX, tSync } from '../src/useAutoT';
+import { FilterTabs } from '../src/components/ui/FilterTabs';
 
 export default function OrdersScreen() {
   const { lang } = useT();
@@ -32,16 +33,14 @@ export default function OrdersScreen() {
         </TouchableOpacity>
         <Text style={s.title}>{tSync('طلباتي', lang)}</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={s.filterRow}>
-        {['all', 'processing', 'completed', 'cancelled'].map(f => (
-          <TouchableOpacity key={f} testID={`filter-${f}`} style={[s.filterPill, filter === f && s.filterActive]}
-            onPress={() => setFilter(f)}>
-            <Text style={[s.filterText, filter === f && s.filterTextActive]}>
-              {tSync(f === 'all' ? 'الكل' : f === 'processing' ? 'قيد التنفيذ' : f === 'completed' ? 'مكتمل' : 'ملغى', lang)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <FilterTabs
+        testIDPrefix="filter"
+        value={filter}
+        onChange={setFilter}
+        items={['all', 'processing', 'completed', 'cancelled'].map(f => ({
+          key: f, label: tSync(f === 'all' ? 'الكل' : f === 'processing' ? 'قيد التنفيذ' : f === 'completed' ? 'مكتمل' : 'ملغى', lang),
+        }))}
+      />
       {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> :
         filtered.length === 0 ? (
           <View style={s.empty}><Ionicons name="bag-outline" size={48} color="#A1A1AA" /><Text style={s.emptyText}>{tSync('لا توجد طلبات', lang)}</Text></View>

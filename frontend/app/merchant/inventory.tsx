@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, spacing, radius, typography, shadows } from '../../src/theme/tokens';
-import { Chip, EmptyState, SkeletonBox, PrimaryButton, Badge } from '../../src/components/ui';
+import { Chip, EmptyState, SkeletonBox, PrimaryButton, Badge, FilterTabs } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
@@ -144,23 +144,15 @@ export default function MerchantInventory() {
           </View>
 
           {/* Tabs */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsRow}>
-            {CHANNEL_TABS.map(t => (
-              <TouchableOpacity
-                key={t.key}
-                onPress={() => setTab(t.key as any)}
-                style={[styles.tab, tab === t.key && styles.tabActive]}
-              >
-                <Ionicons name={t.icon as any} size={14} color={tab === t.key ? colors.onBrandPrimary : colors.onSurfaceSecondary} />
-                <Text style={[styles.tabLabel, tab === t.key && styles.tabLabelActive]}>{tSync(t.label, lang)}</Text>
-                {t.key === 'alerts' && (data?.totals.low_stock ?? 0) > 0 && (
-                  <View style={styles.tabBadge}>
-                    <Text style={styles.tabBadgeText}>{data!.totals.low_stock}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <FilterTabs
+            testIDPrefix="inv-tab"
+            value={tab}
+            onChange={(k) => setTab(k as any)}
+            items={CHANNEL_TABS.map(t => ({
+              key: t.key, label: tSync(t.label, lang), icon: t.icon as any,
+              count: t.key === 'alerts' && (data?.totals.low_stock ?? 0) > 0 ? data!.totals.low_stock : undefined,
+            }))}
+          />
 
           {/* List */}
           {loading ? (

@@ -7,6 +7,7 @@ import { LP, K, KM } from './theme';
 import MediaCarousel from '../MediaCarousel';
 import { TX, tSync, tf } from '../../useAutoT';
 import TranslatableName, { NameInitial } from '../TranslatableName';
+import { FilterTabs } from '../ui/FilterTabs';
 import { useT, curLang } from '../../i18n';
 
 const { width } = Dimensions.get('window');
@@ -28,7 +29,7 @@ const timeAgo = (iso?: string) => {
  *   - Bottom Analytics Sheet showing likers, sharers, links, direct-reply
  *   - Filter chips (all / needs reply / top)
  */
-export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
+export default function MerchantSocialFeed({ apiCall, onOpenPost, header }: any) {
   const { lang } = useT();
   const [posts, setPosts] = useState<any[]>([]);
   const [stories, setStories] = useState<any[]>([]);
@@ -73,8 +74,10 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
         apiCall('/api/social/stories').catch(() => []),
         apiCall('/api/store/support').catch(() => null),
       ]);
-      setPosts((postsData || []).filter((p: any) => p.type !== 'story'));
-      setStories(storiesData || []);
+      const nextPosts = (postsData || []).filter((p: any) => p.type !== 'story');
+      // Background refresh: only re-render when something actually changed (prevents scroll jank).
+      setPosts(prev => (JSON.stringify(prev) === JSON.stringify(nextPosts) ? prev : nextPosts));
+      setStories(prev => (JSON.stringify(prev) === JSON.stringify(storiesData || []) ? prev : (storiesData || [])));
       setStoreInfo(supportData);
     } catch (e) { console.log(e); }
     finally { setLoading(false); setRefreshing(false); }
@@ -90,18 +93,19 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
     return posts;
   }, [posts, filter]);
 
-  const votePoll = async (postId: string, optionIndex: number) => {
-    if (voted[postId] === optionIndex) return;
-    setVoted({ ...voted, [postId]: optionIndex });
-    setPosts(posts.map(p => {
+  const votePoll = useCallback(async (postId: string, optionIndex: number) => {
+    const prevVote = voted[postId];
+    if (prevVote === optionIndex) return;
+    setVoted(v => ({ ...v, [postId]: optionIndex }));
+    setPosts(ps => ps.map(p => {
       if (p.id !== postId) return p;
       const opts = [...(p.poll_options || [])];
-      if (voted[postId] != null) opts[voted[postId]] = { ...opts[voted[postId]], votes: Math.max(0, (opts[voted[postId]].votes || 0) - 1) };
+      if (prevVote != null) opts[prevVote] = { ...opts[prevVote], votes: Math.max(0, (opts[prevVote].votes || 0) - 1) };
       opts[optionIndex] = { ...opts[optionIndex], votes: (opts[optionIndex].votes || 0) + 1 };
       return { ...p, poll_options: opts };
     }));
     try { await apiCall(`/api/social/posts/${postId}/vote`, { method: 'POST', body: JSON.stringify({ option_index: optionIndex }) }); } catch {}
-  };
+  }, [apiCall, voted]);
 
   const sendReply = async () => {
     if (!replying || !replyText.trim()) return;
@@ -126,36 +130,42 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
-  if (loading) return <ActivityIndicator size="large" color={LP.GOLD} style={{ marginTop: 40 }} />;
+  if (loading) return <View>{header}<ActivityIndicator size="large" color={LP.GOLD} style={{ marginTop: 40 }} /></View>;
 
   return (
     <>
-      {/* Preview banner */}
-      <BlurView intensity={30} tint="dark" style={s.merchantBanner}>
-        <Ionicons name="eye" size={14} color={LP.GOLD} />
-        <TX style={s.merchantBannerText}>عرض التاجر — تطابق تام مع تجربة العميل ✨</TX>
-      </BlurView>
-
-      {/* Filter chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 6, paddingVertical: 6 }}>
-        {[
-          { k: 'all', label: 'كل المنشورات', icon: 'grid' },
-          { k: 'needs_reply', label: 'يحتاج رد', icon: 'chatbubble-ellipses' },
-          { k: 'top', label: 'الأكثر تفاعلاً', icon: 'flame' },
-        ].map((f: any) => (
-          <TouchableOpacity key={f.k} onPress={() => setFilter(f.k)}
-            style={[s.filterChip, filter === f.k && s.filterChipActive]}>
-            <Ionicons name={f.icon} size={12} color={filter === f.k ? LP.BG : LP.GOLD} />
-            <Text style={[s.filterChipText, filter === f.k && { color: LP.BG }]}>{tSync(f.label || '', curLang())}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <ScrollView
+      <FlatList
+        data={displayed}
+        keyExtractor={(p: any, i) => String(p.id || p._id || i)}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+        removeClippedSubviews
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={LP.GOLD} />}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
-      >
+        contentContainerStyle={{ paddingBottom: 160 }}
+        ListEmptyComponent={<TX style={s.empty}>لا توجد منشورات</TX>}
+        ListHeaderComponent={
+          <View>
+      {header}
+      {/* Preview banner */}
+      <View style={s.merchantBanner}>
+        <Ionicons name="eye" size={14} color={LP.GOLD} />
+        <TX style={s.merchantBannerText}>عرض التاجر — تطابق تام مع تجربة العميل ✨</TX>
+      </View>
+
+      {/* Filter chips */}
+      <FilterTabs
+        testIDPrefix="social-filter"
+        value={filter}
+        onChange={(k) => setFilter(k as any)}
+        items={[
+          { key: 'all', label: tSync('كل المنشورات', lang), icon: 'grid' },
+          { key: 'needs_reply', label: tSync('يحتاج رد', lang), icon: 'chatbubble-ellipses' },
+          { key: 'top', label: tSync('الأكثر تفاعلاً', lang), icon: 'flame' },
+        ]}
+      />
+
         {/* Stories row */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storiesRow}>
           {stories.length === 0 && (
@@ -175,129 +185,12 @@ export default function MerchantSocialFeed({ apiCall, onOpenPost }: any) {
             </TouchableOpacity>
           ))}
         </ScrollView>
-
-        {/* Posts */}
-        {displayed.length === 0 && <TX style={s.empty}>لا توجد منشورات</TX>}
-        {displayed.map((post: any) => {
-          const postId = post.id || post._id;
-          const isPoll = post.type === 'poll';
-          const isQuestion = post.type === 'question';
-          const isEvent = post.type === 'event';
-          const totalVotes = isPoll ? (post.poll_options || []).reduce((a: number, o: any) => a + (o.votes || 0), 0) : 0;
-          const userVoted = voted[postId];
-          const commentCount = Array.isArray(post.comments) ? post.comments.length : (post.comments_count || post.comments || 0);
-          const unansweredCount = Array.isArray(post.comments) ? post.comments.filter((c: any) => !c.store_reply && !c.is_merchant_reply).length : 0;
-
-          return (
-            <View key={postId} style={s.postCard}>
-              {/* Merchant overlay pill — insights */}
-              <TouchableOpacity style={s.insightsFab} onPress={() => onOpenPost ? onOpenPost(post) : openInsights(post, 'stats')}>
-                <BlurView intensity={40} tint="dark" style={s.insightsPill}>
-                  <Ionicons name="analytics" size={14} color={LP.GOLD} />
-                  <TX style={{ color: LP.GOLD, fontSize: 11, fontWeight: '900' }}>إحصائيات</TX>
-                </BlurView>
-              </TouchableOpacity>
-
-              {/* Needs-reply badge */}
-              {unansweredCount > 0 && (
-                <View style={s.replyBadge}>
-                  <Ionicons name="chatbubble-ellipses" size={11} color="#FFF" />
-                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>{unansweredCount} {tSync('يحتاج رد', lang)}</Text>
-                </View>
-              )}
-
-              {isQuestion && (
-                <View style={s.qBadge}><Ionicons name="help-circle" size={14} color="#F59E0B" /><TX style={s.qBadgeText}>سؤال</TX></View>
-              )}
-              {isEvent && (
-                <View style={[s.qBadge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="calendar" size={14} color="#10B981" /><TX style={[s.qBadgeText, { color: '#065F46' }]}>فعالية</TX></View>
-              )}
-              <View style={s.postHeader}>
-                <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#F5C518" /></View>
-                <View style={s.postAuthorInfo}>
-                  <Text style={s.postAuthor}>{post.author || 'Zenrex Store'}</Text>
-                  <Text style={s.postTime}>{timeAgo(post.created_at)}</Text>
-                </View>
-                <View style={s.postViews}>
-                  <Ionicons name="eye-outline" size={14} color="#A1A1AA" />
-                  <Text style={s.viewsText}>{KM(post.views || 0)}</Text>
-                </View>
-              </View>
-
-              {!!post.text && <TranslatableName text={post.text} style={s.postText} inline={false} />}
-
-              {(() => {
-                // Assemble media array: images[] first, then video at end if present
-                const mediaItems: any[] = [];
-                if (Array.isArray(post.images) && post.images.length > 0) {
-                  post.images.forEach((img: string) => mediaItems.push({ type: 'image', url: img }));
-                } else if (Array.isArray(post.media) && post.media.length > 0) {
-                  post.media.forEach((m: any) => {
-                    if (typeof m === 'string') mediaItems.push({ type: 'image', url: m });
-                    else if (m?.url) mediaItems.push(m);
-                  });
-                } else if (post.image) {
-                  mediaItems.push({ type: 'image', url: post.image });
-                }
-                if (post.video) {
-                  mediaItems.push({
-                    type: 'video',
-                    url: post.video.url || post.video,
-                    thumbnail: post.video.thumbnail || post.video_thumbnail,
-                    duration: post.video.duration || post.video_duration,
-                  });
-                }
-                return mediaItems.length > 0 ? (
-                  <View style={{ marginTop: 8, borderRadius: 14, overflow: 'hidden' }}>
-                    <MediaCarousel items={mediaItems} borderRadius={14} />
-                  </View>
-                ) : null;
-              })()}
-
-              {isEvent && (
-                <View style={s.eventBox}>
-                  <Ionicons name="time" size={14} color="#10B981" />
-                  <Text style={s.eventText}>📅 {post.event_date} {post.event_location && `• 📍 ${post.event_location}`}</Text>
-                </View>
-              )}
-
-              {isPoll && (post.poll_options || []).map((opt: any, i: number) => {
-                const pct = totalVotes ? Math.round((opt.votes || 0) / totalVotes * 100) : 0;
-                const isSelected = userVoted === i;
-                return (
-                  <TouchableOpacity key={i} style={[s.pollOption, isSelected && s.pollSelected]} onPress={() => votePoll(postId, i)}>
-                    <View style={[s.pollBarFill, { width: `${pct}%`, backgroundColor: isSelected ? '#8833FF40' : '#FFF7DA' }]} />
-                    <TranslatableName text={opt.text} style={[s.pollOptionText, isSelected && { fontWeight: '800' }] as any} />
-                    <Text style={[s.pollPct, isSelected && { color: '#F5C518' }]}>{pct}%</Text>
-                  </TouchableOpacity>
-                );
-              })}
-              {isPoll && <Text style={s.totalVotesText}>{totalVotes} {tSync('صوت', lang)}</Text>}
-
-              <View style={s.postActions}>
-                <TouchableOpacity testID={`social-action-likers`} style={s.actionItem} onPress={() => openInsights(post, 'likers')}>
-                  <Ionicons name="heart" size={22} color="#EF4444" />
-                  <Text style={s.actionCount}>{KM(post.likes || 0)}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity testID={`social-action-comments`} style={s.actionItem} onPress={() => openInsights(post, 'comments')}>
-                  <Ionicons name="chatbubble-outline" size={20} color="#52525B" />
-                  <Text style={s.actionCount}>{commentCount}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity testID={`social-action-sharers`} style={s.actionItem} onPress={() => openInsights(post, 'sharers')}>
-                  <Ionicons name="share-social-outline" size={20} color="#52525B" />
-                  <Text style={s.actionCount}>{KM(post.shares || 0)}</Text>
-                </TouchableOpacity>
-                <View style={{ flex: 1 }} />
-                <TouchableOpacity style={s.detailsInlineBtn} onPress={() => onOpenPost ? onOpenPost(post) : openInsights(post, 'stats')}>
-                  <Ionicons name="analytics" size={14} color={LP.BG} />
-                  <TX style={{ color: LP.BG, fontSize: 11, fontWeight: '900' }}>التفاصيل</TX>
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        })}
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          </View>
+        }
+        renderItem={({ item: post }: any) => (
+          <PostCard post={post} userVoted={voted[post.id || post._id]} onVote={votePoll} onOpenPost={onOpenPost} openInsights={openInsights} />
+        )}
+      />
 
       {/* Story Viewer */}
       <Modal visible={!!storyOpen} animationType="fade" transparent onRequestClose={() => setStoryOpen(null)}>
@@ -596,6 +489,128 @@ function CommentsView({ comments, onReply }: any) {
     </>
   );
 }
+
+/** One post — memoised so background refreshes / filter taps don't redraw every card. */
+const PostCard = React.memo(function PostCard({ post, userVoted: userVotedProp, onVote, onOpenPost, openInsights }: any) {
+  const { lang } = useT();
+  const votePoll = onVote;
+          const postId = post.id || post._id;
+          const isPoll = post.type === 'poll';
+          const isQuestion = post.type === 'question';
+          const isEvent = post.type === 'event';
+          const totalVotes = isPoll ? (post.poll_options || []).reduce((a: number, o: any) => a + (o.votes || 0), 0) : 0;
+          const userVoted = userVotedProp;
+          const commentCount = Array.isArray(post.comments) ? post.comments.length : (post.comments_count || post.comments || 0);
+          const unansweredCount = Array.isArray(post.comments) ? post.comments.filter((c: any) => !c.store_reply && !c.is_merchant_reply).length : 0;
+
+          return (
+            <View key={postId} style={s.postCard}>
+              {/* Merchant overlay pill — insights */}
+              <TouchableOpacity style={s.insightsFab} onPress={() => onOpenPost ? onOpenPost(post) : openInsights(post, 'stats')}>
+                <View style={s.insightsPill}>
+                  <Ionicons name="analytics" size={14} color={LP.GOLD} />
+                  <TX style={{ color: LP.GOLD, fontSize: 11, fontWeight: '900' }}>إحصائيات</TX>
+                </View>
+              </TouchableOpacity>
+
+              {/* Needs-reply badge */}
+              {unansweredCount > 0 && (
+                <View style={s.replyBadge}>
+                  <Ionicons name="chatbubble-ellipses" size={11} color="#FFF" />
+                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>{unansweredCount} {tSync('يحتاج رد', lang)}</Text>
+                </View>
+              )}
+
+              {isQuestion && (
+                <View style={s.qBadge}><Ionicons name="help-circle" size={14} color="#F59E0B" /><TX style={s.qBadgeText}>سؤال</TX></View>
+              )}
+              {isEvent && (
+                <View style={[s.qBadge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="calendar" size={14} color="#10B981" /><TX style={[s.qBadgeText, { color: '#065F46' }]}>فعالية</TX></View>
+              )}
+              <View style={s.postHeader}>
+                <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#F5C518" /></View>
+                <View style={s.postAuthorInfo}>
+                  <Text style={s.postAuthor}>{post.author || 'Zenrex Store'}</Text>
+                  <Text style={s.postTime}>{timeAgo(post.created_at)}</Text>
+                </View>
+                <View style={s.postViews}>
+                  <Ionicons name="eye-outline" size={14} color="#A1A1AA" />
+                  <Text style={s.viewsText}>{KM(post.views || 0)}</Text>
+                </View>
+              </View>
+
+              {!!post.text && <TranslatableName text={post.text} style={s.postText} inline={false} />}
+
+              {(() => {
+                // Assemble media array: images[] first, then video at end if present
+                const mediaItems: any[] = [];
+                if (Array.isArray(post.images) && post.images.length > 0) {
+                  post.images.forEach((img: string) => mediaItems.push({ type: 'image', url: img }));
+                } else if (Array.isArray(post.media) && post.media.length > 0) {
+                  post.media.forEach((m: any) => {
+                    if (typeof m === 'string') mediaItems.push({ type: 'image', url: m });
+                    else if (m?.url) mediaItems.push(m);
+                  });
+                } else if (post.image) {
+                  mediaItems.push({ type: 'image', url: post.image });
+                }
+                if (post.video) {
+                  mediaItems.push({
+                    type: 'video',
+                    url: post.video.url || post.video,
+                    thumbnail: post.video.thumbnail || post.video_thumbnail,
+                    duration: post.video.duration || post.video_duration,
+                  });
+                }
+                return mediaItems.length > 0 ? (
+                  <View style={{ marginTop: 8, borderRadius: 14, overflow: 'hidden' }}>
+                    <MediaCarousel items={mediaItems} borderRadius={14} />
+                  </View>
+                ) : null;
+              })()}
+
+              {isEvent && (
+                <View style={s.eventBox}>
+                  <Ionicons name="time" size={14} color="#10B981" />
+                  <Text style={s.eventText}>📅 {post.event_date} {post.event_location && `• 📍 ${post.event_location}`}</Text>
+                </View>
+              )}
+
+              {isPoll && (post.poll_options || []).map((opt: any, i: number) => {
+                const pct = totalVotes ? Math.round((opt.votes || 0) / totalVotes * 100) : 0;
+                const isSelected = userVoted === i;
+                return (
+                  <TouchableOpacity key={i} style={[s.pollOption, isSelected && s.pollSelected]} onPress={() => votePoll(postId, i)}>
+                    <View style={[s.pollBarFill, { width: `${pct}%`, backgroundColor: isSelected ? '#8833FF40' : '#FFF7DA' }]} />
+                    <TranslatableName text={opt.text} style={[s.pollOptionText, isSelected && { fontWeight: '800' }] as any} />
+                    <Text style={[s.pollPct, isSelected && { color: '#F5C518' }]}>{pct}%</Text>
+                  </TouchableOpacity>
+                );
+              })}
+              {isPoll && <Text style={s.totalVotesText}>{totalVotes} {tSync('صوت', lang)}</Text>}
+
+              <View style={s.postActions}>
+                <TouchableOpacity testID={`social-action-likers`} style={s.actionItem} onPress={() => openInsights(post, 'likers')}>
+                  <Ionicons name="heart" size={22} color="#EF4444" />
+                  <Text style={s.actionCount}>{KM(post.likes || 0)}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity testID={`social-action-comments`} style={s.actionItem} onPress={() => openInsights(post, 'comments')}>
+                  <Ionicons name="chatbubble-outline" size={20} color="#52525B" />
+                  <Text style={s.actionCount}>{commentCount}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity testID={`social-action-sharers`} style={s.actionItem} onPress={() => openInsights(post, 'sharers')}>
+                  <Ionicons name="share-social-outline" size={20} color="#52525B" />
+                  <Text style={s.actionCount}>{KM(post.shares || 0)}</Text>
+                </TouchableOpacity>
+                <View style={{ flex: 1 }} />
+                <TouchableOpacity style={s.detailsInlineBtn} onPress={() => onOpenPost ? onOpenPost(post) : openInsights(post, 'stats')}>
+                  <Ionicons name="analytics" size={14} color={LP.BG} />
+                  <TX style={{ color: LP.BG, fontSize: 11, fontWeight: '900' }}>التفاصيل</TX>
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+});
 
 function SheetSection({ icon, title }: any) {
   return (
