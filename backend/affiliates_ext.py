@@ -39,6 +39,28 @@ class PayoutDecision(BaseModel):
 def build_router(db, get_current_user, require_merchant):
     router = APIRouter(prefix="/api")
 
+    async def min_payout(kind: str = "marketer") -> float:
+        s = await db.app_settings.find_one({"_id": "payout_rules"}) or {}
+        return float(s.get(f"{kind}_min", 50))
+
+    class PayoutRules(BaseModel):
+        marketer_min: float = 50
+        driver_min: float = 50
+
+    @router.get("/merchant/payout-settings")
+    async def get_rules(user=Depends(get_current_user)):
+        require_merchant(user)
+        return {"marketer_min": await min_payout("marketer"), "driver_min": await min_payout("driver")}
+
+    @router.put("/merchant/payout-settings")
+    async def put_rules(body: PayoutRules, user=Depends(get_current_user)):
+        if user.get("role") != "merchant":
+            raise HTTPException(403, "للمالك فقط")
+        if body.marketer_min < 1 or body.driver_min < 1:
+            raise HTTPException(400, "الحد الأدنى يجب أن يكون 1 ر.س أو أكثر")
+        await db.app_settings.update_one({"_id": "payout_rules"}, {"$set": body.model_dump()}, upsert=True)
+        return body.model_dump()
+
     async def balance(aff: dict) -> float:
         pending = 0.0
         async for p in db.affiliate_payouts.find({"affiliate_id": str(aff["_id"]), "status": "pending"}):
@@ -49,9 +71,10 @@ def build_router(db, get_current_user, require_merchant):
     async def my_payouts(user=Depends(get_current_user)):
         affs = await db.affiliates.find({"user_id": user["id"]}).to_list(50)
         out = []
+        mn = await min_payout("marketer")
         for a in affs:
             reqs = await db.affiliate_payouts.find({"affiliate_id": str(a["_id"])}).sort("created_at", -1).to_list(100)
-            out.append({"affiliate_id": str(a["_id"]), "referral_code": a.get("referral_code"),
+            out.append({"affiliate_id": str(a["_id"]), "referral_code": a.get("referral_code"), "min_amount": mn,
                         "available": await balance(a), "paid_total": float(a.get("paid_total") or 0),
                         "requests": [{**{k: v for k, v in r.items() if k != "_id"}, "id": str(r["_id"])} for r in reqs]})
         return out
@@ -69,8 +92,9 @@ def build_router(db, get_current_user, require_merchant):
         avail = await balance(aff)
         if not body.account_name.strip():
             raise HTTPException(400, "اسم صاحب الحساب مطلوب")
-        if body.amount < 10 or body.amount > avail:
-            raise HTTPException(400, f"الحد الأدنى 10 ر.س والمتاح للسحب {avail:.2f} ر.س")
+        mn = await min_payout("marketer")
+        if body.amount < mn or body.amount > avail:
+            raise HTTPException(400, f"الحد الأدنى للسحب {mn:.0f} ر.س والمتاح {avail:.2f} ر.س")
         doc = {"affiliate_id": body.affiliate_id, "marketer_id": user["id"], "marketer_name": aff.get("name") or user.get("name", ""),
                "merchant_id": aff.get("merchant_id"), "amount": round(body.amount, 2), "iban": iban,
                "account_name": body.account_name.strip(), "status": "pending",

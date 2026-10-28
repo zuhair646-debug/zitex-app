@@ -1,0 +1,23 @@
+# Zenrex — Roadmap, phases & reminders (owner-approved)
+
+## ⏰ REMINDERS FOR THE OWNER (tell him proactively)
+1. **At official launch** (app live on App Store / Google Play): remind the owner to set the real
+   referral landing link (web store URL or smart download page) → env `APP_OPEN_URL` on the VPS
+   (currently default `zenrex://` = opens installed app only). Build the "download the app" fallback page then.
+2. At launch: replace demo business profile (VAT 300000000000003) with the real VAT / CR / address.
+3. At launch: set `WEBHOOK_SECRET` on VPS and give it to the payment/shipping providers.
+4. End of project: full 20-language scan (see TRANSLATION_RULES.md) + switch translation provider if desired.
+5. ZATCA Phase 2 (XML UBL, CSID, clearance) once the owner has Fatoora portal registration.
+
+## Business model
+Each merchant gets an independent full copy of the app (white-label, own developer accounts). Single-store per copy.
+
+## Phases (audit iteration_46 → plan approved Oct 28 2026)
+- ✅ Phase 1 Security — v1.25.0
+- ✅ Phase 2 ZATCA Phase-1 invoices + inventory — v1.25.0
+- ✅ Phase 3 Marketers (standalone marketer, payouts, referral links) — v1.26.0
+- ✅ Payout minimums configurable by merchant (default 50 SAR; marketer + driver) — after v1.26.0
+- ⏳ Phase 4 Competitions (edit, safe draw, winners, prize claim, real type logic, notifications, loyalty)
+- ⏳ Phase 5 Others (bookings fields, driver assignment, customer history, loyalty double award, marketer stats inside section)
+- 💡 Proposed: POS barcode scanning + barcode generation + quick customer account + invoice via WhatsApp/SMS (awaiting approval)
+- Later: real payment gateway, real shipping carriers, loyalty programs contracts, driver wallet/withdrawals (driver_min already stored).

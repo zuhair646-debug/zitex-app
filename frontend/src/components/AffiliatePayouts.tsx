@@ -39,6 +39,7 @@ export function MarketerPayouts({ affiliateId }: { affiliateId: string }) {
         <View style={s.stat}><TX style={s.statLabel}>المتاح للسحب</TX><Text style={s.statVal}>{data.available.toFixed(2)}</Text></View>
         <View style={s.stat}><TX style={s.statLabel}>تم صرفه</TX><Text style={s.statVal}>{data.paid_total.toFixed(2)}</Text></View>
       </View>
+      <Text style={s.reqMeta}>{tSync('الحد الأدنى للسحب', lang)}: {data.min_amount} {tSync('ر.س', lang)}</Text>
       <TextInput testID="payout-amount" style={s.input} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder={tSync('المبلغ (ر.س)', lang)} placeholderTextColor="#777" />
       <TextInput testID="payout-iban" style={s.input} value={iban} onChangeText={setIban} autoCapitalize="characters" placeholder="SA0000000000000000000000" placeholderTextColor="#777" />
       <TextInput testID="payout-name" style={s.input} value={name} onChangeText={setName} placeholder={tSync('اسم صاحب الحساب', lang)} placeholderTextColor="#777" />
@@ -62,8 +63,19 @@ export function MerchantPayouts() {
   const { lang } = useT();
   const [list, setList] = useState<any[]>([]);
   const [refs, setRefs] = useState<Record<string, string>>({});
-  const load = useCallback(async () => { try { setList(await apiCall('/api/merchant/affiliate/payouts')); } catch {} }, []);
+  const [rules, setRules] = useState<{ marketer_min: string; driver_min: string } | null>(null);
+  const load = useCallback(async () => {
+    try { setList(await apiCall('/api/merchant/affiliate/payouts')); } catch {}
+    try { const r = await apiCall('/api/merchant/payout-settings'); setRules({ marketer_min: String(r.marketer_min), driver_min: String(r.driver_min) }); } catch {}
+  }, []);
   useEffect(() => { load(); }, [load]);
+
+  const saveRules = async () => {
+    try {
+      await apiCall('/api/merchant/payout-settings', { method: 'PUT', body: JSON.stringify({ marketer_min: parseFloat(rules!.marketer_min) || 50, driver_min: parseFloat(rules!.driver_min) || 50 }) });
+      Alert.alert(tSync('تم الحفظ', lang));
+    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
+  };
 
   const decide = async (id: string, ok: boolean) => {
     try {
@@ -72,10 +84,21 @@ export function MerchantPayouts() {
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
 
-  if (!list.length) return null;
   return (
     <View style={s.card}>
-      <TX style={s.title}>🏦 طلبات صرف العمولات</TX>
+      {rules && (
+        <View style={{ gap: 6 }}>
+          <TX style={s.title}>⚙️ الحد الأدنى للسحب (ر.س)</TX>
+          <View style={s.row}>
+            <View style={{ flex: 1 }}><TX style={s.statLabel}>المسوّقون</TX>
+              <TextInput testID="rule-marketer-min" style={s.input} value={rules.marketer_min} onChangeText={(v) => setRules({ ...rules, marketer_min: v })} keyboardType="decimal-pad" /></View>
+            <View style={{ flex: 1 }}><TX style={s.statLabel}>السائقون</TX>
+              <TextInput testID="rule-driver-min" style={s.input} value={rules.driver_min} onChangeText={(v) => setRules({ ...rules, driver_min: v })} keyboardType="decimal-pad" /></View>
+          </View>
+          <TouchableOpacity testID="rule-save" style={s.btn} onPress={saveRules}><TX style={s.btnTxt}>حفظ الحدود</TX></TouchableOpacity>
+        </View>
+      )}
+      {list.length > 0 && <TX style={s.title}>🏦 طلبات صرف العمولات</TX>}
       {list.map((r) => (
         <View key={r.id} style={s.req}>
           <Text style={s.reqAmt}>{r.marketer_name} — {Number(r.amount).toFixed(2)} {tSync('ر.س', lang)}</Text>
