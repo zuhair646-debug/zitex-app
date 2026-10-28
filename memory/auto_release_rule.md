@@ -108,3 +108,7 @@ Feature category → semver bump:
 ## v1.22.1 release — 2026-10-27
 - iOS 1db05d8f-e9f2-4429-9a47-83d21d4b90f3 (build 74), Android 71f40178-2b1a-453c-8322-c717eaf31e84 (versionCode 79)
 - Fix: devices kept stale r3 translations (cache key unchanged). Now GET /api/translate/rules; device wipes its translation cache when rules version changes.
+
+## v1.23.0 release — 2026-10-28
+- iOS 1940b763-ec93-43d8-bb1d-9a67555b37c1 (build 75), Android cda1510a-af3e-4f8e-b92d-e67d009baa96 (versionCode 80)
+- Full 20-lang sweep (tests/full_lang_scan.py, 1380 visits). Fixes: social/services/staff/drivers/roles/loyalty wrapped, NameInitial avatars, noToggle chips, cache-first bulk + 12-item chunks, bn danda fix, InvalidId→404, prewarm_all_content.py (run on VPS with API=http://127.0.0.1:8100)
