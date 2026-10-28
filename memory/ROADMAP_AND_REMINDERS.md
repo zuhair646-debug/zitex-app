@@ -21,3 +21,8 @@ Each merchant gets an independent full copy of the app (white-label, own develop
 - ⏳ Phase 5 Others (bookings fields, driver assignment, customer history, loyalty double award, marketer stats inside section)
 - 💡 Proposed: POS barcode scanning + barcode generation + quick customer account + invoice via WhatsApp/SMS (awaiting approval)
 - Later: real payment gateway, real shipping carriers, loyalty programs contracts, driver wallet/withdrawals (driver_min already stored).
+
+## Decisions (Oct 28 2026, later)
+- Order: Phase 4 competitions → then inventory + barcode together.
+- Invoice to customer: WhatsApp from the seller's phone (free). Printed barcode labels (name, price, barcode). Phone must replace all store devices.
+- INVENTORY MODEL (approved): single source of truth = branch_inventory per branch/product; product.stock = sum of branches (auto). Store setting: shared (default, one pool for shop+app) or split (shop pool + app pool, transfer between them), per-product override. Phone does: sell-scan, stock count by scan, receive goods by scan, branch transfers, low-stock alerts, returns to the right branch. App sells from nearest branch with stock. Later: Excel import/export / external system sync. First step: migrate current product.stock into the main branch.

@@ -330,10 +330,20 @@ async def competitions_live_summary():
 
 @api_router.get("/competitions/{comp_id}")
 async def get_competition(comp_id: str):
+    if not ObjectId.is_valid(comp_id):
+        raise HTTPException(status_code=404, detail="Competition not found")
     comp = await db.competitions.find_one({"_id": ObjectId(comp_id)})
     if not comp:
         raise HTTPException(status_code=404, detail="Competition not found")
-    return serialize_doc(comp)
+    out = serialize_doc(comp)
+    # Q&A created from the merchant form → the quiz format the app screen uses
+    if out.get("competition_type") == "qa" and out.get("question") and not out.get("questions"):
+        out["questions"] = [{"q": out["question"], "options": [o for o in (out.get("options") or []) if o]}]
+    out.pop("correct_answer", None)  # never reveal the answer publicly
+    for w in out.get("winners") or []:
+        p = str(w.get("user_phone") or "")
+        w["user_phone"] = (p[:3] + "****" + p[-2:]) if len(p) > 5 else ""
+    return out
 
 @api_router.post("/competitions/{comp_id}/join")
 async def join_competition(comp_id: str, user=Depends(get_current_user)):
@@ -384,14 +394,17 @@ async def do_draw(comp_id: str, user=Depends(get_current_user)):
     comp = await db.competitions.find_one({"_id": ObjectId(comp_id)})
     if not comp:
         raise HTTPException(status_code=404, detail="Competition not found")
-    entries = await db.competition_entries.find({"competition_id": comp_id}).to_list(1000)
+    if comp.get("status") == "ended" and comp.get("winners"):
+        raise HTTPException(status_code=409, detail="تم السحب على هذه المسابقة مسبقاً")
+    entries = await db.competition_entries.find({"competition_id": comp_id}).to_list(5000)
     if len(entries) < 1:
-        raise HTTPException(status_code=400, detail="Not enough participants")
+        raise HTTPException(status_code=400, detail="لا يوجد مشاركون")
     prize_count = comp.get("prize_count", 1)
     winners = random.sample(entries, min(prize_count, len(entries)))
     winner_list = []
     for w in winners:
-        winner_list.append({"user_id": w["user_id"], "user_name": w["user_name"], "user_phone": w["user_phone"]})
+        winner_list.append({"user_id": w["user_id"], "user_name": w["user_name"], "user_phone": w["user_phone"],
+                            "prize_status": "pending"})
     draw_record = {
         "competition_id": comp_id, "draw_number": len(comp.get("draw_history", [])) + 1,
         "winners": winner_list, "drawn_at": datetime.now(timezone.utc).isoformat(),
@@ -401,6 +414,12 @@ async def do_draw(comp_id: str, user=Depends(get_current_user)):
         "$set": {"winners": winner_list, "status": "ended"},
         "$push": {"draw_history": draw_record}
     })
+    for w in winner_list:
+        try:
+            await create_notification(w["user_id"], "🏆 مبروك! فزت في المسابقة",
+                                      f"{comp.get('title', '')} — {comp.get('prize', '')}", {"competition_id": comp_id})
+        except Exception:
+            pass
     return {"winners": winner_list, "draw_number": draw_record["draw_number"]}
 
 # ─── Chamber Draw (with auth tracking) ───
@@ -2314,8 +2333,64 @@ async def merchant_create_competition(data: CompetitionInput, user=Depends(get_c
 @api_router.put("/merchant/competitions/{cid}")
 async def merchant_update_competition(cid: str, data: CompetitionInput, user=Depends(get_current_user)):
     require_merchant(user)
-    await db.competitions.update_one({"_id": ObjectId(cid)}, {"$set": data.model_dump()})
+    if not ObjectId.is_valid(cid):
+        raise HTTPException(404, "Competition not found")
+    if data.competition_type == "qa":
+        opts = [o for o in (data.options or []) if o and o.strip()]
+        if len(opts) < 2 or not (data.correct_answer or "").strip() or data.correct_answer not in opts:
+            raise HTTPException(422, "مسابقة سؤال وجواب تحتاج خيارين وإجابة صحيحة من ضمنها")
+    r = await db.competitions.update_one({"_id": ObjectId(cid)}, {"$set": {**data.model_dump(), "updated_at": datetime.now(timezone.utc).isoformat()}})
+    if r.matched_count == 0:
+        raise HTTPException(404, "Competition not found")
     return {"message": "Updated"}
+
+class PrizeClaimInput(BaseModel):
+    method: str = "pickup"   # pickup | delivery
+    address: str = ""
+    note: str = ""
+
+@api_router.post("/competitions/{cid}/claim")
+async def claim_prize(cid: str, body: PrizeClaimInput, user=Depends(get_current_user)):
+    """The winner claims the prize (pickup from branch or delivery)."""
+    if not ObjectId.is_valid(cid):
+        raise HTTPException(404)
+    comp = await db.competitions.find_one({"_id": ObjectId(cid)})
+    winners = (comp or {}).get("winners") or []
+    idx = next((i for i, w in enumerate(winners) if w.get("user_id") == user["id"]), None)
+    if idx is None:
+        raise HTTPException(403, "لست من الفائزين في هذه المسابقة")
+    if winners[idx].get("prize_status") in ("claimed", "delivered"):
+        raise HTTPException(409, "تم طلب الجائزة مسبقاً")
+    if body.method == "delivery" and not body.address.strip():
+        a = await db.addresses.find_one({"user_id": user["id"], "is_default": True}) or await db.addresses.find_one({"user_id": user["id"]})
+        body.address = ", ".join(str(a.get(k)) for k in ("label", "street", "district", "city") if a and a.get(k)) if a else ""
+    if body.method == "delivery" and not body.address.strip():
+        raise HTTPException(400, "أضف عنوان توصيل في حسابك أولاً")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.competitions.update_one({"_id": comp["_id"]}, {"$set": {
+        f"winners.{idx}.prize_status": "claimed", f"winners.{idx}.claim_method": body.method,
+        f"winners.{idx}.claim_address": body.address.strip(), f"winners.{idx}.claimed_at": now}})
+    if comp.get("created_by_merchant"):
+        await create_notification(comp["created_by_merchant"], "🎁 طلب استلام جائزة",
+                                  f"{user.get('name', '')} طلب جائزة: {comp.get('prize', '')}", {"competition_id": cid})
+    return {"prize_status": "claimed"}
+
+@api_router.post("/merchant/competitions/{cid}/winners/{uid}/delivered")
+async def mark_prize_delivered(cid: str, uid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    if not ObjectId.is_valid(cid):
+        raise HTTPException(404)
+    comp = await db.competitions.find_one({"_id": ObjectId(cid)})
+    winners = (comp or {}).get("winners") or []
+    idx = next((i for i, w in enumerate(winners) if w.get("user_id") == uid), None)
+    if idx is None:
+        raise HTTPException(404, "الفائز غير موجود")
+    if winners[idx].get("prize_status") != "claimed":
+        raise HTTPException(409, "الفائز لم يطلب الجائزة بعد")
+    await db.competitions.update_one({"_id": comp["_id"]}, {"$set": {
+        f"winners.{idx}.prize_status": "delivered", f"winners.{idx}.delivered_at": datetime.now(timezone.utc).isoformat()}})
+    await create_notification(uid, "✅ تم تسليم جائزتك", f"{comp.get('prize', '')}", {"competition_id": cid})
+    return {"prize_status": "delivered"}
 
 @api_router.delete("/merchant/competitions/{cid}")
 async def merchant_delete_competition(cid: str, user=Depends(get_current_user)):
@@ -2366,14 +2441,25 @@ async def merchant_create_chamber_employee(data: ChamberEmployeeInput, user=Depe
 @api_router.post("/competitions/{cid}/answer")
 async def submit_answer(cid: str, request: Request, user=Depends(get_current_user)):
     body = await request.json()
-    answer = (body.get("answer") or "").strip().lower()
-    comp = await db.competitions.find_one({"_id": ObjectId(cid)})
+    comp = await db.competitions.find_one({"_id": ObjectId(cid)}) if ObjectId.is_valid(cid) else None
     if not comp:
         raise HTTPException(status_code=404, detail="Competition not found")
+    answer = (body.get("answer") or "").strip().lower()
+    # App quiz sends option indexes: {"answers": [2]}
+    if not answer and isinstance(body.get("answers"), list) and body["answers"]:
+        opts = [o for o in (comp.get("options") or []) if o]
+        i = body["answers"][0]
+        if isinstance(i, int) and 0 <= i < len(opts):
+            answer = opts[i].strip().lower()
     if comp.get("competition_type") != "qa":
         raise HTTPException(status_code=400, detail="Not a Q&A competition")
     correct = (comp.get("correct_answer") or "").strip().lower()
+    # One attempt per customer (prevents trying every option until one passes)
+    if await db.competition_answers.find_one({"competition_id": cid, "user_id": user["id"]}):
+        raise HTTPException(status_code=409, detail="لقد أجبت على هذه المسابقة مسبقاً")
     is_correct = answer == correct
+    await db.competition_answers.insert_one({"competition_id": cid, "user_id": user["id"], "correct": is_correct,
+                                             "created_at": datetime.now(timezone.utc).isoformat()})
     if is_correct:
         existing = await db.competition_entries.find_one({"competition_id": cid, "user_id": user["id"]})
         if not existing:
@@ -2383,7 +2469,7 @@ async def submit_answer(cid: str, request: Request, user=Depends(get_current_use
                 "answer": answer, "created_at": datetime.now(timezone.utc).isoformat()
             })
             await db.competitions.update_one({"_id": ObjectId(cid)}, {"$inc": {"joined_count": 1}})
-    return {"correct": is_correct, "entered": is_correct}
+    return {"correct": is_correct, "entered": is_correct, "passed": is_correct, "score": 100.0 if is_correct else 0.0}
 
 # NOTE: /competitions/{id}/join is defined once at the top of this file (~L266).
 

@@ -1,0 +1,51 @@
+{
+  "summary": "Phase 4 merchant competitions. Backend: 22/22 pytest pass. Covered: PUT edit (404 for bad and missing ids, 422 qa validation, 403 for customer, change saved), draw (400 with no participants, 403 for customer, winners pending, 2nd draw 409, 8 parallel draws gave exactly 1x200, winner notification), claim (403 before draw and for non-winner, 400 for delivery without address, pickup claimed, repeat 409, merchant notification), delivered (404 unknown uid, 403 for customer, delivered + notification), QA answer by option index (passed/score, no double count). Frontend (390x844): edit/stats/draw buttons show correctly (draw hidden once ended). The edit form opens filled in with header 'Edit Contest' and PUT is saved. Analytics screen opens. Winners render with prize status. claim-prize-btn shows for the winner and 'Prize Requested' shows after claim. The deliver button appears when claimed and marks delivered. Fixed 2 bugs myself: the save button was hidden under the merchant tab bar, and the claimed text was white on light yellow. Blocker on web: Alert.alert does nothing on react-native-web, so the draw confirm, claim method chooser and save-success dialogs never run. Draw and claim cannot be finished from the web UI. They only work on native. In the UI test, draw and claim were triggered through the API. All TEST data (comps, entries, notifications) was deleted. No real competitions were drawn.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/competitions/{id}", "issue": "winners[].user_phone is returned unmasked on a public endpoint, but participants are masked. Privacy leak (the winners list on the customer page shows full phone numbers)."},
+      {"endpoint": "POST /api/competitions/{id}/draw", "issue": "The 'already drawn' check and the update are separate steps, not atomic. Concurrent draws were safe in testing, but a conditional update_one({_id, status:{$ne:'ended'}}) would be safer. No check that the merchant owns the competition."},
+      {"endpoint": "POST /api/merchant/competitions/{id}/winners/{uid}/delivered", "issue": "Can mark 'delivered' while prize_status is still 'pending' (winner never claimed). Can repeat and send duplicate notifications."},
+      {"endpoint": "POST /api/competitions/{id}/claim", "issue": "Returns 403 instead of 404 for a competition id that does not exist."},
+      {"endpoint": "POST /api/competitions/{id}/answer", "issue": "Unlimited retries for wrong answers, so a user can try every option until passed=true (easy to brute-force with 2-4 options)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "merchant/competitions draw + competition/[id] claim + competition-form save", "issue": "Alert.alert with buttons does nothing on react-native-web 0.21. Tapping draw-comp-{id} does nothing on web. Tapping claim-prize-btn sends no request. After saving the form there is no feedback and no router.back(). Works on native only. Needs a cross-platform confirm (window.confirm on web, or an in-app Modal).", "testID": "draw-comp-{id}, claim-prize-btn, comp-submit-btn", "priority": "HIGH"},
+      {"component": "competition-form submit (FIXED)", "issue": "The footer buttons were hidden under the floating merchant tab bar (elementFromPoint hit tab-products), so tapping Save opened Products. Fixed with paddingBottom:140. Same fix applied to the competitions list.", "testID": "comp-submit-btn", "priority": "HIGH"},
+      {"component": "competition/[id] prize status text (FIXED)", "issue": "'تم طلب الجائزة' / 'تم التسليم' was white (#FFF) on #FEF3C7, so it could not be seen. Changed to #92400E and added testID prize-status-text.", "testID": "prize-status-text", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Customer QA competition from /competition/{id}", "issue": "The quiz UI uses the legacy comp.questions[] schema, but the backend now stores question/options/correct_answer. For new QA competitions the start-quiz-btn never shows on the detail page.", "affected_testIDs": ["start-quiz-btn", "answer-{i}", "next-q-btn"]},
+      {"flow": "Claim via delivery", "issue": "Sends user.address or the literal text 'عنوان الحساب' as the address. The address is never really collected, so the merchant gets placeholder text."}
+    ],
+    "design_issues": [
+      {"screen": "merchant/competitions", "issues": ["The deliver-{cid}-{uid} button label 'تم التسليم'/'Delivered' is the same as the final status. Use 'تأكيد التسليم'. No confirmation before tapping.", "deliver button is 30px tall and the trash icon has no testID and a ~20px target, both under 44px", "The English translation of 'السحب' shows 'Withdrawal'. Should be 'Draw'."]},
+      {"screen": "merchant/competition-form (edit mode)", "issues": ["The submit label still says 'نشر المسابقة'/'Publish Competition' in edit mode. Should be 'حفظ التعديلات'."]},
+      {"screen": "competition/[id]", "issues": ["claim-prize-btn is 30px tall (<44)", "The winner badge in participants matches on user_name, not user_id"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_phase4_competitions.py", "/app/backend/tests/p4_race_and_seed.py", "/app/test_reports/pytest/pytest_phase4.xml"],
+  "action_items": [
+    "HIGH: Replace Alert.alert multi-button dialogs with a cross-platform confirm (Platform.OS==='web' ? window.confirm/prompt : Alert) or an in-app Modal in merchant/competitions.tsx draw(), competition/[id].tsx claimPrize(), and competition-form.tsx submit success (router.back on web).",
+    "Update the competition/[id].tsx quiz to use comp.question + comp.options (single question) and send {answers:[idx]}. Right now new QA comps cannot be answered from the detail page.",
+    "Mask winners[].user_phone in public GET /api/competitions/{id} for non-staff users.",
+    "Collect a real delivery address (input or saved addresses) when claiming by delivery.",
+    "In edit mode, show a 'Save changes' label on comp-submit-btn. Rename the deliver button to 'تأكيد التسليم'. Make deliver/claim buttons at least 44px tall.",
+    "Optional: atomic draw update, block delivered unless status is claimed, limit QA retries."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 6894 lines. It should be split into routers (competitions, merchant, etc.).",
+    "competition-form edit merges the whole comp doc (winners, draw_history, status) into form state and sends it on PUT. Pydantic drops the extras, so it works, but it is fragile.",
+    "chamber_draw does not set prize_status or status:ended and has no 409 guard. Its winners lack prize_status, which the UI treats as pending."
+  ],
+  "updated_files": ["/app/frontend/app/merchant/competition-form.tsx", "/app/frontend/app/merchant/competitions.tsx", "/app/frontend/app/competition/[id].tsx", "/app/backend/tests/test_phase4_competitions.py", "/app/backend/tests/p4_race_and_seed.py"],
+  "success_rate": {"backend": "100% (22/22)", "frontend": "80% (edit/stats/winner list/claimed status/deliver work; draw confirm and claim dialog do not work on web)"},
+  "seed_data_creation": "TEST_P4* competitions created and then fully deleted (competitions, competition_entries, notifications). 'python tests/p4_race_and_seed.py clean' removes any leftovers.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Web Alert.alert does nothing, so draw/claim must be triggered through the API in Playwright unless E1 adds a web fallback. The customer 0500000000 user id is 6ab6206871b6ad54069c12a2. The app UI is shown in English through auto-translation, so Arabic text selectors fail and testIDs must be used.",
+  "rca_of_issue": "Save opened Products: the competition-form ScrollView had padding 16 only, so the last row (comp-submit-btn) sat under the absolute-positioned MerchantTabBar (~96px). Fixed with paddingBottom 140, matching product-form."
+}

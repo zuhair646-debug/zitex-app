@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Switch, Alert, ActivityIndicator, Modal } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,6 +23,7 @@ const TYPES = [
 export default function CompetitionForm() {
   const { lang } = useT();
   const router = useRouter();
+  const { id: editId } = useLocalSearchParams<{ id?: string }>();
   const { apiCall } = useAuth();
   const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState<any[]>([]);
@@ -61,6 +62,16 @@ export default function CompetitionForm() {
 
   const loadEmps = async () => { try { const r = await apiCall('/api/merchant/chamber-employees'); setEmployees(r); } catch {} };
   useEffect(() => { loadEmps(); }, []);
+  // Edit mode: load the existing competition into the form
+  useEffect(() => {
+    if (!editId) return;
+    apiCall(`/api/competitions/${editId}`).then((c: any) => setData((d: any) => ({
+      ...d, ...c,
+      prize_count: String(c.prize_count ?? 1), spend_requirement: String(c.spend_requirement ?? 0),
+      max_participants: String(c.max_participants ?? 1000), max_submissions_per_user: String(c.max_submissions_per_user ?? 1),
+      options: [...(c.options || []), '', '', '', ''].slice(0, Math.max(4, (c.options || []).length)),
+    }))).catch(() => {});
+  }, [editId]);
 
   const createEmp = async () => {
     if (!newEmp.name || !newEmp.phone || !newEmp.password) { Alert.alert(tSync('مطلوب', curLang()), tSync('الاسم والجوال وكلمة المرور مطلوبة', curLang())); return; }
@@ -87,8 +98,9 @@ export default function CompetitionForm() {
         max_submissions_per_user: parseInt(data.max_submissions_per_user) || 1,
         options: (data.options || []).filter((o: string) => o.trim()),
       };
-      await apiCall('/api/merchant/competitions', { method: 'POST', body: JSON.stringify(body) });
-      Alert.alert(tSync('نجاح', lang), tSync('تم نشر المسابقة', curLang()), [{ text: tSync('موافق', curLang()), onPress: () => router.back() }]);
+      if (editId) await apiCall(`/api/merchant/competitions/${editId}`, { method: 'PUT', body: JSON.stringify(body) });
+      else await apiCall('/api/merchant/competitions', { method: 'POST', body: JSON.stringify(body) });
+      Alert.alert(tSync('نجاح', lang), tSync(editId ? 'تم حفظ التعديلات' : 'تم نشر المسابقة', curLang()), [{ text: tSync('موافق', curLang()), onPress: () => router.back() }]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
   };
 
@@ -96,9 +108,9 @@ export default function CompetitionForm() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>{tSync('مسابقة جديدة', lang)}</Text>
+        <Text style={s.title}>{tSync(editId ? 'تعديل المسابقة' : 'مسابقة جديدة', lang)}</Text>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }}>
         <Text style={s.sectionTitle}>{tSync('النوع *', curLang())}</Text>
         <View style={s.typeGrid}>
           {TYPES.map(t => (
@@ -241,7 +253,7 @@ export default function CompetitionForm() {
             <TX style={[s.submitText, { color: '#F5C518' }]}>👁️ معاينة</TX>
           </TouchableOpacity>
           <TouchableOpacity testID="comp-submit-btn" style={[s.submitBtn, { flex: 2 }]} onPress={submit} disabled={loading}>
-            {loading ? <ActivityIndicator color="white" /> : <TX style={s.submitText}>نشر المسابقة</TX>}
+            {loading ? <ActivityIndicator color="white" /> : <Text style={s.submitText}>{tSync(editId ? 'حفظ التعديلات' : 'نشر المسابقة', lang)}</Text>}
           </TouchableOpacity>
         </View>
 

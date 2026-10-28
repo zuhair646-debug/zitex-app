@@ -663,3 +663,11 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - Merchant marketing affiliates tab shows payout requests card.
 - Known: marketer stats still opens /merchant/marketer-stats screen (separate page); payouts not filtered per merchant (single-store copies).
 - Next: Phase 4 competitions, Phase 5 others.
+
+## Phase 4 competitions — v1.27.0 (Oct 28 2026)
+- Merchant competitions screen: edit (competition-form?id= → PUT), stats, safe draw (confirm, 409 on re-draw, winners notified), winners list with prize status (pending/claimed/delivered), "تأكيد التسليم" (only after claim).
+- Customer: claim prize (pickup / delivery using saved default address) → merchant notified; delivered → customer notified.
+- QA: single-question format mapped to quiz, answers by index, one attempt per customer, correct_answer hidden; winners phones masked publicly.
+- Payout minimums configurable (default 50; marketer + driver) in marketing → affiliates tab.
+- Known: Alert dialogs don't show in web preview (native OK). Chamber draw not yet aligned with prize_status.
+- Next: inventory (single source of truth, shared/split) + barcode POS (see ROADMAP_AND_REMINDERS.md).

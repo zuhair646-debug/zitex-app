@@ -50,6 +50,21 @@ export default function CompetitionDetailScreen() {
     }
   };
 
+  const claimPrize = () => {
+    const send = async (method: 'pickup' | 'delivery') => {
+      try {
+        await apiCall(`/api/competitions/${id}/claim`, { method: 'POST', body: JSON.stringify({ method }) });
+        setComp({ ...comp, winners: comp.winners.map((w: any) => w.user_id === user?.id ? { ...w, prize_status: 'claimed' } : w) });
+        Alert.alert(tSync('✅ تم', curLang()), tSync('تم إرسال طلب الجائزة للتاجر وبيتواصل معك', curLang()));
+      } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
+    };
+    Alert.alert(tSync('استلام الجائزة', curLang()), tSync('كيف تبي تستلم جائزتك؟', curLang()), [
+      { text: tSync('إلغاء', curLang()), style: 'cancel' },
+      { text: tSync('من الفرع', curLang()), onPress: () => send('pickup') },
+      { text: tSync('توصيل', curLang()), onPress: () => send('delivery') },
+    ]);
+  };
+
   const performDraw = async () => {
     setDrawing(true);
     try {
@@ -138,7 +153,11 @@ export default function CompetitionDetailScreen() {
                     <TranslatableName text={w.user_name || ''} style={s.winnerName} />
                     <Text style={s.winnerPhone}>{w.user_phone}</Text>
                   </View>
-                  <TouchableOpacity style={s.giftBtn}><Text style={s.giftBtnText}>{tSync('احصل على الهدية', curLang())}</Text></TouchableOpacity>
+                  {w.user_id === user?.id && (!w.prize_status || w.prize_status === 'pending') ? (
+                    <TouchableOpacity testID="claim-prize-btn" style={s.giftBtn} onPress={() => claimPrize()}><Text style={s.giftBtnText}>{tSync('احصل على الهدية', curLang())}</Text></TouchableOpacity>
+                  ) : w.prize_status && w.prize_status !== 'pending' ? (
+                    <Text testID="prize-status-text" style={[s.giftBtnText, { color: '#92400E' }]}>{tSync(w.prize_status === 'delivered' ? 'تم التسليم ✅' : 'تم طلب الجائزة', curLang())}</Text>
+                  ) : null}
                 </View>
               ))}
             </View>
@@ -244,7 +263,7 @@ const s = StyleSheet.create({
   winnerInfo: { flex: 1 },
   winnerName: { fontSize: 15, fontWeight: '600', color: '#0A0A0A' },
   winnerPhone: { fontSize: 12, color: '#52525B' },
-  giftBtn: { backgroundColor: '#10B981', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
+  giftBtn: { backgroundColor: '#10B981', borderRadius: 10, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' },
   giftBtnText: { color: '#FFF', fontSize: 12, fontWeight: '600' },
   drawBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#F5C518', borderRadius: 16, paddingVertical: 18, marginBottom: 20 },
   drawBtnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
