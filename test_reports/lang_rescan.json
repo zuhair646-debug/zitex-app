@@ -1,0 +1,5689 @@
+{
+ "visits": 300,
+ "errors": [],
+ "toggle_fail": [
+  {
+   "role": "customer",
+   "lang": "ja",
+   "route": "/social",
+   "issues": [
+    {
+     "text": "#ذكاء_اصطناعي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+     "problems": [
+      "arabic",
+      "latin:iOS"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex Store",
+    "mid": "Zenrex Store",
+    "back": "Zenrex ストア",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ko",
+   "route": "/social",
+   "issues": [
+    {
+     "text": "#ذكاء_اصطناعي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+     "problems": [
+      "arabic",
+      "latin:iOS"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex Store",
+    "mid": "Zenrex 스토어",
+    "back": "Zenrex 스토어",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "th",
+   "route": "/competitions",
+   "issues": [
+    {
+     "text": "6000ms timeout exceeded",
+     "problems": [
+      "latin:timeout,exceeded"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 18,
+    "ok": false,
+    "err": "Locator.click: Timeout 4000ms exceeded.\nCall log:\n  - waiting for locator(\"[data-testid=\\\"translatable-name-toggle\\\"], [data-testid=\\\"translatable-toggle\\\"]\").f"
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ru",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "Spend & Win: Eid Special Draw",
+     "problems": [
+      "latin:Spend,Win,Eid,Special"
+     ]
+    },
+    {
+     "text": "مسابقة الأسئلة التقنية 🧠",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "سارة الأحمدي، وليد اليامي، عبدالله السالم، أحمد الزهراني",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "سلطان القحطاني، سلطان القحطاني، ريّان القحطاني، هشام الطويرقي، عبدالله السالم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "وليد اليامي، مها الفهد، محمد الشمري، تركي الغامدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Ramadan Mega Draw 🌙",
+     "problems": [
+      "latin:Ramadan,Mega,Draw"
+     ]
+    },
+    {
+     "text": "ريّان القحطاني، جواهر الفيصل، فيصل الرشيدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "مسابقة الجمعة البيضاء ⚡",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "اليوم الوطني السعودي 🇸🇦",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الشريف، نواف العتيبي، ماجد الدوسري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "محمد الشمري، معتز الأحمري، أمل السعيد",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Accessories Bundle Draw",
+     "problems": [
+      "latin:Accessories,Bundle,Draw"
+     ]
+    },
+    {
+     "text": "المتسوق الأول 🥇",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "تحدي فيديو UGC: احسن مراجعة! 🎬",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "خالد المطيري، معتز الأحمري، ريما الشمسي، ريما الشمسي، ريما الشمسي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Summer Tech Giveaway",
+     "problems": [
+      "latin:Summer,Tech,Giveaway"
+     ]
+    },
+    {
+     "text": "دعوة صديق واربح 🎁",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "أمل السعيد، أحمد الزهراني، هدى النعيمي، يزيد المالكي، علي الخيبري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الدوسري، طلال الحسن، فيصل السالم، بندر النعيم، طلال الحسن، بندر النعيم، خالد الشمري، دانة الزهراني، دانة الزهراني، ",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نواف العتيبي، وليد اليامي، بندر الشهري، ريما الشمسي، لمى القرشي",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "المتسوق الأول 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "Первый покупатель 🥇",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ja",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "سارة الأحمدي، وليد اليامي، عبدالله السالم، أحمد الزهراني",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "سلطان القحطاني، سلطان القحطاني، ريّان القحطاني، هشام الطويرقي، عبدالله السالم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "وليد اليامي، مها الفهد، محمد الشمري، تركي الغامدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "ريّان القحطاني، جواهر الفيصل، فيصل الرشيدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الشريف، نواف العتيبي، ماجد الدوسري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "محمد الشمري، معتز الأحمري، أمل السعيد",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "المتسوق الأول 🥇",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "خالد المطيري، معتز الأحمري، ريما الشمسي، ريما الشمسي، ريما الشمسي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "أمل السعيد، أحمد الزهراني، هدى النعيمي، يزيد المالكي، علي الخيبري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الدوسري، طلال الحسن، فيصل السالم، بندر النعيم، طلال الحسن، بندر النعيم، خالد الشمري، دانة الزهراني، دانة الزهراني، ",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نواف العتيبي، وليد اليامي، بندر الشهري، ريما الشمسي، لمى القرشي",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "المتسوق الأول 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "ファーストショッパー 🥇",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "zh",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "سارة الأحمدي، وليد اليامي، عبدالله السالم، أحمد الزهراني",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "سلطان القحطاني، سلطان القحطاني، ريّان القحطاني، هشام الطويرقي، عبدالله السالم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "وليد اليامي، مها الفهد، محمد الشمري، تركي الغامدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "ريّان القحطاني، جواهر الفيصل، فيصل الرشيدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الشريف، نواف العتيبي، ماجد الدوسري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "محمد الشمري، معتز الأحمري، أمل السعيد",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "المتسوق الأول 🥇",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "خالد المطيري، معتز الأحمري، ريما الشمسي، ريما الشمسي، ريما الشمسي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "أمل السعيد، أحمد الزهراني، هدى النعيمي، يزيد المالكي، علي الخيبري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الدوسري، طلال الحسن، فيصل السالم، بندر النعيم، طلال الحسن، بندر النعيم، خالد الشمري، دانة الزهراني، دانة الزهراني، ",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نواف العتيبي، وليد اليامي، بندر الشهري، ريما الشمسي، لمى القرشي",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "المتسوق الأول 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "首位购物者 🥇",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "hi",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "المتسوق الأول 🥇",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "المتسوق الأول 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "المتسوق الأول 🥇",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "en",
+   "route": "/merchant",
+   "issues": [
+    {
+     "text": "أحمد الكاشير",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 1,
+    "before": "أحمد الكاشير",
+    "mid": "أحمد الكاشير",
+    "back": "أحمد الكاشير",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "ur",
+   "route": "/merchant",
+   "issues": [
+    {
+     "text": "أحمد الكاشير",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 1,
+    "before": "أحمد الكاشير",
+    "mid": "أحمد الكاشير",
+    "back": "أحمد الكاشير",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "fa",
+   "route": "/merchant",
+   "issues": [
+    {
+     "text": "أحمد الكاشير",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 1,
+    "before": "أحمد الكاشير",
+    "mid": "أحمد الكاشير",
+    "back": "أحمد الكاشير",
+    "ok": false
+   },
+   "error": null
+  }
+ ],
+ "toggle_ok": 166,
+ "unique_issues": 64,
+ "issues": [
+  {
+   "text": "zitex_official",
+   "problems": [
+    "latin:zitex,official"
+   ],
+   "count": 11,
+   "where": [
+    "ar:/support",
+    "bn:/support",
+    "fa:/support",
+    "he:/support",
+    "hi:/support",
+    "ja:/support"
+   ]
+  },
+  {
+   "text": "support@zitex.sa",
+   "problems": [
+    "latin:support,zitex,sa"
+   ],
+   "count": 11,
+   "where": [
+    "ar:/support",
+    "bn:/support",
+    "fa:/support",
+    "he:/support",
+    "hi:/support",
+    "ja:/support"
+   ]
+  },
+  {
+   "text": "Tech Store",
+   "problems": [
+    "latin:Tech"
+   ],
+   "count": 11,
+   "where": [
+    "ar:/merchant/social",
+    "bn:/merchant/social",
+    "fa:/merchant/social",
+    "he:/merchant/social",
+    "hi:/merchant/social",
+    "ja:/merchant/social"
+   ]
+  },
+  {
+   "text": "Screen Repair",
+   "problems": [
+    "latin:Screen,Repair"
+   ],
+   "count": 10,
+   "where": [
+    "bn:/service/6ab6206a71b6ad54069c12cc",
+    "fa:/service/6ab6206a71b6ad54069c12cc",
+    "he:/service/6ab6206a71b6ad54069c12cc",
+    "hi:/service/6ab6206a71b6ad54069c12cc",
+    "ja:/service/6ab6206a71b6ad54069c12cc",
+    "ko:/service/6ab6206a71b6ad54069c12cc"
+   ]
+  },
+  {
+   "text": "سارة الأحمدي، وليد اليامي، عبدالله السالم، أحمد الزهراني",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "وليد اليامي، مها الفهد، محمد الشمري، تركي الغامدي",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "سلطان القحطاني، سلطان القحطاني، ريّان القحطاني، هشام الطويرقي، عبدالله السالم",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "ريّان القحطاني، جواهر الفيصل، فيصل الرشيدي",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "نورة الشريف، نواف العتيبي، ماجد الدوسري",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "محمد الشمري، معتز الأحمري، أمل السعيد",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "خالد المطيري، معتز الأحمري، ريما الشمسي، ريما الشمسي، ريما الشمسي",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "نورة الدوسري، طلال الحسن، فيصل السالم، بندر النعيم، طلال الحسن، بندر النعيم، خالد الشمري، دانة الزهراني، دانة الزهراني، ",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "أمل السعيد، أحمد الزهراني، هدى النعيمي، يزيد المالكي، علي الخيبري",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "نواف العتيبي، وليد اليامي، بندر الشهري، ريما الشمسي، لمى القرشي",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 5,
+   "where": [
+    "es:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "tr:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "#ذكاء_اصطناعي",
+   "problems": [
+    "arabic"
+   ],
+   "count": 4,
+   "where": [
+    "ja:/merchant/social",
+    "ja:/social",
+    "ko:/merchant/social",
+    "ko:/social"
+   ]
+  },
+  {
+   "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+   "problems": [
+    "arabic",
+    "latin:iOS"
+   ],
+   "count": 4,
+   "where": [
+    "ja:/merchant/social",
+    "ja:/social",
+    "ko:/merchant/social",
+    "ko:/social"
+   ]
+  },
+  {
+   "text": "المتسوق الأول 🥇",
+   "problems": [
+    "arabic"
+   ],
+   "count": 4,
+   "where": [
+    "hi:/chamber",
+    "ja:/chamber",
+    "ru:/chamber",
+    "zh:/chamber"
+   ]
+  },
+  {
+   "text": "WhatsApp (مع كود الدولة)",
+   "problems": [
+    "arabic",
+    "latin:WhatsApp"
+   ],
+   "count": 3,
+   "where": [
+    "ja:/merchant/support-settings",
+    "ko:/merchant/support-settings",
+    "ru:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "أحمد الكاشير",
+   "problems": [
+    "arabic",
+    "foreign-script"
+   ],
+   "count": 3,
+   "where": [
+    "en:/merchant",
+    "fa:/merchant",
+    "ur:/merchant"
+   ]
+  },
+  {
+   "text": "ادعُ 5 أصدقاء إلى Zenrex Store واحصل على فرصة مضمونة للفوز!",
+   "problems": [
+    "arabic"
+   ],
+   "count": 2,
+   "where": [
+    "bn:/competition/6ab6206a71b6ad54069c12bc",
+    "bn:/competitions"
+   ]
+  },
+  {
+   "text": "Qitaf、Rewards、Al-Fursan…",
+   "problems": [
+    "latin:Qitaf,Rewards,Al-Fursan"
+   ],
+   "count": 2,
+   "where": [
+    "ja:/merchant/more",
+    "zh:/merchant/more"
+   ]
+  },
+  {
+   "text": "به زنركس خوش آمدید • Zenrex Store",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "fa:/appearance"
+   ]
+  },
+  {
+   "text": "التقييمات (16)",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "fa:/service/6ab6206a71b6ad54069c12cc"
+   ]
+  },
+  {
+   "text": "לתגובה מהירה, צור קשר דרך מדיה חברתית או WhatsApp",
+   "problems": [
+    "latin:WhatsApp"
+   ],
+   "count": 1,
+   "where": [
+    "he:/support"
+   ]
+  },
+  {
+   "text": "Для быстрого ответа свяжитесь через социальные сети или WhatsApp",
+   "problems": [
+    "latin:WhatsApp"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/support"
+   ]
+  },
+  {
+   "text": "如需快速回复，请通过社交媒体或WhatsApp联系",
+   "problems": [
+    "latin:WhatsApp"
+   ],
+   "count": 1,
+   "where": [
+    "zh:/support"
+   ]
+  },
+  {
+   "text": "迅速な返信のため、ソーシャルメディアまたはWhatsAppで連絡してください",
+   "problems": [
+    "latin:WhatsApp"
+   ],
+   "count": 1,
+   "where": [
+    "ja:/support"
+   ]
+  },
+  {
+   "text": "빠른 응답을 위해 소셜 미디어 또는 WhatsApp으로 연락하세요",
+   "problems": [
+    "latin:WhatsApp"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/support"
+   ]
+  },
+  {
+   "text": "দ্রুত সাড়া পেতে সোশ্যাল মিডিয়া বা WhatsApp-এর মাধ্যমে যোগাযোগ করুন",
+   "problems": [
+    "latin:WhatsApp-"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/support"
+   ]
+  },
+  {
+   "text": "Zenrex Store-এর একজন বিপণনকারী হন",
+   "problems": [
+    "latin:Store-"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/affiliate-apply"
+   ]
+  },
+  {
+   "text": "Marketer হিসেবে যোগ দিন",
+   "problems": [
+    "latin:Marketer"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/affiliate-apply"
+   ]
+  },
+  {
+   "text": "เพื่อการตอบกลับที่รวดเร็ว ติดต่อผ่านโซเชียลมีเดียหรือ WhatsApp",
+   "problems": [
+    "latin:WhatsApp"
+   ],
+   "count": 1,
+   "where": [
+    "th:/support"
+   ]
+  },
+  {
+   "text": "6000ms timeout exceeded",
+   "problems": [
+    "latin:timeout,exceeded"
+   ],
+   "count": 1,
+   "where": [
+    "th:/competitions"
+   ]
+  },
+  {
+   "text": "قطاف، Rewards، الفرسان…",
+   "problems": [
+    "latin:Rewards"
+   ],
+   "count": 1,
+   "where": [
+    "fa:/merchant/more"
+   ]
+  },
+  {
+   "text": "Qitaf, פרסים, אל-פרסאן…",
+   "problems": [
+    "latin:Qitaf"
+   ],
+   "count": 1,
+   "where": [
+    "he:/merchant/more"
+   ]
+  },
+  {
+   "text": "Qitaf, Rewards, Al-Fursan…",
+   "problems": [
+    "latin:Qitaf,Rewards,Al-Fursan"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/merchant/more"
+   ]
+  },
+  {
+   "text": "Qitaf, 리워드, Al-Fursan…",
+   "problems": [
+    "latin:Qitaf,Al-Fursan"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/more"
+   ]
+  },
+  {
+   "text": "رقم الهاتف",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "عنوان المتجر",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "Snapchat",
+   "problems": [
+    "latin:Snapchat"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "TikTok",
+   "problems": [
+    "latin:TikTok"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "Instagram",
+   "problems": [
+    "latin:Instagram"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "X (Twitter)",
+   "problems": [
+    "latin:Twitter"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "ساعات العمل",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "Telegram",
+   "problems": [
+    "latin:Telegram"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "البريد الإلكتروني",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "ko:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "Emily Johnson",
+   "problems": [
+    "latin:Emily,Johnson"
+   ],
+   "count": 1,
+   "where": [
+    "hi:/merchant"
+   ]
+  },
+  {
+   "text": "Michael Brown",
+   "problems": [
+    "latin:Michael,Brown"
+   ],
+   "count": 1,
+   "where": [
+    "hi:/merchant"
+   ]
+  },
+  {
+   "text": "David Miller",
+   "problems": [
+    "latin:David,Miller"
+   ],
+   "count": 1,
+   "where": [
+    "hi:/merchant"
+   ]
+  },
+  {
+   "text": "John Smith",
+   "problems": [
+    "latin:John,Smith"
+   ],
+   "count": 1,
+   "where": [
+    "hi:/merchant"
+   ]
+  },
+  {
+   "text": "Sarah Williams",
+   "problems": [
+    "latin:Sarah,Williams"
+   ],
+   "count": 1,
+   "where": [
+    "hi:/merchant"
+   ]
+  },
+  {
+   "text": "Qitaf, Rewards, अल-फ़ुरसान…",
+   "problems": [
+    "latin:Qitaf,Rewards"
+   ],
+   "count": 1,
+   "where": [
+    "hi:/merchant/more"
+   ]
+  },
+  {
+   "text": "Qitaf, রিওয়ার্ডস, আল-ফুরসান...",
+   "problems": [
+    "latin:Qitaf"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/merchant/more"
+   ]
+  },
+  {
+   "text": "Qitaf, รางวัล, Al-Fursan…",
+   "problems": [
+    "latin:Qitaf,Al-Fursan"
+   ],
+   "count": 1,
+   "where": [
+    "th:/merchant/more"
+   ]
+  },
+  {
+   "text": "แสดงการแจ้งเตือน \"ติดต่อก่อนผ่าน Social\"",
+   "problems": [
+    "latin:Social"
+   ],
+   "count": 1,
+   "where": [
+    "th:/merchant/support-settings"
+   ]
+  },
+  {
+   "text": "Spend & Win: Eid Special Draw",
+   "problems": [
+    "latin:Spend,Win,Eid,Special"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/chamber"
+   ]
+  },
+  {
+   "text": "مسابقة الأسئلة التقنية 🧠",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/chamber"
+   ]
+  },
+  {
+   "text": "Ramadan Mega Draw 🌙",
+   "problems": [
+    "latin:Ramadan,Mega,Draw"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/chamber"
+   ]
+  },
+  {
+   "text": "مسابقة الجمعة البيضاء ⚡",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/chamber"
+   ]
+  },
+  {
+   "text": "اليوم الوطني السعودي 🇸🇦",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/chamber"
+   ]
+  },
+  {
+   "text": "Accessories Bundle Draw",
+   "problems": [
+    "latin:Accessories,Bundle,Draw"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/chamber"
+   ]
+  },
+  {
+   "text": "تحدي فيديو UGC: احسن مراجعة! 🎬",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/chamber"
+   ]
+  },
+  {
+   "text": "Summer Tech Giveaway",
+   "problems": [
+    "latin:Summer,Tech,Giveaway"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/chamber"
+   ]
+  },
+  {
+   "text": "دعوة صديق واربح 🎁",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "ru:/chamber"
+   ]
+  }
+ ],
+ "raw": [
+  {
+   "role": "customer",
+   "lang": "en",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "en",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "en",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "en",
+   "route": "/support",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Saturday - Thursday: 9 AM - 11 PM",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Saturday - Thursday: 9 AM - 11 PM",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 11,
+    "before": "ادعُ 5 أصدقاء إلى متجر Zenrex واحصل على فرصة مضمونة للفوز!",
+    "mid": "ادعُ 5 أصدقاء إلى Zenrex Store واحصل على فرصة مضمونة للفوز!",
+    "back": "ادعُ 5 أصدقاء إلى متجر Zenrex واحصل على فرصة مضمونة للفوز!",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "en",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 11,
+    "before": "Refer a Friend and Win 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Refer a Friend and Win 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "en",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 12,
+    "before": "Refer a Friend and Win 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Refer a Friend and Win 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "en",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 52,
+    "before": "🎥 We filmed a detailed comparison between the iPhone 17 Pro and Samsung S27 Ultr",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 We filmed a detailed comparison between the iPhone 17 Pro and Samsung S27 Ultr",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 27,
+    "before": "متجر التقنية",
+    "mid": "Tech Store",
+    "back": "متجر التقنية",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "استبدال الشاشة الاحترافي لجميع موديلات الهواتف",
+    "mid": "Professional screen replacement for all phone models",
+    "back": "استبدال الشاشة الاحترافي لجميع موديلات الهواتف",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "ادعُ 5 أصدقاء إلى متجر Zenrex واحصل على فرصة مضمونة للفوز!",
+    "mid": "ادعُ 5 أصدقاء إلى Zenrex Store واحصل على فرصة مضمونة للفوز!",
+    "back": "ادعُ 5 أصدقاء إلى متجر Zenrex واحصل على فرصة مضمونة للفوز!",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 18,
+    "before": "دوست کو دعوت دیں اور جیتیں 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "دوست کو دعوت دیں اور جیتیں 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex اسٹور",
+    "mid": "Zenrex Store",
+    "back": "Zenrex اسٹور",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "ہفتہ - جمعرات: صبح 9 - رات 11",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "ہفتہ - جمعرات: صبح 9 - رات 11",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "اسکرین مرمت",
+    "mid": "Screen Repair",
+    "back": "اسکرین مرمت",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 11,
+    "before": "دوست کو دعوت دیں اور جیتیں 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "دوست کو دعوت دیں اور جیتیں 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fa",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 18,
+    "before": "دوستت را دعوت کن و جایزه ببر 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "دوستت را دعوت کن و جایزه ببر 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fa",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "شنبه - پنج‌شنبه: ۹ صبح - ۱۱ شب",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "شنبه - پنج‌شنبه: ۹ صبح - ۱۱ شب",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fa",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 116,
+    "before": "فروشگاه Zenrex",
+    "mid": "Zenrex Store",
+    "back": "فروشگاه Zenrex",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fa",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fa",
+   "route": "/appearance",
+   "issues": [
+    {
+     "text": "به زنركس خوش آمدید • Zenrex Store",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fa",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "التقييمات (16)",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "تعمیر صفحه‌نمایش",
+    "mid": "Screen Repair",
+    "back": "تعمیر صفحه‌نمایش",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 18,
+    "before": "הזמן חבר ותרוויח 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "הזמן חבר ותרוויח 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "לתגובה מהירה, צור קשר דרך מדיה חברתית או WhatsApp",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "שבת - חמישי: 9:00 - 23:00",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "שבת - חמישי: 9:00 - 23:00",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fa",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 11,
+    "before": "دوستت را دعوت کن و جایزه ببر 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "دوستت را دعوت کن و جایزه ببر 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 116,
+    "before": "חנות Zenrex",
+    "mid": "Zenrex Store",
+    "back": "חנות Zenrex",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "תיקון מסך",
+    "mid": "Screen Repair",
+    "back": "תיקון מסך",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "הזמן חבר ותרוויח 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "הזמן חבר ותרוויח 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 15,
+    "before": "Invita a un amigo y gana 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Invita a un amigo y gana 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/support",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Sábado - Jueves: 9 a. m. - 11 p. m.",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Sábado - Jueves: 9 a. m. - 11 p. m.",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 61,
+    "before": "🎥 Hemos grabado para ustedes una comparativa detallada entre el iPhone 17 Pro y ",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Hemos grabado para ustedes una comparativa detallada entre el iPhone 17 Pro y ",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Reparación de Pantalla",
+    "mid": "Screen Repair",
+    "back": "Reparación de Pantalla",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 12,
+    "before": "Invita a un amigo y gana 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Invita a un amigo y gana 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fr",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 15,
+    "before": "Parrainez un ami et gagnez 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Parrainez un ami et gagnez 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fr",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 61,
+    "before": "🎥 Nous avons filmé pour vous une comparaison détaillée entre l'iPhone 17 Pro et ",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Nous avons filmé pour vous une comparaison détaillée entre l'iPhone 17 Pro et ",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fr",
+   "route": "/support",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Samedi - Jeudi : 9h - 23h",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Samedi - Jeudi : 9h - 23h",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fr",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fr",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fr",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Réparation d'Écran",
+    "mid": "Screen Repair",
+    "back": "Réparation d'Écran",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "fr",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 12,
+    "before": "Parrainez un ami et gagnez 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Parrainez un ami et gagnez 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "de",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 15,
+    "before": "Freund einladen und gewinnen 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Freund einladen und gewinnen 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "de",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 Wir haben einen detaillierten Vergleich zwischen iPhone 17 Pro und Samsung S27",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Wir haben einen detaillierten Vergleich zwischen iPhone 17 Pro und Samsung S27",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "de",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "de",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "de",
+   "route": "/support",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Samstag – Donnerstag: 9:00 – 23:00 Uhr",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Samstag – Donnerstag: 9:00 – 23:00 Uhr",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "de",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Bildschirmreparatur",
+    "mid": "Screen Repair",
+    "back": "Bildschirmreparatur",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "de",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 12,
+    "before": "Freund einladen und gewinnen 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Freund einladen und gewinnen 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "it",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 15,
+    "before": "Invita un amico e vinci 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Invita un amico e vinci 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "it",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 Abbiamo registrato per voi un confronto dettagliato tra iPhone 17 Pro e Samsun",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Abbiamo registrato per voi un confronto dettagliato tra iPhone 17 Pro e Samsun",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "it",
+   "route": "/support",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Sabato - Giovedì: 9:00 - 23:00",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Sabato - Giovedì: 9:00 - 23:00",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "it",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "it",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "it",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Riparazione Schermo",
+    "mid": "Screen Repair",
+    "back": "Riparazione Schermo",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "it",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 12,
+    "before": "Invita un amico e vinci 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Invita un amico e vinci 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "pt",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 15,
+    "before": "Indique um amigo e ganhe 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Indique um amigo e ganhe 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "pt",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 61,
+    "before": "🎥 Gravamos para vocês uma comparação detalhada entre o iPhone 17 Pro e o Samsung",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Gravamos para vocês uma comparação detalhada entre o iPhone 17 Pro e o Samsung",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "pt",
+   "route": "/support",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Sábado - Quinta-feira: 9h - 23h",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Sábado - Quinta-feira: 9h - 23h",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "pt",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "pt",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "pt",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Reparo de Tela",
+    "mid": "Screen Repair",
+    "back": "Reparo de Tela",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "pt",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 12,
+    "before": "Indique um amigo e ganhe 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Indique um amigo e ganhe 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ru",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 18,
+    "before": "Пригласи друга и выиграй 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Пригласи друга и выиграй 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ru",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 64,
+    "before": "🎥 Мы сняли для вас подробное сравнение Айфон 17 Про и Самсунг S27 Ультра. Смотри",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Мы сняли для вас подробное сравнение Айфон 17 Про и Самсунг S27 Ультра. Смотри",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ru",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ru",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "Для быстрого ответа свяжитесь через социальные сети или WhatsApp",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "Суббота – четверг: 9:00 – 23:00",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Суббота – четверг: 9:00 – 23:00",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ru",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ru",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "Ремонт экрана",
+    "mid": "Screen Repair",
+    "back": "Ремонт экрана",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ru",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "Пригласи друга и выиграй 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Пригласи друга и выиграй 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "tr",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 15,
+    "before": "Arkadaşını Davet Et ve Kazan 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Arkadaşını Davet Et ve Kazan 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "tr",
+   "route": "/support",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Cumartesi - Perşembe: 09:00 - 23:00",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Cumartesi - Perşembe: 09:00 - 23:00",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "tr",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 iPhone 17 Pro ile Samsung S27 Ultra arasındaki ayrıntılı karşılaştırmayı sizin",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 iPhone 17 Pro ile Samsung S27 Ultra arasındaki ayrıntılı karşılaştırmayı sizin",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "tr",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "tr",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "tr",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Ekran Tamiri",
+    "mid": "Screen Repair",
+    "back": "Ekran Tamiri",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "tr",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 12,
+    "before": "Arkadaşını Davet Et ve Kazan 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Arkadaşını Davet Et ve Kazan 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 18,
+    "before": "邀请好友赢奖励 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "邀请好友赢奖励 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex 商店",
+    "mid": "Zenrex Store",
+    "back": "Zenrex 商店",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "如需快速回复，请通过社交媒体或WhatsApp联系",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "周六至周四：上午9点 - 晚上11点",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "周六至周四：上午9点 - 晚上11点",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "屏幕维修",
+    "mid": "Screen Repair",
+    "back": "屏幕维修",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "邀请好友赢奖励 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "邀请好友赢奖励 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ja",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 18,
+    "before": "友達を招待して賞品をゲット 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "友達を招待して賞品をゲット 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ja",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ja",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "迅速な返信のため、ソーシャルメディアまたはWhatsAppで連絡してください",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "土曜日〜木曜日：午前9時〜午後11時",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "土曜日〜木曜日：午前9時〜午後11時",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ja",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ja",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "画面修理",
+    "mid": "Screen Repair",
+    "back": "画面修理",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ja",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "友達を招待して賞品をゲット 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "友達を招待して賞品をゲット 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ko",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 18,
+    "before": "친구 초대하고 받기 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "친구 초대하고 받기 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ja",
+   "route": "/social",
+   "issues": [
+    {
+     "text": "#ذكاء_اصطناعي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+     "problems": [
+      "arabic",
+      "latin:iOS"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex Store",
+    "mid": "Zenrex Store",
+    "back": "Zenrex ストア",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ko",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ko",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ko",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "빠른 응답을 위해 소셜 미디어 또는 WhatsApp으로 연락하세요",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "토요일 - 목요일: 오전 9시 - 오후 11시",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "토요일 - 목요일: 오전 9시 - 오후 11시",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ko",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "화면 수리",
+    "mid": "Screen Repair",
+    "back": "화면 수리",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ko",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "친구 초대하고 받기 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "친구 초대하고 받기 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ko",
+   "route": "/social",
+   "issues": [
+    {
+     "text": "#ذكاء_اصطناعي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+     "problems": [
+      "arabic",
+      "latin:iOS"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex Store",
+    "mid": "Zenrex 스토어",
+    "back": "Zenrex 스토어",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "hi",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 18,
+    "before": "दोस्त को आमंत्रित करें और जीतें 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "दोस्त को आमंत्रित करें और जीतें 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "hi",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex स्टोर",
+    "mid": "Zenrex Store",
+    "back": "Zenrex स्टोर",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "hi",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "शनिवार - गुरुवार: सुबह 9 बजे - रात 11 बजे",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "शनिवार - गुरुवार: सुबह 9 बजे - रात 11 बजे",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "hi",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "hi",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "hi",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "स्क्रीन मरम्मत",
+    "mid": "Screen Repair",
+    "back": "स्क्रीन मरम्मत",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "hi",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "दोस्त को आमंत्रित करें और जीतें 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "दोस्त को आमंत्रित करें और जीतें 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/competitions",
+   "issues": [
+    {
+     "text": "ادعُ 5 أصدقاء إلى Zenrex Store واحصل على فرصة مضمونة للفوز!",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 18,
+    "before": "বন্ধুকে আমন্ত্রণ জানান এবং জিতুন 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "বন্ধুকে আমন্ত্রণ জানান এবং জিতুন 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex স্টোর",
+    "mid": "Zenrex Store",
+    "back": "Zenrex স্টোর",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "দ্রুত সাড়া পেতে সোশ্যাল মিডিয়া বা WhatsApp-এর মাধ্যমে যোগাযোগ করুন",
+     "problems": [
+      "latin:WhatsApp-"
+     ]
+    },
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "শনিবার - বৃহস্পতিবার: সকাল ৯টা - রাত ১১টা",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "শনিবার - বৃহস্পতিবার: সকাল ৯টা - রাত ১১টা",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/affiliate-apply",
+   "issues": [
+    {
+     "text": "Zenrex Store-এর একজন বিপণনকারী হন",
+     "problems": [
+      "latin:Store-"
+     ]
+    },
+    {
+     "text": "Marketer হিসেবে যোগ দিন",
+     "problems": [
+      "latin:Marketer"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "স্ক্রিন মেরামত",
+    "mid": "Screen Repair",
+    "back": "স্ক্রিন মেরামত",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [
+    {
+     "text": "ادعُ 5 أصدقاء إلى Zenrex Store واحصل على فرصة مضمونة للفوز!",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 13,
+    "before": "বন্ধুকে আমন্ত্রণ জানান এবং জিতুন 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "বন্ধুকে আমন্ত্রণ জানান এবং জিতুন 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "id",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 15,
+    "before": "Ajak Teman & Menangkan 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Ajak Teman & Menangkan 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "id",
+   "route": "/support",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Sabtu - Kamis: 09.00 - 23.00",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Sabtu - Kamis: 09.00 - 23.00",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "id",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 61,
+    "before": "🎥 Kami merekam perbandingan mendetail antara iPhone 17 Pro dan Samsung S27 Ultra",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Kami merekam perbandingan mendetail antara iPhone 17 Pro dan Samsung S27 Ultra",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "id",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "id",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "id",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Perbaikan Layar",
+    "mid": "Screen Repair",
+    "back": "Perbaikan Layar",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "id",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 12,
+    "before": "Ajak Teman & Menangkan 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Ajak Teman & Menangkan 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ms",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 15,
+    "before": "Jemput Rakan & Menang 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Jemput Rakan & Menang 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ms",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 61,
+    "before": "🎥 Kami telah merakam perbandingan terperinci antara iPhone 17 Pro dan Samsung S2",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Kami telah merakam perbandingan terperinci antara iPhone 17 Pro dan Samsung S2",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ms",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ms",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ms",
+   "route": "/support",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Sabtu - Khamis: 9 pagi - 11 malam",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "Sabtu - Khamis: 9 pagi - 11 malam",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ms",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 2,
+    "before": "Pembaikan Skrin",
+    "mid": "Screen Repair",
+    "back": "Pembaikan Skrin",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ms",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 12,
+    "before": "Jemput Rakan & Menang 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "Jemput Rakan & Menang 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "th",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 64,
+    "before": "🎥 เราถ่ายทำวิดีโอเปรียบเทียบแบบละเอียดระหว่างไอโฟน 17 โปร และซัมซุง S27 อัลตรา ต",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 เราถ่ายทำวิดีโอเปรียบเทียบแบบละเอียดระหว่างไอโฟน 17 โปร และซัมซุง S27 อัลตรา ต",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "th",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "เพื่อการตอบกลับที่รวดเร็ว ติดต่อผ่านโซเชียลมีเดียหรือ WhatsApp",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "วันเสาร์ - วันพฤหัสบดี: 9:00 น. - 23:00 น.",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "วันเสาร์ - วันพฤหัสบดี: 9:00 น. - 23:00 น.",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "th",
+   "route": "/competitions",
+   "issues": [
+    {
+     "text": "6000ms timeout exceeded",
+     "problems": [
+      "latin:timeout,exceeded"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 18,
+    "ok": false,
+    "err": "Locator.click: Timeout 4000ms exceeded.\nCall log:\n  - waiting for locator(\"[data-testid=\\\"translatable-name-toggle\\\"], [data-testid=\\\"translatable-toggle\\\"]\").f"
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "th",
+   "route": "/appearance",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "th",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "การซ่อมหน้าจอ",
+    "mid": "Screen Repair",
+    "back": "การซ่อมหน้าจอ",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "th",
+   "route": "/affiliate-apply",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "th",
+   "route": "/competition/6ab6206a71b6ad54069c12bc",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "ชวนเพื่อนแล้วรับรางวัล 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "ชวนเพื่อนแล้วรับรางวัล 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "en",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "en",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "en",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": {
+    "count": 52,
+    "before": "🎥 We filmed a detailed comparison between the iPhone 17 Pro and Samsung S27 Ultr",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 We filmed a detailed comparison between the iPhone 17 Pro and Samsung S27 Ultr",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "en",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 5,
+    "before": "iPhone 15 Pro Max",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "iPhone 15 Pro Max",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "en",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 5,
+    "before": "جون سميث",
+    "mid": "John Smith",
+    "back": "جون سميث",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 23,
+    "before": "تخفيضات كبيرة هذا الويكند! عروض رائعة على جميع منتجات سامسونج.",
+    "mid": "Big sale this weekend! Amazing deals on all Samsung products.",
+    "back": "تخفيضات كبيرة هذا الويكند! عروض رائعة على جميع منتجات سامسونج.",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 8,
+    "before": "ماكسويل أندرسون",
+    "mid": "Maxwell Anderson",
+    "back": "ماكسويل أندرسون",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 6,
+    "before": "Zenrex اسٹور",
+    "mid": "Zenrex Store",
+    "back": "Zenrex اسٹور",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "آئی فون 15 پرو میکس",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "آئی فون 15 پرو میکس",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 ہم نے آپ کے لیے آئی فون 17 پرو اور سام سنگ S27 الٹرا کے درمیان تفصیلی موازنہ ر",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 ہم نے آپ کے لیے آئی فون 17 پرو اور سام سنگ S27 الٹرا کے درمیان تفصیلی موازنہ ر",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fa",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "قطاف، Rewards، الفرسان…",
+     "problems": [
+      "latin:Rewards"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fa",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 6,
+    "before": "فروشگاه Zenrex",
+    "mid": "Zenrex Store",
+    "back": "فروشگاه Zenrex",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fa",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 یک مقایسه دقیق بین آیفون 17 پرو و سامسونگ S27 اولترا برای شما فیلم‌برداری کردی",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 یک مقایسه دقیق بین آیفون 17 پرو و سامسونگ S27 اولترا برای شما فیلم‌برداری کردی",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fa",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fa",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "آیفون 15 پرو مکس",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "آیفون 15 پرو مکس",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf, פרסים, אל-פרסאן…",
+     "problems": [
+      "latin:Qitaf"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 6,
+    "before": "חנות Zenrex",
+    "mid": "Zenrex Store",
+    "back": "חנות Zenrex",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 צילמנו עבורכם השוואה מפורטת בין אייפון 17 פרו לסמסונג S27 אולטרה. עקבו אחר הסר",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 צילמנו עבורכם השוואה מפורטת בין אייפון 17 פרו לסמסונג S27 אולטרה. עקבו אחר הסר",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "אייפון 15 פרו מקס",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "אייפון 15 פרו מקס",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 Hemos grabado para ustedes una comparativa detallada entre el iPhone 17 Pro y ",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Hemos grabado para ustedes una comparativa detallada entre el iPhone 17 Pro y ",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 8,
+    "before": "iPhone 15 Pro Max",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "iPhone 15 Pro Max",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fr",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fr",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fr",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 Nous avons filmé pour vous une comparaison détaillée entre l'iPhone 17 Pro et ",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Nous avons filmé pour vous une comparaison détaillée entre l'iPhone 17 Pro et ",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fr",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 8,
+    "before": "iPhone 15 Pro Max",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "iPhone 15 Pro Max",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "fr",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "de",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "de",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "de",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 Wir haben einen detaillierten Vergleich zwischen iPhone 17 Pro und Samsung S27",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Wir haben einen detaillierten Vergleich zwischen iPhone 17 Pro und Samsung S27",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "de",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "de",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 8,
+    "before": "iPhone 15 Pro Max",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "iPhone 15 Pro Max",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "it",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "it",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "it",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 Abbiamo registrato per voi un confronto dettagliato tra iPhone 17 Pro e Samsun",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Abbiamo registrato per voi un confronto dettagliato tra iPhone 17 Pro e Samsun",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "it",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 8,
+    "before": "iPhone 15 Pro Max",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "iPhone 15 Pro Max",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "it",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "pt",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "pt",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 Gravamos para vocês uma comparação detalhada entre o iPhone 17 Pro e o Samsung",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Gravamos para vocês uma comparação detalhada entre o iPhone 17 Pro e o Samsung",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "pt",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "pt",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 8,
+    "before": "iPhone 15 Pro Max",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "iPhone 15 Pro Max",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ru",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf, Rewards, Al-Fursan…",
+     "problems": [
+      "latin:Qitaf,Rewards,Al-Fursan"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ru",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 5,
+    "before": "Джон Смит",
+    "mid": "John Smith",
+    "back": "Джон Смит",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "pt",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ru",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 Мы сняли для вас подробное сравнение Айфон 17 Про и Самсунг S27 Ультра. Смотри",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Мы сняли для вас подробное сравнение Айфон 17 Про и Самсунг S27 Ультра. Смотри",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ru",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "Айфон 15 Про Макс",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "Айфон 15 Про Макс",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ru",
+   "route": "/merchant/support-settings",
+   "issues": [
+    {
+     "text": "WhatsApp (مع كود الدولة)",
+     "problems": [
+      "arabic",
+      "latin:WhatsApp"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "tr",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "tr",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "tr",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 iPhone 17 Pro ile Samsung S27 Ultra arasındaki ayrıntılı karşılaştırmayı sizin",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 iPhone 17 Pro ile Samsung S27 Ultra arasındaki ayrıntılı karşılaştırmayı sizin",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "tr",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 7,
+    "before": "iPhone 15 Pro Max",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "iPhone 15 Pro Max",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "tr",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 6,
+    "before": "Zenrex 商店",
+    "mid": "Zenrex Store",
+    "back": "Zenrex 商店",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf、Rewards、Al-Fursan…",
+     "problems": [
+      "latin:Qitaf,Rewards,Al-Fursan"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 我们为您录制了苹果 17 专业版与三星 S27 至尊版的详细对比视频，欢迎前往我们的频道观看",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 我们为您录制了苹果 17 专业版与三星 S27 至尊版的详细对比视频，欢迎前往我们的频道观看",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "苹果手机 15 专业顶配版",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "苹果手机 15 专业顶配版",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ja",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf、Rewards、Al-Fursan…",
+     "problems": [
+      "latin:Qitaf,Rewards,Al-Fursan"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ja",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 6,
+    "before": "Zenrex ストア",
+    "mid": "Zenrex Store",
+    "back": "Zenrex ストア",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ja",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "#ذكاء_اصطناعي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+     "problems": [
+      "arabic",
+      "latin:iOS"
+     ]
+    },
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 アイフォン 17 プロとサムスン S27 ウルトラの詳細比較動画を撮影しました。チャンネルでご覧ください\n\n#比較",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 アイフォン 17 プロとサムスン S27 ウルトラの詳細比較動画を撮影しました。チャンネルでご覧ください\n\n#比較",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ja",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "アイフォン 15 プロ マックス",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "アイフォン 15 プロ マックス",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ja",
+   "route": "/merchant/support-settings",
+   "issues": [
+    {
+     "text": "WhatsApp (مع كود الدولة)",
+     "problems": [
+      "arabic",
+      "latin:WhatsApp"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ko",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf, 리워드, Al-Fursan…",
+     "problems": [
+      "latin:Qitaf,Al-Fursan"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ko",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 6,
+    "before": "Zenrex 스토어",
+    "mid": "Zenrex Store",
+    "back": "Zenrex 스토어",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ko",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "#ذكاء_اصطناعي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+     "problems": [
+      "arabic",
+      "latin:iOS"
+     ]
+    },
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 아이폰 17 프로와 삼성 갤럭시 S27 울트라의 상세 비교 영상을 촬영했습니다. 저희 채널에서 영상을 확인하세요",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 아이폰 17 프로와 삼성 갤럭시 S27 울트라의 상세 비교 영상을 촬영했습니다. 저희 채널에서 영상을 확인하세요",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ko",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ko",
+   "route": "/merchant/support-settings",
+   "issues": [
+    {
+     "text": "رقم الهاتف",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "WhatsApp (مع كود الدولة)",
+     "problems": [
+      "arabic",
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "عنوان المتجر",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Snapchat",
+     "problems": [
+      "latin:Snapchat"
+     ]
+    },
+    {
+     "text": "TikTok",
+     "problems": [
+      "latin:TikTok"
+     ]
+    },
+    {
+     "text": "Instagram",
+     "problems": [
+      "latin:Instagram"
+     ]
+    },
+    {
+     "text": "X (Twitter)",
+     "problems": [
+      "latin:Twitter"
+     ]
+    },
+    {
+     "text": "ساعات العمل",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Telegram",
+     "problems": [
+      "latin:Telegram"
+     ]
+    },
+    {
+     "text": "البريد الإلكتروني",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "hi",
+   "route": "/merchant",
+   "issues": [
+    {
+     "text": "Emily Johnson",
+     "problems": [
+      "latin:Emily,Johnson"
+     ]
+    },
+    {
+     "text": "Michael Brown",
+     "problems": [
+      "latin:Michael,Brown"
+     ]
+    },
+    {
+     "text": "David Miller",
+     "problems": [
+      "latin:David,Miller"
+     ]
+    },
+    {
+     "text": "John Smith",
+     "problems": [
+      "latin:John,Smith"
+     ]
+    },
+    {
+     "text": "Sarah Williams",
+     "problems": [
+      "latin:Sarah,Williams"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 6,
+    "before": "Zenrex स्टोर",
+    "mid": "Zenrex Store",
+    "back": "Zenrex स्टोर",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "hi",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf, Rewards, अल-फ़ुरसान…",
+     "problems": [
+      "latin:Qitaf,Rewards"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "hi",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 हमने आपके लिए आईफ़ोन 17 प्रो और सैमसंग S27 अल्ट्रा के बीच एक विस्तृत तुलना वीड",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 हमने आपके लिए आईफ़ोन 17 प्रो और सैमसंग S27 अल्ट्रा के बीच एक विस्तृत तुलना वीड",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "hi",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "आईफ़ोन 15 प्रो मैक्स",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "आईफ़ोन 15 प्रो मैक्स",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "hi",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 6,
+    "before": "Zenrex স্টোর",
+    "mid": "Zenrex Store",
+    "back": "Zenrex স্টোর",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf, রিওয়ার্ডস, আল-ফুরসান...",
+     "problems": [
+      "latin:Qitaf"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 আমরা আপনাদের জন্য আইফোন 17 প্রো এবং স্যামসাং S27 আলট্রার বিস্তারিত তুলনামূলক ভ",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 আমরা আপনাদের জন্য আইফোন 17 প্রো এবং স্যামসাং S27 আলট্রার বিস্তারিত তুলনামূলক ভ",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "আইফোন 15 প্রো ম্যাক্স",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "আইফোন 15 প্রো ম্যাক্স",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "id",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "id",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "id",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 Kami merekam perbandingan mendetail antara iPhone 17 Pro dan Samsung S27 Ultra",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Kami merekam perbandingan mendetail antara iPhone 17 Pro dan Samsung S27 Ultra",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "id",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "id",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 8,
+    "before": "iPhone 15 Pro Max",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "iPhone 15 Pro Max",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ms",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ms",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ms",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": {
+    "count": 57,
+    "before": "🎥 Kami telah merakam perbandingan terperinci antara iPhone 17 Pro dan Samsung S2",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 Kami telah merakam perbandingan terperinci antara iPhone 17 Pro dan Samsung S2",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ms",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 8,
+    "before": "iPhone 15 Pro Max",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "iPhone 15 Pro Max",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ms",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "th",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 5,
+    "before": "จอห์น สมิธ",
+    "mid": "John Smith",
+    "back": "จอห์น สมิธ",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "th",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf, รางวัล, Al-Fursan…",
+     "problems": [
+      "latin:Qitaf,Al-Fursan"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "th",
+   "route": "/merchant/social",
+   "issues": [
+    {
+     "text": "Tech Store",
+     "problems": [
+      "latin:Tech"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 60,
+    "before": "🎥 เราถ่ายทำวิดีโอเปรียบเทียบแบบละเอียดระหว่างไอโฟน 17 โปร และซัมซุง S27 อัลตรา ต",
+    "mid": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو ",
+    "back": "🎥 เราถ่ายทำวิดีโอเปรียบเทียบแบบละเอียดระหว่างไอโฟน 17 โปร และซัมซุง S27 อัลตรา ต",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "th",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": {
+    "count": 13,
+    "before": "ไอโฟน 15 โปร แมกซ์",
+    "mid": "آيفون 15 برو ماكس",
+    "back": "ไอโฟน 15 โปร แมกซ์",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "th",
+   "route": "/merchant/support-settings",
+   "issues": [
+    {
+     "text": "แสดงการแจ้งเตือน \"ติดต่อก่อนผ่าน Social\"",
+     "problems": [
+      "latin:Social"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "en",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": {
+    "count": 16,
+    "before": "Top Shopper 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "Top Shopper 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ar",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": {
+    "count": 5,
+    "before": "تحدي فيديو UGC: أحسن مراجعة! 🎬",
+    "mid": "تحدي فيديو UGC: احسن مراجعة! 🎬",
+    "back": "تحدي فيديو UGC: أحسن مراجعة! 🎬",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ur",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": {
+    "count": 20,
+    "before": "پہلا خریدار 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "پہلا خریدار 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "fa",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": {
+    "count": 20,
+    "before": "خریدار اول 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "خریدار اول 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "he",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": {
+    "count": 20,
+    "before": "הקונה הראשון 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "הקונה הראשון 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "fr",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": {
+    "count": 20,
+    "before": "Premier acheteur 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "Premier acheteur 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "de",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": {
+    "count": 20,
+    "before": "Erster Käufer 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "Erster Käufer 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "es",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "سارة الأحمدي، وليد اليامي، عبدالله السالم، أحمد الزهراني",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "وليد اليامي، مها الفهد، محمد الشمري، تركي الغامدي",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "سلطان القحطاني، سلطان القحطاني، ريّان القحطاني، هشام الطويرقي، عبدالله السالم",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "ريّان القحطاني، جواهر الفيصل، فيصل الرشيدي",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "نورة الشريف، نواف العتيبي، ماجد الدوسري",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "محمد الشمري، معتز الأحمري، أمل السعيد",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "خالد المطيري، معتز الأحمري، ريما الشمسي، ريما الشمسي، ريما الشمسي",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "نورة الدوسري، طلال الحسن، فيصل السالم، بندر النعيم، طلال الحسن، بندر النعيم، خالد الشمري، دانة الزهراني، دانة الزهراني، ",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "أمل السعيد، أحمد الزهراني، هدى النعيمي، يزيد المالكي، علي الخيبري",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "نواف العتيبي، وليد اليامي، بندر الشهري، ريما الشمسي، لمى القرشي",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "El Primer Comprador 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "El Primer Comprador 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "it",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "pt",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "tr",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "سارة الأحمدي، وليد اليامي، عبدالله السالم، أحمد الزهراني",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "سلطان القحطاني، سلطان القحطاني، ريّان القحطاني، هشام الطويرقي، عبدالله السالم",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "وليد اليامي، مها الفهد، محمد الشمري، تركي الغامدي",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "ريّان القحطاني، جواهر الفيصل، فيصل الرشيدي",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "نورة الشريف، نواف العتيبي، ماجد الدوسري",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "محمد الشمري، معتز الأحمري، أمل السعيد",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "خالد المطيري، معتز الأحمري، ريما الشمسي، ريما الشمسي، ريما الشمسي",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "أمل السعيد، أحمد الزهراني، هدى النعيمي، يزيد المالكي، علي الخيبري",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "نورة الدوسري، طلال الحسن، فيصل السالم، بندر النعيم، طلال الحسن، بندر النعيم، خالد الشمري، دانة الزهراني، دانة الزهراني، ",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    },
+    {
+     "text": "نواف العتيبي، وليد اليامي، بندر الشهري، ريما الشمسي، لمى القرشي",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "İlk Alışverişçi 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "İlk Alışverişçi 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ko",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": {
+    "count": 20,
+    "before": "최초 쇼핑객 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "최초 쇼핑객 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "id",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "bn",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": {
+    "count": 20,
+    "before": "প্রথম ক্রেতা 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "প্রথম ক্রেতা 🥇",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ru",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "Spend & Win: Eid Special Draw",
+     "problems": [
+      "latin:Spend,Win,Eid,Special"
+     ]
+    },
+    {
+     "text": "مسابقة الأسئلة التقنية 🧠",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "سارة الأحمدي، وليد اليامي، عبدالله السالم، أحمد الزهراني",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "سلطان القحطاني، سلطان القحطاني، ريّان القحطاني، هشام الطويرقي، عبدالله السالم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "وليد اليامي، مها الفهد، محمد الشمري، تركي الغامدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Ramadan Mega Draw 🌙",
+     "problems": [
+      "latin:Ramadan,Mega,Draw"
+     ]
+    },
+    {
+     "text": "ريّان القحطاني، جواهر الفيصل، فيصل الرشيدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "مسابقة الجمعة البيضاء ⚡",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "اليوم الوطني السعودي 🇸🇦",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الشريف، نواف العتيبي، ماجد الدوسري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "محمد الشمري، معتز الأحمري، أمل السعيد",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Accessories Bundle Draw",
+     "problems": [
+      "latin:Accessories,Bundle,Draw"
+     ]
+    },
+    {
+     "text": "المتسوق الأول 🥇",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "تحدي فيديو UGC: احسن مراجعة! 🎬",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "خالد المطيري، معتز الأحمري، ريما الشمسي، ريما الشمسي، ريما الشمسي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Summer Tech Giveaway",
+     "problems": [
+      "latin:Summer,Tech,Giveaway"
+     ]
+    },
+    {
+     "text": "دعوة صديق واربح 🎁",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "أمل السعيد، أحمد الزهراني، هدى النعيمي، يزيد المالكي، علي الخيبري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الدوسري، طلال الحسن، فيصل السالم، بندر النعيم، طلال الحسن، بندر النعيم، خالد الشمري، دانة الزهراني، دانة الزهراني، ",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نواف العتيبي، وليد اليامي، بندر الشهري، ريما الشمسي، لمى القرشي",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "المتسوق الأول 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "Первый покупатель 🥇",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ms",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ja",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "سارة الأحمدي، وليد اليامي، عبدالله السالم، أحمد الزهراني",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "سلطان القحطاني، سلطان القحطاني، ريّان القحطاني، هشام الطويرقي، عبدالله السالم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "وليد اليامي، مها الفهد، محمد الشمري، تركي الغامدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "ريّان القحطاني، جواهر الفيصل، فيصل الرشيدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الشريف، نواف العتيبي، ماجد الدوسري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "محمد الشمري، معتز الأحمري، أمل السعيد",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "المتسوق الأول 🥇",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "خالد المطيري، معتز الأحمري، ريما الشمسي، ريما الشمسي، ريما الشمسي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "أمل السعيد، أحمد الزهراني، هدى النعيمي، يزيد المالكي، علي الخيبري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الدوسري، طلال الحسن، فيصل السالم، بندر النعيم، طلال الحسن، بندر النعيم، خالد الشمري، دانة الزهراني، دانة الزهراني، ",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نواف العتيبي، وليد اليامي، بندر الشهري، ريما الشمسي، لمى القرشي",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "المتسوق الأول 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "ファーストショッパー 🥇",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "zh",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "سارة الأحمدي، وليد اليامي، عبدالله السالم، أحمد الزهراني",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "سلطان القحطاني، سلطان القحطاني، ريّان القحطاني، هشام الطويرقي، عبدالله السالم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "وليد اليامي، مها الفهد، محمد الشمري، تركي الغامدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "ريّان القحطاني، جواهر الفيصل، فيصل الرشيدي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الشريف، نواف العتيبي، ماجد الدوسري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "محمد الشمري، معتز الأحمري، أمل السعيد",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "المتسوق الأول 🥇",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "خالد المطيري، معتز الأحمري، ريما الشمسي، ريما الشمسي، ريما الشمسي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "أمل السعيد، أحمد الزهراني، هدى النعيمي، يزيد المالكي، علي الخيبري",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نورة الدوسري، طلال الحسن، فيصل السالم، بندر النعيم، طلال الحسن، بندر النعيم، خالد الشمري، دانة الزهراني، دانة الزهراني، ",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "نواف العتيبي، وليد اليامي، بندر الشهري، ريما الشمسي، لمى القرشي",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "المتسوق الأول 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "首位购物者 🥇",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "th",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "ar",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "hi",
+   "route": "/chamber",
+   "issues": [
+    {
+     "text": "المتسوق الأول 🥇",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 20,
+    "before": "المتسوق الأول 🥇",
+    "mid": "المتسوق الأول 🥇",
+    "back": "المتسوق الأول 🥇",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "he",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "es",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "fr",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "de",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "it",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "en",
+   "route": "/merchant",
+   "issues": [
+    {
+     "text": "أحمد الكاشير",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 1,
+    "before": "أحمد الكاشير",
+    "mid": "أحمد الكاشير",
+    "back": "أحمد الكاشير",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "ru",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "pt",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "tr",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "zh",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "ur",
+   "route": "/merchant",
+   "issues": [
+    {
+     "text": "أحمد الكاشير",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 1,
+    "before": "أحمد الكاشير",
+    "mid": "أحمد الكاشير",
+    "back": "أحمد الكاشير",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "fa",
+   "route": "/merchant",
+   "issues": [
+    {
+     "text": "أحمد الكاشير",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 1,
+    "before": "أحمد الكاشير",
+    "mid": "أحمد الكاشير",
+    "back": "أحمد الكاشير",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "ja",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "bn",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "hi",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "ko",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "ms",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "id",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "th",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "en",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "ar",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "fa",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "ur",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "he",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "es",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "de",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "fr",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "it",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "pt",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "ru",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "Сара, специалист по маркетингу",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "Сара, специалист по маркетингу",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "ko",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "마케팅 담당자 사라",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "마케팅 담당자 사라",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "zh",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "萨拉·市场营销负责人",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "萨拉·市场营销负责人",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "tr",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "Sara Pazarlama Sorumlusu",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "Sara Pazarlama Sorumlusu",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "ja",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "サーラー（マーケティング担当）",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "サーラー（マーケティング担当）",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "hi",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "सारा मार्केटिंग मैनेजर",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "सारा मार्केटिंग मैनेजर",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "bn",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "সারা মার্কেটিং ম্যানেজার",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "সারা মার্কেটিং ম্যানেজার",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "id",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "Sara Manajer Pemasaran",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "Sara Manajer Pemasaran",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "th",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "ซาร่า ผู้รับผิดชอบด้านการตลาด",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "ซาร่า ผู้รับผิดชอบด้านการตลาด",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "marketer",
+   "lang": "ms",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "Sarah Pegawai Pemasaran",
+    "mid": "سارة مسؤولة التسويق",
+    "back": "Sarah Pegawai Pemasaran",
+    "ok": true
+   },
+   "error": null
+  }
+ ]
+}

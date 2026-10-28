@@ -633,3 +633,11 @@ Instead of manually rewriting the 50+ files that still use `<TX>`, `useAutoT`, o
 - TranslatableName: mixed Arabic+Latin text is always unified. tSync skips text that has no Arabic letters. Translate button is larger.
 - Live preview, product-analytics, DetailSheets, social feed, competitions and heatmap: all dynamic names and texts are translatable; weekdays use locale names; K/M number suffix.
 - Audit script: scripts/audit_product_names.py checked 105 names x 20 languages, 0 real issues. scripts/clean_bad_translations.py removes bad cached translations.
+
+## AI translation provider switch (Oct 28 2026)
+- backend/translate.py: every AI call goes through `_llm()` → reads `app_settings{_id:"translation_provider"}`: provider emergent (Claude Sonnet 4.6 via Emergent key) | custom (any OpenAI-compatible `{base_url}/chat/completions`, model, api_key) + optional Emergent fallback.
+- Endpoints (store owner role=merchant only): GET/PUT /api/admin/translation-provider, POST /api/admin/translation-provider/test. Key stored server-side, returned masked.
+- UI: Merchant → More → Admin → "مزوّد الترجمة الذكية" (/merchant/ai-provider). Currently left on Emergent (user wants to switch later).
+- Bulk: multi-line texts (social posts) now use single-text path (numbered-line format broke them). Units km/kg/cm allowed in non-Latin scripts. fa/ur outputs normalised ك→ک ي→ی.
+- scripts/bulk_translate.py no longer stores failed lines (they were saved as Arabic source); handles literal \n keys.
+- Full 20-language scan: tests/full_lang_scan.py (env ROUTES=, OUT=). Reports test_reports/lang_scan*.json.

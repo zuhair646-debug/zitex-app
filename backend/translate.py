@@ -106,9 +106,9 @@ def _clean_ok(target: str, text: str, source: str = '') -> bool:
     native = _NATIVE.get(target)
     if target == 'ar' or native:
         # Non-Latin target: every Latin word must be a short code (M3, XPS, 128GB, USB-C) or the app name.
-        bad = [w for w in re.findall(r'[A-Za-z0-9][A-Za-z0-9\-]*', text)
+        bad = [w.strip('-') for w in re.findall(r'[A-Za-z0-9][A-Za-z0-9\-]*', text)
                if re.search(r'[A-Za-z]', w) and not re.search(r'\d', w) and not (w.replace('-', '').isupper() and len(w.replace('-', '')) <= 4)
-               and w.lower() not in ('zenrex', 'store')]
+               and w.strip('-').lower() not in ('zenrex', 'store', 'ios', 'km', 'kg', 'cm', 'mm', 'ml', 'mah', 'lat', 'lng')]
         if bad:
             return False
     return True
@@ -127,15 +127,109 @@ class BulkTranslateReq(BaseModel):
     cache_only: bool = False
 
 
-def build_router(db=None):
+class ProviderCfg(BaseModel):
+    provider: str = Field("emergent", pattern="^(emergent|custom)$")
+    base_url: str = ""
+    model: str = ""
+    api_key: Optional[str] = None  # None / masked value = keep the saved key
+    fallback: bool = True
+
+
+_PROVIDER_ID = "translation_provider"
+_DEFAULT_MODEL = ("anthropic", "claude-sonnet-4-6")
+
+
+def build_router(db=None, get_current_user=None):
     """
     Builds the translation router.
 
     db: optional AsyncIOMotorDatabase. If provided, enables persistent
         MongoDB cache in `translations_cache` collection.
     """
+    from fastapi import Depends, Request
+    import httpx
     router = APIRouter(prefix="/api")
     coll = db["translations_cache"] if db is not None else None
+    settings = db["app_settings"] if db is not None else None
+
+    async def _provider() -> dict:
+        if settings is None:
+            return {"provider": "emergent"}
+        return await settings.find_one({"_id": _PROVIDER_ID}) or {"provider": "emergent"}
+
+    async def _emergent_send(system: str, text: str, sid: str) -> str:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        if not api_key:
+            raise RuntimeError("EMERGENT_LLM_KEY missing")
+        chat = LlmChat(api_key=api_key, session_id=sid, system_message=system).with_model(*_DEFAULT_MODEL)
+        return (await chat.send_message(UserMessage(text=text))) or ""
+
+    async def _custom_send(cfg: dict, system: str, text: str) -> str:
+        """Any OpenAI-compatible endpoint: POST {base_url}/chat/completions."""
+        url = cfg["base_url"].rstrip("/") + "/chat/completions"
+        async with httpx.AsyncClient(timeout=30) as cli:
+            r = await cli.post(url, headers={"Authorization": f"Bearer {cfg.get('api_key', '')}"}, json={
+                "model": cfg.get("model") or "gpt-4o-mini", "temperature": 0,
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": text}]})
+            r.raise_for_status()
+            return r.json()["choices"][0]["message"]["content"] or ""
+
+    async def _llm(system: str, text: str, sid: str) -> str:
+        """Single entry point for every AI translation call — routed by the saved provider switch."""
+        cfg = await _provider()
+        if cfg.get("provider") == "custom" and cfg.get("base_url"):
+            try:
+                return await _custom_send(cfg, system, text)
+            except Exception as e:
+                log.warning(f"custom translation provider failed: {e}")
+                if not cfg.get("fallback", True):
+                    raise
+        return await _emergent_send(system, text, sid)
+
+    def _mask(k: str) -> str:
+        return ("•" * 8 + k[-4:]) if k else ""
+
+    async def _owner(request: Request):
+        if get_current_user is None:
+            raise HTTPException(403, "Not available")
+        user = await get_current_user(request)
+        if user.get("role") != "merchant":
+            raise HTTPException(403, "Store owner only")
+        return user
+
+    @router.get("/admin/translation-provider")
+    async def get_provider(_u=Depends(_owner)):
+        cfg = await _provider()
+        return {"provider": cfg.get("provider", "emergent"), "base_url": cfg.get("base_url", ""),
+                "model": cfg.get("model", ""), "api_key": _mask(cfg.get("api_key", "")),
+                "has_key": bool(cfg.get("api_key")), "fallback": cfg.get("fallback", True)}
+
+    @router.put("/admin/translation-provider")
+    async def put_provider(body: ProviderCfg, _u=Depends(_owner)):
+        old = await _provider()
+        doc = {"provider": body.provider, "base_url": body.base_url.strip(), "model": body.model.strip(),
+               "fallback": body.fallback, "updated_at": datetime.utcnow()}
+        key = (body.api_key or "").strip()
+        doc["api_key"] = key if key and "•" not in key else old.get("api_key", "")
+        if body.provider == "custom" and not (doc["base_url"] and doc["api_key"]):
+            raise HTTPException(400, "base_url and api_key are required")
+        await settings.update_one({"_id": _PROVIDER_ID}, {"$set": doc}, upsert=True)
+        return await get_provider(_u)
+
+    @router.post("/admin/translation-provider/test")
+    async def test_provider(body: ProviderCfg, _u=Depends(_owner)):
+        old = await _provider()
+        key = (body.api_key or "").strip()
+        cfg = {"base_url": body.base_url.strip(), "model": body.model.strip(),
+               "api_key": key if key and "•" not in key else old.get("api_key", "")}
+        system = "You are a professional translator. Translate the user's text to Arabic. Return ONLY the translation."
+        try:
+            out = await (_custom_send(cfg, system, "iPhone 15 Pro Max black 256GB") if body.provider == "custom"
+                         else _emergent_send(system, "iPhone 15 Pro Max black 256GB", "tr-provider-test"))
+            return {"ok": True, "sample": out.strip()[:200]}
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:200]}
 
     async def _ensure_indexes():
         if coll is None:
@@ -210,27 +304,14 @@ def build_router(db=None):
         if hit is not None:
             return {"translated": hit, "source": req.source_lang or "auto", "target": req.target_lang, "cached": True}
 
-        # 2) LLM
-        try:
-            from emergentintegrations.llm.chat import LlmChat, UserMessage
-        except Exception as e:
-            raise HTTPException(500, f"Translation service unavailable: {e}")
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            raise HTTPException(500, "EMERGENT_LLM_KEY missing")
-
+        # 2) LLM (routed through the provider switch)
         target_name = LANG_NAMES.get(req.target_lang, req.target_lang)
+        system = (f"You are a professional translator. Translate the user's text to {target_name}. "
+                  "Return ONLY the translation — no explanation, no quotes, no metadata. "
+                  "Preserve line breaks. " + _RULES)
+        sid = f"tr-{_hash(text)[:16]}-{req.target_lang}"
         try:
-            chat = LlmChat(
-                api_key=api_key,
-                session_id=f"tr-{_hash(text)[:16]}-{req.target_lang}",
-                system_message=(
-                    f"You are a professional translator. Translate the user's text to {target_name}. "
-                    "Return ONLY the translation — no explanation, no quotes, no metadata. "
-                    "Preserve line breaks. " + _RULES
-                ),
-            ).with_model("anthropic", "claude-sonnet-4-6")
-            resp = await chat.send_message(UserMessage(text=text))
+            resp = await _llm(system, text, sid)
             translated = (resp or "").strip()
             if translated.startswith('"') and translated.endswith('"'):
                 translated = translated[1:-1]
@@ -238,10 +319,12 @@ def build_router(db=None):
                 translated = text
             if req.target_lang not in ('ar', 'ur', 'fa'):
                 translated = translated.replace('ر.س', 'SAR')
+            if req.target_lang in ('ur', 'fa'):
+                translated = translated.replace('ك', 'ک').replace('ي', 'ی')
             if not _clean_ok(req.target_lang, translated, text):
-                retry = await chat.send_message(UserMessage(text=(
-                    f"Your answer mixed scripts. Translate again, ONLY in {target_name} script — write brand and product-line "
-                    f"names in {target_name} script too; only digit codes like M3 or 20K stay: {text}")))
+                retry = await _llm(system, (
+                    f"A previous answer mixed scripts. Translate ONLY in {target_name} script — write brand and product-line "
+                    f"names in {target_name} script too; only digit codes like M3 or 20K stay: {text}"), sid + "-r")
                 retry = (retry or '').strip().strip('"')
                 if retry and _clean_ok(req.target_lang, retry, text):
                     translated = retry
@@ -279,14 +362,6 @@ def build_router(db=None):
         if req.cache_only:  # fast phase: let the device show cached names instantly
             return {"translations": results, "cached": True, "failed": [], "missing": remaining}
 
-        try:
-            from emergentintegrations.llm.chat import LlmChat, UserMessage
-        except Exception as e:
-            raise HTTPException(500, f"Translation service unavailable: {e}")
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            raise HTTPException(500, "EMERGENT_LLM_KEY missing")
-
         CHUNK = 40
 
         strict_note = (
@@ -314,20 +389,15 @@ def build_router(db=None):
             numbered = "\n".join(f"{j + 1}. {s}" for j, s in enumerate(batch))
             done = set()
             try:
-                chat = LlmChat(
-                    api_key=api_key,
-                    session_id=f"trb-{req.target_lang}-{tag}-{_hash(numbered)[:10]}",
-                    system_message=(
-                        f"You are a professional translator. Translate each numbered line into {target_name} "
-                        f"(language code '{req.target_lang}'). Output MUST be written in {target_name}. "
-                        "Return ONLY the translations in the same order, each on its own line, prefixed with the "
-                        "same number and a dot. No explanations, no extra text, no quotes. " + _RULES
-                        + (strict_note if tag.startswith('r') and (req.target_lang == 'ar' or req.target_lang in _NATIVE) else '')
-                    ),
-                ).with_model("anthropic", "claude-sonnet-4-6")
-                resp = await chat.send_message(UserMessage(
-                    text=f"Translate into {target_name} ({req.target_lang}) — write every line in {target_name}."
-                         f"{_gloss_hint(numbered) if tag.startswith('rs') else ''}\n{numbered}"))
+                resp = await _llm(
+                    f"You are a professional translator. Translate each numbered line into {target_name} "
+                    f"(language code '{req.target_lang}'). Output MUST be written in {target_name}. "
+                    "Return ONLY the translations in the same order, each on its own line, prefixed with the "
+                    "same number and a dot. No explanations, no extra text, no quotes. " + _RULES
+                    + (strict_note if tag.startswith('r') and (req.target_lang == 'ar' or req.target_lang in _NATIVE) else ''),
+                    f"Translate into {target_name} ({req.target_lang}) — write every line in {target_name}."
+                    f"{_gloss_hint(numbered) if tag.startswith('rs') else ''}\n{numbered}",
+                    f"trb-{req.target_lang}-{tag}-{_hash(numbered)[:10]}")
                 for line in (resp or "").strip().split("\n"):
                     line = line.strip()
                     head, dot, tail = line.partition(".")
@@ -337,6 +407,8 @@ def build_router(db=None):
                     if not (0 <= idx < len(batch)):
                         continue
                     tr = tail.strip().strip('"')
+                    if req.target_lang in ('ur', 'fa'):
+                        tr = tr.replace('ك', 'ک').replace('ي', 'ی')
                     src = batch[idx]
                     if tr and _clean_ok(req.target_lang, tr, src):
                         results[src] = tr
@@ -347,6 +419,20 @@ def build_router(db=None):
             return [b for j, b in enumerate(batch) if j not in done]
 
         import asyncio as _asyncio
+
+        async def one(raw: str):
+            """Multi-line texts (posts, descriptions) can't use the numbered-line format → single-text path."""
+            try:
+                r = await translate(TranslateReq(text=raw.strip()[:5000], target_lang=req.target_lang, source_lang=req.source_lang))
+                tr = (r.get("translated") or "").strip()
+                if tr and _clean_ok(req.target_lang, tr, raw):
+                    results[raw] = tr
+            except Exception as e:
+                log.warning(f"multiline translate failed: {e}")
+
+        multi = [x for x in remaining if "\n" in x.strip()]
+        remaining = [x for x in remaining if "\n" not in x.strip()]
+        await _asyncio.gather(*[one(x) for x in multi])
         chunks = [remaining[i:i + CHUNK] for i in range(0, len(remaining), CHUNK)]
         failed_lists = await _asyncio.gather(*[run_chunk(c, f"c{i}") for i, c in enumerate(chunks)])
         retry = [x for fl in failed_lists for x in fl]

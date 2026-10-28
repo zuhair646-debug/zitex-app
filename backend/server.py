@@ -6648,7 +6648,7 @@ except Exception as _e:
 # Translation router (v1.17.0) — Persistent MongoDB cache + Emergent LLM
 try:
     from translate import build_router as _build_translate_router
-    app.include_router(_build_translate_router(db))
+    app.include_router(_build_translate_router(db, get_current_user))
     logger.info("Translation router mounted (persistent cache)")
 except Exception as _e:
     logger.error(f"Failed to mount translation router: {_e}")

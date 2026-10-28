@@ -132,7 +132,7 @@ export default function ChamberScreen() {
             {c.winners?.length > 0 && (
               <View style={s.winnersPreview}>
                 <Text style={s.winnersLabel}>{tSync('الفائزون:', curLang())} </Text>
-                <TranslatableName text={c.winners.map((w: any) => w.user_name).join('، ')} style={s.winnersNames} inline={false} />
+                <TranslatableName text={c.winners.map((w: any) => w.user_name).join('، ')} style={s.winnersNames} inline={false} containerStyle={{ flex: 1 }} />
               </View>
             )}
             <View style={s.viewMore}><Text style={s.viewMoreText}>{tSync('عرض التفاصيل وإجراء السحب', curLang())}</Text><Ionicons name="chevron-forward" size={16} color="#1E3A5F" /></View>

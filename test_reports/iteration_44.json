@@ -1,0 +1,41 @@
+{
+  "summary": "Translation-provider switch tested end-to-end. Backend 15/15 pytest pass: merchant-only access (customer/no-token -> 403), GET shape with masked key, PUT custom validation (400 without base_url/api_key, 422 bad provider), masked key '••••••••xxxx' preserves saved key, emergent test ok:true with Arabic sample, custom invalid URL ok:false, /api/translate falls back to Emergent when fallback=true and returns 500 when fallback=false, bulk multi-line Arabic->Korean returned Korean with \\n\\n and hashtag kept. Frontend: More menu item present (ar/en/zh), opens /merchant/ai-provider, provider-custom reveals all 4 inputs, test-btn shows test-result (custom: 'All connection attempts failed', emergent: Arabic sample), save persists (verified via API). FOUND & FIXED a blocking bug: save-btn was permanently covered by the floating tab bar/live-preview-fab in custom mode at 375x667 (paddingBottom 48 -> 140). No Arabic leftovers in en/zh. No deprecated Expo packages. Provider reset to emergent at end.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PUT /api/admin/translation-provider", "issue": "No way to clear a saved api_key: empty/None api_key always keeps the old key (has_key stays true forever). Consider an explicit clear flag."},
+      {"endpoint": "_custom_send", "issue": "httpx timeout=90s per call; if the custom endpoint hangs (not refuses), every translation waits up to 90s before falling back to Emergent. Consider a shorter connect/read timeout (e.g. 15-20s) when fallback=true."},
+      {"endpoint": "PUT/POST /api/admin/translation-provider(/test)", "issue": "Merchant-controlled base_url is fetched server-side with no URL validation (SSRF to internal addresses, e.g. http://127.0.0.1). Low risk since owner-only, but consider requiring https and blocking private IPs."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ai-provider save button", "issue": "Save button was hidden under the floating merchant tab bar (live-preview-fab intercepted taps) when provider=custom, even at max scroll. FIXED by tester: body paddingBottom 48 -> 140.", "testID": "save-btn", "priority": "HIGH (fixed)"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/merchant/ai-provider", "issues": [
+        "Save/error feedback uses Alert.alert which is a no-op on web preview - no visible success message on web (mobile native fine). Consider inline success banner.",
+        "Emergent option title always says '(current)' even when 'My Own Platform' is selected/saved - misleading.",
+        "Test-connection sample is always Arabic, so in en/zh UI the result card shows Arabic text; consider testing translation into the current UI language."
+      ]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_translation_provider_switch.py", "/app/test_reports/pytest/pytest_provider.xml"],
+  "action_items": [
+    "Review tester fix in ai-provider.tsx (paddingBottom 140) - keep it.",
+    "Optional: add a way to clear saved api_key; shorten custom-provider timeout when fallback=true; validate base_url (https / no private IPs).",
+    "Optional: show inline save confirmation (Alert.alert does nothing on web); make '(current)' label dynamic; test sample in current UI language."
+  ],
+  "critical_code_review_comments": [
+    "'ai-provider' is not in the hidden Tabs.Screen list in merchant/_layout.tsx (other hidden routes are). Custom tab bar currently hides it, but add it for consistency.",
+    "_provider() hits Mongo on every LLM call (incl. each bulk chunk) - fine at current scale, could cache briefly."
+  ],
+  "updated_files": ["/app/frontend/app/merchant/ai-provider.tsx", "/app/backend/tests/test_translation_provider_switch.py"],
+  "success_rate": {"backend": "100%", "frontend": "100% after padding fix (save-btn was untappable before)"},
+  "seed_data_creation": "Saved a dummy api_key 'sk-TEST_ui5678' (masked ••••••••5678) in app_settings.translation_provider; provider=emergent, base_url/model empty. Key cannot be cleared via API.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run pytest backend/tests/test_translation_provider_switch.py with EXPO_PUBLIC_BACKEND_URL exported (frontend/.env uses EXPO_PUBLIC_BACKEND_URL). Fixture resets provider to emergent at teardown. Bad URL used: http://127.0.0.1:9/v1. Background full_lang_scan.py was not touched."
+}

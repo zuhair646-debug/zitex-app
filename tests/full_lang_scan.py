@@ -36,7 +36,7 @@ ROLES = {
                  '/my-services', '/warranties', '/invoices', '/support', '/group-buys', '/about-store', '/my-affiliate',
                  '/affiliate-apply', '/appearance', '/draw', '/ugc-contest', '/create-return', 'PRODUCT', 'SERVICE', 'COMPETITION']),
     'merchant': ('0509999999', 'merchant2025', ['/merchant', '/merchant/products', '/merchant/orders', '/merchant/customers',
-                 '/merchant/more', '/merchant/live-preview', '/merchant/pos', '/merchant/inventory', '/merchant/invoices',
+                 '/merchant/more', '/merchant/ai-provider', '/merchant/live-preview', '/merchant/pos', '/merchant/inventory', '/merchant/invoices',
                  '/merchant/employees', '/merchant/team', '/merchant/roles', '/merchant/drivers', '/merchant/branches',
                  '/merchant/delivery-settings', '/merchant/shipping-matrix', '/merchant/marketing', '/merchant/marketer-stats',
                  '/merchant/loyalty-programs', '/merchant/banners', '/merchant/bookings', '/merchant/service-bookings',
@@ -165,6 +165,7 @@ async def main():
             tok, user = tokens[role]
             for lang in LANGS:
                 for r in routes:
+                    if os.environ.get('ROUTES') and subst.get(r, r).split('?')[0] not in os.environ['ROUTES'].split(','): continue
                     tasks.append(visit(ctx, sem, role, tok, user, lang, subst.get(r, r), results))
         await asyncio.gather(*tasks)
         await b.close()

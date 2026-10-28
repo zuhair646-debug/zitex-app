@@ -162,7 +162,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.employees.title': 'الموظفون', 'mo.employees.sub': 'الأدوار والصلاحيات',
     'mo.roles.title': 'الأدوار والصلاحيات', 'mo.roles.sub': 'أدوار جاهزة + مخصصة',
     'mo.team.title': 'الفريق - مباشر', 'mo.team.sub': 'الحضور والنشاط',
-    'mo.support.title': 'إعدادات الدعم', 'mo.support.sub': 'قنوات التواصل مع العملاء',
+    'mo.support.title': 'إعدادات الدعم', 'mo.support.sub': 'قنوات التواصل مع العملاء', 'mo.aiProvider.title': 'مزوّد الترجمة الذكية', 'mo.aiProvider.sub': 'اختر الجهة التي تترجم المحتوى',
     'mo.appearance.title': 'المظهر والخطوط', 'mo.appearance.sub': 'ليلي • نهاري • مخصص + اختر الخطوط والألوان',
     'mo.themeDark': 'الوضع الليلي', 'mo.themeLight': 'الوضع النهاري',
     'mo.themeToggleHint': 'اضغط للتبديل بين النهاري والليلي والمخصص',
@@ -354,7 +354,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.employees.title': 'Employees', 'mo.employees.sub': 'Roles and permissions',
     'mo.roles.title': 'Roles & Permissions', 'mo.roles.sub': 'Ready-made + custom roles',
     'mo.team.title': 'Team - Live', 'mo.team.sub': 'Attendance and activity',
-    'mo.support.title': 'Support Settings', 'mo.support.sub': 'Customer contact channels',
+    'mo.support.title': 'Support Settings', 'mo.support.sub': 'Customer contact channels', 'mo.aiProvider.title': 'AI Translation Provider', 'mo.aiProvider.sub': 'Choose who translates your content',
     'mo.appearance.title': 'Appearance & Fonts', 'mo.appearance.sub': 'Dark • Light • Custom + fonts & colors',
     'mo.themeDark': 'Dark Mode', 'mo.themeLight': 'Light Mode',
     'mo.themeToggleHint': 'Tap to toggle Light / Dark / Custom',
@@ -637,7 +637,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'ٹیم - لائیو',
     'mo.team.sub': 'حاضری اور سرگرمی',
     'mo.support.title': 'سپورٹ کی ترتیبات',
-    'mo.support.sub': 'گاہکوں سے رابطے کے چینلز',
+    'mo.support.sub': 'گاہکوں سے رابطے کے چینلز', 'mo.aiProvider.title': 'اے آئی ترجمہ فراہم کنندہ', 'mo.aiProvider.sub': 'منتخب کریں کہ مواد کا ترجمہ کون کرے',
     'mo.appearance.title': 'ظہور اور فونٹس',
     'mo.appearance.sub': 'ڈارک • لائٹ • حسب ضرورت + فونٹس اور رنگ',
     'mo.themeDark': 'ڈارک موڈ',
@@ -896,7 +896,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'مرجوعی و گارانتی',  // dedup v2
     'mo.returns.sub': 'درخواست‌های مرجوعی مشتریان',  // dedup v2
     'mo.loyalty.title': 'برنامه‌های وفاداری عربستان',  // dedup v2
-    'mo.loyalty.sub': 'قطاف، Rewards، الفرسان…',  // dedup v2
+    'mo.loyalty.sub': 'قطاف، ریواردز، الفرسان…',  // dedup v2
     'mo.appFeatures.title': 'قابلیت‌های اپ',  // dedup v2
     'mo.appFeatures.sub': 'هر قابلیت را روشن یا خاموش کنید',  // dedup v2
     'mo.customers.title': 'مشتریان',  // dedup v2
@@ -908,7 +908,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'تیم — زنده',  // dedup v2
     'mo.team.sub': 'حضور و فعالیت',  // dedup v2
     'mo.support.title': 'تنظیمات پشتیبانی',  // dedup v2
-    'mo.support.sub': 'کانال‌های تماس با مشتری',  // dedup v2
+    'mo.support.sub': 'کانال‌های تماس با مشتری', 'mo.aiProvider.title': 'ارائه‌دهنده ترجمه هوشمند', 'mo.aiProvider.sub': 'انتخاب کنید چه کسی محتوا را ترجمه کند',  // dedup v2
     'mo.appearance.title': 'ظاهر و فونت‌ها',  // dedup v2
     'mo.appearance.sub': 'تیره • روشن • سفارشی + انتخاب فونت و رنگ',  // dedup v2
     'mo.themeDark': 'حالت شب',  // dedup v2
@@ -1288,7 +1288,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'Devoluciones y Garantía',
     'mo.returns.sub': 'Solicitudes de devolución de clientes',
     'mo.loyalty.title': 'Programas de Lealtad KSA',
-    'mo.loyalty.sub': 'Qitaf, Rewards, Al-Fursan…',
+    'mo.loyalty.sub': 'Qitaf, Recompensas, Al-Fursan…',
     'mo.appFeatures.title': 'Características de la Aplicación',
     'mo.appFeatures.sub': 'Habilitar o deshabilitar cualquier función',
     'mo.customers.title': 'Clientes',
@@ -1300,7 +1300,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'Equipo - En directo',
     'mo.team.sub': 'Asistencia y actividad',
     'mo.support.title': 'Configuración de soporte',
-    'mo.support.sub': 'Canales de contacto del cliente',
+    'mo.support.sub': 'Canales de contacto del cliente', 'mo.aiProvider.title': 'Proveedor de traducción IA', 'mo.aiProvider.sub': 'Elige quién traduce tu contenido',
     'mo.appearance.title': 'Apariencia y fuentes',
     'mo.appearance.sub': 'Oscuro • Claro • Personalizado + fuentes y colores',
     'mo.themeDark': 'Modo oscuro',
@@ -1614,7 +1614,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'Retours et garantie',
     'mo.returns.sub': 'Demandes de retour client',
     'mo.loyalty.title': 'Programmes de fidélité KSA',
-    'mo.loyalty.sub': 'Qitaf, Rewards, Al-Fursan…',
+    'mo.loyalty.sub': 'Qitaf, Récompenses, Al-Fursan…',
     'mo.appFeatures.title': 'Fonctionnalités de l\'application',
     'mo.appFeatures.sub': 'Activer ou désactiver n\'importe quelle fonctionnalité',
     'mo.customers.title': 'Clients',
@@ -1626,7 +1626,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'Équipe - En direct',
     'mo.team.sub': 'Présence et activité',
     'mo.support.title': 'Paramètres d\'assistance',
-    'mo.support.sub': 'Canaux de contact des clients',
+    'mo.support.sub': 'Canaux de contact des clients', 'mo.aiProvider.title': 'Fournisseur de traduction IA', 'mo.aiProvider.sub': 'Choisissez qui traduit votre contenu',
     'mo.appearance.title': 'Apparence et polices',
     'mo.appearance.sub': 'Mode sombre • Mode clair • Personnalisé + polices et couleurs',
     'mo.themeDark': 'Mode sombre',
@@ -1952,7 +1952,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'Team – Live',
     'mo.team.sub': 'Anwesenheit und Aktivität',
     'mo.support.title': 'Support-Einstellungen',
-    'mo.support.sub': 'Kundenkontaktkanäle',
+    'mo.support.sub': 'Kundenkontaktkanäle', 'mo.aiProvider.title': 'KI-Übersetzungsanbieter', 'mo.aiProvider.sub': 'Wählen Sie, wer Ihre Inhalte übersetzt',
     'mo.appearance.title': 'Erscheinungsbild und Schriftarten',
     'mo.appearance.sub': 'Dunkel • Hell • Benutzerdefiniert + Schriftarten und Farben',
     'mo.themeDark': 'Dunkler Modus',
@@ -2279,7 +2279,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'Team - In diretta',
     'mo.team.sub': 'Presenze e attività',
     'mo.support.title': 'Impostazioni supporto',
-    'mo.support.sub': 'Canali di contatto clienti',
+    'mo.support.sub': 'Canali di contatto clienti', 'mo.aiProvider.title': 'Fornitore di traduzione IA', 'mo.aiProvider.sub': 'Scegli chi traduce i tuoi contenuti',
     'mo.appearance.title': 'Aspetto e caratteri',
     'mo.appearance.sub': 'Modalità scura • Modalità chiara • Personalizzato + caratteri e colori',
     'mo.themeDark': 'Modalità scura',
@@ -2606,7 +2606,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'Equipe - Ao Vivo',
     'mo.team.sub': 'Presença e atividade',
     'mo.support.title': 'Configurações de Suporte',
-    'mo.support.sub': 'Canais de contato do cliente',
+    'mo.support.sub': 'Canais de contato do cliente', 'mo.aiProvider.title': 'Provedor de tradução IA', 'mo.aiProvider.sub': 'Escolha quem traduz seu conteúdo',
     'mo.appearance.title': 'Aparência e Fontes',
     'mo.appearance.sub': 'Escuro • Claro • Personalizado + fontes e cores',
     'mo.themeDark': 'Modo Escuro',
@@ -2921,7 +2921,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'Возвраты и гарантия',
     'mo.returns.sub': 'Запросы на возврат товаров покупателями',
     'mo.loyalty.title': 'Программы лояльности KSA',
-    'mo.loyalty.sub': 'Qitaf, Rewards, Al-Fursan…',
+    'mo.loyalty.sub': 'Китаф, Ривардс, Аль-Фурсан…',
     'mo.appFeatures.title': 'Функции приложения',
     'mo.appFeatures.sub': 'Включить или отключить любую функцию',
     'mo.customers.title': 'Клиенты',
@@ -2933,7 +2933,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'Команда - Онлайн',
     'mo.team.sub': 'Посещаемость и активность',
     'mo.support.title': 'Параметры поддержки',
-    'mo.support.sub': 'Каналы контакта с клиентами',
+    'mo.support.sub': 'Каналы контакта с клиентами', 'mo.aiProvider.title': 'Поставщик ИИ-перевода', 'mo.aiProvider.sub': 'Выберите, кто переводит ваш контент',
     'mo.appearance.title': 'Внешний вид и шрифты',
     'mo.appearance.sub': 'Темный • Светлый • Пользовательский + шрифты и цвета',
     'mo.themeDark': 'Темный режим',
@@ -3248,7 +3248,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'İadeler & Garanti',
     'mo.returns.sub': 'Müşteri iade talepleri',
     'mo.loyalty.title': 'KSA Sadakat Programları',
-    'mo.loyalty.sub': 'Qitaf, Rewards, Al-Fursan…',
+    'mo.loyalty.sub': 'Qitaf, Ödüller, Al-Fursan…',
     'mo.appFeatures.title': 'Uygulama Özellikleri',
     'mo.appFeatures.sub': 'Herhangi bir özelliği etkinleştirin veya devre dışı bırakın',
     'mo.customers.title': 'Müşteriler',
@@ -3260,7 +3260,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'Takım - Canlı',
     'mo.team.sub': 'Katılım ve aktivite',
     'mo.support.title': 'Destek Ayarları',
-    'mo.support.sub': 'Müşteri iletişim kanalları',
+    'mo.support.sub': 'Müşteri iletişim kanalları', 'mo.aiProvider.title': 'Yapay Zekâ Çeviri Sağlayıcısı', 'mo.aiProvider.sub': 'İçeriğinizi kimin çevireceğini seçin',
     'mo.appearance.title': 'Görünüm ve Yazı Tipleri',
     'mo.appearance.sub': 'Koyu • Açık • Özel + yazı tipleri ve renkler',
     'mo.themeDark': 'Koyu Mod',
@@ -3517,7 +3517,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': '退货与保修',  // dedup v2
     'mo.returns.sub': '客户退货请求',  // dedup v2
     'mo.loyalty.title': '沙特忠诚度计划',  // dedup v2
-    'mo.loyalty.sub': 'Qitaf、Rewards、Al-Fursan…',  // dedup v2
+    'mo.loyalty.sub': '奇塔夫、奖励计划、富尔桑…',  // dedup v2
     'mo.appFeatures.title': '应用功能',  // dedup v2
     'mo.appFeatures.sub': '启用或禁用任何功能',  // dedup v2
     'mo.customers.title': '客户',  // dedup v2
@@ -3529,7 +3529,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': '团队 — 实时',  // dedup v2
     'mo.team.sub': '出勤与活动',  // dedup v2
     'mo.support.title': '支持设置',  // dedup v2
-    'mo.support.sub': '客户联系渠道',  // dedup v2
+    'mo.support.sub': '客户联系渠道', 'mo.aiProvider.title': '智能翻译服务商', 'mo.aiProvider.sub': '选择由谁翻译您的内容',  // dedup v2
     'mo.appearance.title': '外观与字体',  // dedup v2
     'mo.appearance.sub': '深色 • 浅色 • 自定义 + 字体与颜色',  // dedup v2
     'mo.themeDark': '深色模式',  // dedup v2
@@ -3912,7 +3912,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': '返品と保証',
     'mo.returns.sub': '顧客返品リクエスト',
     'mo.loyalty.title': 'KSAロイヤルティプログラム',
-    'mo.loyalty.sub': 'Qitaf、Rewards、Al-Fursan…',
+    'mo.loyalty.sub': 'キターフ、リワーズ、アル・フルサン…',
     'mo.appFeatures.title': 'アプリ機能',
     'mo.appFeatures.sub': '任意の機能を有効または無効にする',
     'mo.customers.title': '顧客',
@@ -3924,7 +3924,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'チーム - ライブ',
     'mo.team.sub': '出席と活動',
     'mo.support.title': 'サポート設定',
-    'mo.support.sub': '顧客連絡先チャネル',
+    'mo.support.sub': '顧客連絡先チャネル', 'mo.aiProvider.title': 'AI翻訳プロバイダー', 'mo.aiProvider.sub': 'コンテンツを翻訳するサービスを選択',
     'mo.appearance.title': '外観＆フォント',
     'mo.appearance.sub': 'ダーク・ライト・カスタム＋フォント＆色',
     'mo.themeDark': 'ダークモード',
@@ -4239,7 +4239,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': '반품 및 보증',
     'mo.returns.sub': '고객 반품 요청',
     'mo.loyalty.title': 'KSA 충성도 프로그램',
-    'mo.loyalty.sub': 'Qitaf, 리워드, Al-Fursan…',
+    'mo.loyalty.sub': '키타프, 리워드, 알푸르산…',
     'mo.appFeatures.title': '앱 기능',
     'mo.appFeatures.sub': '기능 활성화 또는 비활성화',
     'mo.customers.title': '고객',
@@ -4251,7 +4251,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': '팀 - 라이브',
     'mo.team.sub': '출석 및 활동',
     'mo.support.title': '지원 설정',
-    'mo.support.sub': '고객 연락 채널',
+    'mo.support.sub': '고객 연락 채널', 'mo.aiProvider.title': 'AI 번역 제공자', 'mo.aiProvider.sub': '콘텐츠를 번역할 서비스를 선택하세요',
     'mo.appearance.title': '모양 및 글꼴',
     'mo.appearance.sub': '어두움 • 밝음 • 사용자 정의 + 글꼴 및 색상',
     'mo.themeDark': '어두운 모드',
@@ -4508,7 +4508,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'वापसी और वारंटी',  // dedup v2
     'mo.returns.sub': 'ग्राहक वापसी अनुरोध',  // dedup v2
     'mo.loyalty.title': 'सऊदी वफादारी कार्यक्रम',  // dedup v2
-    'mo.loyalty.sub': 'Qitaf, Rewards, अल-फ़ुरसान…',  // dedup v2
+    'mo.loyalty.sub': 'क़िताफ़, रिवॉर्ड्स, अल-फ़ुरसान…',  // dedup v2
     'mo.appFeatures.title': 'ऐप सुविधाएं',  // dedup v2
     'mo.appFeatures.sub': 'किसी भी सुविधा को सक्षम/अक्षम करें',  // dedup v2
     'mo.customers.title': 'ग्राहक',  // dedup v2
@@ -4520,7 +4520,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'टीम — लाइव',  // dedup v2
     'mo.team.sub': 'उपस्थिति और गतिविधि',  // dedup v2
     'mo.support.title': 'सपोर्ट सेटिंग्स',  // dedup v2
-    'mo.support.sub': 'ग्राहक संपर्क चैनल',  // dedup v2
+    'mo.support.sub': 'ग्राहक संपर्क चैनल', 'mo.aiProvider.title': 'एआई अनुवाद प्रदाता', 'mo.aiProvider.sub': 'चुनें कि आपकी सामग्री का अनुवाद कौन करे',  // dedup v2
     'mo.appearance.title': 'दिखावट और फ़ॉन्ट',  // dedup v2
     'mo.appearance.sub': 'डार्क • लाइट • कस्टम + फ़ॉन्ट और रंग',  // dedup v2
     'mo.themeDark': 'डार्क मोड',  // dedup v2
@@ -4903,7 +4903,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'রিটার্ন এবং ওয়ারেন্টি',
     'mo.returns.sub': 'গ্রাহক রিটার্ন অনুরোধ',
     'mo.loyalty.title': 'কেএসএ লয়্যালটি প্রোগ্রাম',
-    'mo.loyalty.sub': 'Qitaf, রিওয়ার্ডস, আল-ফুরসান...',
+    'mo.loyalty.sub': 'কিতাফ, রিওয়ার্ডস, আল-ফুরসান…',
     'mo.appFeatures.title': 'অ্যাপ বৈশিষ্ট্য',
     'mo.appFeatures.sub': 'যেকোনো বৈশিষ্ট্য সক্ষম বা নিষ্ক্রিয় করুন',
     'mo.customers.title': 'গ্রাহক',
@@ -4915,7 +4915,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'দল - লাইভ',
     'mo.team.sub': 'উপস্থিতি এবং কার্যকলাপ',
     'mo.support.title': 'সহায়তা সেটিংস',
-    'mo.support.sub': 'গ্রাহক যোগাযোগ চ্যানেল',
+    'mo.support.sub': 'গ্রাহক যোগাযোগ চ্যানেল', 'mo.aiProvider.title': 'এআই অনুবাদ প্রদানকারী', 'mo.aiProvider.sub': 'আপনার কনটেন্ট কে অনুবাদ করবে তা বেছে নিন',
     'mo.appearance.title': 'চেহারা এবং ফন্ট',
     'mo.appearance.sub': 'ডার্ক • লাইট • কাস্টম + ফন্ট এবং রঙ',
     'mo.themeDark': 'ডার্ক মোড',
@@ -5242,7 +5242,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'Tim - Langsung',
     'mo.team.sub': 'Kehadiran dan aktivitas',
     'mo.support.title': 'Pengaturan Dukungan',
-    'mo.support.sub': 'Saluran kontak pelanggan',
+    'mo.support.sub': 'Saluran kontak pelanggan', 'mo.aiProvider.title': 'Penyedia Terjemahan AI', 'mo.aiProvider.sub': 'Pilih siapa yang menerjemahkan konten Anda',
     'mo.appearance.title': 'Penampilan & Font',
     'mo.appearance.sub': 'Gelap • Terang • Kustom + font & warna',
     'mo.themeDark': 'Mode Gelap',
@@ -5557,7 +5557,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'Pengembalian & Garansi',
     'mo.returns.sub': 'Permintaan pemulangan pelanggan',
     'mo.loyalty.title': 'Program Loyalitas KSA',
-    'mo.loyalty.sub': 'Qitaf, Rewards, Al-Fursan…',
+    'mo.loyalty.sub': 'Qitaf, Ganjaran, Al-Fursan…',
     'mo.appFeatures.title': 'Fitur Aplikasi',
     'mo.appFeatures.sub': 'Aktif atau nyahaktif mana-mana ciri',
     'mo.customers.title': 'Pelanggan',
@@ -5569,7 +5569,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'Pasukan - Langsung',
     'mo.team.sub': 'Kehadiran dan aktiviti',
     'mo.support.title': 'Tetapan Sokongan',
-    'mo.support.sub': 'Saluran hubungan pelanggan',
+    'mo.support.sub': 'Saluran hubungan pelanggan', 'mo.aiProvider.title': 'Penyedia Terjemahan AI', 'mo.aiProvider.sub': 'Pilih siapa yang menterjemah kandungan anda',
     'mo.appearance.title': 'Penampilan & Fon',
     'mo.appearance.sub': 'Gelap • Cerah • Tersuai + fon & warna',
     'mo.themeDark': 'Mod Gelap',
@@ -5884,7 +5884,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'การคืนสินค้าและการรับประกัน',
     'mo.returns.sub': 'คำขอคืนสินค้าของลูกค้า',
     'mo.loyalty.title': 'โปรแกรมความภักดี KSA',
-    'mo.loyalty.sub': 'Qitaf, รางวัล, Al-Fursan…',
+    'mo.loyalty.sub': 'กิตาฟ, รางวัล, อัล-ฟุรซาน…',
     'mo.appFeatures.title': 'ฟีเจอร์แอป',
     'mo.appFeatures.sub': 'เปิดหรือปิดฟีเจอร์ใดๆ',
     'mo.customers.title': 'ลูกค้า',
@@ -5896,7 +5896,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'ทีม - สด',
     'mo.team.sub': 'การเข้างานและกิจกรรม',
     'mo.support.title': 'ตั้งค่าการสนับสนุน',
-    'mo.support.sub': 'ช่องทางติดต่อลูกค้า',
+    'mo.support.sub': 'ช่องทางติดต่อลูกค้า', 'mo.aiProvider.title': 'ผู้ให้บริการแปลด้วย AI', 'mo.aiProvider.sub': 'เลือกผู้แปลเนื้อหาของคุณ',
     'mo.appearance.title': 'ลักษณะที่ปรากฏและฟอนต์',
     'mo.appearance.sub': 'มืด • สว่าง • กำหนดเอง + ฟอนต์และสี',
     'mo.themeDark': 'โหมดมืด',
@@ -6226,7 +6226,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.returns.title': 'החזרות ואחריות',
     'mo.returns.sub': 'בקשות החזרה של לקוחות',
     'mo.loyalty.title': 'תוכניות נאמנות KSA',
-    'mo.loyalty.sub': 'Qitaf, פרסים, אל-פרסאן…',
+    'mo.loyalty.sub': 'קיטאף, פרסים, אל-פרסאן…',
     'mo.appFeatures.title': 'תכונות האפליקציה',
     'mo.appFeatures.sub': 'הפעלה או השבתה של כל תכונה',
     'mo.customers.title': 'לקוחות',
@@ -6238,7 +6238,7 @@ const T: Record<Lang, Record<string, string>> = {
     'mo.team.title': 'צוות - חי',
     'mo.team.sub': 'נוכחות ופעילות',
     'mo.support.title': 'הגדרות תמיכה',
-    'mo.support.sub': 'ערוצי קשר עם לקוחות',
+    'mo.support.sub': 'ערוצי קשר עם לקוחות', 'mo.aiProvider.title': 'ספק תרגום בינה מלאכותית', 'mo.aiProvider.sub': 'בחרו מי מתרגם את התוכן שלכם',
     'mo.appearance.title': 'מראה וגופנים',
     'mo.appearance.sub': 'כהה • בהיר • מותאם אישית + גופנים וצבעים',
     'mo.themeDark': 'מצב כהה',

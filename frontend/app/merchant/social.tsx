@@ -247,7 +247,7 @@ export default function MerchantSocial() {
                       <Ionicons name={ti.name as any} size={13} color={ti.color} />
                       <Text style={[s.typePillText, { color: ti.color }]}>{tSync(ti.label || '', curLang())}</Text>
                     </View>
-                    <Text style={s.author}>{p.author || 'Zenrex Store'}</Text>
+                    <TranslatableName text={p.author || 'Zenrex Store'} style={s.author} containerStyle={{ flex: 1 }} noToggle numberOfLines={1} />
                     <TouchableOpacity onPress={() => delPost(p.id || p._id)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
                   </View>
                   {!!p.text && <TranslatableName text={p.text || p.content} style={s.text} inline={false} />}

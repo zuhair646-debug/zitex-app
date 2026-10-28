@@ -60,6 +60,7 @@ export default function MerchantMore() {
     { icon: 'shield-checkmark',  titleKey: 'mo.roles.title',     subKey: 'mo.roles.sub',     route: '/merchant/roles' },
     { icon: 'pulse',             titleKey: 'mo.team.title',      subKey: 'mo.team.sub',      route: '/merchant/team' },
     { icon: 'headset',           titleKey: 'mo.support.title',   subKey: 'mo.support.sub',   route: '/merchant/support-settings' },
+    ...(user?.role === 'merchant' ? [{ icon: 'language', titleKey: 'mo.aiProvider.title', subKey: 'mo.aiProvider.sub', route: '/merchant/ai-provider' }] : []),
   ] as const;
 
   const Section = ({ label, items }: { label: string; items: readonly any[] }) => (

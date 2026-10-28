@@ -54,7 +54,7 @@ export default function ServiceDetail() {
         <TouchableOpacity style={s.topBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
         </TouchableOpacity>
-        <Text style={s.topTitle} numberOfLines={1}>{(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))}</Text>
+        <TranslatableName text={(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))} style={s.topTitle} containerStyle={{ flex: 1 }} noToggle numberOfLines={1} />
         <View style={{ width: 40 }} />
       </View>
 

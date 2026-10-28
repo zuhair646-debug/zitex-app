@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useT, curLang } from '../../src/i18n';
 import { tSync, TX } from '../../src/useAutoT';
+import TranslatableName from '../../src/components/TranslatableName';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Switch, Alert, ActivityIndicator, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -168,7 +169,7 @@ export default function ShippingMatrixScreen() {
 
           {rules.map((r) => {
             const carrier = CARRIERS[r.carrier_code] || { name: r.carrier_code, logo: '📦', color: MUTED };
-            const cityName = r.city_code ? cities.find((c) => c.code === r.city_code)?.name_ar : tSync('كل المدن', lang);
+            const cityName = r.city_code ? tSync(cities.find((c) => c.code === r.city_code)?.name_ar || '', lang) : tSync('كل المدن', lang);
             const branchName = r.branch_id ? branches.find((b: any) => (b.id || b._id) === r.branch_id)?.name : tSync('كل الفروع', lang);
             return (
               <View key={r.id} style={s.card}>
@@ -240,7 +241,7 @@ export default function ShippingMatrixScreen() {
                       <TouchableOpacity key={c.code}
                         onPress={() => setEditing({ ...editing, city_code: c.code })}
                         style={[s.chip, editing.city_code === c.code && { borderColor: GOLD, backgroundColor: GOLD + '20' }]}>
-                        <Text style={[s.chipText, editing.city_code === c.code && { color: GOLD }]}>{c.name_ar}</Text>
+                        <TranslatableName text={c.name_ar} style={[s.chipText, editing.city_code === c.code && { color: GOLD }] as any} noToggle />
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
@@ -258,7 +259,7 @@ export default function ShippingMatrixScreen() {
                         <TouchableOpacity key={bid}
                           onPress={() => setEditing({ ...editing, branch_id: bid })}
                           style={[s.chip, editing.branch_id === bid && { borderColor: GOLD, backgroundColor: GOLD + '20' }]}>
-                          <Text style={[s.chipText, editing.branch_id === bid && { color: GOLD }]}>{b.name || b.name_ar}</Text>
+                          <TranslatableName text={b.name || b.name_ar} style={[s.chipText, editing.branch_id === bid && { color: GOLD }] as any} noToggle />
                         </TouchableOpacity>
                       );
                     })}

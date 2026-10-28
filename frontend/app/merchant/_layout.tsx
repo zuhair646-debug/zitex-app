@@ -90,7 +90,7 @@ export default function MerchantLayout() {
       {[
         'product-form','social','competitions','competition-form','services','service-bookings',
         'bookings','customers','banners','branches','drivers','delivery-settings','employees',
-        'support-settings','roles','team','pos','invoices','marketing','marketer-stats',
+        'support-settings','ai-provider','roles','team','pos','invoices','marketing','marketer-stats',
         'live-preview',
       ].map(n => (
         <Tabs.Screen key={n} name={n} options={{ href: null }} />

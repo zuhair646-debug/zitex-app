@@ -64,11 +64,15 @@ def extract_strings() -> list[str]:
 def bulk_translate(texts: list[str], target: str) -> dict[str, str]:
     r = requests.post(
         f"{BACKEND}/api/translate/bulk",
-        json={"texts": texts, "target_lang": target},
+        json={"texts": [t.replace("\\n", "\n") for t in texts], "target_lang": target},
         timeout=180,
     )
     r.raise_for_status()
-    return r.json().get("translations", {})
+    j = r.json()
+    failed = set(j.get("failed") or [])
+    # Never store a failed line (the backend echoes the source back for those).
+    out = {k.replace("\n", "\\n"): v.replace("\n", "\\n") for k, v in (j.get("translations") or {}).items() if k not in failed}
+    return out
 
 
 def main() -> int:
