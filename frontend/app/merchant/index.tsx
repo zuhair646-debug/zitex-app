@@ -82,7 +82,7 @@ export default function MerchantHome() {
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
               <Text style={styles.greeting}>{t('mh.hello')}</Text>
-              <Text style={styles.merchantName} numberOfLines={1}>{user?.name || t('mh.merchantFallback')}</Text>
+              {user?.name ? <TranslatableName text={user.name} style={styles.merchantName} numberOfLines={1} iconSize={12} /> : <Text style={styles.merchantName} numberOfLines={1}>{t('mh.merchantFallback')}</Text>}
               <Text style={styles.merchantRole} numberOfLines={1}>{t('mh.dashboardTitle')}</Text>
             </View>
             <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications')} activeOpacity={0.7}>

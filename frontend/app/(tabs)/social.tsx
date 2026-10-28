@@ -5,8 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import MediaCarousel from '../../src/components/MediaCarousel';
-import TranslateButton from '../../src/components/TranslateButton';
-import TranslatableName from '../../src/components/TranslatableName';
+import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 
@@ -234,7 +233,7 @@ export default function SocialScreen() {
                   </View>
                 </View>
 
-                {!!post.text && <TranslateButton text={post.text} sourceLang="ar" textStyle={s.postText} />}
+                {!!post.text && <TranslatableName text={post.text} style={s.postText} inline={false} />}
 
                 {/* Images */}
                 {(() => {
@@ -279,7 +278,7 @@ export default function SocialScreen() {
                   return (
                     <TouchableOpacity key={i} style={[s.pollOption, isSelected && s.pollSelected]} onPress={() => votePoll(postId, i)}>
                       <View style={[s.pollBarFill, { width: `${pct}%`, backgroundColor: isSelected ? '#8833FF40' : '#FFF7DA' }]} />
-                      <Text style={[s.pollOptionText, isSelected && { fontWeight: '800' }]}>{opt.text}</Text>
+                      <TranslatableName text={opt.text} style={[s.pollOptionText, isSelected && { fontWeight: '800' }] as any} />
                       <Text style={[s.pollPct, isSelected && { color: '#F5C518' }]}>{pct}%</Text>
                     </TouchableOpacity>
                   );
@@ -308,7 +307,7 @@ export default function SocialScreen() {
                       {!!storeInfo.whatsapp && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#25D366' }]} onPress={() => openContact('whatsapp')}>
                           <Ionicons name="logo-whatsapp" size={14} color="white" />
-                          <Text style={s.chipText}>WhatsApp</Text>
+                          <TranslatableName text="WhatsApp" style={s.chipText} noToggle />
                         </TouchableOpacity>
                       )}
                       {!!storeInfo.phone && (
@@ -326,13 +325,13 @@ export default function SocialScreen() {
                       {!!storeInfo.instagram && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#E1306C' }]} onPress={() => openContact('instagram')}>
                           <Ionicons name="logo-instagram" size={14} color="white" />
-                          <Text style={s.chipText}>Instagram</Text>
+                          <TranslatableName text="Instagram" style={s.chipText} noToggle />
                         </TouchableOpacity>
                       )}
                       {!!storeInfo.tiktok && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#000' }]} onPress={() => openContact('tiktok')}>
                           <Ionicons name="logo-tiktok" size={14} color="white" />
-                          <Text style={s.chipText}>TikTok</Text>
+                          <TranslatableName text="TikTok" style={s.chipText} noToggle />
                         </TouchableOpacity>
                       )}
                       {!!storeInfo.snapchat && (
@@ -344,13 +343,13 @@ export default function SocialScreen() {
                       {!!storeInfo.twitter && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#000' }]} onPress={() => openContact('twitter')}>
                           <Ionicons name="logo-twitter" size={14} color="white" />
-                          <Text style={s.chipText}>X / Twitter</Text>
+                          <TranslatableName text="X / Twitter" style={s.chipText} noToggle />
                         </TouchableOpacity>
                       )}
                       {!!storeInfo.telegram && (
                         <TouchableOpacity style={[s.chip, { backgroundColor: '#0088CC' }]} onPress={() => openContact('telegram')}>
                           <Ionicons name="paper-plane" size={14} color="white" />
-                          <Text style={s.chipText}>Telegram</Text>
+                          <TranslatableName text="Telegram" style={s.chipText} noToggle />
                         </TouchableOpacity>
                       )}
                     </ScrollView>
@@ -370,7 +369,7 @@ export default function SocialScreen() {
           {storyOpen?.image && <Image source={{ uri: storyOpen.image }} style={s.storyImage} resizeMode="contain" />}
           <View style={s.storyFooter}>
             <Text style={s.storyAuthor}>📖 {storyOpen?.author || 'Store'}</Text>
-            {!!storyOpen?.text && <Text style={s.storyText}>{storyOpen.text}</Text>}
+            {!!storyOpen?.text && <TranslatableName text={storyOpen.text} style={s.storyText} inline={false} />}
             <Text style={s.storyTime}>{timeAgo(storyOpen?.created_at)}</Text>
           </View>
         </View>
@@ -391,10 +390,10 @@ export default function SocialScreen() {
             ListEmptyComponent={<TX style={s.empty}>كن أول من يعلق</TX>}
             renderItem={({ item: c }) => (
               <View style={[s.cmtCard, c.is_merchant_reply && s.cmtMerchantStyle]}>
-                <View style={s.cmtAvatar}><Text style={s.cmtAvText}>{c.user_name?.charAt(0) || '?'}</Text></View>
+                <View style={s.cmtAvatar}><NameInitial name={c.user_name} style={s.cmtAvText} /></View>
                 <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Text style={s.cmtName}>{c.user_name} {c.is_merchant_reply && <TX style={s.merchantTag}>✓ التاجر</TX>}</Text>
-                  <Text style={s.cmtText}>{c.text}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}><TranslatableName text={c.user_name} style={s.cmtName} />{c.is_merchant_reply && <TX style={s.merchantTag}> ✓ التاجر</TX>}</View>
+                  <TranslatableName text={c.text} style={s.cmtText} inline={false} />
                 </View>
               </View>
             )}

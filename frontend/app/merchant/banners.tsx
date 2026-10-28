@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useT, curLang } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { tSync, tf } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Image, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import TranslatableName from '../../src/components/TranslatableName';
 
 export default function MerchantBanners() {
   const { lang } = useT();
@@ -35,7 +36,7 @@ export default function MerchantBanners() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>{tSync('البانرات (', lang)}{banners.length})</Text>
+        <Text style={s.title}>{tSync('البانرات', lang)} ({banners.length})</Text>
         <TouchableOpacity testID="add-banner" onPress={() => setModalOpen(true)} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
@@ -44,7 +45,7 @@ export default function MerchantBanners() {
             <View key={b.id} style={s.card}>
               <Image source={{ uri: b.image }} style={s.img} />
               <View style={s.cardBody}>
-                <Text style={s.bTitle}>{b.title_ar || b.title_en || 'Banner'}</Text>
+                <TranslatableName text={(lang === 'ar' ? (b.title_ar || b.title_en) : (b.title_en || b.title_ar)) || tSync('بانر', lang)} style={s.bTitle} />
                 <TouchableOpacity onPress={() => del(b.id)}><Ionicons name="trash-outline" size={22} color="#EF4444" /></TouchableOpacity>
               </View>
             </View>
@@ -58,11 +59,11 @@ export default function MerchantBanners() {
             <Text style={s.title}>{tSync('بانر جديد', lang)}</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            <Text style={s.label}>Image URL *</Text>
+            <Text style={s.label}>{tSync('رابط الصورة *', lang)}</Text>
             <TextInput style={s.input} value={form.image} onChangeText={t => setForm({ ...form, image: t })} placeholder="https://..." autoCapitalize="none" />
-            <Text style={s.label}>Title (Arabic)</Text>
+            <Text style={s.label}>{tSync('العنوان (عربي)', lang)}</Text>
             <TextInput style={s.input} value={form.title_ar} onChangeText={t => setForm({ ...form, title_ar: t })} />
-            <Text style={s.label}>Title (English)</Text>
+            <Text style={s.label}>{tSync('العنوان (إنجليزي)', lang)}</Text>
             <TextInput style={s.input} value={form.title_en} onChangeText={t => setForm({ ...form, title_en: t })} />
             <Text style={s.label}>{tSync('الطلب', lang)}</Text>
             <TextInput style={s.input} keyboardType="numeric" value={String(form.order)} onChangeText={t => setForm({ ...form, order: t })} />

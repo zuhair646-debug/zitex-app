@@ -1,3 +1,4 @@
+import TranslatableName from '../../src/components/TranslatableName';
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -6,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+
+const PERM_AR: Record<string, string> = { pos: 'نقطة البيع', inventory: 'المخزون', invoices: 'الفواتير', orders: 'الطلبات', products: 'المنتجات', customers: 'العملاء', reports: 'التقارير', settings: 'الإعدادات', marketing: 'التسويق', employees: 'الموظفون', delivery: 'التوصيل', services: 'الخدمات', social: 'التواصل الاجتماعي', competitions: 'المسابقات', returns: 'المرتجعات', support: 'الدعم' };
 
 const DEPARTMENTS = [
   { id: 'marketing', label: 'تسويق / سوشال ميديا', icon: 'megaphone', color: '#EC4899', defaultPerms: ['social', 'banners'] },
@@ -101,10 +104,10 @@ export default function MerchantEmployees() {
             <View key={e.id} style={s.empCard}>
               <View style={[s.empIcon, { backgroundColor: dept.color + '20' }]}><Ionicons name={dept.icon as any} size={22} color={dept.color} /></View>
               <View style={{ flex: 1 }}>
-                <Text style={s.empName}>{e.name} {!e.active && <TX style={s.inactive}>(معطّل)</TX>}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}><TranslatableName text={e.name} style={s.empName} />{!e.active && <TX style={s.inactive}> (معطّل)</TX>}</View>
                 <Text style={s.empMeta}>{e.phone} • {tSync(dept.label, lang)}</Text>
                 <View style={s.permRow}>
-                  {(e.permissions || []).slice(0, 4).map((p: string) => <View key={p} style={s.permTag}><Text style={s.permTagText}>{tSync(perms.labels[p] || p, lang)}</Text></View>)}
+                  {(e.permissions || []).slice(0, 4).map((p: string) => <View key={p} style={s.permTag}><Text style={s.permTagText}>{tSync(perms.labels[p] || PERM_AR[p] || p, lang)}</Text></View>)}
                   {(e.permissions || []).length > 4 && <Text style={s.morePerms}>+{e.permissions.length - 4}</Text>}
                 </View>
               </View>
@@ -147,7 +150,7 @@ export default function MerchantEmployees() {
                   return (
                     <TouchableOpacity key={b.id} style={[s.permCard, active && s.permActive]} onPress={() => toggleBranch(b.id)}>
                       <Ionicons name={active ? 'checkmark-circle' : 'business-outline'} size={16} color={active ? '#8833FF' : '#9CA3AF'} />
-                      <Text style={[s.permLbl, active && s.permLblActive]}>{b.name}{b.is_main ? ' ⭐' : ''}</Text>
+                      <Text style={[s.permLbl, active && s.permLblActive]}>{tSync(b.name || '', lang)}{b.is_main ? ' ⭐' : ''}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -170,7 +173,7 @@ export default function MerchantEmployees() {
               {perms.permissions.map(p => (
                 <TouchableOpacity key={p} style={[s.permCard, form.permissions.includes(p) && s.permActive]} onPress={() => togglePerm(p)}>
                   <Ionicons name={form.permissions.includes(p) ? 'checkmark-circle' : 'ellipse-outline'} size={16} color={form.permissions.includes(p) ? '#8833FF' : '#9CA3AF'} />
-                  <Text style={[s.permLbl, form.permissions.includes(p) && s.permLblActive]}>{perms.labels[p]}</Text>
+                  <Text style={[s.permLbl, form.permissions.includes(p) && s.permLblActive]}>{tSync(perms.labels[p] || PERM_AR[p] || p, lang)}</Text>
                 </TouchableOpacity>
               ))}
             </View>

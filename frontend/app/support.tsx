@@ -64,7 +64,7 @@ export default function SupportScreen() {
               <View style={[s.iconBox, { backgroundColor: c.color + '20' }]}>
                 <Ionicons name={c.icon as any} size={24} color={c.color} />
               </View>
-              <Text style={s.cardLabel}>{c.label}</Text>
+              <TranslatableName text={c.label} style={s.cardLabel} noToggle />
               <Text style={s.cardSub} numberOfLines={1}>{c.sub}</Text>
             </TouchableOpacity>
           ))}

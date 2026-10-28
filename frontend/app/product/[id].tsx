@@ -267,7 +267,7 @@ export default function ProductDetailScreen() {
             <View style={styles.payRow}>
               <View style={styles.payBadge}><Ionicons name="cash" size={16} color="#10B981" /><TX style={styles.payText}>الدفع عند الاستلام</TX></View>
               <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="card" size={16} color="#6B7280" /><TX style={styles.payTextSoon}>بطاقة</TX></View>
-              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="logo-apple" size={16} color="#6B7280" /><Text style={styles.payTextSoon}>Apple Pay</Text></View>
+              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="logo-apple" size={16} color="#6B7280" /><TranslatableName text="Apple Pay" style={styles.payTextSoon} noToggle /></View>
               <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="time" size={16} color="#6B7280" /><TX style={styles.payTextSoon}>تمارا</TX></View>
             </View>
           </View>

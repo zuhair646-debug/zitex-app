@@ -164,10 +164,10 @@ export default function MerchantServices() {
               )}
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={s.name}>{lang === 'ar' ? (sv.name_ar || sv.name) : (sv.name || sv.name_ar)}</Text>
+                  <TranslatableName text={lang === 'ar' ? (sv.name_ar || sv.name) : (sv.name || sv.name_ar)} style={s.name} />
                   {!sv.published && <View style={s.hiddenBadge}><TX style={s.hiddenBadgeText}>مخفية</TX></View>}
                 </View>
-                <Text style={s.desc} numberOfLines={2}>{tSync(sv.desc || '', curLang())}</Text>
+                <TranslatableName text={sv.desc || ''} style={s.desc} numberOfLines={2} inline={false} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
                   <Text style={s.price}>{sv.price} {tSync('ر.س', lang)}</Text>
                   {sv.warranty_available ? <Text style={s.warranty}>🛡 {sv.warranty_days}{tSync('ي', lang)}</Text> : null}

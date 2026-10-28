@@ -1,3 +1,4 @@
+import TranslatableName from '../../src/components/TranslatableName';
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Switch } from 'react-native';
 import { Image } from 'expo-image';
@@ -24,6 +25,8 @@ const STATUS_FLOW = [
   { id: 'in_progress', label: 'قيد الإصلاح' },
   { id: 'ready', label: 'جاهز' },
   { id: 'completed', label: 'مكتمل' },
+  { id: 'delivered', label: 'تم التسليم' },
+  { id: 'cancelled', label: 'ملغى' },
 ];
 
 export default function MerchantServiceBookings() {
@@ -112,7 +115,7 @@ function BookingDetailModal({ booking, onClose, onStatus, apiCall, onRefresh }: 
       <SafeAreaView style={s.safe}>
         <View style={s.header}>
           <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={GOLD} /></TouchableOpacity>
-          <Text style={s.title}>{booking.service_name}</Text>
+          <TranslatableName text={booking.service_name} style={s.title} />
           <View style={{ width: 22 }} />
         </View>
         <ScrollView contentContainerStyle={{ padding: 16 }}>

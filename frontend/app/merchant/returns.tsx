@@ -1,3 +1,4 @@
+import TranslatableName from '../../src/components/TranslatableName';
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -157,8 +158,8 @@ export default function MerchantReturnsScreen() {
                     </View>
                   )}
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
-                    <Text style={s.cardTitle} numberOfLines={1}>{r.product_name}</Text>
-                    <Text style={s.cardSub}>{r.customer_name} · {r.customer_phone}</Text>
+                    <TranslatableName text={r.product_name} style={s.cardTitle} numberOfLines={1} containerStyle={{ flexShrink: 1 }} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}><TranslatableName text={r.customer_name} style={s.cardSub} /><Text style={s.cardSub}> · {r.customer_phone}</Text></View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                       <View style={[s.pill, { backgroundColor: meta.color + '25', borderColor: meta.color }]}>
                         <Ionicons name={meta.icon as any} size={10} color={meta.color} />
@@ -168,7 +169,7 @@ export default function MerchantReturnsScreen() {
                         <Text style={[s.pillText, { color: TEXT }]}>{r.type === 'warranty' ? 'ضمان' : r.type === 'exchange' ? tSync('استبدال', curLang()) : tSync('إرجاع', curLang())}</Text>
                       </View>
                     </View>
-                    <Text style={s.reasonText} numberOfLines={2}>{tSync(r.reason_label_ar || '', lang)} — {r.reason_text}</Text>
+                    <View><Text style={s.reasonText} numberOfLines={1}>{tSync(r.reason_label_ar || '', lang)}</Text>{!!r.reason_text && <TranslatableName text={r.reason_text} style={s.reasonText} numberOfLines={2} inline={false} />}</View>
                   </View>
                 </View>
               </TouchableOpacity>

@@ -35,6 +35,8 @@ interface Props {
   showToggleLabel?: boolean;
   numberOfLines?: number;
   iconOnly?: boolean;
+  /** Translate automatically but never show the arrow (chips, small labels). */
+  noToggle?: boolean;
   onToggle?: (showingTranslation: boolean, translated?: string) => void;
 }
 
@@ -167,26 +169,41 @@ async function flush(lang: Lang) {
   if (!q || !q.size) return;
   queues[lang] = new Map();
   const texts = Array.from(q.keys());
-  try {
-    const res = await fetch(`${BACKEND}/api/translate/bulk`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ texts, target_lang: lang }),
-    });
-    const j = res.ok ? await res.json() : null;
+  const settle = (j: any, batch: string[]) => {
     const out: Record<string, string> = j?.translations || {};
     const failed = new Set<string>(j?.failed || []);
-    texts.forEach((tx) => {
+    batch.forEach((tx) => {
+      if (!(tx in out)) return;
       const tr = (out[tx] ?? '').toString().trim();
       // Failed lines come back as the source — never cache them as final (retry next time).
       const ok = !!tr && !failed.has(tx) && !(lang !== 'ar' && lang !== 'fa' && lang !== 'ur' && AR_RX.test(tr));
       if (ok) { memCache[`${lang}::${tx}`] = tr; }
       q.get(tx)?.forEach((w) => w.resolve(ok ? tr : null));
+      q.delete(tx);
     });
+  };
+  const post = async (batch: string[], cacheOnly: boolean) => {
+    const res = await fetch(`${BACKEND}/api/translate/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texts: batch, target_lang: lang, cache_only: cacheOnly }),
+    });
+    return res.ok ? res.json() : null;
+  };
+  try {
+    // 1) cached translations come back instantly
+    const fast = await post(texts, true);
+    settle(fast, texts);
+    // 2) the rest in small parallel chunks so short names never wait for long posts
+    const rest = texts.filter((tx) => q.has(tx));
+    const chunks: string[][] = [];
+    for (let i = 0; i < rest.length; i += 12) chunks.push(rest.slice(i, i + 12));
+    await Promise.all(chunks.map(async (c) => {
+      try { settle(await post(c, false), c); } catch { /* resolved below */ }
+    }));
     schedulePersist();
-  } catch {
-    texts.forEach((tx) => q.get(tx)?.forEach((w) => w.resolve(null)));
-  }
+  } catch { /* network error */ }
+  q.forEach((ws) => ws.forEach((w) => w.resolve(null)));
 }
 
 /** Queue a text for automatic translation; many calls on one screen become one request. */
@@ -214,6 +231,7 @@ export default function TranslatableName({
   showToggleLabel = false,
   numberOfLines,
   iconOnly = false,
+  noToggle = false,
   onToggle,
 }: Props) {
   const { lang, isRTL, t } = useT();
@@ -273,7 +291,7 @@ export default function TranslatableName({
   // benefits from a translate option.
   // Icon only matters when a translation exists/needed (lets the user see the original).
   const tooShort = !original || original.trim().length < 2;
-  const hideIcon = tooShort || translated === original || (!needsTranslation(original, lang) && translated === null);
+  const hideIcon = !!noToggle || tooShort || translated === original || (!needsTranslation(original, lang) && translated === null);
 
   const displayText = showing === 'translated' && translated !== null ? translated : original;
   const isTr = showing === 'translated' && translated !== null;
@@ -370,3 +388,19 @@ const styles = StyleSheet.create({
     color: colors.brand,
   },
 });
+
+/** First letter of a person's name in the viewer's script (avatar circles). */
+export function NameInitial({ name, style }: { name?: string | null; style?: TextStyle | TextStyle[] }) {
+  const { lang } = useT();
+  const src = (name || '').trim();
+  const [shown, setShown] = useState<string>(src);
+  useEffect(() => {
+    let alive = true;
+    setShown(memCache[`${lang}::${src}`] || src);
+    if (src && needsTranslation(src, lang)) {
+      fetchTranslation(src, lang).then((tr) => { if (alive && tr) setShown(tr); }).catch(() => {});
+    }
+    return () => { alive = false; };
+  }, [src, lang]);
+  return <Text style={style}>{(Array.from(shown)[0] || '?').toUpperCase()}</Text>;
+}

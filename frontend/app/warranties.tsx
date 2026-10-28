@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import TranslatableName from '../src/components/TranslatableName';
 
 export default function WarrantiesScreen() {
   useT(); // re-render when language or on-demand translations change
@@ -39,8 +40,8 @@ export default function WarrantiesScreen() {
                 </View>
                 {daysLeft(w.end_date) > 0 && <Text style={s.daysLeft}>{tf('متبقي {0} يوم', curLang(), [daysLeft(w.end_date)])}</Text>}
               </View>
-              <Text style={s.productName}>{w.product_name}</Text>
-              <Text style={s.serviceName}>{w.service_name}</Text>
+              <TranslatableName text={w.product_name} style={s.productName} />
+              <TranslatableName text={w.service_name} style={s.serviceName} />
               <View style={s.infoRow}><Text style={s.infoLabel}>{tSync('مدة الضمان', curLang())}</Text><Text style={s.infoVal}>{tf('{0} يوم', curLang(), [w.warranty_days])}</Text></View>
               <View style={s.infoRow}><Text style={s.infoLabel}>{tSync('تاريخ البداية', curLang())}</Text><Text style={s.infoVal}>{w.start_date}</Text></View>
               <View style={s.infoRow}><Text style={s.infoLabel}>{tSync('تاريخ الانتهاء', curLang())}</Text><Text style={s.infoVal}>{w.end_date}</Text></View>

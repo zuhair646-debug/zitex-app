@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../_layout';
 import { mediaUrlSync } from '../../src/utils/upload';
+import TranslatableName from '../../src/components/TranslatableName';
 
 const PURPLE = '#F5C518';
 const { width } = Dimensions.get('window');
@@ -88,11 +89,11 @@ export default function ServiceDetail() {
         </View>
 
         <View style={s.headerCard}>
-          <Text style={s.name}>{(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))}</Text>
-          {!!svc.desc && <Text style={s.desc}>{tSync(svc.desc || '', curLang())}</Text>}
+          <TranslatableName text={(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))} style={s.name} />
+          {!!svc.desc && <TranslatableName text={svc.desc} style={s.desc} inline={false} />}
           <View style={s.metaRow}>
             <View style={s.metaChip}><Ionicons name="cash" size={14} color={PURPLE} /><Text style={s.metaText}>{svc.price} {tSync('ر.س', lang)}</Text></View>
-            <View style={s.metaChip}><Ionicons name="time" size={14} color={PURPLE} /><Text style={s.metaText}>{svc.turnaround}</Text></View>
+            <View style={s.metaChip}><Ionicons name="time" size={14} color={PURPLE} /><TranslatableName text={String(svc.turnaround || '')} style={s.metaText} noToggle /></View>
             {svc.rating > 0 && (
               <View style={s.metaChip}><Ionicons name="star" size={14} color="#F5C518" /><Text style={s.metaText}>{svc.rating} ({svc.review_count})</Text></View>
             )}
@@ -118,7 +119,7 @@ export default function ServiceDetail() {
             {!!svc.long_description && (
               <View style={s.aboutCard}>
                 <TX style={s.aboutTitle}>عن الخدمة</TX>
-                <Text style={s.aboutBody}>{svc.long_description}</Text>
+                <TranslatableName text={svc.long_description} style={s.aboutBody} inline={false} />
               </View>
             )}
             <View style={s.featureGrid}>
@@ -196,7 +197,7 @@ function Feature({ icon, title, value }: { icon: string; title: string; value: s
     <View style={s.featureCard}>
       <Ionicons name={icon as any} size={20} color={PURPLE} />
       <Text style={s.featureTitle}>{title}</Text>
-      <Text style={s.featureValue}>{value}</Text>
+      <TranslatableName text={String(value ?? '')} style={s.featureValue} noToggle />
     </View>
   );
 }

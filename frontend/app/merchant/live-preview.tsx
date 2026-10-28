@@ -18,7 +18,7 @@ import CompetitionDetailSheet from '../../src/components/live-preview/Competitio
 import LiveToastNotifications from '../../src/components/live-preview/LiveToastNotifications';
 import { useT, curLang } from '../../src/i18n';
 import { TX, tSync, tf } from '../../src/useAutoT';
-import TranslatableName from '../../src/components/TranslatableName';
+import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 
 /** Product name in the viewer's language (merchant-entered field), auto-unified by TranslatableName. */
 const pName = (p: any, lang: string) => (lang === 'ar' ? (p?.name_ar || p?.name) : (p?.name_en || p?.name || p?.name_ar)) || '';
@@ -709,7 +709,7 @@ function SocialSection({ apiCall, onOpenPost }: any) {
           return (
           <View style={s.postCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <View style={s.avatar}><Text style={{ color: BG, fontWeight: '900' }}>{(item.author_name || tSync('ز', curLang()))[0]}</Text></View>
+              <View style={s.avatar}><NameInitial name={item.author_name} style={{ color: BG, fontWeight: '900' }} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={s.postAuthor}>{item.author_name}</Text>
                 <Text style={s.postDate}>{(item.created_at || '').slice(0, 10)}</Text>
@@ -915,7 +915,7 @@ function ProductAnalyticsSheet({ product, onClose, apiCall }: any) {
               <View style={s.empty2}><TX style={{ color: MUTED }}>لا زوار بعد</TX></View>
             ) : data.visitors.map((v: any, i: number) => (
               <View key={i} style={s.visitor}>
-                <View style={s.visitorAvatar}><Text style={{ color: BG, fontWeight: '900' }}>{(v.user_name || tSync('ز', curLang()))[0]}</Text></View>
+                <View style={s.visitorAvatar}><NameInitial name={v.user_name} style={{ color: BG, fontWeight: '900' }} /></View>
                 <View style={{ flex: 1 }}>
                   <TranslatableName text={v.user_name} style={s.visitorName} />
                   <Text style={s.visitorMeta}>⏱ {v.duration_seconds || 0}{tSync('ث', lang)} • {v.added_to_cart ? `🛒 ${tSync('أضاف للسلة', lang)} ` : ''}{v.reached_checkout ? `✅ ${tSync('وصل الدفع', lang)}` : ''}</Text>

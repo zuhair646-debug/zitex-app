@@ -1,3 +1,4 @@
+import TranslatableName from '../../src/components/TranslatableName';
 import { useState, useEffect, useCallback } from 'react';
 import { useT, curLang } from '../../src/i18n';
 import { tSync, TX } from '../../src/useAutoT';
@@ -111,8 +112,8 @@ export default function ServicesCatalogScreen() {
                         <Ionicons name={m.icon as any} size={16} color={meta.color} />
                       </View>
                       <View style={{ flex: 1, marginHorizontal: 10 }}>
-                        <TX style={s.rowTitle}>{m.name_ar || ''}</TX>
-                        <TX style={s.rowDesc} numberOfLines={2}>{m.description_ar || ''}</TX>
+                        <TranslatableName text={m.name_ar || ''} style={s.rowTitle} noToggle />
+                        <TranslatableName text={m.description_ar || ''} style={s.rowDesc} numberOfLines={2} noToggle inline={false} />
                       </View>
                       <Switch
                         value={!!m.enabled}

@@ -10,7 +10,7 @@ import { useAuth } from './_layout';
 import { uploadMedia, mediaUrlSync } from '../src/utils/upload';
 import { TX, tSync, tf } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
-import TranslatableName from '../src/components/TranslatableName';
+import TranslatableName, { NameInitial } from '../src/components/TranslatableName';
 
 export default function UGCContest() {
   const { lang } = useT();
@@ -183,7 +183,7 @@ export default function UGCContest() {
 
               <View style={{ padding: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={s.avatar}><Text style={s.avatarText}>{(v.user_name || '?').charAt(0)}</Text></View>
+                  <View style={s.avatar}><NameInitial name={v.user_name} style={s.avatarText} /></View>
                   <View style={{ flex: 1 }}>
                     <Text style={s.userName}>{v.user_name || tSync('مشارك', curLang())}</Text>
                     <Text style={s.dateText}>{new Date(v.created_at).toLocaleDateString('ar')}</Text>
@@ -282,7 +282,7 @@ export default function UGCContest() {
               {comments.length === 0 && <TX style={s.emptyC}>كن أول من يعلق!</TX>}
               {comments.map(c => (
                 <View key={c.id} style={s.commentRow}>
-                  <View style={s.avatar}><Text style={s.avatarText}>{(c.user_name || '?').charAt(0)}</Text></View>
+                  <View style={s.avatar}><NameInitial name={c.user_name} style={s.avatarText} /></View>
                   <View style={{ flex: 1 }}>
                     <TranslatableName text={c.user_name || ''} style={s.userName} />
                     <Text style={s.commentText}>{c.text}</Text>

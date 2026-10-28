@@ -9,7 +9,7 @@ import { ScreenHeader, StatCard, EmptyState, SkeletonBox, Badge, PrimaryButton }
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
-import TranslatableName from '../../src/components/TranslatableName';
+import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 
 export default function MerchantTeam() {
   const { lang } = useT();
@@ -78,7 +78,7 @@ export default function MerchantTeam() {
               <View key={e.id} style={s.card}>
                 <View style={s.cardTop}>
                   <View style={[s.avatar, e.online && { backgroundColor: colors.success + '33' }]}>
-                    <Text style={[s.avatarText, e.online && { color: colors.success }]}>{(e.name || 'M').slice(0, 1).toUpperCase()}</Text>
+                    <NameInitial name={e.name} style={[s.avatarText, e.online && { color: colors.success }]} />
                     {e.online && <View style={s.onlineDot} />}
                   </View>
                   <View style={{ flex: 1 }}>
@@ -86,7 +86,7 @@ export default function MerchantTeam() {
                       <TranslatableName text={e.name || ''} style={s.name} />
                       {e.online ? <Badge label={tSync("🟢 متصل", lang)} tone="success" /> : <Badge label={tSync("غير متصل", lang)} tone="default" />}
                     </View>
-                    <Text style={s.meta}>{e.job_title || e.department || tSync('موظف', curLang())} • {e.phone}</Text>
+                    <Text style={s.meta}>{tSync(e.job_title || e.department || 'موظف', curLang())} • {e.phone}</Text>
                   </View>
                 </View>
 

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
+import TranslatableName from '../src/components/TranslatableName';
 
 export default function AddressesScreen() {
   useT(); // re-render when language or on-demand translations change
@@ -47,10 +48,10 @@ export default function AddressesScreen() {
           <View key={a.id} style={s.addrCard}>
             <View style={s.addrTop}>
               <Ionicons name={a.label === 'My home' ? 'home' : 'business'} size={20} color="#F5C518" />
-              <Text style={s.addrLabel}>{a.label}</Text>
+              <TranslatableName text={a.label} style={s.addrLabel} />
               {a.is_default && <View style={s.defaultBadge}><Ionicons name="checkmark" size={12} color="#10B981" /><Text style={s.defaultText}>{tSync('افتراضي', curLang())}</Text></View>}
             </View>
-            <Text style={s.addrText}>{a.address}</Text>
+            <TranslatableName text={a.address} style={s.addrText} inline={false} />
             <View style={s.addrActions}>
               <TouchableOpacity testID={`edit-addr-${a.id}`} style={s.actionBtn}><Ionicons name="pencil" size={16} color="#52525B" /><Text style={s.actionText}>{tSync('تعديل', curLang())}</Text></TouchableOpacity>
               <TouchableOpacity testID={`delete-addr-${a.id}`} style={s.actionBtn} onPress={() => deleteAddr(a.id)}><Ionicons name="trash" size={16} color="#EF4444" /><Text style={[s.actionText, { color: '#EF4444' }]}>{tSync('حذف', curLang())}</Text></TouchableOpacity>

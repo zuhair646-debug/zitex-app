@@ -1,3 +1,4 @@
+import TranslatableName from '../../src/components/TranslatableName';
 import { useEffect, useState, useCallback } from 'react';
 import { useT, curLang } from '../../src/i18n';
 import { tSync, TX } from '../../src/useAutoT';
@@ -67,7 +68,7 @@ export default function SupportSettings() {
           <View key={f.key} style={s.field}>
             <View style={s.fieldHeader}>
               <View style={[s.fIcon, { backgroundColor: f.color + '20' }]}><Ionicons name={f.icon} size={16} color={f.color} /></View>
-              <Text style={s.fLabel}>{tSync(f.label, curLang())}</Text>
+              <TranslatableName text={f.label} style={s.fLabel} noToggle />
             </View>
             <TextInput style={s.input} value={String(data[f.key] || '')} onChangeText={t => setData({ ...data, [f.key]: t })} placeholder={tSync(f.placeholder || '', curLang())} autoCapitalize="none" />
             {!!f.sub && <Text style={s.sub}>{tSync(f.sub, curLang())}</Text>}

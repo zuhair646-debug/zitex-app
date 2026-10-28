@@ -334,7 +334,7 @@ export default function ProductForm() {
                 const active = data.category_id === c.id;
                 return (
                   <TouchableOpacity key={c.id} onPress={() => setData({ ...data, category_id: c.id })} style={[s.chip, active && s.chipActive]}>
-                    <Text style={[s.chipText, active && s.chipTextActive]}>{curLang() === 'ar' ? (c.name_ar || c.name_en) : (c.name_en || tSync(c.name_ar || '', curLang()))}</Text>
+                    <TranslatableName text={(curLang() === 'ar' ? (c.name_ar || c.name_en) : (c.name_en || c.name_ar)) || ''} style={[s.chipText, active && s.chipTextActive] as any} noToggle />
                   </TouchableOpacity>
                 );
               })}
@@ -345,7 +345,7 @@ export default function ProductForm() {
                 const active = data.brand_id === b.id;
                 return (
                   <TouchableOpacity key={b.id} onPress={() => setData({ ...data, brand_id: b.id })} style={[s.chip, active && s.chipActive]}>
-                    <Text style={[s.chipText, active && s.chipTextActive]}>{curLang() === 'ar' ? (b.name_ar || b.name_en) : (b.name_en || tSync(b.name_ar || '', curLang()))}</Text>
+                    <TranslatableName text={(curLang() === 'ar' ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar)) || ''} style={[s.chipText, active && s.chipTextActive] as any} noToggle />
                   </TouchableOpacity>
                 );
               })}

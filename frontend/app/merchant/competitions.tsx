@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useT, curLang } from '../../src/i18n';
-import { tSync } from '../../src/useAutoT';
+import { tSync, tf } from '../../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,7 +30,7 @@ export default function MerchantCompetitions() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <Text style={s.title}>Competitions ({comps.length})</Text>
+        <Text style={s.title}>{tSync('المسابقات', lang)} ({comps.length})</Text>
         <TouchableOpacity testID="new-comp" onPress={() => router.push('/merchant/competition-form')} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
@@ -43,12 +43,12 @@ export default function MerchantCompetitions() {
                   <TranslatableName text={c.title} style={s.compTitle} numberOfLines={1} />
                   <TouchableOpacity onPress={() => del(c.id)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
                 </View>
-                <Text style={s.prize}>{c.prize}</Text>
+                <TranslatableName text={c.prize} style={s.prize} />
                 <View style={s.statRow}>
                   <View style={[s.badge, { backgroundColor: APPROVAL_COLORS[ap] + '20' }]}>
-                    <Text style={[s.badgeText, { color: APPROVAL_COLORS[ap] }]}>{ap === 'auto_approved' ? 'PUBLIC' : ap.toUpperCase()}</Text>
+                    <Text style={[s.badgeText, { color: APPROVAL_COLORS[ap] }]}>{tSync(ap === 'auto_approved' ? 'عامة' : ap === 'pending' ? 'بانتظار الموافقة' : ap === 'rejected' ? 'مرفوضة' : 'معتمدة', lang)}</Text>
                   </View>
-                  <Text style={s.joined}>{c.joined_count || 0} joined</Text>
+                  <Text style={s.joined}>{tf('{0} مشارك', lang, [c.joined_count || 0])}</Text>
                 </View>
                 {c.approval_note ? <Text style={s.note}>Note: {c.approval_note}</Text> : null}
               </View>

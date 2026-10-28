@@ -15,6 +15,9 @@ const STATUSES: Record<string, string> = {
   in_progress: 'قيد التنفيذ',
   completed: 'مكتمل',
   cancelled: 'ملغى',
+  delivered: 'تم التسليم',
+  ready: 'جاهز للاستلام',
+  received: 'تم الاستلام',
 };
 const SCOLOR: Record<string, string> = {
   pending: colors.warning,

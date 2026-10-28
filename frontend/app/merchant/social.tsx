@@ -12,6 +12,8 @@ import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
+
 
 type Tab = 'posts' | 'comments';
 type PostType = 'post' | 'story' | 'poll' | 'question' | 'event';
@@ -248,7 +250,7 @@ export default function MerchantSocial() {
                     <Text style={s.author}>{p.author || 'Zenrex Store'}</Text>
                     <TouchableOpacity onPress={() => delPost(p.id || p._id)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
                   </View>
-                  {!!p.text && <Text style={s.text}>{p.text || p.content}</Text>}
+                  {!!p.text && <TranslatableName text={p.text || p.content} style={s.text} inline={false} />}
                   {(p.images && p.images.length > 0) ? (
                     p.images.length === 1
                       ? <Image source={{ uri: p.images[0] }} style={s.img} />
@@ -262,7 +264,7 @@ export default function MerchantSocial() {
                     return (
                       <View key={i} style={s.pollRow}>
                         <View style={[s.pollBar, { width: `${pct}%` }]} />
-                        <Text style={s.pollText}>{o.text}</Text>
+                        <TranslatableName text={o.text} style={s.pollText} />
                         <Text style={s.pollVotes}>{pct}% ({o.votes || 0})</Text>
                       </View>
                     );
@@ -292,13 +294,13 @@ export default function MerchantSocial() {
             {comments.length === 0 && <TX style={s.empty}>لا توجد تعليقات حتى الآن</TX>}
             {comments.map(c => (
               <TouchableOpacity key={c.id} style={s.commentCard} onPress={() => openThread(c.post_id)}>
-                <View style={s.cmtAvatar}><Text style={s.cmtAvText}>{c.user_name?.charAt(0) || '?'}</Text></View>
+                <View style={s.cmtAvatar}><NameInitial name={c.user_name} style={s.cmtAvText} /></View>
                 <View style={{ flex: 1, marginLeft: 10 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={s.cmtName}>{c.user_name} {c.is_merchant_reply && <TX style={s.youTag}> (أنت)</TX>}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}><TranslatableName text={c.user_name} style={s.cmtName} />{c.is_merchant_reply && <TX style={s.youTag}> (أنت)</TX>}</View>
                     {!c.is_merchant_reply && <TouchableOpacity onPress={(e) => { e.stopPropagation(); delComment(c.id); }}><Ionicons name="trash-outline" size={16} color="#EF4444" /></TouchableOpacity>}
                   </View>
-                  <Text style={s.cmtText} numberOfLines={3}>{c.text}</Text>
+                  <TranslatableName text={c.text} style={s.cmtText} numberOfLines={3} inline={false} />
                   <Text style={s.cmtPost}>{tSync('↳ على:', lang)} {(c.post?.content || c.post?.text || '').slice(0, 60)}</Text>
                 </View>
               </TouchableOpacity>
@@ -475,10 +477,10 @@ export default function MerchantSocial() {
             renderItem={({ item: c }) => (
               <View style={[s.cmtThread, c.is_merchant_reply && s.cmtMerchant, !!c.reply_to && { marginLeft: 24 }]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={s.cmtName}>{c.user_name} {c.is_merchant_reply && <TX style={s.youTag}>✓ التاجر</TX>}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}><TranslatableName text={c.user_name} style={s.cmtName} />{c.is_merchant_reply && <TX style={s.youTag}> ✓ التاجر</TX>}</View>
                   {!c.is_merchant_reply && <TouchableOpacity onPress={() => delComment(c.id)}><Ionicons name="trash-outline" size={15} color="#EF4444" /></TouchableOpacity>}
                 </View>
-                <Text style={s.cmtText}>{c.text}</Text>
+                <TranslatableName text={c.text} style={s.cmtText} inline={false} />
                 {!c.is_merchant_reply && (
                   <TouchableOpacity onPress={() => setReplyParent(c)} style={{ marginTop: 4 }}>
                     <TX style={{ color: '#8833FF', fontSize: 11, fontWeight: '700' }}>الرد ↩</TX>
@@ -490,7 +492,7 @@ export default function MerchantSocial() {
           <View style={s.replyBar}>
             {replyParent && (
               <View style={s.replyTo}>
-                <Text style={s.replyToText}>{tSync('الرد على:', lang)} {replyParent.user_name}</Text>
+                <Text style={s.replyToText}>{tSync('الرد على:', lang)} {tSync(replyParent.user_name || '', lang)}</Text>
                 <TouchableOpacity onPress={() => setReplyParent(null)}><Ionicons name="close" size={16} color="#6B7280" /></TouchableOpacity>
               </View>
             )}

@@ -93,7 +93,7 @@ export default function POSTerminal() {
         {branches.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.sm, paddingBottom: spacing.sm }}>
             {branches.map((b: any) => (
-              <Chip key={b.id} label={b.name} icon="business" active={branchId === b.id} onPress={() => setBranchId(b.id)} />
+              <Chip key={b.id} label={tSync(b.name || '', lang)} icon="business" active={branchId === b.id} onPress={() => setBranchId(b.id)} />
             ))}
           </ScrollView>
         )}

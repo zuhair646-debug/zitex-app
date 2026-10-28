@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { LP, K, KM } from './theme';
 import MediaCarousel from '../MediaCarousel';
 import { TX, tSync, tf } from '../../useAutoT';
-import TranslatableName from '../TranslatableName';
+import TranslatableName, { NameInitial } from '../TranslatableName';
 import { useT, curLang } from '../../i18n';
 
 const { width } = Dimensions.get('window');
@@ -459,7 +459,7 @@ function LikersView({ likers, totalLikes }: any) {
         <View key={u.user_id || i} style={s.userRow}>
           <View style={[s.userAvatar, { backgroundColor: '#EF4444' + '30' }]}>
             {u.user_avatar ? <Image source={{ uri: u.user_avatar }} style={{ width: 40, height: 40, borderRadius: 20 }} /> :
-              <Text style={{ color: '#EF4444', fontWeight: '900', fontSize: 14 }}>{(u.user_name || '?')[0]}</Text>}
+              <NameInitial name={u.user_name} style={{ color: '#EF4444', fontWeight: '900', fontSize: 14 }} />}
           </View>
           <View style={{ flex: 1, marginHorizontal: 10 }}>
             <TranslatableName text={u.user_name || tSync('مستخدم', curLang())} style={s.userName} />
@@ -534,7 +534,7 @@ function SharersView({ sharers, totalShares }: any) {
             {list.map((sh: any, i: number) => (
               <View key={i} style={s.userRow}>
                 <View style={[s.userAvatar, { backgroundColor: meta.color + '30' }]}>
-                  <Text style={{ color: meta.color, fontWeight: '900', fontSize: 14 }}>{(sh.user_name || '?')[0]}</Text>
+                  <NameInitial name={sh.user_name} style={{ color: meta.color, fontWeight: '900', fontSize: 14 }} />
                 </View>
                 <View style={{ flex: 1, marginHorizontal: 10 }}>
                   <TranslatableName text={sh.user_name || tSync('مستخدم', curLang())} style={s.userName} />
@@ -570,7 +570,7 @@ function CommentsView({ comments, onReply }: any) {
       {comments.map((c: any) => (
         <View key={c.id} style={s.commentCard}>
           <View style={[s.userAvatar, { backgroundColor: LP.GOLD + '30', width: 36, height: 36, borderRadius: 18 }]}>
-            <Text style={{ color: LP.GOLD, fontWeight: '900', fontSize: 13 }}>{(c.user_name || '?')[0]}</Text>
+            <NameInitial name={c.user_name} style={{ color: LP.GOLD, fontWeight: '900', fontSize: 13 }} />
           </View>
           <View style={{ flex: 1, marginHorizontal: 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

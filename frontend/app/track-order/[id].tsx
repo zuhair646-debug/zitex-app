@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import ZitexMap from '../../src/components/MapView';
 import { TX, tSync } from '../../src/useAutoT';
+import { NameInitial } from '../../src/components/TranslatableName';
 
 const STATUS_ORDER = ['pending', 'processing', 'ready_for_pickup', 'assigned', 'picked_up', 'delivered'];
 const STATUS_AR: Record<string, string> = {
@@ -89,7 +90,7 @@ export default function TrackOrder() {
           <View style={s.driverBox}>
             <TX style={s.section}>السائق</TX>
             <View style={s.driverRow}>
-              <View style={s.avatar}><Text style={s.avatarText}>{order.driver_name?.charAt(0)}</Text></View>
+              <View style={s.avatar}><NameInitial name={order.driver_name} style={s.avatarText} /></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={s.driverName}>{order.driver_name}</Text>
                 <Text style={s.driverPhone}>{order.driver_phone}</Text>

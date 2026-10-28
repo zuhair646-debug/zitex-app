@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { LoyaltyWidget } from '../src/components/PaymentAndLoyalty';
+import TranslatableName from '../src/components/TranslatableName';
 
 export default function WalletScreen() {
   const { lang } = useT();
@@ -55,11 +56,11 @@ export default function WalletScreen() {
               <Ionicons name={t.type === 'credit' ? 'arrow-down' : 'diamond'} size={18} color={t.type === 'credit' ? '#10B981' : '#F5C518'} />
             </View>
             <View style={s.txnInfo}>
-              <Text style={s.txnDesc}>{t.description}</Text>
+              <TranslatableName text={t.description} style={s.txnDesc} />
               <Text style={s.txnDate}>{t.created_at?.split('T')[0]}</Text>
             </View>
             <Text style={[s.txnAmount, { color: t.type === 'credit' ? '#10B981' : '#F5C518' }]}>
-              {t.type === 'credit' ? '+' : '+'}{t.amount} {t.type === 'points' ? 'pts' : 'SAR'}
+              {t.type === 'credit' ? '+' : '+'}{t.amount} {tSync(t.type === 'points' ? 'نقطة' : 'ر.س', lang)}
             </Text>
           </View>
         ))}

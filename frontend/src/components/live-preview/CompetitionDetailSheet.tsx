@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useT, curLang } from '../../i18n';
 import { tSync, tf, TX } from '../../useAutoT';
-import TranslatableName from '../TranslatableName';
+import TranslatableName, { NameInitial } from '../TranslatableName';
 import { View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -213,7 +213,7 @@ export default function CompetitionDetailSheet({ competitionId, apiCall, onClose
                 {(data.all_participants || []).slice().reverse().map((p: any, i: number) => (
                   <View key={i} style={st.userRow}>
                     <View style={st.userAvatar}>
-                      <Text style={{ color: LP.BG, fontWeight: '900', fontSize: 14 }}>{(p.user_name || '?')[0]}</Text>
+                      <NameInitial name={p.user_name} style={{ color: LP.BG, fontWeight: '900', fontSize: 14 }} />
                     </View>
                     <View style={{ flex: 1, marginHorizontal: 10 }}>
                       <TranslatableName text={p.user_name || tSync('مستخدم', curLang())} style={st.userName} />

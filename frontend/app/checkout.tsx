@@ -224,7 +224,7 @@ export default function CheckoutScreen() {
           <TouchableOpacity key={pm.id} style={[s.payCard, paymentMethod === pm.id && s.payActive]} onPress={() => setPaymentMethod(pm.id)}>
             <Ionicons name={paymentMethod === pm.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={paymentMethod === pm.id ? '#F5C518' : '#A1A1AA'} />
             <Ionicons name={pm.icon as any} size={20} color="#52525B" />
-            <Text style={s.payLabel}>{tSync(pm.label, lang)}</Text>
+            <TranslatableName text={pm.label} style={s.payLabel} noToggle />
             {!!pm.tag && <View style={s.payTag}><Text style={s.payTagText}>{tSync(pm.tag, lang)}</Text></View>}
           </TouchableOpacity>
         ))}

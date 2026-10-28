@@ -81,7 +81,7 @@ _SCRIPT_RX = {
 }
 _ALLOWED = {
     'ar': ['arab'], 'ur': ['arab'], 'fa': ['arab'], 'he': ['heb'], 'ru': ['cyr'], 'zh': ['cjk'],
-    'ja': ['cjk', 'kana'], 'ko': ['hangul', 'cjk'], 'hi': ['deva'], 'bn': ['beng'], 'th': ['thai'],
+    'ja': ['cjk', 'kana'], 'ko': ['hangul', 'cjk'], 'hi': ['deva'], 'bn': ['beng', 'deva'], 'th': ['thai'],
 }
 
 
@@ -124,6 +124,7 @@ class BulkTranslateReq(BaseModel):
     texts: list[str] = Field(..., min_length=1, max_length=1000)
     target_lang: str = Field(..., min_length=2, max_length=5)
     source_lang: Optional[str] = None
+    cache_only: bool = False
 
 
 def build_router(db=None):
@@ -275,6 +276,8 @@ def build_router(db=None):
 
         if not remaining:
             return {"translations": results, "cached": True, "failed": []}
+        if req.cache_only:  # fast phase: let the device show cached names instantly
+            return {"translations": results, "cached": True, "failed": [], "missing": remaining}
 
         try:
             from emergentintegrations.llm.chat import LlmChat, UserMessage
@@ -349,7 +352,7 @@ def build_router(db=None):
         retry = [x for fl in failed_lists for x in fl]
         if retry:  # one retry for lines the model answered in the wrong language
             await _asyncio.gather(*[run_chunk(retry[i:i + 20], f"r{i}") for i in range(0, len(retry), 20)])
-            last = [x for x in retry if x not in results][:20]
+            last = [x for x in retry if x not in results][:60]
             if last:  # final pass: one line per request for the stubborn ones
                 await _asyncio.gather(*[run_chunk([x], f"rs{i}") for i, x in enumerate(last)])
             # Last resort for Chinese: deterministic glossary substitution of brand/model words.

@@ -1,3 +1,4 @@
+import TranslatableName from '../../src/components/TranslatableName';
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, StatusBar, Switch, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -109,19 +110,19 @@ export default function LoyaltyProgramsScreen() {
                 </View>
                 <View style={{ flex: 1, marginHorizontal: 10 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <TX style={s.cardTitle}>{p.name_ar || ''}</TX>
+                    <TranslatableName text={p.name_ar || ''} style={s.cardTitle} />
                     <View style={[s.typePill, { backgroundColor: p.brand_color + '20', borderColor: p.brand_color }]}>
-                      <Text style={[s.typePillText, { color: p.brand_color }]}>{
+                      <Text style={[s.typePillText, { color: p.brand_color }]}>{tSync(
                         p.type === 'telco' ? 'اتصالات' :
                         p.type === 'bank' ? 'بنك' :
                         p.type === 'airline' ? 'طيران' :
                         p.type === 'coalition' ? 'مشترك' :
                         p.type === 'wallet' ? 'محفظة' :
-                        p.type === 'internal' ? 'داخلي' : p.type
+                        p.type === 'internal' ? 'داخلي' : (p.type || ''), lang)
                       }</Text>
                     </View>
                   </View>
-                  <TX style={s.cardSub} numberOfLines={2}>{p.description_ar || ''}</TX>
+                  <TranslatableName text={p.description_ar || ''} style={s.cardSub} numberOfLines={2} inline={false} />
                   {p.status === 'sandbox_pending' && (
                     <TX style={s.pendingTag}>⚠️ بانتظار بيانات الاعتماد</TX>
                   )}

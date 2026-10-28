@@ -15,7 +15,7 @@ import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
-import TranslatableName from '../../src/components/TranslatableName';
+import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 
 type Tab = 'ads' | 'affiliates';
 type CampaignType = 'ad' | 'affiliate';
@@ -284,7 +284,7 @@ export default function MarketingPanel() {
                   <Text style={s.sectionTitle}>{tSync('📥 طلبات قيد المراجعة (', lang)}{pending.length})</Text>
                   {pending.map(a => (
                     <View key={a.id} style={s.appCard}>
-                      <View style={s.appAvatar}><Text style={s.appAvText}>{(a.applicant_name || '?').charAt(0)}</Text></View>
+                      <View style={s.appAvatar}><NameInitial name={a.applicant_name} style={s.appAvText} /></View>
                       <View style={{ flex: 1 }}>
                         <Text style={s.appName}>{a.applicant_name}</Text>
                         <Text style={s.appPhone}>📱 {a.applicant_phone}</Text>

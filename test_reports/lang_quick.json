@@ -1,0 +1,2508 @@
+{
+ "visits": 102,
+ "errors": [],
+ "toggle_fail": [
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/social",
+   "issues": [
+    {
+     "text": "Instagram",
+     "problems": [
+      "latin:Instagram"
+     ]
+    },
+    {
+     "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+     "problems": [
+      "arabic",
+      "latin:iOS"
+     ]
+    },
+    {
+     "text": "#ذكاء_اصطناعي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "WhatsApp",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "X / Twitter",
+     "problems": [
+      "latin:Twitter"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex Store",
+    "mid": "Zenrex 商店",
+    "back": "Zenrex 商店",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/about-store",
+   "issues": [
+    {
+     "text": "Riyadh Store",
+     "problems": [
+      "latin:Riyadh"
+     ]
+    },
+    {
+     "text": "Prince Mohammed Bin Abdulaziz Rd, Riyadh",
+     "problems": [
+      "latin:Prince,Mohammed,Bin,Abdulaziz"
+     ]
+    },
+    {
+     "text": "Jeddah Store",
+     "problems": [
+      "latin:Jeddah"
+     ]
+    },
+    {
+     "text": "الخريطة -",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 5,
+    "before": "Riyadh Store",
+    "mid": "Riyadh Store",
+    "back": "Riyadh Store",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/about-store",
+   "issues": [
+    {
+     "text": "Riyadh Store",
+     "problems": [
+      "latin:Riyadh"
+     ]
+    },
+    {
+     "text": "Prince Mohammed Bin Abdulaziz Rd, Riyadh",
+     "problems": [
+      "latin:Prince,Mohammed,Bin,Abdulaziz"
+     ]
+    },
+    {
+     "text": "Jeddah Store",
+     "problems": [
+      "latin:Jeddah"
+     ]
+    },
+    {
+     "text": "الخريطة -",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 5,
+    "before": "Riyadh Store",
+    "mid": "Riyadh Store",
+    "back": "Riyadh Store",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/about-store",
+   "issues": [
+    {
+     "text": "الخريطة -",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 5,
+    "before": "Riyadh Store",
+    "mid": "Riyadh Store",
+    "back": "Riyadh Store",
+    "ok": false
+   },
+   "error": null
+  }
+ ],
+ "toggle_ok": 16,
+ "unique_issues": 76,
+ "issues": [
+  {
+   "text": "support@zitex.sa",
+   "problems": [
+    "latin:support,zitex,sa"
+   ],
+   "count": 4,
+   "where": [
+    "ar:/support",
+    "bn:/support",
+    "he:/support",
+    "zh:/support"
+   ]
+  },
+  {
+   "text": "zitex_official",
+   "problems": [
+    "latin:zitex,official"
+   ],
+   "count": 4,
+   "where": [
+    "ar:/support",
+    "bn:/support",
+    "he:/support",
+    "zh:/support"
+   ]
+  },
+  {
+   "text": "المسابقات (0)",
+   "problems": [
+    "arabic"
+   ],
+   "count": 4,
+   "where": [
+    "bn:/merchant/competitions",
+    "es:/merchant/competitions",
+    "he:/merchant/competitions",
+    "zh:/merchant/competitions"
+   ]
+  },
+  {
+   "text": "Instagram",
+   "problems": [
+    "latin:Instagram"
+   ],
+   "count": 3,
+   "where": [
+    "he:/support",
+    "zh:/social",
+    "zh:/support"
+   ]
+  },
+  {
+   "text": "WhatsApp",
+   "problems": [
+    "latin:WhatsApp"
+   ],
+   "count": 3,
+   "where": [
+    "he:/support",
+    "zh:/social",
+    "zh:/support"
+   ]
+  },
+  {
+   "text": "الخريطة -",
+   "problems": [
+    "arabic"
+   ],
+   "count": 3,
+   "where": [
+    "bn:/about-store",
+    "es:/about-store",
+    "ur:/about-store"
+   ]
+  },
+  {
+   "text": "Screen Repair",
+   "problems": [
+    "latin:Screen,Repair"
+   ],
+   "count": 2,
+   "where": [
+    "he:/service/6ab6206a71b6ad54069c12cc",
+    "zh:/service/6ab6206a71b6ad54069c12cc"
+   ]
+  },
+  {
+   "text": "Tamara",
+   "problems": [
+    "latin:Tamara"
+   ],
+   "count": 2,
+   "where": [
+    "he:/product/6ab6de22e0ac8916314aa31a",
+    "zh:/product/6ab6de22e0ac8916314aa31a"
+   ]
+  },
+  {
+   "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+   "problems": [
+    "arabic",
+    "latin:iOS"
+   ],
+   "count": 2,
+   "where": [
+    "bn:/social",
+    "zh:/social"
+   ]
+  },
+  {
+   "text": "#ذكاء_اصطناعي",
+   "problems": [
+    "arabic"
+   ],
+   "count": 2,
+   "where": [
+    "bn:/social",
+    "zh:/social"
+   ]
+  },
+  {
+   "text": "X / Twitter",
+   "problems": [
+    "latin:Twitter"
+   ],
+   "count": 2,
+   "where": [
+    "bn:/social",
+    "zh:/social"
+   ]
+  },
+  {
+   "text": "Riyadh Store",
+   "problems": [
+    "latin:Riyadh"
+   ],
+   "count": 2,
+   "where": [
+    "bn:/about-store",
+    "ur:/about-store"
+   ]
+  },
+  {
+   "text": "Prince Mohammed Bin Abdulaziz Rd, Riyadh",
+   "problems": [
+    "latin:Prince,Mohammed,Bin,Abdulaziz"
+   ],
+   "count": 2,
+   "where": [
+    "bn:/about-store",
+    "ur:/about-store"
+   ]
+  },
+  {
+   "text": "Jeddah Store",
+   "problems": [
+    "latin:Jeddah"
+   ],
+   "count": 2,
+   "where": [
+    "bn:/about-store",
+    "ur:/about-store"
+   ]
+  },
+  {
+   "text": "如需快速回复，请通过社交媒体或WhatsApp联系",
+   "problems": [
+    "latin:WhatsApp"
+   ],
+   "count": 1,
+   "where": [
+    "zh:/support"
+   ]
+  },
+  {
+   "text": "Apple Pay",
+   "problems": [
+    "latin:Apple,Pay"
+   ],
+   "count": 1,
+   "where": [
+    "zh:/product/6ab6de22e0ac8916314aa31a"
+   ]
+  },
+  {
+   "text": "الرياض، المملكة العربية السعودية",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "he:/support"
+   ]
+  },
+  {
+   "text": "X (Twitter)",
+   "problems": [
+    "latin:Twitter"
+   ],
+   "count": 1,
+   "where": [
+    "he:/support"
+   ]
+  },
+  {
+   "text": "לתגובה מהירה, צור קשר דרך מדיה חברתית או WhatsApp",
+   "problems": [
+    "latin:WhatsApp"
+   ],
+   "count": 1,
+   "where": [
+    "he:/support"
+   ]
+  },
+  {
+   "text": "السبت - الخميس: 9 ص - 11 م",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "he:/support"
+   ]
+  },
+  {
+   "text": "দ্রুত সাড়া পেতে সোশ্যাল মিডিয়া বা WhatsApp-এর মাধ্যমে যোগাযোগ করুন",
+   "problems": [
+    "latin:WhatsApp-"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/support"
+   ]
+  },
+  {
+   "text": "#صحة_رقمية",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "✨ سر التصوير الاحترافي في الآيفون: فعّل خاصية ProRAW. مثالية لمن يريد تعديل الصور لاحقاً بحرية أكبر",
+   "problems": [
+    "arabic",
+    "latin:ProRAW"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#تصوير",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "Big sale this weekend! Amazing deals on all Samsung products.",
+   "problems": [
+    "latin:Big,sale,this,weekend"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "Welcome to our new store! We are excited to serve you with the latest technology products.",
+   "problems": [
+    "latin:Welcome,to,our,new"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🔴 مباشر الآن: عرض خاص لمدة ساعتين فقط — سماعات AirPods Pro بسعر 799 ريال بدلاً من 1099. الكمية محدودة!",
+   "problems": [
+    "arabic",
+    "latin:AirPods,Pro"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#ورشة #تعليم",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🎯 أفضل وقت لشراء جوال جديد: بعد 2-3 أشهر من إطلاقه. السعر ينخفض 10-15% ومازالت أحدث تكنولوجيا",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#عروض_اليوم",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🎧 هل تعلم؟ سماعات AirPods Pro الأصلية تدعم إلغاء الضوضاء المتكيف. لو ما تشتغل عندك، غالباً هي تقليد. نبيع الأصلي فقط بضم",
+   "problems": [
+    "arabic",
+    "latin:AirPods,Pro"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#تقسيط #تمارا #تابي",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#نصائح_شراء",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "📵 يا أهل التقنية: خذ كل ساعة استراحة 5 دقائق بدون شاشة. عيونك بتشكرك، وعقلك أهم",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "👨‍💻 برمجة أو تصميم؟ ماك بوك برو 14 مع شريحة M4 هي الأفضل لك حالياً. تعال شوفها بيديك في الفرع",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🔐 احمِ حسابك على الجوال بالتحقق بخطوتين. طريقة سهلة تمنع 99% من محاولات الاختراق. نساعدك بإعدادها مجاناً في الفرع",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#سلامة",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#واقع_افتراضي",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "👨‍🎓 عروض الجامعات! عندك بطاقة طالب؟ احصل على خصم 15% على أي لابتوب. العرض ساري لنهاية الشهر",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#أمان",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#تحدي #مسابقة",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🎥 بث مباشر بعد ساعة من الفرع الرئيسي: عرض تجريبي لخصائص كاميرا آيفون 17 برو. انضموا لنا في السناب والتيك توك 📸",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🎯 تحدي الأسبوع: اكتشف الفرق بين الجوال الأصلي والمقلّد. صورة تلاقيها في التعليقات — من يكتشف يفوز بشاحن مجاني!",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#طلاب #جامعة",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🌡️ لا تترك جوالك في الشمس صيفاً أبداً! الحرارة العالية تدمّر البطارية بشكل دائم وقد تسبب انفجارها. احرصوا على تبريده",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#هواوي",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "💾 نصيحة ذهبية: احفظ جوالك في iCloud أو Google Drive أسبوعياً. أي كارثة تصير بجوالك مو نهاية العالم بعدها",
+   "problems": [
+    "arabic",
+    "latin:iCloud,Google,Drive"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#شكراً #تقييمات",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#صحة #تحدي_رياضي",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#معرض_تقني",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "💼 نبحث عن موظفين موهوبين للانضمام لعائلتنا! فني إصلاح جوالات، خبير مبيعات، مسؤول سوشيال ميديا. أرسل سيرتك عبر الواتساب",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#بث_مباشر",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#سماعات #أصلي",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "⭐ افتخر بإعلان: حصلنا على 5 نجوم بأكثر من 3000 تقييم من عملائنا. شكراً لكل من ساعدنا نصير الأفضل ❤️",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#اختبار",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#نصائح_تقنية",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#توظيف #وظائف",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🇨🇳 هواوي عادت بقوة! أعلنت عن Mate 70 Pro بمعالج جديد كلياً ونظام تشغيل Harmony 5. متوفر عندنا للحجز",
+   "problems": [
+    "arabic",
+    "latin:Mate,Pro,Harmony"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#أمان_رقمي",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#مقارنات",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🎮 أخيراً! ميتا كواست 4 وصلت السعودية. تجربة واقع افتراضي غير مسبوقة. جرّبها مجاناً في المتجر يوم الجمعة",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🎓 ورشة عمل مجانية يوم السبت: كيف تصلح شاشة جوالك بنفسك؟ التسجيل مفتوح في المتجر. الأماكن محدودة (15 مقعد)",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#نسخ_احتياطي",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#مصممين #مطورين",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "💳 خدمة تقسيط جديدة عبر تمارا وتابي! قسّط أي منتج من المتجر على 4 دفعات بدون فوائد. سارٍ من اليوم",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🏆 تحدي هذا الأسبوع: صوّر أفضل لقطة مع منتج من متجرنا وشاركها مع الهاشتاق. أفضل 3 صور يفوزون بشاحن لاسلكي!",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "💡 نصيحة سريعة: إذا كانت بطارية جوالك تنفد بسرعة، جرب تعطيل التحديث في الخلفية للتطبيقات غير المهمة. توفّر 30% من عمر الب",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🎬 صوّر فيديو 15 ثانية عن أفضل تجربة لك مع منتج اشتريته منا. أفضل 5 فيديوهات تربح 500 ريال كل واحد",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو على قناتنا",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "💪 تحدي 30 يوم: استخدم منتجاتنا الرياضية (Apple Watch أو Galaxy Watch) وشارك تقدمك يومياً. الفائز يحصل على iPad Pro مجانا",
+   "problems": [
+    "arabic",
+    "latin:Apple,Watch,Galaxy,Watch"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "⚠️ تنبيه أمني: انتشرت رسائل احتيالية تدّعي أنها من شركة الاتصالات وتطلب بيانات حسابك. لا تشارك أي معلومة ولا تضغط على ال",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "🎪 معرضنا التقني السنوي بعد أسبوعين! أكثر من 30 علامة تجارية عالمية، أسعار الجملة، هدايا فورية. الدخول مجاني",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "#مسابقة_فيديو",
+   "problems": [
+    "arabic"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/social"
+   ]
+  },
+  {
+   "text": "Qitaf、Rewards、Al-Fursan…",
+   "problems": [
+    "latin:Qitaf,Rewards,Al-Fursan"
+   ],
+   "count": 1,
+   "where": [
+    "zh:/merchant/more"
+   ]
+  },
+  {
+   "text": "Qitaf, פרסים, אל-פרסאן…",
+   "problems": [
+    "latin:Qitaf"
+   ],
+   "count": 1,
+   "where": [
+    "he:/merchant/more"
+   ]
+  },
+  {
+   "text": "Qitaf, রিওয়ার্ডস, আল-ফুরসান...",
+   "problems": [
+    "latin:Qitaf"
+   ],
+   "count": 1,
+   "where": [
+    "bn:/merchant/more"
+   ]
+  }
+ ],
+ "raw": [
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    },
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/product/6ab6de22e0ac8916314aa31a",
+   "issues": [],
+   "toggle": {
+    "count": 3,
+    "before": "ساعة أبل ألترا 2",
+    "mid": "ساعة أبل Watch Ultra 2",
+    "back": "ساعة أبل ألترا 2",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/about-store",
+   "issues": [],
+   "toggle": {
+    "count": 5,
+    "before": "متجر الرياض",
+    "mid": "Riyadh Store",
+    "back": "متجر الرياض",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": {
+    "count": 1,
+    "before": "استبدال الشاشة الاحترافي لجميع موديلات الهواتف",
+    "mid": "Professional screen replacement for all phone models",
+    "back": "استبدال الشاشة الاحترافي لجميع موديلات الهواتف",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/social",
+   "issues": [],
+   "toggle": {
+    "count": 27,
+    "before": "متجر التقنية",
+    "mid": "Tech Store",
+    "back": "متجر التقنية",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ar",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 11,
+    "before": "ادعُ 5 أصدقاء إلى متجر Zenrex واحصل على فرصة مضمونة للفوز!",
+    "mid": "ادعُ 5 أصدقاء إلى Zenrex Store واحصل على فرصة مضمونة للفوز!",
+    "back": "ادعُ 5 أصدقاء إلى متجر Zenrex واحصل على فرصة مضمونة للفوز!",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "Instagram",
+     "problems": [
+      "latin:Instagram"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    },
+    {
+     "text": "如需快速回复，请通过社交媒体或WhatsApp联系",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "WhatsApp",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "周六至周四：上午9点 - 晚上11点",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "周六至周四：上午9点 - 晚上11点",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "屏幕维修",
+    "mid": "Screen Repair",
+    "back": "屏幕维修",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/product/6ab6de22e0ac8916314aa31a",
+   "issues": [
+    {
+     "text": "Apple Pay",
+     "problems": [
+      "latin:Apple,Pay"
+     ]
+    },
+    {
+     "text": "Tamara",
+     "problems": [
+      "latin:Tamara"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 8,
+    "before": "苹果手表 至尊版 2",
+    "mid": "Apple Watch Ultra 2",
+    "back": "苹果手表 至尊版 2",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/social",
+   "issues": [
+    {
+     "text": "Instagram",
+     "problems": [
+      "latin:Instagram"
+     ]
+    },
+    {
+     "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+     "problems": [
+      "arabic",
+      "latin:iOS"
+     ]
+    },
+    {
+     "text": "#ذكاء_اصطناعي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "WhatsApp",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "X / Twitter",
+     "problems": [
+      "latin:Twitter"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex Store",
+    "mid": "Zenrex 商店",
+    "back": "Zenrex 商店",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/about-store",
+   "issues": [],
+   "toggle": {
+    "count": 5,
+    "before": "利雅得门店",
+    "mid": "Riyadh Store",
+    "back": "利雅得门店",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "zh",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/social",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "Instagram",
+     "problems": [
+      "latin:Instagram"
+     ]
+    },
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    },
+    {
+     "text": "الرياض، المملكة العربية السعودية",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    },
+    {
+     "text": "X (Twitter)",
+     "problems": [
+      "latin:Twitter"
+     ]
+    },
+    {
+     "text": "לתגובה מהירה, צור קשר דרך מדיה חברתית או WhatsApp",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    },
+    {
+     "text": "السبت - الخميس: 9 ص - 11 م",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "WhatsApp",
+     "problems": [
+      "latin:WhatsApp"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "السبت - الخميس: 9 ص - 11 م",
+    "mid": "שבת - חמישי: 9:00 - 23:00",
+    "back": "السبت - الخميس: 9 ص - 11 م",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [
+    {
+     "text": "Screen Repair",
+     "problems": [
+      "latin:Screen,Repair"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "תיקון מסך",
+    "mid": "Screen Repair",
+    "back": "תיקון מסך",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/product/6ab6de22e0ac8916314aa31a",
+   "issues": [
+    {
+     "text": "Tamara",
+     "problems": [
+      "latin:Tamara"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 8,
+    "before": "אפל ווטש אולטרה 2",
+    "mid": "Apple Watch Ultra 2",
+    "back": "אפל ווטש אולטרה 2",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/about-store",
+   "issues": [],
+   "toggle": {
+    "count": 5,
+    "before": "חנות ריאד",
+    "mid": "Riyadh Store",
+    "back": "חנות ריאד",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "he",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": {
+    "count": 18,
+    "before": "הזמן חבר ותרוויח 🎁",
+    "mid": "دعوة صديق واربح 🎁",
+    "back": "הזמן חבר ותרוויח 🎁",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/support",
+   "issues": [
+    {
+     "text": "support@zitex.sa",
+     "problems": [
+      "latin:support,zitex,sa"
+     ]
+    },
+    {
+     "text": "দ্রুত সাড়া পেতে সোশ্যাল মিডিয়া বা WhatsApp-এর মাধ্যমে যোগাযোগ করুন",
+     "problems": [
+      "latin:WhatsApp-"
+     ]
+    },
+    {
+     "text": "zitex_official",
+     "problems": [
+      "latin:zitex,official"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 2,
+    "before": "শনিবার - বৃহস্পতিবার: সকাল ৯টা - রাত ১১টা",
+    "mid": "السبت - الخميس: 9 ص - 11 م",
+    "back": "শনিবার - বৃহস্পতিবার: সকাল ৯টা - রাত ১১টা",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/social",
+   "issues": [
+    {
+     "text": "#صحة_رقمية",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "✨ سر التصوير الاحترافي في الآيفون: فعّل خاصية ProRAW. مثالية لمن يريد تعديل الصور لاحقاً بحرية أكبر",
+     "problems": [
+      "arabic",
+      "latin:ProRAW"
+     ]
+    },
+    {
+     "text": "#تصوير",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "Big sale this weekend! Amazing deals on all Samsung products.",
+     "problems": [
+      "latin:Big,sale,this,weekend"
+     ]
+    },
+    {
+     "text": "Welcome to our new store! We are excited to serve you with the latest technology products.",
+     "problems": [
+      "latin:Welcome,to,our,new"
+     ]
+    },
+    {
+     "text": "🔴 مباشر الآن: عرض خاص لمدة ساعتين فقط — سماعات AirPods Pro بسعر 799 ريال بدلاً من 1099. الكمية محدودة!",
+     "problems": [
+      "arabic",
+      "latin:AirPods,Pro"
+     ]
+    },
+    {
+     "text": "#ورشة #تعليم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🎯 أفضل وقت لشراء جوال جديد: بعد 2-3 أشهر من إطلاقه. السعر ينخفض 10-15% ومازالت أحدث تكنولوجيا",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#عروض_اليوم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🎧 هل تعلم؟ سماعات AirPods Pro الأصلية تدعم إلغاء الضوضاء المتكيف. لو ما تشتغل عندك، غالباً هي تقليد. نبيع الأصلي فقط بضم",
+     "problems": [
+      "arabic",
+      "latin:AirPods,Pro"
+     ]
+    },
+    {
+     "text": "#تقسيط #تمارا #تابي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#نصائح_شراء",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "📵 يا أهل التقنية: خذ كل ساعة استراحة 5 دقائق بدون شاشة. عيونك بتشكرك، وعقلك أهم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "👨‍💻 برمجة أو تصميم؟ ماك بوك برو 14 مع شريحة M4 هي الأفضل لك حالياً. تعال شوفها بيديك في الفرع",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🔐 احمِ حسابك على الجوال بالتحقق بخطوتين. طريقة سهلة تمنع 99% من محاولات الاختراق. نساعدك بإعدادها مجاناً في الفرع",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#سلامة",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🤖 الذكاء الاصطناعي في جوالك أصبح أذكى! تحديث iOS 20 الجديد يجلب مساعد شخصي متطور. جرّبوه معنا في الفرع",
+     "problems": [
+      "arabic",
+      "latin:iOS"
+     ]
+    },
+    {
+     "text": "#ذكاء_اصطناعي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#واقع_افتراضي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "👨‍🎓 عروض الجامعات! عندك بطاقة طالب؟ احصل على خصم 15% على أي لابتوب. العرض ساري لنهاية الشهر",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#أمان",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#تحدي #مسابقة",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🎥 بث مباشر بعد ساعة من الفرع الرئيسي: عرض تجريبي لخصائص كاميرا آيفون 17 برو. انضموا لنا في السناب والتيك توك 📸",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🎯 تحدي الأسبوع: اكتشف الفرق بين الجوال الأصلي والمقلّد. صورة تلاقيها في التعليقات — من يكتشف يفوز بشاحن مجاني!",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#طلاب #جامعة",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🌡️ لا تترك جوالك في الشمس صيفاً أبداً! الحرارة العالية تدمّر البطارية بشكل دائم وقد تسبب انفجارها. احرصوا على تبريده",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#هواوي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "💾 نصيحة ذهبية: احفظ جوالك في iCloud أو Google Drive أسبوعياً. أي كارثة تصير بجوالك مو نهاية العالم بعدها",
+     "problems": [
+      "arabic",
+      "latin:iCloud,Google,Drive"
+     ]
+    },
+    {
+     "text": "#شكراً #تقييمات",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#صحة #تحدي_رياضي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#معرض_تقني",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "💼 نبحث عن موظفين موهوبين للانضمام لعائلتنا! فني إصلاح جوالات، خبير مبيعات، مسؤول سوشيال ميديا. أرسل سيرتك عبر الواتساب",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#بث_مباشر",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#سماعات #أصلي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "⭐ افتخر بإعلان: حصلنا على 5 نجوم بأكثر من 3000 تقييم من عملائنا. شكراً لكل من ساعدنا نصير الأفضل ❤️",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#اختبار",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#نصائح_تقنية",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#توظيف #وظائف",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🇨🇳 هواوي عادت بقوة! أعلنت عن Mate 70 Pro بمعالج جديد كلياً ونظام تشغيل Harmony 5. متوفر عندنا للحجز",
+     "problems": [
+      "arabic",
+      "latin:Mate,Pro,Harmony"
+     ]
+    },
+    {
+     "text": "#أمان_رقمي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#مقارنات",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🎮 أخيراً! ميتا كواست 4 وصلت السعودية. تجربة واقع افتراضي غير مسبوقة. جرّبها مجاناً في المتجر يوم الجمعة",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🎓 ورشة عمل مجانية يوم السبت: كيف تصلح شاشة جوالك بنفسك؟ التسجيل مفتوح في المتجر. الأماكن محدودة (15 مقعد)",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#نسخ_احتياطي",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#مصممين #مطورين",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "💳 خدمة تقسيط جديدة عبر تمارا وتابي! قسّط أي منتج من المتجر على 4 دفعات بدون فوائد. سارٍ من اليوم",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🏆 تحدي هذا الأسبوع: صوّر أفضل لقطة مع منتج من متجرنا وشاركها مع الهاشتاق. أفضل 3 صور يفوزون بشاحن لاسلكي!",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "💡 نصيحة سريعة: إذا كانت بطارية جوالك تنفد بسرعة، جرب تعطيل التحديث في الخلفية للتطبيقات غير المهمة. توفّر 30% من عمر الب",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🎬 صوّر فيديو 15 ثانية عن أفضل تجربة لك مع منتج اشتريته منا. أفضل 5 فيديوهات تربح 500 ريال كل واحد",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🎥 صوّرنا لكم مقارنة تفصيلية بين آيفون 17 برو وسامسونج S27 ألترا. تابعوا الفيديو على قناتنا",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "💪 تحدي 30 يوم: استخدم منتجاتنا الرياضية (Apple Watch أو Galaxy Watch) وشارك تقدمك يومياً. الفائز يحصل على iPad Pro مجانا",
+     "problems": [
+      "arabic",
+      "latin:Apple,Watch,Galaxy,Watch"
+     ]
+    },
+    {
+     "text": "⚠️ تنبيه أمني: انتشرت رسائل احتيالية تدّعي أنها من شركة الاتصالات وتطلب بيانات حسابك. لا تشارك أي معلومة ولا تضغط على ال",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "🎪 معرضنا التقني السنوي بعد أسبوعين! أكثر من 30 علامة تجارية عالمية، أسعار الجملة، هدايا فورية. الدخول مجاني",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "#مسابقة_فيديو",
+     "problems": [
+      "arabic"
+     ]
+    },
+    {
+     "text": "X / Twitter",
+     "problems": [
+      "latin:Twitter"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 116,
+    "before": "Zenrex Store",
+    "mid": "Zenrex স্টোর",
+    "back": "Zenrex Store",
+    "ok": true
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/product/6ab6de22e0ac8916314aa31a",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/support",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/social",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/product/6ab6de22e0ac8916314aa31a",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "bn",
+   "route": "/about-store",
+   "issues": [
+    {
+     "text": "Riyadh Store",
+     "problems": [
+      "latin:Riyadh"
+     ]
+    },
+    {
+     "text": "Prince Mohammed Bin Abdulaziz Rd, Riyadh",
+     "problems": [
+      "latin:Prince,Mohammed,Bin,Abdulaziz"
+     ]
+    },
+    {
+     "text": "Jeddah Store",
+     "problems": [
+      "latin:Jeddah"
+     ]
+    },
+    {
+     "text": "الخريطة -",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 5,
+    "before": "Riyadh Store",
+    "mid": "Riyadh Store",
+    "back": "Riyadh Store",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/support",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/social",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/service/6ab6206a71b6ad54069c12cc",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/product/6ab6de22e0ac8916314aa31a",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "ur",
+   "route": "/about-store",
+   "issues": [
+    {
+     "text": "Riyadh Store",
+     "problems": [
+      "latin:Riyadh"
+     ]
+    },
+    {
+     "text": "Prince Mohammed Bin Abdulaziz Rd, Riyadh",
+     "problems": [
+      "latin:Prince,Mohammed,Bin,Abdulaziz"
+     ]
+    },
+    {
+     "text": "Jeddah Store",
+     "problems": [
+      "latin:Jeddah"
+     ]
+    },
+    {
+     "text": "الخريطة -",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 5,
+    "before": "Riyadh Store",
+    "mid": "Riyadh Store",
+    "back": "Riyadh Store",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/competitions",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/services",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/customers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/employees",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/drivers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "customer",
+   "lang": "es",
+   "route": "/about-store",
+   "issues": [
+    {
+     "text": "الخريطة -",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    }
+   ],
+   "toggle": {
+    "count": 5,
+    "before": "Riyadh Store",
+    "mid": "Riyadh Store",
+    "back": "Riyadh Store",
+    "ok": false
+   },
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/competitions",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ar",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/services",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/customers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/employees",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/drivers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf、Rewards、Al-Fursan…",
+     "problems": [
+      "latin:Qitaf,Rewards,Al-Fursan"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/competitions",
+   "issues": [
+    {
+     "text": "المسابقات (0)",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "zh",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/services",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/customers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/employees",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/drivers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf, פרסים, אל-פרסאן…",
+     "problems": [
+      "latin:Qitaf"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/competitions",
+   "issues": [
+    {
+     "text": "المسابقات (0)",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "he",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/services",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/employees",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/customers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/drivers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/more",
+   "issues": [
+    {
+     "text": "Qitaf, রিওয়ার্ডস, আল-ফুরসান...",
+     "problems": [
+      "latin:Qitaf"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/competitions",
+   "issues": [
+    {
+     "text": "المسابقات (0)",
+     "problems": [
+      "arabic"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "bn",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/services",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/customers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/employees",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/drivers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/competitions",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "ur",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/services",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/customers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/employees",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/drivers",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/more",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/support-settings",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/social",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/competitions",
+   "issues": [
+    {
+     "text": "المسابقات (0)",
+     "problems": [
+      "arabic",
+      "foreign-script"
+     ]
+    }
+   ],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "merchant",
+   "lang": "es",
+   "route": "/merchant/returns",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ar",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "zh",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "he",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "bn",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "ur",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "chamber",
+   "lang": "es",
+   "route": "/chamber",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "ar",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "zh",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "he",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "bn",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "ur",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  },
+  {
+   "role": "cashier",
+   "lang": "es",
+   "route": "/merchant",
+   "issues": [],
+   "toggle": null,
+   "error": null
+  }
+ ]
+}

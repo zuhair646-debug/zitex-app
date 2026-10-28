@@ -5,7 +5,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import TranslatableName from '../../src/components/TranslatableName';
+import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 import { useAuth } from '../_layout';
 
 export default function CompetitionDetailScreen() {
@@ -116,7 +116,7 @@ export default function CompetitionDetailScreen() {
             <Text style={s.sectionTitle}>{tf('المشاركون ({0})', curLang(), [participants.length])}</Text>
             {participants.slice(0, 10).map((p, i) => (
               <View key={i} style={s.participantRow}>
-                <View style={s.participantAvatar}><Text style={s.avatarText}>{p.user_name?.[0] || '?'}</Text></View>
+                <View style={s.participantAvatar}><NameInitial name={p.user_name} style={s.avatarText} /></View>
                 <View style={s.participantInfo}>
                   <TranslatableName text={p.user_name || ''} style={s.participantName} />
                   <Text style={s.participantPhone}>{p.user_phone}</Text>

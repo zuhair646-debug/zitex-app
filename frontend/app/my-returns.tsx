@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from './_layout';
+import TranslatableName from '../src/components/TranslatableName';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -89,7 +90,7 @@ export default function MyReturnsScreen() {
                     </View>
                   )}
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
-                    <Text style={s.cardTitle} numberOfLines={1}>{r.product_name}</Text>
+                    <TranslatableName text={r.product_name} style={s.cardTitle} numberOfLines={1} containerStyle={{ flexShrink: 1 }} />
                     <TX style={s.cardSub}>{r.reason_label_ar || ''}</TX>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                       <View style={[s.pill, { backgroundColor: meta.color + '25', borderColor: meta.color }]}>

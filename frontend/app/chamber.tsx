@@ -5,7 +5,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import TranslatableName from '../src/components/TranslatableName';
+import TranslatableName, { NameInitial } from '../src/components/TranslatableName';
 import { useAuth } from './_layout';
 
 export default function ChamberScreen() {
@@ -132,7 +132,7 @@ export default function ChamberScreen() {
             {c.winners?.length > 0 && (
               <View style={s.winnersPreview}>
                 <Text style={s.winnersLabel}>{tSync('الفائزون:', curLang())} </Text>
-                <Text style={s.winnersNames}>{c.winners.map((w: any) => w.user_name).join(', ')}</Text>
+                <TranslatableName text={c.winners.map((w: any) => w.user_name).join('، ')} style={s.winnersNames} inline={false} />
               </View>
             )}
             <View style={s.viewMore}><Text style={s.viewMoreText}>{tSync('عرض التفاصيل وإجراء السحب', curLang())}</Text><Ionicons name="chevron-forward" size={16} color="#1E3A5F" /></View>
@@ -213,7 +213,7 @@ export default function ChamberScreen() {
               {selectedComp?.participants?.map((p: any, i: number) => (
                 <View key={i} style={s.participantRow}>
                   <Text style={s.pNum}>{i + 1}</Text>
-                  <View style={s.pAvatar}><Text style={s.pAvatarText}>{p.user_name?.[0]}</Text></View>
+                  <View style={s.pAvatar}><NameInitial name={p.user_name} style={s.pAvatarText} /></View>
                   <View style={s.pInfo}>
                     <TranslatableName text={p.user_name || ''} style={s.pName} />
                     <Text style={s.pPhone}>{p.user_phone}</Text>

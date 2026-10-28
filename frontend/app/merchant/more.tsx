@@ -2,6 +2,7 @@ import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Modal,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
+import { NameInitial } from '../../src/components/TranslatableName';
 import { useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
@@ -84,7 +85,7 @@ export default function MerchantMore() {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={styles.hero}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{(user?.name || t('mh.merchantFallback')).slice(0, 1).toUpperCase()}</Text>
+            <NameInitial name={user?.name || t('mh.merchantFallback')} style={styles.avatarText} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name} numberOfLines={1}>{user?.name || t('mh.merchantFallback')}</Text>
@@ -158,7 +159,7 @@ export default function MerchantMore() {
             <ListItem icon="log-out" title={t('auth.logout')} onPress={logout} tone="default" />
           </View>
 
-          <Text style={styles.version}>Zenrex Store Merchant v{Constants.expoConfig?.version}</Text>
+          <Text style={styles.version}>Zenrex Store · {t('mh.merchantFallback')} v{Constants.expoConfig?.version}</Text>
         </ScrollView>
       </SafeAreaView>
 

@@ -57,7 +57,7 @@ export default function AboutStoreScreen() {
 
         <View style={s.mapPlaceholder}>
           <Ionicons name="map" size={40} color="#A1A1AA" />
-          <TranslatableName text={tSync('الخريطة', lang) + ' - ' + (store.name || '')} style={s.mapText} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}><Text style={s.mapText}>{tSync('الخريطة', lang)} · </Text><TranslatableName text={store.name || ''} style={s.mapText} /></View>
           <TranslatableName text={store.address} style={s.mapAddr} />
         </View>
 

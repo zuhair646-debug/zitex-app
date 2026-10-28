@@ -25,6 +25,13 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'techstore')]
 
 app = FastAPI()
+
+
+@app.exception_handler(__import__('bson').errors.InvalidId)
+async def _invalid_id_handler(request, exc):
+    # e.g. /api/services/undefined → clean 404 instead of a 500
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=404, content={"detail": "Not found"})
 api_router = APIRouter(prefix="/api")
 
 JWT_SECRET = os.environ.get("JWT_SECRET", secrets.token_hex(32))

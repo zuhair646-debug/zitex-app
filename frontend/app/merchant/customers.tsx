@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
-import TranslatableName from '../../src/components/TranslatableName';
+import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 
 export default function MerchantCustomers() {
   const { lang } = useT();
@@ -32,7 +32,7 @@ export default function MerchantCustomers() {
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
           {customers.map(c => (
             <View key={c.id} style={s.card}>
-              <View style={s.avatar}><Text style={s.avatarText}>{(c.name || '?').charAt(0)}</Text></View>
+              <View style={s.avatar}><NameInitial name={c.name} style={s.avatarText} /></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <TranslatableName
                   text={c.name || 'No Name'}
@@ -40,7 +40,7 @@ export default function MerchantCustomers() {
                   iconSize={12}
                 />
                 <Text style={s.phone}>{c.phone}</Text>
-                <Text style={s.email}>{c.email || 'No email'}</Text>
+                <Text style={s.email}>{c.email || tSync('لا يوجد بريد', lang)}</Text>
               </View>
               <View style={s.statsBox}>
                 <Text style={s.statsVal}>{c.orders_count}</Text>

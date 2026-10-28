@@ -271,7 +271,7 @@ export default function HomeScreen() {
         {/* ─── Featured iPhone Banner ─── */}
         <TouchableOpacity activeOpacity={0.85} style={s.featuredBanner} onPress={() => hotProducts[0] ? router.push(`/product/${hotProducts[0].id}`) : router.push('/search')}>
           <View style={s.featuredContent}>
-            <Text style={s.featuredTitle}>iPhone 16</Text>
+            <TranslatableName text="iPhone 16" style={s.featuredTitle} noToggle />
             <View style={s.checkOutBtn}>
               <Text style={s.checkOutText}>{tSync('أتمم الشراء الحين!', lang)}</Text>
             </View>

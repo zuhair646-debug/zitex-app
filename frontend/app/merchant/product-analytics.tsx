@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useT, curLang } from '../../src/i18n';
 import { tSync, tf, TX } from '../../src/useAutoT';
-import TranslatableName from '../../src/components/TranslatableName';
+import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -363,7 +363,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               {d.top_visitors.map((v: any, i: number) => (
                 <View key={i} style={s.userCard}>
                   <View style={[s.avatar, { backgroundColor: BLUE + '30' }]}>
-                    <Text style={{ color: BLUE, fontWeight: '900' }}>{(v.user_name || tSync('ز', curLang())).charAt(0)}</Text>
+                    <NameInitial name={v.user_name} style={{ color: BLUE, fontWeight: '900' }} />
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <TranslatableName text={v.user_name} style={s.userName} />
@@ -383,7 +383,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               {d.cart_abandonments.map((a: any, i: number) => (
                 <View key={i} style={[s.userCard, { borderLeftWidth: 3, borderLeftColor: RED }]}>
                   <View style={[s.avatar, { backgroundColor: RED + '30' }]}>
-                    <Text style={{ color: RED, fontWeight: '900' }}>{(a.user_name || '?').charAt(0)}</Text>
+                    <NameInitial name={a.user_name} style={{ color: RED, fontWeight: '900' }} />
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <TranslatableName text={a.user_name} style={s.userName} />
@@ -402,7 +402,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
               {d.buyers.map((b: any, i: number) => (
                 <View key={i} style={s.userCard}>
                   <View style={[s.avatar, { backgroundColor: OK + '30' }]}>
-                    <Text style={{ color: OK, fontWeight: '900' }}>{(b.user_name || tSync('ع', curLang())).charAt(0)}</Text>
+                    <NameInitial name={b.user_name} style={{ color: OK, fontWeight: '900' }} />
                   </View>
                   <View style={{ flex: 1, marginHorizontal: 10 }}>
                     <Text style={s.userName}>{tSync(b.user_name || '', lang)} <Text style={{ color: MUTED, fontSize: 10, fontWeight: '400' }}>· {b.phone || ''}</Text></Text>
@@ -484,7 +484,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                 <View key={i} style={s.reviewCard}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={[s.avatar, { backgroundColor: AMBER + '30' }]}>
-                      <Text style={{ color: AMBER, fontWeight: '900' }}>{(r.user_name || '?').charAt(0)}</Text>
+                      <NameInitial name={r.user_name} style={{ color: AMBER, fontWeight: '900' }} />
                     </View>
                     <View style={{ flex: 1, marginHorizontal: 10 }}>
                       <TranslatableName text={r.user_name} style={s.userName} />
@@ -553,7 +553,7 @@ export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = 
                 <View key={i} style={[s.reviewCard, { borderLeftWidth: 3, borderLeftColor: AMBER }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={[s.avatar, { backgroundColor: AMBER + '30' }]}>
-                      <Text style={{ color: AMBER, fontWeight: '900' }}>{(c.user_name || tSync('؟', curLang())).charAt(0)}</Text>
+                      <NameInitial name={c.user_name} style={{ color: AMBER, fontWeight: '900' }} />
                     </View>
                     <View style={{ flex: 1, marginHorizontal: 10 }}>
                       <Text style={s.userName}>{tSync(c.user_name || '', lang)} <Text style={{ color: MUTED, fontSize: 10, fontWeight: '400' }}>· {c.phone || ''}</Text></Text>

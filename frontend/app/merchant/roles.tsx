@@ -1,3 +1,4 @@
+import TranslatableName from '../../src/components/TranslatableName';
 import { useEffect, useState, useCallback, useMemo} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, Modal, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -97,10 +98,10 @@ export default function MerchantRoles() {
                   <View style={[s.dot, { backgroundColor: r.color || colors.brand }]} />
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                      <TX style={s.name}>{r.name || ''}</TX>
+                      <TranslatableName text={r.name || ''} style={s.name} />
                       {r.is_preset && <Badge label={tSync('مُعدّ مسبقاً', lang)} tone="info" />}
                     </View>
-                    {!!r.description && <TX style={s.desc} numberOfLines={2}>{r.description || ''}</TX>}
+                    {!!r.description && <TranslatableName text={r.description || ''} style={s.desc} numberOfLines={2} inline={false} />}
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
                       {r.permissions.slice(0, 4).map((p: string) => (
                         <Badge key={p} label={tSync(PERMS.find(x => x.key === p)?.label || p, lang)} tone="default" />
