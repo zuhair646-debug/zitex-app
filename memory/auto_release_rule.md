@@ -117,3 +117,7 @@ Feature category → semver bump:
 - iOS d77c0817-b3c0-4576-8660-47566d6b0b3b (build 76), Android 4da94ad7-2c6f-43eb-b79b-fd4509a59cdc (versionCode 81). Commit 358ced9. Backend deployed to Hetzner.
 - Poller log: /tmp/eas_release_v1.24.0.log
 - Changes: FilterTabs unified option bars (Android RTL safe), live-preview whole-page scroll, social FlatList+memo, translation provider switch, translation fixes.
+
+## v1.25.0 release — 2026-10-28
+- iOS a1919d76-2d42-4fba-90d8-447d121fc466 (build 77), Android 10027e4a-0abb-43cb-b237-01af1407b3c0 (versionCode 82). Backend deployed.
+- Security hardening + ZATCA phase-1 invoices + inventory fixes. Poller log /tmp/eas_release_v1.25.0.log
