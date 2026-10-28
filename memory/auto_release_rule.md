@@ -112,3 +112,8 @@ Feature category → semver bump:
 ## v1.23.0 release — 2026-10-28
 - iOS 1940b763-ec93-43d8-bb1d-9a67555b37c1 (build 75), Android cda1510a-af3e-4f8e-b92d-e67d009baa96 (versionCode 80)
 - Full 20-lang sweep (tests/full_lang_scan.py, 1380 visits). Fixes: social/services/staff/drivers/roles/loyalty wrapped, NameInitial avatars, noToggle chips, cache-first bulk + 12-item chunks, bn danda fix, InvalidId→404, prewarm_all_content.py (run on VPS with API=http://127.0.0.1:8100)
+
+## v1.24.0 release — 2026-10-28
+- iOS d77c0817-b3c0-4576-8660-47566d6b0b3b (build 76), Android 4da94ad7-2c6f-43eb-b79b-fd4509a59cdc (versionCode 81). Commit 358ced9. Backend deployed to Hetzner.
+- Poller log: /tmp/eas_release_v1.24.0.log
+- Changes: FilterTabs unified option bars (Android RTL safe), live-preview whole-page scroll, social FlatList+memo, translation provider switch, translation fixes.
