@@ -20,7 +20,7 @@
 
 ## Employees (موظفو التاجر) - يعملون تحت 0509999999
 - Cashier: `0530000001` / `emp1234` (كاشير - فرع الرياض)
-- Marketing: `0530000002` / `emp1234` (مسؤول تسويق)
+- Marketer (standalone role "marketer", code SARA10 → lands on /my-affiliate): `0530000002` / `emp1234`
 - Branch Manager: `0530000003` / `emp1234` (مدير فرع جدة)
 
 ## ملاحظات للوكلاء (Agents)

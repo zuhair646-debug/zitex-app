@@ -1,21 +1,23 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useT, curLang } from '../src/i18n';
 import { tSync, tf, TX } from '../src/useAutoT';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Share, Alert, StatusBar, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Share, Alert, StatusBar, Platform, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import { useAuth } from './_layout';
+import { MarketerPayouts } from '../src/components/AffiliatePayouts';
 
-const APP_LINK_BASE = (process.env.EXPO_PUBLIC_BACKEND_URL || 'https://zitex.app').replace(/\/api\/?$/, '');
+const APP_LINK_BASE = `${process.env.EXPO_PUBLIC_BACKEND_URL || ''}/api`;
 
 export default function MyAffiliate() {
   const { lang } = useT();
 
   const router = useRouter();
-  const { apiCall } = useAuth();
+  const { apiCall, user, logout } = useAuth();
+  const isMarketer = user?.role === 'marketer';
   const [accounts, setAccounts] = useState<any[]>([]);
   const [selected, setSelected] = useState<number>(0);
   const [loading, setLoading] = useState(true);
@@ -47,6 +49,7 @@ export default function MyAffiliate() {
     if (!refLink) return;
     const url = `https://wa.me/?text=${encodeURIComponent(tf('اطلب من Zenrex Store عبر رابطي 🎁\n{0}', lang, [refLink]))}`;
     if (Platform.OS === 'web') window.open(url, '_blank');
+    else Linking.openURL(url).catch(() => {});
   };
 
   if (loading) return (
@@ -57,9 +60,15 @@ export default function MyAffiliate() {
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-            <Ionicons name="arrow-back" size={22} color="#F5C518" />
-          </TouchableOpacity>
+          {isMarketer ? (
+            <TouchableOpacity testID="marketer-logout" onPress={async () => { await logout(); router.replace('/login' as any); }} style={s.iconBtn}>
+              <Ionicons name="log-out-outline" size={22} color="#F5C518" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
+              <Ionicons name="arrow-back" size={22} color="#F5C518" />
+            </TouchableOpacity>
+          )}
           <TX style={s.headerTitle}>لوحة المسوّق</TX>
           <View style={s.iconBtn} />
         </View>
@@ -77,9 +86,15 @@ export default function MyAffiliate() {
       <StatusBar barStyle="light-content" />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-            <Ionicons name="arrow-back" size={22} color="#F5C518" />
-          </TouchableOpacity>
+          {isMarketer ? (
+            <TouchableOpacity testID="marketer-logout" onPress={async () => { await logout(); router.replace('/login' as any); }} style={s.iconBtn}>
+              <Ionicons name="log-out-outline" size={22} color="#F5C518" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
+              <Ionicons name="arrow-back" size={22} color="#F5C518" />
+            </TouchableOpacity>
+          )}
           <TX style={s.headerTitle}>لوحة المسوّق</TX>
           <View style={s.iconBtn} />
         </View>
@@ -128,6 +143,8 @@ export default function MyAffiliate() {
             </View>
           </View>
 
+          <MarketerPayouts affiliateId={cur.id} />
+
           {/* Analytics grid */}
           <View style={s.gridRow}>
             <View style={s.gridCell}>
@@ -155,20 +172,6 @@ export default function MyAffiliate() {
             </View>
           </View>
 
-          <View style={s.card}>
-            <TX style={s.cardTitle}>💰 محفظتك</TX>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={s.walletValue}>{(cur.wallet_balance || 0).toFixed(2)} {tSync('ر.س', lang)}</Text>
-              <TouchableOpacity style={s.withdrawBtn}
-                onPress={() => {
-                  if ((cur.wallet_balance || 0) < 50) Alert.alert(tSync('الحد الأدنى', lang), tSync('يتم السحب من 50 ر.س', curLang()));
-                  else Alert.alert(tSync('طلب السحب', lang), tSync('سيتم التواصل معك خلال 3 أيام عمل', curLang()));
-                }}>
-                <TX style={s.withdrawText}>سحب</TX>
-              </TouchableOpacity>
-            </View>
-          </View>
-
           {!!cur.incentives && (
             <View style={s.incentivesBox}>
               <TX style={s.incentivesTitle}>🎁 الحوافز</TX>
@@ -187,7 +190,7 @@ export default function MyAffiliate() {
                     <Text style={s.histOrder}>{tSync('طلب #', lang)}{c.order_id?.slice(-6) || '—'}</Text>
                     <Text style={s.histDate}>{new Date(c.created_at).toLocaleDateString('ar')}</Text>
                   </View>
-                  <Text style={s.histAmount}>+{(c.commission_amount || 0).toFixed(2)} {tSync('ر.س', lang)}</Text>
+                  <Text style={s.histAmount}>+{Number(c.earning ?? c.commission_amount ?? 0).toFixed(2)} {tSync('ر.س', lang)}</Text>
                 </View>
               ))
             )}

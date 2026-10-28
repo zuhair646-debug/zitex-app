@@ -30,6 +30,8 @@ export default function LoginScreen() {
         router.replace('/merchant');
       } else if (role === 'driver') {
         router.replace('/driver');
+      } else if (role === 'marketer') {
+        router.replace('/my-affiliate' as any);
       } else {
         router.replace('/(tabs)');
       }

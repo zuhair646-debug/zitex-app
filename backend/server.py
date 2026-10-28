@@ -990,12 +990,12 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
             })
             # Do NOT credit self-referral
             if aff and aff.get("user_id") != user["id"]:
-                commission_pct = float(aff.get("commission_percent", 5))
+                commission_pct = float(aff.get("commission_percent") or aff.get("commission_rate") or 5)
                 earning = round(subtotal * commission_pct / 100.0, 2)
                 await db.affiliate_conversions.insert_one({
                     "affiliate_id": str(aff["_id"]),
                     "marketer_id": aff.get("user_id"),
-                    "marketer_name": aff.get("user_name", ""),
+                    "marketer_name": aff.get("name") or aff.get("user_name", ""),
                     "merchant_id": aff.get("merchant_id"),
                     "customer_id": user["id"],
                     "customer_name": user.get("name", ""),
@@ -4481,7 +4481,7 @@ async def approve_affiliate(aid: str, user=Depends(get_current_user)):
 @api_router.get("/affiliate/dashboard")
 async def affiliate_dashboard(user=Depends(get_current_user)):
     """Full dashboard for the customer showing all their affiliate accounts + analytics."""
-    if user.get("role") not in ("customer", "user"):
+    if user.get("role") not in ("customer", "user", "marketer"):
         raise HTTPException(status_code=403)
     affs = await db.affiliates.find({"user_id": user["id"], "active": True}).to_list(50)
     result = []
@@ -4495,7 +4495,7 @@ async def affiliate_dashboard(user=Depends(get_current_user)):
         this_month = 0.0
         for c in recent:
             if c.get("created_at", "") >= month_start:
-                this_month += float(c.get("commission_amount") or 0)
+                this_month += float(c.get("earning") or c.get("commission_amount") or 0)
         a["this_month_earnings"] = this_month
         result.append(a)
     return result
@@ -4508,6 +4508,17 @@ async def track_affiliate_click(code: str):
         raise HTTPException(404, "رمز إحالة غير صالح")
     await db.affiliates.update_one({"_id": aff["_id"]}, {"$inc": {"total_clicks": 1}})
     return {"ok": True, "merchant_id": aff["merchant_id"]}
+
+@api_router.get("/r/{code}")
+async def referral_link(code: str):
+    """Shareable referral link: counts the click, then opens the store with ?ref=CODE (saved for checkout)."""
+    from fastapi.responses import RedirectResponse
+    aff = await db.affiliates.find_one({"referral_code": code.upper(), "active": True})
+    if aff:
+        await db.affiliates.update_one({"_id": aff["_id"]}, {"$inc": {"total_clicks": 1}})
+    # APP_OPEN_URL: where the link lands (web store URL); default opens the installed app via its scheme
+    base = os.environ.get("APP_OPEN_URL", "zenrex://")
+    return RedirectResponse(url=f"{base}?ref={code.upper()}", status_code=302)
 
 @api_router.post("/merchant/affiliate/applications/{aid}/reject")
 async def reject_affiliate(aid: str, user=Depends(get_current_user)):
@@ -4531,7 +4542,7 @@ async def merchant_affiliates(user=Depends(get_current_user)):
 @api_router.get("/affiliate/my")
 async def my_affiliate_accounts(user=Depends(get_current_user)):
     """Customer sees all the affiliate accounts they own."""
-    if user.get("role") not in ("customer", "user"):
+    if user.get("role") not in ("customer", "user", "marketer"):
         raise HTTPException(status_code=403)
     affs = await db.affiliates.find({"user_id": user["id"]}).to_list(50)
     return serialize_docs(affs)
@@ -6716,6 +6727,30 @@ try:
     logger.info("Shipping matrix router mounted")
 except Exception as _e:
     logger.error(f"Failed to mount shipping_matrix router: {_e}")
+
+# ─── Marketers: payouts + legacy-field normalisation ───
+try:
+    from affiliates_ext import build_router as _build_aff_router, normalise_affiliates as _norm_affs
+    app.include_router(_build_aff_router(db, get_current_user, require_merchant))
+
+    @app.on_event("startup")
+    async def _aff_startup():
+        await _norm_affs(db)
+        # Demo marketer account (0530000002) is a standalone marketer with its own dashboard
+        u = await db.users.find_one({"phone": "0530000002"})
+        if u and u.get("role") == "employee":
+            await db.users.update_one({"_id": u["_id"]}, {"$set": {"role": "marketer", "permissions": []}})
+        if u and not await db.affiliates.find_one({"user_id": str(u["_id"])}):
+            m = await db.users.find_one({"role": "merchant"})
+            await db.affiliates.insert_one({
+                "merchant_id": str(m["_id"]) if m else "", "merchant_name": (m or {}).get("name", "Zenrex Store"),
+                "user_id": str(u["_id"]), "name": u.get("name", ""), "phone": u.get("phone", ""),
+                "referral_code": "SARA10", "commission_percent": 10.0, "total_earnings": 0.0, "paid_total": 0.0,
+                "total_conversions": 0, "total_clicks": 0, "total_sales": 0.0, "active": True,
+                "created_at": datetime.now(timezone.utc).isoformat()})
+    logger.info("Affiliates ext router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount affiliates ext router: {_e}")
 
 # ─── ZATCA invoicing ───
 try:

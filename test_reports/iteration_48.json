@@ -1,0 +1,55 @@
+{
+  "summary": "Phase 3 (marketers/affiliates) tested. Backend: 18/18 pytest pass (marketer role + 403 on merchant APIs, merchant affiliate list with normalised real numbers, /api/r/NAWAF25 302 + click increment, referral attribution 10% of subtotal, payout validation IBAN/amount/ownership, approve w/o ref 400, approve paid + paid_total, 2nd approve 409, reject, concurrency smoke). Frontend (375x667): marketer login lands on /my-affiliate with SARA10/10% + payout card; customer checkout referral-input (auto-uppercases) → order credited SARA10; marketer UI payout request 200 → shows 'Under review' and available drops 17.90→7.90; merchant /merchant/marketing?tab=affiliates shows real numbers + 'طلبات صرف العمولات' card, approve-without-ref 400, approve-with-ref → paid #ref, reject → Rejected; marketer then sees paid status + Dispensed 10.00. Fixed 1 bug (recent conversions showed +0.00). All test data cleaned up (orders/invoices/conversions/payouts deleted, stock/points/cart restored, SARA10 counters 0, NAWAF25 total_clicks 1245).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/affiliate/payouts", "issue": "amount=0.001 accepted and stored as round()=0.00 payout (check is on raw amount before rounding); no minimum payout amount. Empty account_name accepted. Validate amount>=1 (or min) after rounding and account_name non-empty (min_length)."},
+      {"endpoint": "GET /api/merchant/affiliate/payouts + approve/reject", "issue": "Not scoped by merchant_id — any merchant/employee(with marketing perm) sees and can decide payouts of all merchants' marketers. Add {'merchant_id': user.merchant_id or user.id} filter in list and _decide."},
+      {"endpoint": "approve/request payout atomicity", "issue": "_decide does find_one(status pending) then $inc paid_total then update status — not atomic; request_payout balance check also non-atomic. Concurrency smoke tests passed, but use find_one_and_update({_id, status:'pending'}, {$set:{status:'processing'}}) before $inc to guarantee single payment."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "my-affiliate recent conversions", "issue": "Showed '+0.00 SAR' because UI read c.commission_amount while backend stores 'earning'. FIXED by tester (now shows +17.90).", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "my-affiliate legacy wallet card", "issue": "Old '💰 محفظتك' card with fake 'سحب' button (wallet_balance always 0, shows 'contact in 3 days' alert) duplicates/conflicts with the new payout card. Remove it.", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "Marketer navigation", "issue": "Marketer is trapped on /my-affiliate: header back arrow → router.back() → tabs → _layout redirect back to /my-affiliate; no logout/settings/language entry point on marketer dashboard. Add logout + settings in header instead of back arrow.", "testID": "n/a", "priority": "HIGH"}
+    ],
+    "integration_issues": [
+      {"flow": "Feedback on web", "issue": "Alert.alert is a no-op on react-native-web: payout errors (invalid IBAN / amount) and success, and checkout 'تم الطلب!' alert are invisible on web preview; after placing order user stays on /checkout with no feedback. Native OK. Consider inline error text / toast or window.alert fallback on web.", "affected_testIDs": ["payout-submit", "place-order-btn"]},
+      {"flow": "Referral persistence", "issue": "checkout.tsx reads AsyncStorage 'ref_code' but never clears it after a credited order → every future order of that customer is attributed to the same marketer (confirm if lifetime attribution intended; otherwise remove after order).", "affected_testIDs": ["referral-input"]}
+    ],
+    "design_issues": [
+      {"screen": "merchant/marketing affiliates tab", "issues": ["Payouts card renders between the '🏆 المسوقون النشطون' heading and the marketer list — move it above the heading", "Amount line mixes RTL/LTR: 'SAR 10.00 — name' order flips"]},
+      {"screen": "my-affiliate", "issues": ["'تحويل' (conversion) auto-translated as 'Transfer' in English — misleading next to payout 'transfers'", "unique visitors uses cur.unique_visitors (seed field is unique_clicks) → always 0"]},
+      {"screen": "checkout", "issues": ["Coupon apply button label truncated to 'App' at 375px"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_phase3_affiliates.py", "/app/test_reports/pytest/pytest_phase3.xml"],
+  "action_items": [
+    "Add logout/settings to marketer dashboard header (marketer currently cannot leave /my-affiliate)",
+    "Remove legacy wallet/withdraw card in my-affiliate.tsx",
+    "Payout validation: min amount after rounding, non-empty account_name",
+    "Scope merchant payout list/approve/reject by merchant_id; make approve atomic (find_one_and_update on status pending)",
+    "Show inline errors/success for payout request & order placement on web (Alert.alert no-op on web)",
+    "Decide on clearing AsyncStorage ref_code after successful order",
+    "Update /app/memory/test_credentials.md: 0530000002 is now role 'marketer' (lands on /my-affiliate), not an employee"
+  ],
+  "critical_code_review_comments": [
+    "affiliates_ext._decide and request_payout are read-then-write (race-prone)",
+    "merchant_payouts ignores merchant_id (multi-tenant leak)",
+    "order attribution sets marketer_name from aff.user_name which doesn't exist on affiliate docs (field is 'name') → conversions have empty marketer_name (server.py:998)"
+  ],
+  "updated_files": [
+    "/app/frontend/app/my-affiliate.tsx (recent conversions amount reads c.earning)",
+    "/app/frontend/app/checkout.tsx (testIDs: place-order-btn, coupon-input, coupon-apply-btn)",
+    "/app/frontend/app/merchant/marketing.tsx (testID affiliate-row-{code})",
+    "/app/backend/tests/test_phase3_affiliates.py (new)"
+  ],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "~85% (all requested flows work; marketer navigation trap + web feedback issues)"},
+  "seed_data_creation": "None persisted. All created orders/invoices/conversions/payouts deleted; stock, customer points/wallet/cart restored; SARA10 counters & paid_total reset to 0; NAWAF25 total_clicks reset to 1245.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run pytest /app/backend/tests/test_phase3_affiliates.py (self-cleaning). affiliate_payouts collection was empty before testing. UI: marketer 0530000002 → /my-affiliate; merchant payouts at /merchant/marketing?tab=affiliates. Alerts don't fire on web — use expect_response to verify actions.",
+  "rca_of_issue": "Recent conversions +0.00: backend inserts affiliate_conversions.earning (server.py ~1006) but my-affiliate.tsx rendered c.commission_amount (legacy). Fixed with fallback earning ?? commission_amount."
+}

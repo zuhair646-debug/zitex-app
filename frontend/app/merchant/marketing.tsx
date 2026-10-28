@@ -16,6 +16,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
+import { MerchantPayouts } from '../../src/components/AffiliatePayouts';
 
 type Tab = 'ads' | 'affiliates';
 type CampaignType = 'ad' | 'affiliate';
@@ -309,6 +310,7 @@ export default function MarketingPanel() {
               )}
 
               <Text style={s.sectionTitle}>{tSync('🏆 المسوقون النشطون (', lang)}{affiliates.length})</Text>
+              <MerchantPayouts />
               {affiliates.length === 0 && pending.length === 0 && affCampaigns.length === 0 && (
                 <View style={s.empty}>
                   <Ionicons name="people-outline" size={54} color={colors.onSurfaceTertiary} />
@@ -317,7 +319,7 @@ export default function MarketingPanel() {
                 </View>
               )}
               {affiliates.map(af => (
-                <TouchableOpacity key={af.id} style={s.affRow} onPress={() => router.push(`/merchant/marketer-stats?id=${af.id}` as any)}>
+                <TouchableOpacity key={af.id} testID={`affiliate-row-${af.referral_code}`} style={s.affRow} onPress={() => router.push(`/merchant/marketer-stats?id=${af.id}` as any)}>
                   <View style={s.affRank}><Text style={s.affRankText}>#{affiliates.indexOf(af) + 1}</Text></View>
                   <View style={{ flex: 1 }}>
                     <TranslatableName text={af.name || ''} style={s.affName} />

@@ -1,6 +1,7 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { Text, TextInput } from 'react-native';
+import * as ExpoLinking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { I18nProvider } from '../src/i18n';
@@ -102,6 +103,14 @@ export default function RootLayout() {
     } catch {}
   };
 
+  // ── Referral links (/api/r/CODE → /?ref=CODE): remember the marketer code for checkout ──
+  const incomingUrl = ExpoLinking.useURL();
+  useEffect(() => {
+    if (!incomingUrl) return;
+    const ref = ExpoLinking.parse(incomingUrl).queryParams?.ref;
+    if (typeof ref === 'string' && ref) AsyncStorage.setItem('ref_code', ref.toUpperCase()).catch(() => {});
+  }, [incomingUrl]);
+
   // ── Role-based auto-redirect ──
   // Ensures merchant/driver/chamber never land in the customer (tabs) area
   useEffect(() => {
@@ -119,6 +128,8 @@ export default function RootLayout() {
       if (inTabs) router.replace('/driver');
     } else if (role === 'chamber' && segments[0] !== 'chamber') {
       if (inTabs) router.replace('/chamber');
+    } else if (role === 'marketer' && inTabs) {
+      router.replace('/my-affiliate' as any);
     }
   }, [user, segments, loading]);
 

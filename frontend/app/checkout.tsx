@@ -1,5 +1,6 @@
 import TranslatableName from '../src/components/TranslatableName';
 import { useState, useEffect, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Linking } from 'react-native';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
@@ -21,6 +22,8 @@ export default function CheckoutScreen() {
   const [deliveryType, setDeliveryType] = useState<'standard' | 'same_day' | 'scheduled'>('standard');
   const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery');
   const [couponCode, setCouponCode] = useState('');
+  const [refCode, setRefCode] = useState('');
+  useEffect(() => { AsyncStorage.getItem('ref_code').then((c) => { if (c) setRefCode(c); }).catch(() => {}); }, []);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState('');
   const [cart, setCart] = useState<any[]>([]);
@@ -134,11 +137,12 @@ export default function CheckoutScreen() {
       const addr = addresses[selectedAddr];
       const order = await apiCall('/api/orders', { method: 'POST', body: JSON.stringify({
         address: addr.address, phone: addr.phone || '0500000000', delivery_type: deliveryType,
-        payment_method: paymentMethod, notes, coupon_code: couponApplied,
+        payment_method: paymentMethod, notes, coupon_code: couponApplied, referral_code: refCode.trim() || undefined,
         dest_lat: userLat, dest_lng: userLng,
         branch_id: quote?.branch?.id, branch_lat: quote?.branch?.lat, branch_lng: quote?.branch?.lng,
         scheduled_slot: scheduledSlot,
       })});
+      AsyncStorage.removeItem('ref_code').catch(() => {});
       Alert.alert(tSync('تم الطلب!', lang), tf('رقم الطلب #{0}', lang, [order.id?.slice(-8)]), [
         { text: tSync('تتبع', curLang()), onPress: () => { router.dismiss(); router.push(`/track-order/${order.id}` as any); } },
         { text: tSync('طلباتي', curLang()), onPress: () => { router.dismiss(); router.push('/orders'); } }
@@ -231,10 +235,15 @@ export default function CheckoutScreen() {
 
         <TX style={s.sectionTitle}>كود الخصم</TX>
         <View style={s.couponRow}>
-          <TextInput style={s.couponInput} placeholder={tSync("أدخل كود الخصم", lang)} value={couponCode} onChangeText={setCouponCode} autoCapitalize="characters" />
-          <TouchableOpacity style={s.couponBtn} onPress={applyCoupon}><TX style={s.couponBtnText}>تطبيق</TX></TouchableOpacity>
+          <TextInput testID="coupon-input" style={s.couponInput} placeholder={tSync("أدخل كود الخصم", lang)} value={couponCode} onChangeText={setCouponCode} autoCapitalize="characters" />
+          <TouchableOpacity testID="coupon-apply-btn" style={s.couponBtn} onPress={applyCoupon}><TX style={s.couponBtnText}>تطبيق</TX></TouchableOpacity>
         </View>
         {couponApplied ? <Text style={s.couponApplied}>{couponApplied} {tSync('طُبِّق! -', lang)}{couponDiscount} {tSync('ر.س', lang)}</Text> : null}
+
+        <TX style={s.sectionTitle}>كود المسوّق (اختياري)</TX>
+        <View style={s.couponRow}>
+          <TextInput testID="referral-input" style={s.couponInput} placeholder={tSync('أدخل كود المسوّق', lang)} value={refCode} onChangeText={(v) => setRefCode(v.toUpperCase())} autoCapitalize="characters" />
+        </View>
 
         <TextInput style={s.notesInput} placeholder={tSync("ملاحظات للطلب (اختياري)", lang)} value={notes} onChangeText={setNotes} multiline />
 
@@ -296,7 +305,7 @@ export default function CheckoutScreen() {
       </View>
 
       <View style={s.bottomBar}>
-        <TouchableOpacity style={s.buyBtn} onPress={placeOrder} disabled={ordering}>
+        <TouchableOpacity testID="place-order-btn" style={s.buyBtn} onPress={placeOrder} disabled={ordering}>
           {ordering ? <ActivityIndicator color="#FFF" /> : <Text style={s.buyText}>{tSync('اشترِ الآن -', lang)} {total} {tSync('ر.س', lang)}</Text>}
         </TouchableOpacity>
       </View>
