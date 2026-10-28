@@ -655,3 +655,11 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - backend/invoicing.py: business profile (/api/merchant/business-profile), per-store sequential counter, UUID, hash chain, TLV QR, simplified/standard/credit_note, server-side DB prices, printable HTML thermal/A4 (/api/invoices/{id}/print?fmt=&token=), /api/invoices/mine. Online orders auto-invoice (VAT includes delivery). RMA refund → credit note + restock; RMA price/qty from order (VAT-incl), no double inspection (409). Cart qty validation + stock check. decrement_stock() keeps product.stock + branch pools.
 - Frontend: merchant invoices (type badges, print thermal/A4), /merchant/business-profile, customer /invoices from invoices collection, POS "طباعة" after sale.
 - Remaining phases: 3 marketers, 4 competitions, 5 others (bookings fields, driver assignment, customer history, loyalty double award).
+
+## Phase 3 marketers — v1.26.0 (Oct 28 2026)
+- backend/affiliates_ext.py: legacy seed field normalisation (startup), payouts (marketer request with SA IBAN, min 10 SAR, balance = earnings − paid − pending; merchant approve with transfer ref (atomic) / reject).
+- 0530000002 converted to role "marketer" with affiliate SARA10 (10%) → lands on /my-affiliate (logout button, payout card, fake wallet card removed).
+- Referral link /api/r/{code} → counts click, redirects to APP_OPEN_URL?ref=CODE (default zenrex://); app stores ref_code, checkout has referral-input (prefilled, cleared after order). Commission uses commission_percent.
+- Merchant marketing affiliates tab shows payout requests card.
+- Known: marketer stats still opens /merchant/marketer-stats screen (separate page); payouts not filtered per merchant (single-store copies).
+- Next: Phase 4 competitions, Phase 5 others.

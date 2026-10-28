@@ -121,3 +121,6 @@ Feature category → semver bump:
 ## v1.25.0 release — 2026-10-28
 - iOS a1919d76-2d42-4fba-90d8-447d121fc466 (build 77), Android 10027e4a-0abb-43cb-b237-01af1407b3c0 (versionCode 82). Backend deployed.
 - Security hardening + ZATCA phase-1 invoices + inventory fixes. Poller log /tmp/eas_release_v1.25.0.log
+
+## v1.26.0 release — 2026-10-28
+- iOS a8f3c250-bd27-44af-8a6d-58d683f38278 (build 78), Android 1c046253-06a7-4811-92eb-376df37c6260 (versionCode 83). Marketers phase 3. Poller log /tmp/eas_release_v1.26.0.log
