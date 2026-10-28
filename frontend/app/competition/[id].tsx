@@ -12,7 +12,7 @@ export default function CompetitionDetailScreen() {
   useT(); // re-render when language or on-demand translations change
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { apiCall } = useAuth();
+  const { apiCall, user } = useAuth();
   const [comp, setComp] = useState<any>(null);
   const [participants, setParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,7 +144,7 @@ export default function CompetitionDetailScreen() {
             </View>
           )}
 
-          {isOpen && (
+          {isOpen && ['merchant', 'chamber'].includes(user?.role || '') && (
             <TouchableOpacity testID="draw-btn" style={s.drawBtn} onPress={performDraw} disabled={drawing}>
               {drawing ? <ActivityIndicator color="#FFF" /> : (
                 <><Ionicons name="dice" size={22} color="#FFF" /><Text style={s.drawBtnText}>{tSync('ابدأ السحب', curLang())}</Text></>

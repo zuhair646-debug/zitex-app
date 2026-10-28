@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
+import { openInvoicePrint } from '../../src/utils/invoicePrint';
 import { colors, spacing, radius, typography } from '../../src/theme/tokens';
 import { ScreenHeader, PrimaryButton, SecondaryButton, EmptyState, SkeletonBox, Badge, FilterTabs, Chip } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -79,7 +80,7 @@ export default function POSTerminal() {
       });
       setCart([]); setCheckoutOpen(false); setCustomerName(''); setCustomerPhone('');
       Alert.alert(tSync('✅ تم إنشاء الفاتورة', curLang()), tf('رقم الفاتورة: {0}\nالمجموع: {1} ر.س', lang, [r.invoice_number, r.total.toFixed(2)]),
-        [{ text: tSync('موافق', curLang()) }, { text: tSync('عرض الفواتير', curLang()), onPress: () => router.push('/merchant/invoices') }]);
+        [{ text: tSync('موافق', curLang()) }, { text: tSync('طباعة', curLang()), onPress: () => openInvoicePrint(r.id, 'thermal') }, { text: tSync('عرض الفواتير', curLang()), onPress: () => router.push('/merchant/invoices') }]);
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };

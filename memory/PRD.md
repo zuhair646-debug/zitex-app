@@ -648,3 +648,10 @@ Instead of manually rewriting the 50+ files that still use `<TX>`, `useAutoT`, o
 3. Social feed in live preview: FlatList + memoised PostCard, no BlurView per post, background refresh only re-renders on change.
 4. Competitions "active" filter excludes ended/with-winners.
 - Translation rules locked in /app/memory/TRANSLATION_RULES.md (final 20-lang scan at end of project).
+
+## Phase 1 (security) + Phase 2 (ZATCA invoices) — v1.25.0 (Oct 28 2026)
+Owner decisions: each merchant gets an independent full app copy (single-store, white-label); ZATCA Phase 1 now, Phase 2 (XML/CSID/clearance) later; marketer payout = request + manual bank transfer by merchant; demo marketer 0530000002 becomes a standalone marketer with own dashboard (Phase 3).
+- Security: draw endpoint auth (merchant/chamber/employee+competitions), participants phones masked publicly, webhooks need X-Webhook-Secret (env WEBHOOK_SECRET; unset = disabled), login lockout 5 fails/15min, employee permission middleware deny-by-default on /api/merchant*, /api/pos*, /api/invoices* (+ token-in-URL bypass fixed), new perms marketing/analytics, More menu filtered by employee perms, draw button hidden for customers.
+- backend/invoicing.py: business profile (/api/merchant/business-profile), per-store sequential counter, UUID, hash chain, TLV QR, simplified/standard/credit_note, server-side DB prices, printable HTML thermal/A4 (/api/invoices/{id}/print?fmt=&token=), /api/invoices/mine. Online orders auto-invoice (VAT includes delivery). RMA refund → credit note + restock; RMA price/qty from order (VAT-incl), no double inspection (409). Cart qty validation + stock check. decrement_stock() keeps product.stock + branch pools.
+- Frontend: merchant invoices (type badges, print thermal/A4), /merchant/business-profile, customer /invoices from invoices collection, POS "طباعة" after sale.
+- Remaining phases: 3 marketers, 4 competitions, 5 others (bookings fields, driver assignment, customer history, loyalty double award).

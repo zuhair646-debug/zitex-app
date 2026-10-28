@@ -179,6 +179,14 @@ def build_router(db, get_current_user, require_merchant):
         payment_method = order.get("payment_method") or order.get("payment_code") or "wallet"
         refund_route = REFUND_ROUTES.get(payment_method, "wallet")
 
+        # Price & qty always from the order line (never trust the client); refund = what was paid incl. VAT
+        line = next((it for it in (order.get("items") or []) if str(it.get("product_id")) == str(body.product_id)), None)
+        if not line:
+            raise HTTPException(400, "المنتج غير موجود في هذا الطلب")
+        bought = int(line.get("quantity") or line.get("qty") or 1)
+        qty = min(max(1, body.qty), bought)
+        paid_unit = round(float(line.get("price") or 0) * 1.15, 2)
+
         rma_doc = {
             "user_id": uid,
             "customer_name": user.get("name") or user.get("full_name") or "",
@@ -188,8 +196,8 @@ def build_router(db, get_current_user, require_merchant):
             "product_id": body.product_id,
             "product_name": body.product_name or product.get("name_ar", ""),
             "product_image": (product.get("images") or [""])[0] if product.get("images") else "",
-            "qty": max(1, body.qty),
-            "unit_price": float(body.unit_price or product.get("price", 0)),
+            "qty": qty,
+            "unit_price": paid_unit,
             "type": rma_type,
             "reason_code": body.reason_code,
             "reason_label_ar": reason_meta["label_ar"],
@@ -380,6 +388,8 @@ def build_router(db, get_current_user, require_merchant):
         rma = await db.rmas.find_one({"_id": oid})
         if not rma:
             raise HTTPException(404, "RMA not found")
+        if rma.get("state") in ("refunded", "resolved", "rejected", "closed"):
+            raise HTTPException(409, "تم فحص هذا الطلب مسبقاً")
 
         now = datetime.now(timezone.utc).isoformat()
         inspection = {
@@ -417,6 +427,28 @@ def build_router(db, get_current_user, require_merchant):
                 "at": now, "status": "processed",
             }
             new_state = "refunded"
+            # Credit note (ZATCA) referencing the original invoice + put the item back in stock
+            try:
+                import invoicing
+                from server import decrement_stock
+                order = await db.orders.find_one({"_id": ObjectId(rma["order_id"])}) if ObjectId.is_valid(str(rma.get("order_id", ""))) else None
+                orig = None
+                if order and order.get("invoice_id") and ObjectId.is_valid(order["invoice_id"]):
+                    orig = await db.invoices.find_one({"_id": ObjectId(order["invoice_id"])})
+                qty = int(rma.get("qty", 1) or 1)
+                net_unit = float(amt) / 1.15 / qty  # refund amount is VAT-inclusive (what the customer paid)
+                cn = await invoicing.ISSUE(
+                    kind="credit_note", source="return", order_id=str(rma.get("order_id", "")), customer_id=uid or "",
+                    buyer={"name": rma.get("customer_name", ""), "phone": rma.get("customer_phone", "")},
+                    payment_method=refund_info["route"],
+                    ref_invoice={"id": str(orig["_id"]), "invoice_number": orig.get("invoice_number")} if orig else None,
+                    lines=[{"product_id": rma.get("product_id", ""), "name": rma.get("product_name", ""), "qty": qty, "unit_price": net_unit}],
+                    notes=f"RMA {rma_id}")
+                refund_info["credit_note_id"], refund_info["credit_note_number"] = cn["id"], cn["invoice_number"]
+                await decrement_stock((order or {}).get("branch_id", ""), rma.get("product_id", ""), qty, channel="app", restock=True)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"credit note failed: {e}")
 
         await db.rmas.update_one({"_id": oid}, {
             "$set": {

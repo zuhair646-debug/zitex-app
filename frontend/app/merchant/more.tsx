@@ -63,7 +63,28 @@ export default function MerchantMore() {
     ...(user?.role === 'merchant' ? [{ icon: 'language', titleKey: 'mo.aiProvider.title', subKey: 'mo.aiProvider.sub', route: '/merchant/ai-provider' }] : []),
   ] as const;
 
-  const Section = ({ label, items }: { label: string; items: readonly any[] }) => (
+  // Employees only see the sections their permissions allow (owner sees everything).
+  const ROUTE_PERM: Record<string, string> = {
+    '/merchant/pos': 'pos', '/merchant/invoices': 'invoices', '/merchant/inventory': 'inventory',
+    '/merchant/marketing': 'marketing', '/merchant/marketing?tab=affiliates': 'marketing',
+    '/merchant/social': 'social', '/merchant/competitions': 'competitions', '/merchant/banners': 'banners',
+    '/merchant/services': 'services', '/merchant/service-bookings': 'services', '/merchant/bookings': 'services',
+    '/merchant/branches': 'branches', '/merchant/drivers': 'drivers', '/merchant/delivery-settings': 'delivery',
+    '/merchant/shipping-matrix': 'delivery', '/merchant/returns': 'orders', '/merchant/loyalty-programs': 'settings',
+    '/merchant/services-catalog': 'settings', '/merchant/customers': 'customers', '/merchant/employees': '_owner',
+    '/merchant/roles': 'roles_manage', '/merchant/team': 'roles_manage', '/merchant/support-settings': 'support',
+  };
+  const perms: string[] = (user as any)?.permissions || [];
+  const allowed = (route: string) => {
+    if (user?.role !== 'employee' || perms.includes('all')) return true;
+    const p = ROUTE_PERM[route];
+    return !!p && p !== '_owner' && perms.includes(p);
+  };
+
+  const Section = ({ label, items: all }: { label: string; items: readonly any[] }) => {
+    const items = all.filter((it) => allowed(it.route));
+    if (!items.length) return null;
+    return (
     <>
       <SectionHeader title={label} />
       <View style={styles.groupCard}>
@@ -78,7 +99,8 @@ export default function MerchantMore() {
         ))}
       </View>
     </>
-  );
+    );
+  };
 
   return (
     <View style={styles.root}>

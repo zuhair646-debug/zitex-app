@@ -144,13 +144,24 @@ async def register(data: RegisterInput):
     token = create_access_token(user_doc["id"])
     return {"user": user_doc, "token": token}
 
+_LOGIN_FAILS: dict = {}  # phone -> [count, first_fail_ts]
+
 @api_router.post("/auth/login")
 async def login(data: LoginInput):
+    import time as _t
     phone = (data.phone or "").strip()
     password = (data.password or "").strip()
+    rec = _LOGIN_FAILS.get(phone)
+    if rec and rec[0] >= 5 and _t.time() - rec[1] < 900:
+        raise HTTPException(status_code=429, detail="محاولات كثيرة، حاول بعد 15 دقيقة")
     user = await db.users.find_one({"phone": phone})
     if not user or not verify_password(password, user["password_hash"]):
+        if not rec or _t.time() - rec[1] >= 900:
+            rec = [0, _t.time()]
+        rec[0] += 1
+        _LOGIN_FAILS[phone] = rec
         raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
+    _LOGIN_FAILS.pop(phone, None)
     user["id"] = str(user.pop("_id"))
     user.pop("password_hash")
     token = create_access_token(user["id"])
@@ -249,6 +260,8 @@ async def get_cart(user=Depends(get_current_user)):
 
 @api_router.post("/cart")
 async def add_to_cart(data: CartItemInput, user=Depends(get_current_user)):
+    if data.quantity <= 0 or data.quantity > 100:
+        raise HTTPException(400, "كمية غير صالحة")
     existing = await db.cart_items.find_one({
         "user_id": user["id"], "product_id": data.product_id,
         "color": data.color, "storage": data.storage
@@ -344,13 +357,30 @@ async def join_competition(comp_id: str, user=Depends(get_current_user)):
     return {"message": "Joined successfully"}
 
 @api_router.get("/competitions/{comp_id}/participants")
-async def get_participants(comp_id: str):
+async def get_participants(comp_id: str, request: Request):
     entries = await db.competition_entries.find({"competition_id": comp_id}).to_list(1000)
-    return [serialize_doc(e) for e in entries]
+    staff = False
+    try:
+        u = await get_current_user(request)
+        staff = u.get("role") in ("merchant", "chamber") or (
+            u.get("role") == "employee" and {"all", "competitions"} & set(u.get("permissions", [])))
+    except HTTPException:
+        pass
+    out = [serialize_doc(e) for e in entries]
+    if not staff:  # public view: no phone numbers
+        for e in out:
+            p = str(e.get("user_phone") or "")
+            e["user_phone"] = (p[:3] + "****" + p[-2:]) if len(p) > 5 else ""
+    return out
 
 @api_router.post("/competitions/{comp_id}/draw")
-async def do_draw(comp_id: str):
+async def do_draw(comp_id: str, user=Depends(get_current_user)):
     import random
+    if not (user.get("role") in ("merchant", "chamber") or (
+            user.get("role") == "employee" and {"all", "competitions"} & set(user.get("permissions", [])))):
+        raise HTTPException(status_code=403, detail="السحب للتاجر فقط")
+    if not ObjectId.is_valid(comp_id):
+        raise HTTPException(status_code=404, detail="Competition not found")
     comp = await db.competitions.find_one({"_id": ObjectId(comp_id)})
     if not comp:
         raise HTTPException(status_code=404, detail="Competition not found")
@@ -365,7 +395,7 @@ async def do_draw(comp_id: str):
     draw_record = {
         "competition_id": comp_id, "draw_number": len(comp.get("draw_history", [])) + 1,
         "winners": winner_list, "drawn_at": datetime.now(timezone.utc).isoformat(),
-        "drawn_by": "system"
+        "drawn_by": user.get("name") or user["id"]
     }
     await db.competitions.update_one({"_id": ObjectId(comp_id)}, {
         "$set": {"winners": winner_list, "status": "ended"},
@@ -835,7 +865,9 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
     subtotal = 0
     for ci in cart_items:
         product = await db.products.find_one({"_id": ObjectId(ci["product_id"])})
-        if product:
+        if product and int(ci.get("quantity") or 0) > 0:
+            if product.get("stock") is not None and int(product.get("stock") or 0) < int(ci["quantity"]):
+                raise HTTPException(400, f"الكمية غير متوفرة: {product.get('name_ar') or product.get('name_en', '')}")
             price = product.get("discount_price") or product["price"]
             item_total = price * ci["quantity"]
             subtotal += item_total
@@ -849,7 +881,6 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
                 "storage": ci.get("storage"),
                 "total": item_total
             })
-    tax = round(subtotal * 0.15, 2)
 
     # Calculate delivery cost using the new dynamic system
     delivery_cost = 0
@@ -880,6 +911,7 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
         # Legacy fallback
         delivery_cost = 25 if data.delivery_type in ("express", "same_day") else 15
 
+    tax = round((subtotal + delivery_cost) * 0.15, 2)  # VAT also applies to the delivery fee
     total = round(subtotal + tax + delivery_cost, 2)
     order_doc = {
         "user_id": user["id"],
@@ -928,12 +960,24 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
     except Exception as e:
         logger.warning(f"Loyalty award failed: {e}")
     # Decrement `stock_app` for online orders
-    if branch_id:
-        for it in items:
-            pid = it.get("product_id") or it.get("id")
-            qty = int(it.get("quantity") or it.get("qty") or 1)
-            if pid:
-                await decrement_channel_stock(branch_id, pid, qty, channel="app")
+    # Decrement stock for online orders (global + branch `stock_app`)
+    for it in items:
+        pid = it.get("product_id") or it.get("id")
+        qty = int(it.get("quantity") or it.get("qty") or 1)
+        if pid:
+            await decrement_stock(branch_id, pid, qty, channel="app")
+    # ZATCA simplified tax invoice for every online order
+    try:
+        import invoicing
+        inv = await invoicing.ISSUE(
+            kind="simplified", source="online", order_id=str(result.inserted_id), customer_id=user["id"],
+            buyer={"name": user.get("name", ""), "phone": data.phone or user.get("phone", "")},
+            payment_method=data.payment_method, branch_id=branch_id, delivery_fee=delivery_cost,
+            lines=[{"product_id": it["product_id"], "name": it["name"], "qty": it["quantity"], "unit_price": it["price"]} for it in items])
+        await db.orders.update_one({"_id": result.inserted_id}, {"$set": {"invoice_id": inv["id"], "invoice_number": inv["invoice_number"]}})
+        order_doc["invoice_id"], order_doc["invoice_number"] = inv["id"], inv["invoice_number"]
+    except Exception as e:
+        logger.warning(f"Order invoice failed: {e}")
     await db.cart_items.delete_many({"user_id": user["id"]})
     order_doc["id"] = str(result.inserted_id)
     order_doc.pop("_id", None)
@@ -1125,8 +1169,16 @@ async def get_order_tracking(order_id: str, user=Depends(get_current_user)):
     return out
 
 # ─── Delivery Integration Webhooks ───
+def _check_webhook(request: Request):
+    """Webhooks must carry X-Webhook-Secret == WEBHOOK_SECRET (unset → webhooks disabled)."""
+    expected = os.environ.get("WEBHOOK_SECRET", "")
+    got = request.headers.get("X-Webhook-Secret", "")
+    if not expected or not secrets.compare_digest(expected, got):
+        raise HTTPException(status_code=403, detail="Invalid webhook secret")
+
 @api_router.post("/webhooks/delivery/update")
 async def delivery_webhook(request: Request):
+    _check_webhook(request)
     body = await request.json()
     order_id = body.get("order_id")
     status = body.get("status")
@@ -1145,6 +1197,7 @@ async def delivery_webhook(request: Request):
 
 @api_router.post("/webhooks/delivery/assigned")
 async def delivery_assigned_webhook(request: Request):
+    _check_webhook(request)
     body = await request.json()
     order_id = body.get("order_id")
     if order_id:
@@ -1172,6 +1225,7 @@ async def create_payment_intent(request: Request, user=Depends(get_current_user)
 
 @api_router.post("/webhooks/payment/confirm")
 async def payment_webhook(request: Request):
+    _check_webhook(request)
     body = await request.json()
     order_id = body.get("order_id")
     payment_status = body.get("status")
@@ -1333,10 +1387,12 @@ async def update_support_info(request: Request, user=Depends(get_current_user)):
 # Available permission keys (used by merchant when assigning):
 EMPLOYEE_PERMS = ["all", "products", "orders", "social", "competitions", "services",
                   "branches", "drivers", "delivery", "banners", "customers", "settings", "support",
-                  "pos", "inventory", "invoices", "tasks", "tickets_reply", "roles_manage"]
+                  "pos", "inventory", "invoices", "tasks", "tickets_reply", "roles_manage",
+                  "marketing", "analytics"]
 
 PERM_LABELS = {
     "all": "كل الصلاحيات (Admin)",
+    "marketing": "التسويق والمسوّقون", "analytics": "التقارير المالية والإحصائيات",
     "products": "المنتجات", "orders": "الطلبات", "social": "السوشال ميديا",
     "competitions": "المسابقات", "services": "الخدمات", "branches": "الفروع",
     "drivers": "السائقون", "delivery": "التوصيل", "banners": "البانرات",
@@ -1378,7 +1434,9 @@ async def list_roles(user=Depends(get_current_user)):
 @api_router.post("/merchant/roles")
 async def create_role(data: RoleInput, user=Depends(get_current_user)):
     require_merchant(user)
-    doc = {**data.model_dump(), "merchant_id": user["id"], "employees_count": 0, "is_preset": False,
+    if user.get("role") == "employee" and "all" in data.permissions and "all" not in user.get("permissions", []):
+        raise HTTPException(status_code=403, detail="لا يمكنك منح كل الصلاحيات")
+    doc = {**data.model_dump(), "merchant_id": user.get("merchant_id", user["id"]), "employees_count": 0, "is_preset": False,
            "created_at": datetime.now(timezone.utc).isoformat()}
     r = await db.roles.insert_one(doc)
     return {"id": str(r.inserted_id)}
@@ -1386,8 +1444,10 @@ async def create_role(data: RoleInput, user=Depends(get_current_user)):
 @api_router.put("/merchant/roles/{rid}")
 async def update_role(rid: str, data: RoleInput, user=Depends(get_current_user)):
     require_merchant(user)
+    if user.get("role") == "employee" and "all" in data.permissions and "all" not in user.get("permissions", []):
+        raise HTTPException(status_code=403, detail="لا يمكنك منح كل الصلاحيات")
     if not ObjectId.is_valid(rid): raise HTTPException(status_code=400, detail="Invalid role id")
-    await db.roles.update_one({"_id": ObjectId(rid), "merchant_id": user["id"]}, {"$set": data.model_dump()})
+    await db.roles.update_one({"_id": ObjectId(rid), "merchant_id": user.get("merchant_id", user["id"])}, {"$set": data.model_dump()})
     return {"message": "Updated"}
 
 @api_router.delete("/merchant/roles/{rid}")
@@ -2647,6 +2707,25 @@ def _normalize_inventory_doc(inv: dict) -> dict:
         "min_alert": int(inv.get("min_alert", 5) or 5),
         "inventory_type": inv.get("inventory_type", "both"),
     }
+
+async def decrement_stock(branch_id: str, product_id: str, qty: int, channel: str = "store", restock: bool = False):
+    """Always keeps the product's global stock right, plus the branch pool when one is configured.
+    restock=True adds the quantity back (returns / cancellations)."""
+    if not product_id or qty <= 0 or not ObjectId.is_valid(product_id):
+        return
+    delta = qty if restock else -qty
+    p = await db.products.find_one({"_id": ObjectId(product_id)}, {"stock": 1})
+    if p is not None:
+        new_stock = max(0, int(p.get("stock") or 0) + delta)
+        await db.products.update_one({"_id": ObjectId(product_id)}, {"$set": {"stock": new_stock, "in_stock": new_stock > 0}})
+    if not branch_id:
+        return
+    if restock:
+        await db.branch_inventory.update_one({"branch_id": branch_id, "product_id": product_id},
+                                             {"$inc": {"quantity": qty, ("stock_store" if channel == "store" else "stock_app"): qty}})
+    else:
+        await decrement_channel_stock(branch_id, product_id, qty, channel=channel)
+
 
 async def decrement_channel_stock(branch_id: str, product_id: str, qty: int, channel: str = "store"):
     """Decrement stock for a given channel (`store` for POS, `app` for online orders).
@@ -4006,34 +4085,61 @@ app.add_middleware(
 # Employees must have either "all" or the specific perm to access /api/merchant/* routes.
 _PERM_MAP = [
     ("/api/merchant/products",      "products"),
+    ("/api/merchant/categories",    "products"),
     ("/api/merchant/orders",        "orders"),
+    ("/api/merchant/abandoned-carts", "orders"),
+    ("/api/merchant/group-buys",    "orders"),
+    ("/api/merchant/rmas",          "orders"),
     ("/api/merchant/social",        "social"),
     ("/api/merchant/competitions",  "competitions"),
     ("/api/merchant/services",      "services"),
     ("/api/merchant/bookings",      "services"),
+    ("/api/merchant/service-bookings", "services"),
     ("/api/merchant/branches",      "branches"),
     ("/api/merchant/drivers",       "drivers"),
     ("/api/merchant/delivery",      "delivery"),
+    ("/api/merchant/shipping",      "delivery"),
     ("/api/merchant/banners",       "banners"),
     ("/api/merchant/customers",     "customers"),
+    ("/api/merchant/inventory",     "inventory"),
+    ("/api/merchant/marketing",     "marketing"),
+    ("/api/merchant/affiliate",     "marketing"),
+    ("/api/merchant/stats",         "analytics"),
+    ("/api/merchant/analytics",     "analytics"),
+    ("/api/merchant/live-preview",  "analytics"),
     ("/api/merchant/store/support", "settings"),
+    ("/api/merchant/settings",      "settings"),
+    ("/api/merchant/store",         "settings"),
+    ("/api/merchant/loyalty",       "settings"),
+    ("/api/merchant/modules",       "settings"),
     ("/api/merchant/support",       "support"),
+    ("/api/merchant/roles",         "roles_manage"),
+    ("/api/merchant/team",          "roles_manage"),
+    ("/api/pos",                    "pos"),
+    ("/api/pos/invoices",           "invoices"),
+    ("/api/invoices",               "invoices"),
     ("/api/merchant/employees",     "_owner_only"),  # only owner
     ("/api/merchant/employee-perms","_owner_only"),
     ("/api/merchant/chamber-employees","_owner_only"),
 ]
+# Read-only lookups several roles need (e.g. the POS needs the branch list).
+_PERM_ALT = {("GET", "/api/merchant/branches"): {"pos", "inventory", "drivers", "delivery", "orders"},
+             ("GET", "/api/merchant/products"): {"pos", "inventory", "orders"},
+             ("GET", "/api/merchant/business-profile"): {"pos", "invoices"}}
 
 @app.middleware("http")
 async def enforce_employee_perms(request: Request, call_next):
     path = request.url.path
-    # Only enforce on /api/merchant/* paths
-    if not path.startswith("/api/merchant/") and path != "/api/merchant":
+    # Enforce on merchant / POS / invoice APIs
+    if not (path.startswith("/api/merchant") or path.startswith("/api/pos") or path.startswith("/api/invoices")):
         return await call_next(request)
     auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
+    # get_current_user also accepts ?token= — enforce perms for both, otherwise the query token bypasses this check
+    raw_token = auth[7:] if auth.startswith("Bearer ") else request.query_params.get("token", "")
+    if not raw_token:
         return await call_next(request)  # let endpoint handle 401
     try:
-        payload = jwt.decode(auth[7:], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(raw_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user = await db.users.find_one({"_id": ObjectId(payload["sub"])})
     except Exception:
         return await call_next(request)  # let endpoint handle invalid auth
@@ -4047,11 +4153,16 @@ async def enforce_employee_perms(request: Request, call_next):
             required = perm
             best_len = len(prefix)
     perms = user.get("permissions", [])
+    if "all" in perms:
+        return await call_next(request)
+    from fastapi.responses import JSONResponse
     if required == "_owner_only":
-        from fastapi.responses import JSONResponse
         return JSONResponse(status_code=403, content={"detail": "هذه العملية للمالك فقط"})
-    if required and "all" not in perms and required not in perms:
-        from fastapi.responses import JSONResponse
+    alt = next((v for (m, p), v in _PERM_ALT.items() if m == request.method and path.startswith(p)), set())
+    if required is None:
+        # Unmapped merchant endpoint → only admins (deny by default)
+        return JSONResponse(status_code=403, content={"detail": "يتطلب صلاحية: all"})
+    if required not in perms and not (alt & set(perms)):
         return JSONResponse(status_code=403, content={"detail": f"يتطلب صلاحية: {required}"})
     return await call_next(request)
 
@@ -4102,57 +4213,54 @@ class InvoiceInput(BaseModel):
     vat_percent: float = 15
     notes: str = ""
     send_via: str = "whatsapp"      # whatsapp / email / none
+    buyer_vat_number: str = ""      # set → standard (B2B) tax invoice
 
 @api_router.post("/pos/invoice")
 async def create_invoice(data: InvoiceInput, user=Depends(get_current_user)):
-    from datetime import datetime, timezone
+    import invoicing
     if user.get("role") not in ("merchant", "employee"):
         raise HTTPException(status_code=403)
     if not data.items:
         raise HTTPException(status_code=400, detail="لا توجد منتجات")
-    subtotal = sum((it.price * it.quantity) - it.discount for it in data.items)
-    vat = subtotal * (data.vat_percent / 100) if data.vat_percent else 0
-    total = subtotal + vat - data.discount
-    count = await db.invoices.count_documents({})
-    inv_number = f"INV-{count+1:06d}"
-    doc = {
-        "invoice_number": inv_number,
-        "items": [it.model_dump() for it in data.items],
-        "customer_name": data.customer_name, "customer_phone": data.customer_phone,
-        "payment_method": data.payment_method, "branch_id": data.branch_id,
-        "subtotal": subtotal, "discount": data.discount,
-        "vat_percent": data.vat_percent, "vat_amount": vat, "total": total,
-        "notes": data.notes, "send_via": data.send_via,
-        "employee_id": user["id"], "employee_name": user.get("name", ""),
-        "merchant_id": user.get("merchant_id", user["id"]),
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "status": "paid",
-    }
-    r = await db.invoices.insert_one(doc)
-    # Reduce branch inventory (POS = store channel)
-    if data.branch_id:
-        for it in data.items:
-            await decrement_channel_stock(data.branch_id, it.product_id, it.quantity, channel="store")
-    await log_activity(user, "pos_sale", "invoice", str(r.inserted_id),
-                       {"total": total, "items_count": len(data.items)})
-    return {"id": str(r.inserted_id), "invoice_number": inv_number, "total": total, "vat_amount": vat}
+    # Prices always come from the database — never from the client.
+    lines = []
+    for it in data.items:
+        if it.quantity <= 0 or not ObjectId.is_valid(it.product_id):
+            raise HTTPException(400, "كمية أو منتج غير صالح")
+        p = await db.products.find_one({"_id": ObjectId(it.product_id)})
+        if not p:
+            raise HTTPException(400, "منتج غير موجود")
+        unit = float(p.get("discount_price") or p.get("price") or 0)
+        lines.append({"product_id": it.product_id, "name": p.get("name_ar") or p.get("name_en") or it.name,
+                      "qty": it.quantity, "unit_price": unit, "discount": max(0.0, it.discount)})
+    buyer = {"name": data.customer_name, "phone": data.customer_phone, "vat_number": getattr(data, "buyer_vat_number", "")}
+    cust = await db.users.find_one({"phone": data.customer_phone}) if data.customer_phone else None
+    inv = await invoicing.ISSUE(kind="standard" if buyer["vat_number"] else "simplified", source="pos", lines=lines,
+                                buyer=buyer, payment_method=data.payment_method, branch_id=data.branch_id,
+                                employee=user, customer_id=str(cust["_id"]) if cust else "",
+                                extra_discount=data.discount, notes=data.notes)
+    for ln in lines:
+        await decrement_stock(data.branch_id, ln["product_id"], ln["qty"], channel="store")
+    await log_activity(user, "pos_sale", "invoice", inv["id"], {"total": inv["total"], "items_count": len(lines)})
+    return {"id": inv["id"], "invoice_number": inv["invoice_number"], "total": inv["total"], "vat_amount": inv["vat_amount"]}
 
 @api_router.get("/pos/invoices")
-async def list_invoices(user=Depends(get_current_user), limit: int = 100):
+async def list_invoices(user=Depends(get_current_user), limit: int = 200):
     if user.get("role") not in ("merchant", "employee"):
         raise HTTPException(status_code=403)
-    mid = user.get("merchant_id", user["id"])
-    q = {"merchant_id": mid}
+    q = {}  # one store per app copy → all store invoices (POS + online + credit notes)
     # Employees see only their own invoices unless they have all permission
     if user.get("role") == "employee" and "all" not in user.get("permissions", []) and "invoices_view_all" not in user.get("permissions", []):
         q["employee_id"] = user["id"]
     invs = await db.invoices.find(q).sort("created_at", -1).to_list(limit)
     return [{
-        "id": str(i["_id"]), "invoice_number": i.get("invoice_number"),
+        "id": str(i["_id"]), "invoice_number": i.get("invoice_number"), "type": i.get("type", "simplified"),
+        "source": i.get("source", "pos"), "vat_amount": i.get("vat_amount"),
         "customer_name": i.get("customer_name"), "customer_phone": i.get("customer_phone"),
         "total": i.get("total"), "payment_method": i.get("payment_method"),
-        "items_count": len(i.get("items", [])), "created_at": i.get("created_at"),
+        "items_count": len(i.get("lines") or i.get("items", [])), "created_at": i.get("created_at"),
         "employee_name": i.get("employee_name"), "branch_id": i.get("branch_id"),
+        "ref_invoice_number": i.get("ref_invoice_number", ""),
     } for i in invs]
 
 @api_router.get("/pos/invoice/{iid}")
@@ -4162,10 +4270,6 @@ async def get_invoice(iid: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=403)
     inv = await db.invoices.find_one({"_id": ObjectId(iid)})
     if not inv: raise HTTPException(404)
-    # Ownership check: merchant/employee can only see their tenant's invoices
-    mid = user.get("merchant_id", user["id"])
-    if inv.get("merchant_id") != mid:
-        raise HTTPException(status_code=403, detail="ليست فاتورتك")
     # Employees see only own invoices unless they have all/invoices_view_all
     if user.get("role") == "employee":
         perms = user.get("permissions", [])
@@ -6612,6 +6716,14 @@ try:
     logger.info("Shipping matrix router mounted")
 except Exception as _e:
     logger.error(f"Failed to mount shipping_matrix router: {_e}")
+
+# ─── ZATCA invoicing ───
+try:
+    from invoicing import build_router as _build_invoicing_router
+    app.include_router(_build_invoicing_router(db, get_current_user))
+    logger.info("Invoicing router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount invoicing router: {_e}")
 
 # ─── RMA / Returns (Phase B) ───
 try:

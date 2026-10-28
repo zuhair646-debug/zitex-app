@@ -9,6 +9,9 @@ import { ScreenHeader, EmptyState, SkeletonBox, Badge, StatCard, PrimaryButton }
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import { openInvoicePrint } from '../../src/utils/invoicePrint';
+
+const TYPE_LABEL: Record<string, string> = { simplified: 'فاتورة ضريبية مبسطة', standard: 'فاتورة ضريبية', credit_note: 'إشعار دائن' };
 
 export default function Invoices() {
   const { lang } = useT();
@@ -54,8 +57,12 @@ export default function Invoices() {
           <StatCard icon="wallet" label={tSync("إجمالي المبيعات", lang)} value={new Intl.NumberFormat('en').format(totalRevenue)} tone="gold" />
         </View>
 
-        <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.md }}>
+        <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.md, gap: spacing.sm }}>
           <PrimaryButton label={tSync("فتح شاشة البيع POS", lang)} icon="cart" onPress={() => router.push('/merchant/pos')} />
+          <TouchableOpacity testID="open-business-profile" style={s.profileBtn} onPress={() => router.push('/merchant/business-profile' as any)}>
+            <Ionicons name="business" size={16} color={colors.brand} />
+            <TX style={s.profileTxt}>بيانات المنشأة (الرقم الضريبي والسجل)</TX>
+          </TouchableOpacity>
         </View>
 
         {loading ? (
@@ -68,20 +75,32 @@ export default function Invoices() {
               <View key={i.id} style={s.card}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
                   <Text style={s.no}>{i.invoice_number}</Text>
+                  <Badge label={tSync(TYPE_LABEL[i.type] || 'فاتورة ضريبية مبسطة', lang)} tone={i.type === 'credit_note' ? 'warning' : 'gold'} />
                   <Badge label={method(i.payment_method)} tone="info" />
                   <View style={{ flex: 1 }} />
                   <Text style={s.amt}>{i.total?.toFixed(2)} <TX style={s.cur}>ر.س</TX></Text>
                 </View>
                 <Text style={s.meta} numberOfLines={1}>
-                  {i.customer_name || tSync('عميل مباشر', curLang())} • {i.items_count} {tSync('منتج •', lang)} {i.employee_name}
+                  {tSync(i.source === 'online' ? 'طلب من التطبيق' : i.source === 'return' ? 'مرتجع' : 'نقطة البيع', lang)} • {i.customer_name || tSync('عميل مباشر', curLang())} • {i.items_count} {tSync('منتج •', lang)} {i.employee_name}
                 </Text>
+                {!!i.ref_invoice_number && <Text style={s.date}>↩ {i.ref_invoice_number}</Text>}
                 <Text style={s.date}>{new Date(i.created_at).toLocaleString(curLang() === 'ar' ? 'ar-SA' : 'en-US')}</Text>
-                {i.customer_phone && (
-                  <TouchableOpacity onPress={() => sendWhatsapp(i)} style={s.waBtn}>
-                    <Ionicons name="logo-whatsapp" size={14} color="#25D366" />
-                    <TX style={s.waTxt}>إرسال واتساب</TX>
+                <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+                  <TouchableOpacity testID={`print-thermal-${i.id}`} onPress={() => openInvoicePrint(i.id, 'thermal')} style={s.printBtn}>
+                    <Ionicons name="print" size={14} color={colors.brand} />
+                    <TX style={s.printTxt}>طباعة حرارية</TX>
                   </TouchableOpacity>
-                )}
+                  <TouchableOpacity testID={`print-a4-${i.id}`} onPress={() => openInvoicePrint(i.id, 'a4')} style={s.printBtn}>
+                    <Ionicons name="document-text" size={14} color={colors.brand} />
+                    <TX style={s.printTxt}>PDF / A4</TX>
+                  </TouchableOpacity>
+                  {i.customer_phone && (
+                    <TouchableOpacity onPress={() => sendWhatsapp(i)} style={s.waBtn}>
+                      <Ionicons name="logo-whatsapp" size={14} color="#25D366" />
+                      <TX style={s.waTxt}>إرسال واتساب</TX>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             ))}
           </ScrollView>
@@ -104,7 +123,11 @@ function useSStyles() {
   cur: { fontSize: 11, color: colors.onSurfaceSecondary },
   meta: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 4 },
   date: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 2 },
-  waBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm, alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: 4, backgroundColor: 'rgba(37, 211, 102, 0.15)', borderRadius: radius.sm },
+  waBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm, alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: 6, backgroundColor: 'rgba(37, 211, 102, 0.15)', borderRadius: radius.sm },
+  printBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm, paddingHorizontal: spacing.sm, paddingVertical: 6, borderWidth: 1, borderColor: colors.brand, borderRadius: radius.sm },
+  printTxt: { color: colors.brand, fontSize: 11, fontWeight: '700' },
+  profileBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  profileTxt: { color: colors.brand, fontSize: 13, fontWeight: '700' },
   waTxt: { color: '#25D366', fontSize: 11, fontWeight: '700' },
 }), [themeKey]);
 }

@@ -1,0 +1,59 @@
+{
+  "summary": "Tested Phase 1 (security) and Phase 2 (ZATCA Phase-1 invoices + inventory) on both backend and frontend. Backend: 25 pytest cases, 22 pass. Phase 1 works: draw auth codes 401/403/404, participant phones masked for the public, all 3 webhooks return 403 without the secret or with a wrong one, lockout gives 429 on the 6th try, cashier gets 403/200 as specified. I FIXED one serious security hole: a ?token= query parameter skipped the employee permission check (the cashier got 200 on /api/merchant/stats). Phase 2 works: business-profile validation, POS ignores client prices and rejects qty<=0, INV-xxxxxx numbers are sequential, hash chain links (previous_hash = prior invoice_hash), TLV QR tags 1-5 decode correctly, thermal/A4 print with QR and ?token=, customer gets 403 on another's invoice, stock decrements, online order invoice (tax=(sub+del)*0.15, order total == invoice total), /invoices/mine lists it, RMA refund creates a credit note (CN-, ref_invoice_number) and restocks. 3 failing tests are real bugs: (1) RMA inspection can be repeated (double refund, 2 credit notes, double restock), (2) RMA trusts unit_price/qty sent by the client, (3) POST /cart accepts negative quantities. Frontend: customer /invoices + inv-print work and draw-btn is hidden for customers. Merchant /merchant/invoices shows badges and the print-thermal/print-a4 buttons, which open HTML with QR. business-profile form loads with bp-* fields and saves (400 on bad VAT, 200 on a valid one). The cashier's More menu shows only POS/Invoices/Returns/Customers. Cashier business-profile screen spins forever (403). No deprecated Expo packages detected. All test data cleaned up (invoices/orders/rmas/wallet/stock restored, profile unchanged).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "PUT /api/merchant/rmas/{id}/inspection", "issue": "No state guard: calling disposition=refund again on an already 'refunded' RMA returns 200, credits the wallet again, issues a 2nd credit note and restocks again (verified: 2 credit notes, stock +2). Only allow inspection from 'approved' (or the pickup states). rma.py:373-452", "priority": "CRITICAL"},
+      {"endpoint": "POST /api/rmas", "issue": "unit_price and qty come from the client body (rma.py ~line 193: float(body.unit_price or product.price)); qty is not checked against the ordered qty. A customer can send unit_price=99999, qty=50 and the default approved_refund_amount follows. Use the order item's price/qty.", "priority": "HIGH"},
+      {"endpoint": "POST /api/cart", "issue": "Accepts quantity <= 0 (quantity=-3 → 200). The order then gets a negative subtotal, while invoicing.ISSUE clamps qty to max(1,qty), so the order total and invoice total disagree. Validate quantity >= 1 (Pydantic Field(gt=0)). There is also no stock check on orders or POS (overselling allowed; stock just clamps at 0).", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "PUT /api/merchant/rmas/{id}/inspection", "issue": "Refund amount is inconsistent: the default approved_refund_amount = product list price (199) ex-VAT, while the customer paid discount_price 179 + VAT = 205.85. The credit note then treats the amount as VAT-inclusive (net_unit = amt/1.15), so the credit note total is 199. Use the paid line total incl. VAT from the original invoice."},
+      {"endpoint": "POST /api/auth/login", "issue": "Lockout is an in-memory dict: it resets on restart, is not shared across workers, and is keyed only by phone, so anyone can lock a real user out for 15 min with 5 bad attempts. Store it in Mongo with a TTL and key it by phone+IP."},
+      {"endpoint": "POST /api/pos/invoice", "issue": "Per-line discount and extra discount from the client are not limited (a cashier can discount up to ~100%). Consider a max discount % or a 'discount' permission."},
+      {"endpoint": "invoicing.issue()", "issue": "previous_hash is read (find_one sort seq -1) and the insert happens separately, not atomically. Two concurrent invoices can get the same previous_hash and break the chain. Look up by seq-1 after next_seq(), or serialize the steps."},
+      {"endpoint": "invoicing.tlv_qr", "issue": "TLV length is stored in one byte; a value over 255 UTF-8 bytes (long Arabic seller name) would corrupt the QR. Validate the length or truncate."},
+      {"endpoint": "GET /api/pos/invoices, /api/invoices/{id}/print", "issue": "30 legacy seeded invoices have no invoice_number/VAT/qr/hash/lines.vat_amount. The list shows a blank number; the print shows no item rows and VAT 0.00. Migrate them or label them as legacy."},
+      {"endpoint": "GET /api/merchant/business-profile", "issue": "Not mapped in _PERM_MAP, so the middleware returns 403 for every non-'all' employee, but the screen is designed to be read-only for employees. Add a _PERM_ALT GET entry for {invoices,pos}, or hide the button for employees."},
+      {"endpoint": "/api/merchant/rmas/*", "issue": "Mapped to the 'orders' perm, so the cashier (orders perm) can approve and refund RMAs (wallet credit + credit note). Confirm this is intended; consider a separate 'refunds' perm."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "merchant/business-profile (employee)", "issue": "Cashier opening 'open-business-profile' gets 403 → infinite ActivityIndicator. Alert.alert is a no-op on web, so no error is shown.", "testID": "open-business-profile", "priority": "medium"},
+      {"component": "merchant/business-profile", "issue": "Save success/400 error is shown only via Alert.alert, which does nothing on react-native-web, so web users get no feedback on an invalid VAT. Add an inline error/toast.", "testID": "bp-vat_number", "priority": "low"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "merchant/invoices", "issues": ["print-thermal-{id} / print-a4-{id} buttons are 29px tall (<44)", "WhatsApp button 29px and has no testID", "Invoice number wraps onto 2 lines ('INV-' / '000013') because the badges crowd the row"]},
+      {"screen": "invoices (customer)", "issues": ["inv-print-{id} is 40px tall (<44)", "In English mode the VAT label, total label, type badge and 'عرض / PDF' still show in Arabic (tSync not translated)", "Uses hardcoded light colors (#FFF), so it ignores the theme/dark mode", "Load errors are swallowed silently (catch {})"]},
+      {"screen": "merchant/business-profile", "issues": ["Several labels stay in Arabic in English mode (note, Arabic name, VAT, CR, building no., street)"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_phase1_2_security_invoicing.py", "/app/backend/tests/ui_seed_invoice.py", "/app/test_reports/pytest/iteration_47.xml"],
+  "action_items": [
+    "rma.py inspect_rma: reject (400) unless the state is 'approved' (or the pickup states); prevents double refund, credit note and restock",
+    "rma.py create_rma: take unit_price/qty from the order item and reject qty > ordered qty (minus already returned)",
+    "server.py CartItemInput.quantity: Field(gt=0, le=99); add a stock availability check in POST /orders (and optionally POS)",
+    "RMA refund amount/credit note: base them on the original invoice line (paid price incl. VAT) so the credit note matches the refund",
+    "Business-profile: add _PERM_ALT GET for {'invoices','pos'} or hide 'open-business-profile' for employees; add inline error/success (Alert is a no-op on web)",
+    "Login lockout: persist it in Mongo (TTL) and key it by phone+IP",
+    "Invoice chain: make the previous_hash lookup consistent under concurrency (use seq-1)",
+    "Print link: use a short-lived signed print token instead of the long-lived JWT in ?token=",
+    "Touch targets: print buttons >=44px; add a testID to the WhatsApp button; fix INV number wrapping; translate invoice labels in English mode",
+    "Migrate or label the 30 legacy invoices that have no ZATCA fields"
+  ],
+  "critical_code_review_comments": [
+    "FIXED: enforce_employee_perms middleware only read the Authorization header, but get_current_user also accepts ?token=. The cashier got 200 on /api/merchant/stats?token=... (full bypass of employee permissions). The middleware now reads the token from either place.",
+    "server.py is ~6790 lines; it should be split into modules",
+    "RMA credit-note creation sits in a broad try/except that only logs, so a refund can complete without a credit note (ZATCA gap)",
+    "Order invoice creation also only logs a warning on failure, so an order can exist without an invoice"
+  ],
+  "updated_files": ["/app/backend/server.py (enforce_employee_perms: also check the ?token= query token)", "/app/backend/tests/test_phase1_2_security_invoicing.py (new)", "/app/backend/tests/ui_seed_invoice.py (new)"],
+  "success_rate": {"backend": "88% (22/25; 3 failures are real bugs listed above)", "frontend": "90% (all requested flows work; cashier business-profile spinner + design issues)"},
+  "seed_data_creation": "None left behind. Test invoices/orders/RMAs/loyalty/wallet txns were deleted, wallet balance and product stock restored, business profile unchanged (VAT 300000000000003). The invoice counter advanced to ~13 (expected: numbers never repeat).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Run: pytest /app/backend/tests/test_phase1_2_security_invoicing.py (it cleans up after itself). For UI: python /app/backend/tests/ui_seed_invoice.py seed|clean creates/removes one POS invoice linked to customer 0500000000. Lockout test uses phone 0599999990 (in-memory, resets on backend restart). Competition with entries: 6ab6206a71b6ad54069c12b5 (do not draw).",
+  "rca_of_issue": "Employee-perm bypass: get_current_user falls back to request.query_params['token'] for browser-opened endpoints, but the middleware returned call_next() when no Bearer header was present. Repro: GET /api/merchant/stats?token=<cashier JWT> → 200. Fix: the middleware decodes the header token or the query token. Verified → 403."
+}

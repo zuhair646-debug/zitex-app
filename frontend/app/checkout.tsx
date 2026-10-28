@@ -148,7 +148,7 @@ export default function CheckoutScreen() {
 
   const subtotal = cart.reduce((a, i) => a + ((i.product?.discount_price || i.product?.price || 0) * i.quantity), 0);
   const deliveryCost = deliveryFee;
-  const tax = Math.round(subtotal * 0.15);
+  const tax = Math.round((subtotal + deliveryCost) * 0.15 * 100) / 100; // VAT also on delivery (matches the invoice)
   const loyaltyOff = loyaltyDiscount?.amount || 0;
   const total = Math.max(0, subtotal + tax + deliveryCost - couponDiscount - loyaltyOff);
 
