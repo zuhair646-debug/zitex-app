@@ -1,4 +1,5 @@
 import { useT, curLang } from '../src/i18n';
+import { uploadMedia, mediaUrlSync } from '../src/utils/upload';
 import { tSync, tf } from '../src/useAutoT';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, ScrollView, Modal } from 'react-native';
@@ -61,21 +62,8 @@ export default function DrawScreen() {
       if (result.canceled || !result.assets?.[0]) return;
       const asset = result.assets[0];
       setUploading(true);
-      // Get signed upload params
-      const sig = await apiCall('/api/upload/signature', { method: 'POST', body: JSON.stringify({ folder: `zitex/draws/${id}`, resource_type: 'video' }) });
-      // Upload directly to Cloudinary
-      const formData = new FormData();
-      formData.append('file', { uri: asset.uri, type: 'video/mp4', name: 'draw.mp4' } as any);
-      formData.append('signature', sig.signature);
-      formData.append('timestamp', String(sig.timestamp));
-      formData.append('api_key', sig.api_key);
-      formData.append('folder', sig.folder);
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${sig.cloud_name}/video/upload`;
-      const resp = await fetch(uploadUrl, { method: 'POST', body: formData });
-      const data = await resp.json();
-      if (!data.secure_url) throw new Error(data.error?.message || 'Upload failed');
-      // Save URL on backend
-      await apiCall(`/api/competitions/${id}/draw-video`, { method: 'POST', body: JSON.stringify({ video_url: data.secure_url }) });
+      const up = await uploadMedia(asset.uri, asset.fileName || 'draw.mp4', asset.mimeType || 'video/mp4');
+      await apiCall(`/api/competitions/${id}/draw-video`, { method: 'POST', body: JSON.stringify({ video_url: mediaUrlSync(up.path) }) });
       Alert.alert(tSync('تم بنجاح', curLang()), tSync('تم رفع فيديو السحب وحفظه', curLang()));
       load();
     } catch (e: any) { Alert.alert(tSync('خطأ في الرفع', curLang()), e.message); } finally { setUploading(false); }

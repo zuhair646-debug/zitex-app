@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from './_layout';
+import { uploadMedia } from '../src/utils/upload';
 import { TX, tSync } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
 
@@ -28,7 +29,7 @@ const RESOLUTIONS = [
 export default function CreateRMAScreen() {
   const { lang, isRTL } = useT();
   const router = useRouter();
-  const { apiCall, token } = useAuth();
+  const { apiCall } = useAuth();
   const params = useLocalSearchParams<{ order_id?: string; product_id?: string }>();
   const orderId = String(params.order_id || '');
   const preselectPid = String(params.product_id || '');
@@ -83,16 +84,8 @@ export default function CreateRMAScreen() {
     const asset = result.assets[0];
     setUploading(true);
     try {
-      const form = new FormData();
-      // @ts-ignore RN form-data blob shape
-      form.append('file', { uri: asset.uri, name: asset.fileName || `media.${asset.uri.split('.').pop()}`, type: asset.mimeType || (asset.type === 'video' ? 'video/mp4' : 'image/jpeg') });
-      const base = process.env.EXPO_PUBLIC_BACKEND_URL || '';
-      const resp = await fetch(`${base}/api/upload`, {
-        method: 'POST', body: form, headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.detail || tSync('فشل الرفع', curLang()));
-      setMedia([...media, data.url]);
+      const up = await uploadMedia(asset.uri, asset.fileName || undefined, asset.mimeType || (asset.type === 'video' ? 'video/mp4' : 'image/jpeg'));
+      setMedia([...media, up.url]);
     } catch (e: any) {
       Alert.alert(tSync('خطأ', lang), e?.message);
     } finally { setUploading(false); }

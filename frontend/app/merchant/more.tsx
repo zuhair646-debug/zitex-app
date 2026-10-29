@@ -116,7 +116,7 @@ export default function MerchantMore() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 220 }} showsVerticalScrollIndicator={false}>
           <Section label={t('mo.section.sales')}       items={sales} />
           <Section label={t('mo.section.marketing')}   items={marketing} />
           <Section label={t('mo.section.operations')}  items={operations} />

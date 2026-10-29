@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, StatusBar, FlatList, Linking, KeyboardAvoidingView, Platform } from 'react-native';
 import BarcodeScannerModal from '../../src/components/BarcodeScannerModal';
 import { notify } from '../../src/utils/notify';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
@@ -19,6 +19,7 @@ type CartItem = { product_id: string; name: string; price: number; quantity: num
 export default function POSTerminal() {
   const { lang } = useT();
   const s = useSStyles();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { apiCall, user } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
@@ -166,7 +167,7 @@ export default function POSTerminal() {
           <FlatList
             data={filtered}
             keyExtractor={(p: any) => p.id}
-            contentContainerStyle={{ padding: spacing.lg, paddingBottom: cart.length > 0 ? 200 : 140, gap: spacing.sm }}
+            contentContainerStyle={{ padding: spacing.lg, paddingBottom: cart.length > 0 ? 260 : 200, gap: spacing.sm }}
             ListEmptyComponent={<EmptyState icon="cube-outline" title={tSync("لا يوجد منتجات", lang)} description={tSync('أضف منتجات من قسم المنتجات أولاً', lang)} />}
             renderItem={({ item: p }: any) => {
               const cartItem = cart.find(x => x.product_id === p.id);
@@ -200,7 +201,7 @@ export default function POSTerminal() {
         )}
 
         {cart.length > 0 && (
-          <View style={s.cartBar}>
+          <View style={[s.cartBar, { bottom: 72 + Math.max(insets.bottom, spacing.md) + 8 }]}>
             <View style={{ flex: 1 }}>
               <Text style={s.cartLbl}>{cart.reduce((a, x) => a + x.quantity, 0)} {tSync('قطعة', lang)}</Text>
               <Text style={s.cartTotal}>{total.toFixed(2)} <TX style={s.cartCur}>ر.س</TX></Text>

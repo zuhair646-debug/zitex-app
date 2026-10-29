@@ -115,7 +115,7 @@ export default function MerchantInventory() {
         </View>
 
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 220 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
           showsVerticalScrollIndicator={false}
         >

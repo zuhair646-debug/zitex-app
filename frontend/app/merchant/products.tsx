@@ -134,7 +134,7 @@ export default function MerchantProducts() {
             windowSize={7}
             removeClippedSubviews
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140, gap: spacing.md }}
+            contentContainerStyle={{ padding: spacing.lg, paddingBottom: 220, gap: spacing.md }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brand} />}
             renderItem={({ item: p }) => (
               <View style={s.card}>

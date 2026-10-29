@@ -6,6 +6,7 @@
  */
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetch as expoFetch } from 'expo/fetch';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -29,15 +30,13 @@ export async function uploadMedia(uri: string, filename?: string, contentType?: 
   }
 
   const form = new FormData();
-  if (Platform.OS === 'web') {
-    // On web the picker returns a blob: URI; convert to a real Blob.
-    const blob = await (await fetch(uri)).blob();
-    form.append('file', blob, guessedName);
-  } else {
-    form.append('file', { uri, name: guessedName, type } as any);
-  }
+  // Native global fetch is expo/fetch → `{uri,name,type}` parts throw on real phones; always append a Blob.
+  const fileRes = Platform.OS === 'web' ? await fetch(uri) : await expoFetch(uri);
+  const raw = await fileRes.blob();
+  const blob = raw.type ? raw : new Blob([raw], { type });
+  form.append('file', blob as any, guessedName);
 
-  const res = await fetch(`${API_URL}/api/upload`, {
+  const res = await (Platform.OS === 'web' ? fetch : (expoFetch as any))(`${API_URL}/api/upload`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` }, // NEVER set Content-Type manually
     body: form,

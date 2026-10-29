@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,6 +27,7 @@ type BranchStock = { branch_id: string; branch_name: string; quantity: number };
 export default function ProductForm() {
   const { lang } = useT();
   const s = useSStyles();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { apiCall } = useAuth();
@@ -642,7 +643,7 @@ export default function ProductForm() {
         </ScrollView>
 
         {/* Sticky bottom CTA */}
-        <View style={s.stickyBar}>
+        <View style={[s.stickyBar, { bottom: 72 + Math.max(insets.bottom, spacing.md) + 8 }]}>
           <TouchableOpacity testID="product-save-btn" style={s.submitBtn} onPress={submit} disabled={saving || uploading}>
             <LinearGradient colors={['#F5C518', '#D4AF37']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.submitInner}>
               {saving ? <ActivityIndicator color={colors.onBrandPrimary} /> : (
