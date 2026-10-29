@@ -124,3 +124,6 @@ Feature category → semver bump:
 
 ## v1.26.0 release — 2026-10-28
 - iOS a8f3c250-bd27-44af-8a6d-58d683f38278 (build 78), Android 1c046253-06a7-4811-92eb-376df37c6260 (versionCode 83). Marketers phase 3. Poller log /tmp/eas_release_v1.26.0.log
+
+## v1.27.0 release — 2026-10-28
+- iOS 829282a5-13f0-4876-b9f9-23b1844fc4f9 (build 79), Android 89f597d7-91cc-4439-a955-ab07596c8939 (versionCode 84). Competitions phase 4 + payout minimums. Log /tmp/eas_release_v1.27.0.log

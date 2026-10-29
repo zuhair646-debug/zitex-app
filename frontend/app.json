@@ -19,7 +19,7 @@
       "bundleIdentifier": "com.smartangle.zitex",
       "buildNumber": "79",
       "infoPlist": {
-        "NSCameraUsageDescription": "Take photos of products and receipts",
+        "NSCameraUsageDescription": "Scan product barcodes and take product photos",
         "NSPhotoLibraryUsageDescription": "Upload photos from your gallery",
         "NSLocationWhenInUseUsageDescription": "Find nearby stores and delivery tracking"
       }
@@ -56,7 +56,14 @@
       ],
       "expo-web-browser",
       "expo-video",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Scan product barcodes and take product photos",
+          "recordAudioAndroid": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

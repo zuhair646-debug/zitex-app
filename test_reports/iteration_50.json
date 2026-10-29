@@ -1,0 +1,56 @@
+{
+  "summary": "POS barcode feature: tested backend (15/15 pytest pass) and the frontend on web at 375x667. All backend endpoints work as specified: by-barcode lookup (barcode and SKU), quick-add (400/409), POS invoice stock decrement, WhatsApp link with 05->9665 normalization, EAN-13 '20' generation (idempotent, valid check digit), HTML label with SVG barcode and copies, customer 403. On the frontend, scanner modal, manual entry, existing-barcode add-to-cart, barcode search, product-form generate and print (after save) all work. Problems found: (1) on web the unknown-barcode flow does nothing because react-native-web Alert.alert with buttons is a no-op, so the quick-add modal never opens. The modal itself works; I confirmed it with a temporary window.confirm patch, which I reverted. The post-checkout Alert holding the WhatsApp and Print buttons has the same problem. (2) Products created through the product form have no global `stock` (ProductInput has no stock field), so one POS sale sets stock=0 and in_stock=false. (3) Cashier (pos perm) gets 403 on quick-add, but the UI still offers 'add product'. (4) The Print Label button shows before the product is saved and opens a JSON 400 page. (5) The product-form sticky Save button is covered by the merchant bottom tab bar. No deprecated Expo packages detected (expo-camera ~17 used correctly).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/pos/invoice + POST/PUT /api/merchant/products", "issue": "ProductInput (server.py ~1716) has no `stock` field and product-form has no global stock input, so products created through the form have no stock. decrement_stock treats None as 0, so the first POS sale sets stock=0 and in_stock=False and the product shows as out of stock online. Reproduced: create via POST /merchant/products, sell 1, then stock=0 and in_stock=false.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/merchant/products/quick-add", "issue": "Cashier (perms pos/invoices/orders/customers) gets 403 'يتطلب صلاحية: products' from the employee perm middleware (_PERM_MAP '/api/merchant/products'). Cashiers at the POS can't use the quick-add flow. Either add a ('POST','/api/merchant/products/quick-add') → {'pos'} alt, or hide the add option for users without the products perm."},
+      {"endpoint": "GET /api/pos/invoice/{id}/whatsapp", "issue": "An employee can get the WhatsApp text (customer phone and items) of any invoice, including invoices they get 403 on for GET /api/pos/invoice/{id}. The own-invoice check from get_invoice is missing (verified: cashier 403 on the invoice, 200 on its /whatsapp)."},
+      {"endpoint": "POST/PUT /api/merchant/products", "issue": "Barcode uniqueness is not enforced in the regular create/update (duplicate TESTUI001 accepted, 200). by-barcode then returns an arbitrary match. Only quick-add checks for duplicates."},
+      {"endpoint": "POST /api/merchant/products/quick-add", "issue": "branch_id is accepted but ignored; no branch_inventory row is created for the selected branch."},
+      {"endpoint": "_PERM_ALT GET /api/merchant/products prefix", "issue": "Prefix match grants pos-perm employees every GET under /api/merchant/products/* (e.g. /{pid}/deep-analytics, /{pid}/label). Pre-existing and over-permissive."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "POS onScanned unknown barcode (pos.tsx:72)", "issue": "Alert.alert with buttons is a no-op on react-native-web. On web, scanning or entering an unknown code silently does nothing, and the quick-add modal never opens. Use a cross-platform confirm (window.confirm when Platform.OS==='web'), or open the quick-add modal directly with an 'unregistered barcode' message.", "testID": "scanner-manual-submit", "priority": "HIGH"},
+      {"component": "POS checkout success (pos.tsx:134)", "issue": "The success Alert holding the 'إرسال واتساب' and 'طباعة' buttons is a no-op on web. The invoice is created and the cart clears, but the user gets no confirmation and can't reach the WhatsApp receipt or print.", "testID": "n/a", "priority": "HIGH"},
+      {"component": "product-form Print Label (product-form.tsx:349)", "issue": "The button appears as soon as a barcode is generated or typed on an existing product, before saving. The label endpoint then returns the raw JSON {'detail':'المنتج ليس له باركود'} in a new tab. Show it only when the saved barcode equals the current value, or auto-save / call POST /products/{id}/barcode.", "testID": "product-barcode-print", "priority": "MEDIUM"},
+      {"component": "product-form genBarcode (product-form.tsx:61)", "issue": "The barcode is generated on the client with no uniqueness check, and the backend POST /merchant/products/{pid}/barcode endpoint is unused. Use the backend endpoint for existing products.", "testID": "product-barcode-generate", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Cashier POS quick-add", "issue": "The backend returns 403 for cashiers, but the UI still offers 'إضافة منتج', so the cashier fills the form and then gets an error.", "affected_testIDs": ["quick-name", "quick-price", "quick-stock"]}
+    ],
+    "design_issues": [
+      {"screen": "/merchant/product-form", "issues": ["The sticky 'Save Changes' button (y≈620 on 375x667) is covered by the floating merchant bottom tab bar. Tapping it hits the 'Live Store' button and navigates to /merchant/live-preview. Save button has no testID."]},
+      {"screen": "/merchant/pos quick-add modal", "issues": ["The quick-stock input overflows the right edge of the sheet at 375px width (the flex:1 inputs in the row don't shrink; add minWidth:0).", "No KeyboardAvoidingView in the quick-add sheet or the scanner manual-entry row (the bottom input will sit under the keyboard on device)."]},
+      {"screen": "/merchant/pos", "issues": ["The POS search TextInput and product cards have no testID.", "The cart bar (bottom:88) sits right above the floating tab bar and slightly overlaps the center Live Store button."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_pos_barcodes.py", "/app/test_reports/pytest/pytest_pos_barcodes.xml"],
+  "action_items": [
+    "HIGH: Make the unknown-barcode confirm and the checkout success (WhatsApp/Print) work on web: use window.confirm on web, or an in-app modal instead of Alert.alert with buttons.",
+    "HIGH: Unified inventory: add `stock: Optional[int]` to ProductInput and a stock field to the product form, or make decrement_stock skip the global stock when the field is absent, so a POS sale can't zero out products that have no stock field.",
+    "Allow pos-perm employees to call quick-add (and optionally the barcode generator), or hide the 'add product' option for them.",
+    "Add the employee own-invoice check to GET /pos/invoice/{id}/whatsapp.",
+    "Enforce barcode uniqueness in POST/PUT /merchant/products (409).",
+    "Hide or disable product-barcode-print until the barcode is saved.",
+    "Fix the product-form sticky Save button hidden behind the bottom tab bar, and add a testID to it.",
+    "Fix the quick-stock overflow and add KeyboardAvoidingView to the scanner and quick-add modals."
+  ],
+  "critical_code_review_comments": [
+    "barcodes.py is clean: _id excluded, Pydantic validated, html.escape used in the label, copies clamped to 1-100.",
+    "The label/print URL carries the JWT in a query string (token=), so it lands in proxy/browser history. Same pattern as invoice print; consider a short-lived signed token.",
+    "BarcodeScannerModal uses autoCapitalize='characters' on manual input, which uppercases alphanumeric SKUs. Lookup is case-sensitive in the backend but case-insensitive in local search.",
+    "product-form onChangeText trims on every keystroke, so internal spaces can't be typed (minor)."
+  ],
+  "updated_files": ["/app/backend/tests/test_pos_barcodes.py (new). pos.tsx was temporarily patched to bypass Alert on web for testing, then restored byte-for-byte from backup."],
+  "success_rate": {"backend": "100% (15/15 pytest; plus 2 extra issues found in manual checks)", "frontend": "~70% (scanner open, manual entry, known barcode to cart, barcode search, checkout and stock decrement, generate, print after save all work; unknown-barcode quick-add and checkout WhatsApp are unreachable on web)"},
+  "seed_data_creation": "All TEST* products created were deleted. Invoices INV-000031 and a few test invoices remain, since invoices are immutable.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login via /login testIDs login-phone-input/login-password-input/login-submit-button. The POS scanner modal slides in, so wait about 2s before clicking scanner-manual-submit. On web there is no camera; scanner-permission box shows. The product-form Save button sits under the tab bar, so use dispatch_event('click') on the 'Save Changes' text. Label opens in a popup (context.expect_page).",
+  "rca_of_issue": "Web quick-add failure: react-native-web implements Alert.alert as a no-op, so the onPress callbacks never run. Stock zeroing: ProductInput has no stock field, so form-created products have no `stock`, and decrement_stock computes max(0, (None or 0) - qty) = 0 and sets in_stock False."
+}

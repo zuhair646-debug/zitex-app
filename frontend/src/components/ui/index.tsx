@@ -14,11 +14,11 @@ export { FilterTabs } from './FilterTabs';
 
 // ─── PrimaryButton (Gold) ──────────────────────────────────────
 export function PrimaryButton({
-  label, onPress, icon, disabled, loading, style, size = 'md', fullWidth = true,
+  label, onPress, icon, disabled, loading, style, size = 'md', fullWidth = true, testID,
 }: {
   label: string; onPress?: () => void; icon?: keyof typeof Ionicons.glyphMap;
   disabled?: boolean; loading?: boolean; style?: StyleProp<ViewStyle>;
-  size?: 'sm' | 'md' | 'lg'; fullWidth?: boolean;
+  size?: 'sm' | 'md' | 'lg'; fullWidth?: boolean; testID?: string;
 }) {
   const styles = useStyles();
   const h = size === 'sm' ? 40 : size === 'lg' ? 56 : 48;
@@ -28,7 +28,7 @@ export function PrimaryButton({
     onPress?.();
   };
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={handle} disabled={disabled || loading} style={[{ opacity: disabled ? 0.4 : 1 }, style]}>
+    <TouchableOpacity testID={testID} activeOpacity={0.85} onPress={handle} disabled={disabled || loading} style={[{ opacity: disabled ? 0.4 : 1 }, style]}>
       <LinearGradient
         colors={gradients.brandGold}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
@@ -46,18 +46,18 @@ export function PrimaryButton({
 
 // ─── SecondaryButton (Outlined Gold) ────────────────────────────
 export function SecondaryButton({
-  label, onPress, icon, disabled, style, size = 'md', fullWidth = true,
+  label, onPress, icon, disabled, style, size = 'md', fullWidth = true, testID,
 }: {
   label: string; onPress?: () => void; icon?: keyof typeof Ionicons.glyphMap;
   disabled?: boolean; style?: StyleProp<ViewStyle>;
-  size?: 'sm' | 'md' | 'lg'; fullWidth?: boolean;
+  size?: 'sm' | 'md' | 'lg'; fullWidth?: boolean; testID?: string;
 }) {
   const styles = useStyles();
   const h = size === 'sm' ? 40 : size === 'lg' ? 56 : 48;
   const handle = () => { if (disabled) return; Haptics.selectionAsync().catch(()=>{}); onPress?.(); };
   return (
     <TouchableOpacity
-      activeOpacity={0.7} onPress={handle} disabled={disabled}
+      testID={testID} activeOpacity={0.7} onPress={handle} disabled={disabled}
       style={[styles.sbtn, { height: h, alignSelf: fullWidth ? 'stretch' : 'flex-start', opacity: disabled ? 0.4 : 1 }, style]}
     >
       {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 20} color={colors.brand} />}

@@ -1731,6 +1731,7 @@ class ProductInput(BaseModel):
     variants: List[dict] = []
     branch_stock: List[dict] = []
     sku: str = ""
+    barcode: str = ""
     tags: List[str] = []
     in_stock: bool = True
     featured: bool = False
@@ -1768,9 +1769,22 @@ async def _prewarm_translations(texts: list):
         logging.getLogger(__name__).warning(f"prewarm translations failed: {e}")
 
 
+async def _ensure_unique_barcode(barcode: str, sku: str = "", exclude_id: str = ""):
+    """A barcode/SKU must identify exactly one product (scanned codes match barcode or SKU)."""
+    codes = [c for c in {(barcode or "").strip(), (sku or "").strip()} if c]
+    if not codes:
+        return
+    q = {"$or": [{"barcode": {"$in": codes}}, {"sku": {"$in": codes}}]}
+    if exclude_id and ObjectId.is_valid(exclude_id):
+        q["_id"] = {"$ne": ObjectId(exclude_id)}
+    if await db.products.find_one(q, {"_id": 1}):
+        raise HTTPException(409, "الباركود مستخدم لمنتج آخر")
+
+
 @api_router.post("/merchant/products")
 async def merchant_create_product(data: ProductInput, user=Depends(get_current_user)):
     require_merchant(user)
+    await _ensure_unique_barcode(data.barcode, data.sku)
     doc = data.model_dump()
     doc.update({"rating": 0, "review_count": 0, "sold_count": 0,
                 "created_at": datetime.now(timezone.utc).isoformat()})
@@ -1791,6 +1805,7 @@ async def merchant_create_product(data: ProductInput, user=Depends(get_current_u
 @api_router.put("/merchant/products/{pid}")
 async def merchant_update_product(pid: str, data: ProductInput, user=Depends(get_current_user)):
     require_merchant(user)
+    await _ensure_unique_barcode(data.barcode, data.sku, exclude_id=pid)
     await db.products.update_one({"_id": ObjectId(pid)}, {"$set": data.model_dump()})
     asyncio.create_task(_prewarm_translations([data.name_ar or "", getattr(data, "name_en", "") or ""]))
     for bs in data.branch_stock:
@@ -2801,7 +2816,7 @@ async def decrement_stock(branch_id: str, product_id: str, qty: int, channel: st
         return
     delta = qty if restock else -qty
     p = await db.products.find_one({"_id": ObjectId(product_id)}, {"stock": 1})
-    if p is not None:
+    if p is not None and p.get("stock") is not None:  # untracked products (no stock field) stay available
         new_stock = max(0, int(p.get("stock") or 0) + delta)
         await db.products.update_one({"_id": ObjectId(product_id)}, {"$set": {"stock": new_stock, "in_stock": new_stock > 0}})
     if not branch_id:
@@ -6845,6 +6860,14 @@ try:
     logger.info("Invoicing router mounted")
 except Exception as _e:
     logger.error(f"Failed to mount invoicing router: {_e}")
+
+# ─── POS barcodes / labels / WhatsApp receipts ───
+try:
+    from barcodes import build_router as _build_barcodes_router
+    app.include_router(_build_barcodes_router(db, get_current_user, require_merchant))
+    logger.info("Barcodes router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount barcodes router: {_e}")
 
 # ─── RMA / Returns (Phase B) ───
 try:

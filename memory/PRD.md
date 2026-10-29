@@ -671,3 +671,11 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - Payout minimums configurable (default 50; marketer + driver) in marketing → affiliates tab.
 - Known: Alert dialogs don't show in web preview (native OK). Chamber draw not yet aligned with prize_status.
 - Next: inventory (single source of truth, shared/split) + barcode POS (see ROADMAP_AND_REMINDERS.md).
+
+## v1.28.0 — POS Mobile Barcode Scanner + Unified Inventory (June 2026) — DONE
+- expo-camera scanner (BarcodeScannerModal) in POS + product form, manual entry fallback, permission flow with Open Settings.
+- Backend `/app/backend/barcodes.py`: by-barcode lookup, quick-add (unknown barcode → new product, merchant/products perm only), internal EAN-13 generation ("20" prefix), printable Code128 labels, WhatsApp receipt link (api.whatsapp.com, phone normalised to 966).
+- Unified stock: POS sale decrements the same product stock as online; untracked products (no stock field) stay available. Barcode/SKU uniqueness enforced (409).
+- Post-sale in-app modal: WhatsApp / Print / New sale.
+- Pending: automatic WhatsApp sending from official store number (needs WhatsApp Business Cloud API credentials from user).
+- Postponed by user: Chamber of Commerce dashboards.

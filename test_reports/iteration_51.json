@@ -1,0 +1,45 @@
+{
+  "summary": "Retest of the POS barcode fixes from iteration_50. Backend: 25/25 pytest pass (15 regression in test_pos_barcodes.py, 10 new in test_pos_barcodes_fixes.py). All 8 listed fixes verified on backend and UI at 375x667. (1) An unknown barcode entered through the manual scanner input opens the pos-quick-add modal directly; save adds the product to the cart with stock 4→3 after sale. (2) The cashier sees the 'ask the manager' message and a Close button with no form. (3) The pos-sale-done modal shows INV number, total, WhatsApp (only with a phone), Print (opens /api/invoices/{id}/print) and New Sale. (4) Products without a stock field stay in_stock after a POS sale; tracked products still reach 0. (5) Cashier gets 403 on /whatsapp for a merchant invoice and 200 for their own. (6) POST and PUT return 409 for a duplicate barcode or a barcode matching another product's SKU; PUT with the product's own barcode returns 200. (7) Product form: Generate on an existing product calls the backend and returns a 20-prefixed EAN-13; Print Label appears only when the barcode equals the saved one and opens the SVG label; product-save-btn sits at y=511-555, above the tab bar, and is hittable. (8) quick-add with branch_id writes branch_inventory quantity=7; pos-search-input finds by barcode. Remaining issues are minor or web-only.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/pos/invoice/{id}/whatsapp", "issue": "The backend URL is correct (https://wa.me/...?text=%F0%9F%A7%BE...). The wa.me redirect to api.whatsapp.com turns 4-byte emoji (🧾, 🌟) into U+FFFD (%EF%BF%BD), so the customer sees '�' at the start and end of the message. Verified with curl -I on wa.me. Fix: build the URL as https://api.whatsapp.com/send?phone=..&text=.. directly, or drop the emoji from the text."},
+      {"endpoint": "_ensure_unique_barcode (server.py ~1772)", "issue": "The `sku` parameter is accepted but never checked. A new product's SKU can equal another product's barcode, and by-barcode then matches two products. Add a second check for the SKU, or document that only the barcode is checked."},
+      {"endpoint": "DELETE /api/merchant/products/{pid}", "issue": "Orphan branch_inventory rows (written by quick-add with branch_id or by branch_stock) are not removed when the product is deleted."},
+      {"endpoint": "_PERM_ALT GET /api/merchant/products prefix", "issue": "Still open from iteration 50: the prefix match grants pos-perm employees every GET under /api/merchant/products/* (label, deep-analytics)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "product-form submit (product-form.tsx:223-225)", "issue": "On web the success Alert (with an OK button that calls router.back) and the error Alert are no-ops (react-native-web Alert). Verified: a duplicate barcode returns 409 with no message shown, and a successful POST returns 200 but the user stays on 'New product' with no feedback. A second tap would create a duplicate product. Use a cross-platform toast/modal or Platform.OS==='web' ? window.alert, and router.back() directly after save.", "testID": "product-save-btn", "priority": "MEDIUM"},
+      {"component": "POS saveQuick/checkout/sendWhatsApp error handling (pos.tsx:81,91,99,135)", "issue": "Validation ('name and price required') and API errors use Alert.alert, which is silent on web. With an empty name, tapping Save and Add does nothing.", "testID": "quick-save", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "POS (pos.tsx:319 cartBar bottom:88)", "issues": ["The cart bar is partly covered by the merchant tab bar on a 375x667 viewport: the bottom of the total row ('57.50 SAR') is clipped at the tab-bar edge. Raise bottom to about 96, like product-form."]},
+      {"screen": "POS sale-done modal (pos.tsx:255)", "issues": ["Heading 'تم إنشاء الفاتورة' stays in Arabic in English mode while the rest of the modal is translated. It also renders with disjointed Arabic glyphs, probably because of letterSpacing in typography.titleSmall."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_pos_barcodes.py", "/app/backend/tests/test_pos_barcodes_fixes.py", "/app/test_reports/pytest/pytest_pos_barcodes_51.xml", "/app/test_reports/pytest/pytest_pos_barcodes_fixes_51.xml"],
+  "action_items": [
+    "Product form (web): replace the Alert.alert success/error calls with a cross-platform toast or in-app modal; call router.back() directly after a successful save. The 409 duplicate-barcode message is currently invisible on web.",
+    "POS: show quick-add validation and API errors inline in the pos-quick-add modal instead of through Alert.",
+    "WhatsApp receipt: use https://api.whatsapp.com/send?phone=&text= (or remove the 4-byte emoji). wa.me corrupts 🧾/🌟 into �.",
+    "_ensure_unique_barcode: also check data.sku against other products' barcode/sku, or remove the unused param.",
+    "POS cartBar: bottom 88 → about 96 so the tab bar does not clip it.",
+    "Optional: delete branch_inventory rows on product delete; tighten the _PERM_ALT prefix for GET /api/merchant/products."
+  ],
+  "critical_code_review_comments": [
+    "No deprecated Expo packages in the reviewed files (expo-camera used for the scanner).",
+    "product-form.tsx is 725 lines, over the 700-line guideline; split it into sub-components.",
+    "PrimaryButton/SecondaryButton did not accept testID. Added an optional testID prop, plus testIDs on the POS modal buttons and checkout inputs."
+  ],
+  "updated_files": ["/app/frontend/src/components/ui/index.tsx (optional testID prop on PrimaryButton/SecondaryButton)", "/app/frontend/app/merchant/pos.tsx (testIDs: pos-checkout-btn, pos-issue-invoice, pos-customer-name, pos-customer-phone, pos-done-whatsapp, pos-done-print, pos-done-new, quick-save, quick-cancel, quick-close)", "/app/backend/tests/test_pos_barcodes_fixes.py (new)"],
+  "success_rate": {"backend": "100% (25/25)", "frontend": "100% of requested fix verifications; 2 web-only Alert UX issues plus minor design issues"},
+  "seed_data_creation": "None persisted. All TEST products deleted (mongo count of name_ar /^TEST/ = 0). Test invoices INV-000039 and later, plus a few branch_inventory rows, remain.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "POS at /merchant/pos. Scanner manual entry: click pos-scan-btn, wait about 1.2s for the slide animation, fill scanner-manual-input, then dispatch_event('click') on scanner-manual-submit (a normal click fails while the modal is still animating). The UI renders in English by default, so use testIDs rather than Arabic text. Cashier 0530000001 lacks the products perm.",
+  "rca_of_issue": "WA emoji: verified with `curl -I 'https://wa.me/966512345678?text=%F0%9F%A7%BE%20x'`; the Location header shows text=%EF%BF%BD+x, so wa.me's redirect mangles the emoji (it is not a backend encoding bug). Web silent saves: react-native-web implements Alert.alert as a no-op, so every Alert-based success or error path is invisible in the web preview."
+}

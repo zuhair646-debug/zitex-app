@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Switch,
-  Alert, ActivityIndicator, Platform, StatusBar,
+  Alert, ActivityIndicator, StatusBar,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +17,9 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
+import BarcodeScannerModal from '../../src/components/BarcodeScannerModal';
+import { openLabelPrint } from '../../src/utils/labelPrint';
+import { notify } from '../../src/utils/notify';
 
 type Variant = { name: string; value: string };
 type BranchStock = { branch_id: string; branch_name: string; quantity: number };
@@ -39,7 +42,7 @@ export default function ProductForm() {
     in_stock: true, featured: false, published: true,
     variants: [] as Variant[],
     branch_stock: [] as BranchStock[],
-    sku: '', tags: '',
+    sku: '', barcode: '', tags: '',
     colors: [] as { name: string; hex: string }[],
     warranty_type: 'none',
     shop_warranty_days: '', shop_warranty_terms: '',
@@ -53,6 +56,23 @@ export default function ProductForm() {
   });
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#000000');
+  const [scanOpen, setScanOpen] = useState(false);
+  const [savedBarcode, setSavedBarcode] = useState('');
+
+  // Saved product → server generates a unique code; new product → local in-store EAN-13 ("20" prefix)
+  const genBarcode = async () => {
+    if (id) {
+      try {
+        const r = await apiCall(`/api/merchant/products/${id}/barcode`, { method: 'POST' });
+        setSavedBarcode(r.barcode);
+        setData((v: any) => ({ ...v, barcode: r.barcode }));
+      } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
+      return;
+    }
+    const d = '20' + Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join('');
+    const sum = d.split('').reduce((a, c, i) => a + Number(c) * (i % 2 ? 3 : 1), 0);
+    setData((v: any) => ({ ...v, barcode: d + ((10 - (sum % 10)) % 10) }));
+  };
 
   useEffect(() => {
     (async () => {
@@ -66,6 +86,7 @@ export default function ProductForm() {
         setBranches(Array.isArray(br) ? br : []);
         if (id) {
           const p = await apiCall(`/api/products/${id}`);
+          setSavedBarcode(p.barcode || '');
           setData({
             ...p,
             price: String(p.price),
@@ -75,6 +96,7 @@ export default function ProductForm() {
             variants: p.variants || [],
             branch_stock: p.branch_stock || [],
             sku: p.sku || '',
+            barcode: p.barcode || '',
             tags: (p.tags || []).join(', '),
             colors: p.colors || [],
             warranty_type: p.warranty_type || 'none',
@@ -199,9 +221,8 @@ export default function ProductForm() {
       };
       if (id) await apiCall(`/api/merchant/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiCall('/api/merchant/products', { method: 'POST', body: JSON.stringify(body) });
-      Alert.alert(tSync('✅ تم', curLang()), id ? tSync('تم تحديث المنتج بنجاح', curLang()) : tSync('تم إنشاء المنتج بنجاح', curLang()),
-        [{ text: tSync('موافق', curLang()), onPress: () => router.back() }]);
-    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
+      notify(tSync('✅ تم', curLang()), id ? tSync('تم تحديث المنتج بنجاح', curLang()) : tSync('تم إنشاء المنتج بنجاح', curLang()), () => router.back());
+    } catch (e: any) { notify(tSync('خطأ', lang), e.message); }
     finally { setSaving(false); }
   };
 
@@ -218,7 +239,7 @@ export default function ProductForm() {
           <View style={s.iconBtn} />
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 240 }} showsVerticalScrollIndicator={false}>
           {/* Card: Basic Info */}
           <View style={s.card}>
             <View style={s.cardHeader}>
@@ -320,6 +341,30 @@ export default function ProductForm() {
             <TX style={s.label}>SKU / رمز المنتج</TX>
             <TextInput style={s.input} value={data.sku} placeholderTextColor={colors.onSurfaceTertiary}
               onChangeText={t => setData({ ...data, sku: t })} placeholder="TECH-IP15PM-256" autoCapitalize="characters" />
+            <TX style={s.label}>الباركود</TX>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+              <TextInput testID="product-barcode-input" style={[s.input, { flex: 1 }]} value={data.barcode} placeholderTextColor={colors.onSurfaceTertiary}
+                onChangeText={t => setData({ ...data, barcode: t.trim() })} placeholder="6281234567890" autoCapitalize="characters" />
+              <TouchableOpacity testID="product-barcode-scan" style={s.iconBtn} onPress={() => setScanOpen(true)}>
+                <Ionicons name="scan" size={22} color={colors.brand} />
+              </TouchableOpacity>
+            </View>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
+              {!data.barcode ? (
+                <TouchableOpacity testID="product-barcode-generate" style={s.barcodeAction} onPress={genBarcode}>
+                  <Ionicons name="sparkles" size={16} color={colors.brand} />
+                  <TX style={s.barcodeActionText}>توليد باركود داخلي</TX>
+                </TouchableOpacity>
+              ) : null}
+              {id && data.barcode && data.barcode === savedBarcode ? (
+                <TouchableOpacity testID="product-barcode-print" style={s.barcodeAction}
+                  onPress={() => openLabelPrint(String(id), 1)}>
+                  <Ionicons name="print" size={16} color={colors.brand} />
+                  <TX style={s.barcodeActionText}>طباعة ملصق</TX>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            {data.barcode && data.barcode !== savedBarcode ? <TX style={s.label}>احفظ المنتج أولاً لطباعة الملصق</TX> : null}
           </View>
 
           {/* Card: Category / Brand / Condition */}
@@ -598,7 +643,7 @@ export default function ProductForm() {
 
         {/* Sticky bottom CTA */}
         <View style={s.stickyBar}>
-          <TouchableOpacity style={s.submitBtn} onPress={submit} disabled={saving || uploading}>
+          <TouchableOpacity testID="product-save-btn" style={s.submitBtn} onPress={submit} disabled={saving || uploading}>
             <LinearGradient colors={['#F5C518', '#D4AF37']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.submitInner}>
               {saving ? <ActivityIndicator color={colors.onBrandPrimary} /> : (
                 <>
@@ -610,6 +655,8 @@ export default function ProductForm() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      <BarcodeScannerModal visible={scanOpen} onClose={() => setScanOpen(false)}
+        onScanned={(code) => { setScanOpen(false); setData((v: any) => ({ ...v, barcode: code })); }} />
     </View>
   );
 }
@@ -660,7 +707,7 @@ function useSStyles() {
   branchQtyInput: { backgroundColor: colors.surfaceTertiary, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, width: 80, textAlign: 'center', color: colors.onSurface, fontWeight: '700', borderWidth: 1, borderColor: colors.border },
   toggle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm },
   toggleLabel: { fontSize: 14, fontWeight: '600', color: colors.onSurface },
-  stickyBar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, padding: spacing.lg, paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg },
+  stickyBar: { position: 'absolute', left: 0, right: 0, bottom: 96, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, padding: spacing.lg, paddingBottom: spacing.lg },
   submitBtn: { borderRadius: radius.lg, overflow: 'hidden' },
   submitInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingVertical: spacing.md },
   submitText: { color: colors.onBrandPrimary, fontWeight: '800', fontSize: 16 },
@@ -672,5 +719,7 @@ function useSStyles() {
   warrTypeText: { fontSize: 12, color: colors.onSurface, fontWeight: '700' },
   warrSection: { backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md, marginTop: spacing.sm, borderWidth: 1, borderColor: colors.border },
   warrSectionTitle: { fontSize: 13, fontWeight: '800', color: colors.brand, marginBottom: spacing.sm, textAlign: 'right' },
+  barcodeAction: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: spacing.md, paddingVertical: 10, borderRadius: radius.md, borderWidth: 1, borderColor: colors.brand },
+  barcodeActionText: { color: colors.brand, fontSize: 13, fontWeight: '700' },
 }), [themeKey]);
 }
