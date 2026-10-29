@@ -127,3 +127,7 @@ Feature category → semver bump:
 
 ## v1.27.0 release — 2026-10-28
 - iOS 829282a5-13f0-4876-b9f9-23b1844fc4f9 (build 79), Android 89f597d7-91cc-4439-a955-ab07596c8939 (versionCode 84). Competitions phase 4 + payout minimums. Log /tmp/eas_release_v1.27.0.log
+
+## v1.28.0 release — 2026-10-29
+- iOS 948a9e5f-a82a-453f-b3fd-c0d4c4b098a5 (build 80), Android dc937570-74a6-494e-8ccd-7661e4a4ac91 (versionCode 85). Commit bd1a2bb. Backend deployed to Hetzner.
+- POS barcode scanner (expo-camera = new native module → full build required), labels, WhatsApp receipts, native upload fix (expo/fetch Blob), bottom buttons above tab bar. Log /tmp/eas_release_v1.28.0.log
