@@ -12,17 +12,17 @@ import { curLang } from '../i18n';
 
 export type ZenMapMsg = { type: string; [k: string]: any };
 export type ZenMapHandle = { send: (m: ZenMapMsg) => void };
-type Props = { onEvent?: (e: any) => void; style?: any; testID?: string };
+type Props = { onEvent?: (e: any) => void; style?: any; testID?: string; brand?: boolean };
 
 const BASE = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
-const ZenMap = forwardRef<ZenMapHandle, Props>(({ onEvent, style, testID }, ref) => {
+const ZenMap = forwardRef<ZenMapHandle, Props>(({ onEvent, style, testID, brand = true }, ref) => {
   const { isDark } = useTheme();
   const web = useRef<any>(null);
   const frame = useRef<any>(null);
   const queue = useRef<ZenMapMsg[]>([]);
   const [ready, setReady] = useState(false);
-  const url = `${BASE}/api/map/view?theme=${isDark ? 'dark' : 'light'}&lang=${curLang() === 'ar' ? 'ar' : 'en'}`;
+  const url = `${BASE}/api/map/view?theme=${isDark ? 'dark' : 'light'}&lang=${curLang() === 'ar' ? 'ar' : 'en'}&brand=${brand ? 1 : 0}`;
 
   const deliver = useCallback((m: ZenMapMsg) => {
     if (Platform.OS === 'web') frame.current?.contentWindow?.postMessage(JSON.stringify({ __zmap: 1, msg: m }), '*');

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform, FlatList, Image } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -174,7 +174,7 @@ export default function DriverHome() {
 
   return (
     <View style={s.root}>
-      <ZenMap ref={map} style={StyleSheet.absoluteFill} testID="driver-map"
+      <ZenMap ref={map} style={StyleSheet.absoluteFill} testID="driver-map" brand={false}
         onEvent={(e) => { if (e.type === 'follow') setFollowing(e.value); }} />
 
       <SafeAreaView edges={['top']} style={s.top} pointerEvents="box-none">
@@ -184,6 +184,7 @@ export default function DriverHome() {
             <Text style={s.chipTxt}>{Number(home?.today_earnings || 0).toFixed(2)} {tSync('ر.س', lang)}</Text>
             <Text style={s.chipSub}>· {home?.today_trips || 0} {tSync('رحلة', lang)}</Text>
           </View>
+          <Image source={require('../../assets/images/zenrex-logo-round.png')} style={s.logo} testID="driver-brand-logo" />
           <TouchableOpacity testID="driver-sos" style={s.sos} onPress={sos}><Text style={s.sosTxt}>SOS</Text></TouchableOpacity>
         </View>
         {!conn && home?.online ? <View style={s.banner}><TX style={s.bannerTxt}>جاري إعادة الاتصال…</TX></View> : null}
@@ -270,6 +271,7 @@ function useStyles() {
     chipSub: { color: colors.onSurfaceTertiary, fontSize: 13 },
     sos: { width: 52, height: 44, borderRadius: radius.pill, backgroundColor: colors.error, alignItems: 'center', justifyContent: 'center' },
     sosTxt: { color: colors.onError, fontWeight: '900' },
+    logo: { width: 40, height: 40, borderRadius: 20, borderWidth: 1.5, borderColor: colors.brand },
     banner: { alignSelf: 'center', marginTop: spacing.sm, backgroundColor: colors.warning, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 4 },
     bannerTxt: { color: colors.onWarning, fontWeight: '700', fontSize: 12 },
     fabs: { position: 'absolute', right: spacing.lg, bottom: 300 },

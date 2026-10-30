@@ -393,10 +393,12 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
         return await route(from_lat, from_lng, to_lat, to_lng)
 
     @router.get("/map/view", response_class=HTMLResponse)
-    async def map_view(theme: str = "dark", lang: str = "ar"):
+    async def map_view(theme: str = "dark", lang: str = "ar", brand: int = 1):
         here = os.path.dirname(__file__)
         html = open(os.path.join(here, "static_map.html"), encoding="utf-8").read()
-        return HTMLResponse(html.replace("__TILES__", tiles).replace("__THEME__", "light" if theme == "light" else "dark")
+        logo = open(os.path.join(here, "static_logo.b64"), encoding="utf-8").read().strip()
+        return HTMLResponse(html.replace("__LOGO__", "data:image/png;base64," + logo).replace("__BRAND__", "1" if brand else "0")
+                            .replace("__TILES__", tiles).replace("__THEME__", "light" if theme == "light" else "dark")
                             .replace("__LANG__", lang if lang.isalpha() else "ar"),
                             headers={"Cache-Control": "public, max-age=300"})
 
