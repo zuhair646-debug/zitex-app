@@ -135,3 +135,6 @@ Feature category → semver bump:
 ## v1.29.0 release — 2026-10-30
 - iOS aa0b9c07-b0dc-4352-8802-fd4554d36ede (build 81), Android 8b8eea41-63d5-45e1-8daa-2bbc622cbb56 (versionCode 86). Commit 321ad6e. Backend + map + OSRM on Hetzner.
 - Driver system v2 + own map. New native: expo-task-manager + background location. Log /tmp/eas_release_v1.29.0.log
+
+## v1.30.0 release — 2026-10-30
+- iOS 2078bb46-f2bf-4485-9ae3-d10920486a75 (build 82), Android 65a912fa-78f7-4d08-a81e-70996211bc3d (versionCode 87). Commit 2cfc461. Backend deployed to Hetzner. NOTE: eas-cli must be reinstalled (`npm i -g eas-cli`) in new pods.
