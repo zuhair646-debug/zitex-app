@@ -138,3 +138,8 @@ Feature category → semver bump:
 
 ## v1.30.0 release — 2026-10-30
 - iOS 2078bb46-f2bf-4485-9ae3-d10920486a75 (build 82), Android 65a912fa-78f7-4d08-a81e-70996211bc3d (versionCode 87). Commit 2cfc461. Backend deployed to Hetzner. NOTE: eas-cli must be reinstalled (`npm i -g eas-cli`) in new pods.
+
+## v1.30.1 release — 2026-10-30
+- iOS e9b7be8e-2244-4258-bc5d-8c0e0107afa8 (build 83), Android 9e0d72da-c9fe-4454-8a1b-4268023671d0 (versionCode 88). Commit aa326c3. Log /tmp/eas_release_v1.30.1.log
+- Driver prefs = merchant pattern (appearance page, theme switch, language sheet); gold Z car pin; map brand badge moved bottom-left (hidden on driver map, logo in top row).
+- ⚠️ Backend (static_map.html/static_logo.b64/delivery.py) NOT deployed to Hetzner: SSH key zenrex_deploy rejected in this pod.

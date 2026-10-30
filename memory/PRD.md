@@ -694,3 +694,8 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - Planner (delivery.py): auto at plan_hour (22 Riyadh) for tomorrow, by area sweep then equal split, nearest-neighbour sequence; merchant Fleet "الجدولة" tab (run/move, date nav). Driver queue card → pickup all → stop #1 en_route + customer push; next stop auto.
 - Customer bottom live banner (src/components/LiveDeliveryBanner.tsx, /api/delivery/active-order), tips via wallet (POST /api/orders/{oid}/tip, atomic).
 - Driver settings: language (20) + theme. Map: Z car marker + ZENREX brand pill on all maps.
+
+## v1.30.1 (2026-10-30)
+- Driver profile preferences now identical to merchant/more.tsx (Appearance page link, Dark/Light switch, language bottom sheet) — same i18n keys, no new translation system.
+- Map: gold top-down car pin with real Zenrex Z logo (backend/static_logo.b64), brand badge moved bottom-left; driver map hides it (brand=0) and shows round logo between earnings chip and SOS.
+- Pending: deploy backend map files to Hetzner (SSH key rejected from new pod).
