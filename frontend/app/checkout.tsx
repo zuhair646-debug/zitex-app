@@ -1,7 +1,7 @@
 import TranslatableName from '../src/components/TranslatableName';
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Linking } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, Modal, Linking, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,7 +19,9 @@ export default function CheckoutScreen() {
   const { apiCall } = useAuth();
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddr, setSelectedAddr] = useState(0);
-  const [deliveryType, setDeliveryType] = useState<'standard' | 'same_day' | 'scheduled'>('standard');
+  const [deliveryType, setDeliveryType] = useState<'standard' | 'same_day' | 'scheduled'>('same_day');
+  const [schedDays, setSchedDays] = useState<any[]>([]);
+  const [schedDate, setSchedDate] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery');
   const [couponCode, setCouponCode] = useState('');
   const [refCode, setRefCode] = useState('');
@@ -105,11 +107,14 @@ export default function CheckoutScreen() {
       setQuote(q);
       setDeliveryFee(q.fee?.delivery_fee || 0);
       if (deliveryType === 'scheduled' && q.fee?.scheduled_slots) setAvailableSlots(q.fee.scheduled_slots);
+      if (q.fee?.scheduled_days) { setSchedDays(q.fee.scheduled_days); setSchedDate((d) => d || q.fee.scheduled_days[0]?.date || ''); }
       if (deliveryType !== 'scheduled') setScheduledSlot(null);
       if (q.alternative_note) {
         Alert.alert(
           tSync('تنبيه: المنتجات في فرع بديل', lang),
-          tf('{0}\n{1}/{2} متوفر في الفرع المختار', lang, [q.alternative_note.reason, q.alternative_note.available_count, q.alternative_note.total_requested]),
+          q.fee?.out_of_range
+            ? tf('الفرع الأقرب لا يتوفر فيه كل ما طلبت، وسننقله لك من فرع آخر بالشحن ({0} ر.س — {1})', lang, [q.fee.delivery_fee, q.fee.eta_text])
+            : tf('{0}\n{1}/{2} متوفر في الفرع المختار', lang, [q.alternative_note.reason, q.alternative_note.available_count, q.alternative_note.total_requested]),
         );
       }
     } catch (e: any) {
@@ -140,9 +145,10 @@ export default function CheckoutScreen() {
         payment_method: paymentMethod, notes, coupon_code: couponApplied, referral_code: refCode.trim() || undefined,
         dest_lat: userLat, dest_lng: userLng,
         branch_id: quote?.branch?.id, branch_lat: quote?.branch?.lat, branch_lng: quote?.branch?.lng,
-        scheduled_slot: scheduledSlot,
+        scheduled_slot: scheduledSlot, scheduled_date: deliveryType === 'scheduled' ? schedDate : '',
       })});
       AsyncStorage.removeItem('ref_code').catch(() => {});
+      if (Platform.OS === 'web') { router.dismiss(); router.push(`/track-order/${order.id}` as any); return; }
       Alert.alert(tSync('تم الطلب!', lang), tf('رقم الطلب #{0}', lang, [order.id?.slice(-8)]), [
         { text: tSync('تتبع', curLang()), onPress: () => { router.dismiss(); router.push(`/track-order/${order.id}` as any); } },
         { text: tSync('طلباتي', curLang()), onPress: () => { router.dismiss(); router.push('/orders'); } }
@@ -165,11 +171,14 @@ export default function CheckoutScreen() {
     { id: 'tamara', label: 'تمارا (تقسيط)', icon: 'time', tag: 'قريباً' },
   ];
 
-  const deliveryOpts = [
-    { id: 'standard' as const, label: 'عادي', time: '٢-٣ أيام', icon: 'cube' },
-    { id: 'same_day' as const, label: 'نفس اليوم ⚡', time: 'خلال ٩٠ دقيقة', icon: 'flash' },
-    { id: 'scheduled' as const, label: 'مجدول', time: 'اختر الموعد', icon: 'calendar' },
-  ];
+  const outOfRange = !!quote?.fee?.out_of_range;
+  const deliveryOpts = outOfRange
+    ? [{ id: deliveryType, label: 'شحن 📦', time: quote?.fee?.eta_text || '2-4 أيام عمل', icon: 'airplane' }]
+    : [
+      { id: 'same_day' as const, label: 'توصيل سريع ⚡ الآن', time: 'يوصلك أقرب سائق مباشرة (حسب المسافة)', icon: 'flash' },
+      { id: 'scheduled' as const, label: 'توصيل عادي (أوفر)', time: 'اختر اليوم والفترة الصباحية أو المسائية', icon: 'calendar' },
+    ];
+  const daySlots = (schedDays.find((d) => d.date === schedDate)?.slots) || availableSlots;
 
   return (
     <SafeAreaView style={s.safe}>
@@ -207,7 +216,7 @@ export default function CheckoutScreen() {
         <TX style={s.sectionTitle}>نوع التوصيل</TX>
         <View style={{ gap: 8 }}>
           {deliveryOpts.map(opt => (
-            <TouchableOpacity key={opt.id} style={[s.shipCard, deliveryType === opt.id && s.shipActive]} onPress={() => setDeliveryType(opt.id)}>
+            <TouchableOpacity key={opt.id} testID={`delivery-opt-${outOfRange ? 'shipping' : opt.id}`} style={[s.shipCard, deliveryType === opt.id && s.shipActive]} onPress={() => setDeliveryType(opt.id)}>
               <Ionicons name={deliveryType === opt.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={deliveryType === opt.id ? '#F5C518' : '#A1A1AA'} />
               <Ionicons name={opt.icon as any} size={20} color="#52525B" />
               <View style={s.shipInfo}><Text style={s.shipLabel}>{tSync(opt.label, lang)}</Text><Text style={s.shipTime}>{tSync(opt.time, lang)}</Text></View>
@@ -216,12 +225,22 @@ export default function CheckoutScreen() {
           ))}
         </View>
 
-        {deliveryType === 'scheduled' && (
-          <TouchableOpacity style={s.slotBtn} onPress={() => setSlotModalOpen(true)}>
+        {deliveryType === 'scheduled' && !outOfRange && (<>
+          {schedDays.length ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 8 }}>
+              {schedDays.map((d) => (
+                <TouchableOpacity key={d.date} testID={`sched-day-${d.date}`} onPress={() => { setSchedDate(d.date); setScheduledSlot(null); }}
+                  style={[s.shipCard, { paddingVertical: 8 }, schedDate === d.date && s.shipActive]}>
+                  <Text style={s.shipLabel}>{new Date(d.date + 'T12:00:00').toLocaleDateString(lang, { weekday: 'short', day: 'numeric', month: 'short' })}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : null}
+          <TouchableOpacity testID="slot-picker-btn" style={s.slotBtn} onPress={() => setSlotModalOpen(true)}>
             <Ionicons name="time" size={18} color="#F5C518" />
-            <Text style={s.slotBtnText}>{scheduledSlot ? tf('الفترة: {0} ({1} - {2})', lang, [scheduledSlot.label, scheduledSlot.start, scheduledSlot.end]) : tSync('اختر فترة التوصيل', curLang())}</Text>
+            <Text style={s.slotBtnText}>{scheduledSlot ? `${tSync('الفترة', lang)}: ${tSync(scheduledSlot.label, lang)} (${scheduledSlot.start} – ${scheduledSlot.end})` : tSync('اختر فترة التوصيل', curLang())}</Text>
           </TouchableOpacity>
-        )}
+        </>)}
 
         <TX style={s.sectionTitle}>طريقة الدفع</TX>
         {payMethods.map(pm => (
@@ -318,12 +337,12 @@ export default function CheckoutScreen() {
             <TX style={s.title}>اختر الفترة</TX>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            {availableSlots.length === 0 && <TX style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 40 }}>لا توجد فترات متاحة</TX>}
-            {availableSlots.map((sl, i) => (
-              <TouchableOpacity key={i} style={[s.slotItem, scheduledSlot?.label === sl.label && s.slotItemActive]} onPress={() => { setScheduledSlot(sl); setSlotModalOpen(false); }}>
+            {daySlots.length === 0 && <TX style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 40 }}>لا توجد فترات متاحة</TX>}
+            {daySlots.map((sl: any, i: number) => (
+              <TouchableOpacity key={i} testID={`slot-item-${i}`} disabled={sl.full} style={[s.slotItem, scheduledSlot?.label === sl.label && s.slotItemActive, sl.full && { opacity: 0.4 }]} onPress={() => { setScheduledSlot(sl); setSlotModalOpen(false); }}>
                 <Ionicons name="time-outline" size={20} color={scheduledSlot?.label === sl.label ? 'white' : '#F5C518'} />
                 <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={[s.slotLabel, scheduledSlot?.label === sl.label && { color: 'white' }]}>{tSync(sl.label, lang)}</Text>
+                  <Text style={[s.slotLabel, scheduledSlot?.label === sl.label && { color: 'white' }]}>{tSync(sl.label, lang)}{sl.full ? ` — ${tSync('ممتلئة', lang)}` : sl.remaining != null ? ` — ${tSync('متبقي', lang)} ${sl.remaining}` : ''}</Text>
                   <Text style={[s.slotTime, scheduledSlot?.label === sl.label && { color: 'white' }]}>{sl.start} - {sl.end}</Text>
                 </View>
               </TouchableOpacity>

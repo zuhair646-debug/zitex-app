@@ -7,10 +7,11 @@ import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { useT } from '../../src/i18n';
+import LiveDeliveryBanner from '../../src/components/LiveDeliveryBanner';
 
 export default function TabLayout() {
   const styles = useSStyles();
-  const { user, loading } = useAuth();
+  const { user, loading, apiCall } = useAuth() as any;
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
@@ -36,6 +37,7 @@ export default function TabLayout() {
   const barHeight = 56 + bottomPad;
 
   return (
+    <View style={{ flex: 1 }}>
     <Tabs screenOptions={{
       headerShown: false,
       tabBarActiveTintColor: colors.gold,
@@ -57,6 +59,8 @@ export default function TabLayout() {
       <Tabs.Screen name="social"       options={{ title: t('tabs.social'),       tabBarIcon: ({ color, size }) => <Ionicons name="megaphone" size={size} color={color} /> }} />
       <Tabs.Screen name="settings"     options={{ title: t('tabs.profile'),      tabBarIcon: ({ color, size }) => <Ionicons name="person"    size={size} color={color} /> }} />
     </Tabs>
+    {user.role === 'customer' || user.role === 'user' || !user.role ? <LiveDeliveryBanner apiCall={apiCall} bottom={barHeight + 8} /> : null}
+    </View>
   );
 }
 

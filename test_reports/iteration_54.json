@@ -1,0 +1,65 @@
+{
+  "summary": "Delivery v3 (express/standard-scheduled/shipping, shifts+pools, night planner, queue pickup, live banner, tips, ZENREX map) tested. Backend 10/11 pytest pass (public URL). Core flows work end-to-end: distance-priced express, shipping when > max_distance_km, slot capacity full/remaining, scheduled order stored, shift PUT + fleet pools/shift, express offers only to express-pool drivers, scheduled orders never offered, max_active_per_driver respected and waiting hot order dispatched after completion, plan run/get/move, driver queue -> pickup -> stop #1 en_route + notification -> auto next stop after complete, active-order banner API, tip rules (owner/delivered/balance/once/amount). UI verified on 390x844: driver queue card + long-press pickup, customer banner (after fix) -> track page, tip chips + send, driver Settings lang/theme switching, merchant shift modal, Scheduling tab run+move, delivery-settings new fields, checkout 2 options + day chips + full slot disabled. HIGH: when no settings.delivery doc exists (current DB state) scheduled quote returns ZERO slots -> customer cannot place a standard order. FIXED by me: live banner never rendered for customers (role is 'user'). No deprecated Expo packages detected. No SafeAreaView issues detected.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/delivery/calculate-fee & /api/delivery/quote (scheduled)", "issue": "server.py:3110/3162/3184 use `db.settings.find_one({'key':'delivery'}) or {}` and `s.get('scheduled_slots', [])`; GET /api/delivery/settings returns hardcoded default slots but calculate-fee does not. DB currently has NO delivery settings doc -> scheduled_days[].slots = [] -> checkout slot modal shows 'No available time slots' and placeOrder blocks. Fix: single DEFAULT_DELIVERY_SETTINGS merged into all readers (calculate-fee, scheduled_days_with_capacity, planner, eligible_drivers) or seed the doc idempotently.", "priority": "HIGH"},
+      {"endpoint": "POST /api/orders (scheduled)", "issue": "No server-side validation of scheduled_date/scheduled_slot: slot capacity not enforced (overbooking possible; remaining went to -1 in test), date not checked against allowed scheduled_days, delivery_type=scheduled with empty date is accepted and will never be planned.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/orders/{oid}/tip", "issue": "delivery.py:834-842 check-then-set is not atomic; two parallel requests can both deduct wallet and double-tip. Claim tip first with update_one({_id, tip:{$exists:false}}) then deduct (rollback on low balance)."},
+      {"endpoint": "GET /api/orders/{oid}/live + WS sub", "issue": "For planned stops not yet en_route (queue_waiting=true) response still includes driver.loc and route (verified), and ws 'sub' sends driver_loc (delivery.py:379-382, 871-882) - contradicts 'only the en_route customer sees the driver'."},
+      {"endpoint": "dispatch()", "issue": "Only excludes delivery_type=='scheduled'; orders with delivery_type 'shipping' (out of range) are offered to express drivers on ready_for_pickup (delivery.py:257)."},
+      {"endpoint": "POST /api/driver/queue/pickup", "issue": "Takes every planned order regardless of readiness (status 'processing') and overwrites driver_id even if merchant assigned it to someone else via /merchant/orders/{oid}/assign (delivery.py:818-822)."},
+      {"endpoint": "scheduled_days_with_capacity", "issue": "remaining can go negative when overbooked; clamp to 0."},
+      {"endpoint": "PUT /api/merchant/delivery/settings", "issue": "No Pydantic validation; arbitrary keys/types are $set."},
+      {"endpoint": "eligible_drivers", "issue": "settings doc re-fetched inside per-driver loop (delivery.py:243)."},
+      {"endpoint": "CORS", "issue": "access-control-allow-origin: * together with allow-credentials: true."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "LiveDeliveryBanner in (tabs)/_layout.tsx:62", "issue": "Banner only rendered for role 'customer' but customers have role 'user' -> never shown. FIXED by testing agent (added user.role === 'user').", "testID": "live-delivery-banner", "priority": "HIGH (fixed)"},
+      {"component": "Checkout slot modal", "issue": "Empty slot list when settings doc missing (see backend critical) -> standard delivery unusable.", "testID": "slot-picker-btn", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Driver map (driver/index.tsx)", "issues": ["Wallet/earnings chip overlaps the ZENREX brand pill at top (pill partly hidden)", "Light theme: step labels (gold on white) low contrast", "'المحطة' translated as 'Station' (should be 'Stop')", "Swipe label truncated 'Pull: All orders received — …'"]},
+      {"screen": "Merchant delivery-settings", "issues": ["Top tab pills stretched ~180px tall", "Slot rows overflow horizontally at 390px: capacity input (ds-slot-cap-i) and delete are off-screen", "Plan-hour label not translated in EN", "plan_hour parseInt(..)||22 makes hour 0 impossible"]},
+      {"screen": "Merchant fleet Scheduling tab", "issues": ["Only shows tomorrow's plan, no date selector (cannot view/run today's plan though API supports ?date)", "Last card hidden behind floating tab bar (needs bottom padding)"]},
+      {"screen": "Checkout", "issues": ["'Supported payment methods' overlay panel covers payment options above Buy button", "'مكتملة' translated as 'Completed' (should be 'Full')", "Selected slot label shown untranslated in EN", "Hardcoded colors, not theme-aware"]},
+      {"screen": "Track order / driver profile", "issues": ["Tip chips 34px and language chips 33px tall (<44px touch target)"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_delivery_v3_scheduling.py", "/app/backend/tests/ui_prep_delivery_v3.py", "/app/test_reports/pytest/pytest_delivery_v3.xml"],
+  "action_items": [
+    "Apply default delivery settings (scheduled_slots etc.) in calculate_delivery_fee/scheduled_days_with_capacity/quote when settings doc is missing (or seed it idempotently) - currently customers see no slots",
+    "Validate scheduled_date + slot (allowed day, slot exists, capacity not full) in POST /api/orders; reject scheduled without date",
+    "Make tip atomic (claim order.tip first)",
+    "Hide driver loc/route in /orders/{oid}/live and WS sub when queue_waiting (not en_route)",
+    "Exclude delivery_type 'shipping' from driver dispatch",
+    "queue/pickup: skip orders already assigned to another driver; consider requiring ready status",
+    "Clamp slot remaining to >=0",
+    "Fix design issues: driver map chip overlapping ZENREX pill, delivery-settings tab pill height + slot row overflow, fleet plan tab date selector + bottom padding, checkout payment overlay, touch targets, translations ('Full', 'Stop')"
+  ],
+  "critical_code_review_comments": [
+    "server.py is 6900+ lines, delivery.py 1000+ lines - split into modules",
+    "PUT /merchant/delivery/settings and plan endpoints use raw dict bodies instead of Pydantic models",
+    "move_plan does not resequence the source driver's remaining stops (gaps in seq)",
+    "auto_plan_tick only plans 'tomorrow' once at plan_hour; scheduled orders placed after the run for tomorrow are never auto-planned"
+  ],
+  "updated_files": [
+    "/app/frontend/app/(tabs)/_layout.tsx (banner role fix)",
+    "/app/frontend/app/checkout.tsx (testIDs delivery-opt-<same_day|scheduled|shipping>, slot-picker-btn, slot-item-<i>)",
+    "/app/frontend/app/merchant/fleet.tsx (testIDs plan-order-<id>, move-to-<user_id>)",
+    "/app/frontend/app/merchant/delivery-settings.tsx (testIDs ds-slot-cap-<i>, ds-save)",
+    "/app/backend/tests/test_delivery_v3_scheduling.py (new)",
+    "/app/backend/tests/ui_prep_delivery_v3.py (new)"
+  ],
+  "success_rate": {"backend": "91% (10/11)", "frontend": "~85% (banner fixed; slots empty with default settings; shipping card UI not exercised - test customer is 0 km from branch)"},
+  "seed_data_creation": "Temporary _test orders only; all removed. settings.delivery doc removed again (was absent originally). Wallets restored (customer 2748, driver 65), driver offline, cash_in_hand 0, pools [express,standard], shift slot ''.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run pytest tests/test_delivery_v3_scheduling.py (cleans itself). For UI: python tests/ui_prep_delivery_v3.py seed|tomorrow|deliver|clean. Customer role is 'user'. Arabic glyphs appear disjoint in headless screenshots but computed letter-spacing is normal -> headless font artifact, not an app bug. Server clock is Oct 2026; TODAY computed in Riyadh tz. Delivery settings tabs: express/shipping fields under 'Same day' tab, plan-hour/capacity under 'Scheduled'.",
+  "rca_of_issue": "Banner: (tabs)/_layout.tsx gated on user.role==='customer' while seeded/registered customers have role 'user'. Empty slots: calculate_delivery_fee reads settings doc directly with [] fallback; defaults exist only inside GET /delivery/settings handler, and the DB has no delivery settings doc."
+}

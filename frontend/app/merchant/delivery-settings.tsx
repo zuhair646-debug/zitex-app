@@ -52,6 +52,12 @@ export default function DeliverySettings() {
         scheduled_flat_price: String(d.scheduled_flat_price ?? 20),
         scheduled_slots: d.scheduled_slots || [],
         zones: d.zones || [],
+        express_per_km_rate: String(d.express_per_km_rate ?? 1.5),
+        shipping_base_fee: String(d.shipping_base_fee ?? 25),
+        shipping_per_km: String(d.shipping_per_km ?? 0.15),
+        shipping_eta_text: d.shipping_eta_text ?? '2-4 أيام عمل',
+        max_active_per_driver: String(d.max_active_per_driver ?? 1),
+        plan_hour: String(d.plan_hour ?? 22),
       });
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
   }, []);
@@ -69,8 +75,14 @@ export default function DeliverySettings() {
         same_day_flat_price: parseFloat(data.same_day_flat_price) || 0,
         scheduled_enabled: data.scheduled_enabled,
         scheduled_flat_price: parseFloat(data.scheduled_flat_price) || 0,
-        scheduled_slots: data.scheduled_slots,
+        scheduled_slots: data.scheduled_slots.map((x: any) => ({ ...x, capacity: parseInt(x.capacity) || 0 })),
         zones: data.zones,
+        express_per_km_rate: parseFloat(data.express_per_km_rate) || 0,
+        shipping_base_fee: parseFloat(data.shipping_base_fee) || 0,
+        shipping_per_km: parseFloat(data.shipping_per_km) || 0,
+        shipping_eta_text: data.shipping_eta_text,
+        max_active_per_driver: parseInt(data.max_active_per_driver) || 1,
+        plan_hour: Math.min(23, Math.max(0, parseInt(data.plan_hour) || 22)),
       };
       await apiCall('/api/merchant/delivery/settings', { method: 'PUT', body: JSON.stringify(body) });
       Alert.alert(tSync('تم الحفظ', lang), tSync('تم تحديث إعدادات التوصيل بنجاح', curLang()));
@@ -111,14 +123,14 @@ export default function DeliverySettings() {
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <TX style={s.title}>إعدادات التوصيل</TX>
-        <TouchableOpacity onPress={save} disabled={saving} style={s.saveTopBtn}>
+        <TouchableOpacity testID="ds-save" onPress={save} disabled={saving} style={s.saveTopBtn}>
           {saving ? <ActivityIndicator color="white" size="small" /> : <TX style={s.saveTopText}>حفظ</TX>}
         </TouchableOpacity>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabs}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={[s.tabs, { alignItems: 'center' }]}>
         {TABS.map(t => (
-          <TouchableOpacity key={t} style={[s.tab, tab === t && s.tabActive]} onPress={() => setTab(t)}>
+          <TouchableOpacity key={t} testID={`ds-tab-${t}`} style={[s.tab, tab === t && s.tabActive]} onPress={() => setTab(t)}>
             <Text style={[s.tabText, tab === t && s.tabTextActive]}>{tSync(TAB_LABELS[t], curLang())}</Text>
           </TouchableOpacity>
         ))}
@@ -148,6 +160,18 @@ export default function DeliverySettings() {
           <View style={s.box}>
             <TX style={s.label}>السعر الثابت لنفس اليوم (ر.س)</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.same_day_flat_price} onChangeText={t => setData({ ...data, same_day_flat_price: t })} editable={data.same_day_enabled} />
+            <TX style={s.label}>سعر الكيلو للتوصيل السريع (ر.س / كم)</TX>
+            <TextInput testID="ds-express-km" style={s.input} keyboardType="numeric" value={data.express_per_km_rate} onChangeText={t => setData({ ...data, express_per_km_rate: t })} />
+            <TX style={s.hint}>رسوم التوصيل السريع = الرسوم الأساسية + المسافة × سعر الكيلو</TX>
+            <TX style={s.label}>عدد الطلبات السريعة للسائق في نفس الوقت</TX>
+            <TextInput style={s.input} keyboardType="numeric" value={data.max_active_per_driver} onChangeText={t => setData({ ...data, max_active_per_driver: t })} />
+            <TX style={s.section}>📦 الشحن (خارج نطاق الفروع)</TX>
+            <TX style={s.label}>رسوم الشحن الأساسية (ر.س)</TX>
+            <TextInput testID="ds-ship-base" style={s.input} keyboardType="numeric" value={data.shipping_base_fee} onChangeText={t => setData({ ...data, shipping_base_fee: t })} />
+            <TX style={s.label}>سعر الكيلو للشحن (ر.س / كم)</TX>
+            <TextInput style={s.input} keyboardType="numeric" value={data.shipping_per_km} onChangeText={t => setData({ ...data, shipping_per_km: t })} />
+            <TX style={s.label}>مدة الشحن المعروضة للعميل</TX>
+            <TextInput style={s.input} value={data.shipping_eta_text} onChangeText={t => setData({ ...data, shipping_eta_text: t })} />
             <TX style={s.hint}>يُطبق إذا لم تتطابق أي منطقة محددة</TX>
           </View>
         </>}
@@ -161,6 +185,8 @@ export default function DeliverySettings() {
             <TX style={s.label}>السعر الثابت للتوصيل المجدول (ر.س)</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.scheduled_flat_price} onChangeText={t => setData({ ...data, scheduled_flat_price: t })} editable={data.scheduled_enabled} />
             <TX style={s.hint}>أرخص من نفس اليوم لأن العميل يختار موعداً مرناً</TX>
+            <TX style={s.label}>ساعة التوزيع التلقائي على السائقين (مساء اليوم السابق، 0-23)</TX>
+            <TextInput testID="ds-plan-hour" style={s.input} keyboardType="numeric" value={data.plan_hour} onChangeText={t => setData({ ...data, plan_hour: t })} />
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
             <Text style={s.section}>{tSync('الفترات المتاحة (', lang)}{data.scheduled_slots.length})</Text>
@@ -172,6 +198,7 @@ export default function DeliverySettings() {
               <TextInput style={[s.input, { width: 70 }]} placeholder="09:00" value={sl.start} onChangeText={t => updSlot(i, 'start', t)} />
               <Text style={{ fontSize: 12 }}>-</Text>
               <TextInput style={[s.input, { width: 70 }]} placeholder="12:00" value={sl.end} onChangeText={t => updSlot(i, 'end', t)} />
+              <TextInput testID={`ds-slot-cap-${i}`} style={[s.input, { width: 64 }]} placeholder={tSync('السعة', lang)} keyboardType="numeric" value={String((sl as any).capacity ?? '')} onChangeText={t => updSlot(i, 'capacity' as any, t)} />
               <TouchableOpacity onPress={() => delSlot(i)}><Ionicons name="trash" size={18} color="#EF4444" /></TouchableOpacity>
             </View>
           ))}
@@ -286,7 +313,7 @@ const s = StyleSheet.create({
   zoneName: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
   zoneInfo: { fontSize: 11, color: '#6B7280', marginTop: 2 },
   zonePrice: { fontSize: 12, fontWeight: '700', color: '#8833FF', marginTop: 2 },
-  slotCard: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  slotCard: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 8 },
   opt: { backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8 },
   optActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
   optText: { fontSize: 12, color: '#374151', fontWeight: '600' },

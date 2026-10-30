@@ -8,7 +8,7 @@ import { useAuth } from '../_layout';
 import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync } from '../../src/useAutoT';
-import { useT } from '../../src/i18n';
+import { useT, LANGUAGES } from '../../src/i18n';
 import { PrimaryButton, SecondaryButton, Badge } from '../../src/components/ui';
 import { uploadMedia } from '../../src/utils/upload';
 import { notify } from '../../src/utils/notify';
@@ -23,7 +23,8 @@ const BADGE_AR: Record<string, [string, any]> = {
 
 export default function DriverProfile() {
   const s = useStyles();
-  const { lang } = useT();
+  const { lang, setLang } = useT();
+  const { mode, setMode } = useTheme();
   const { apiCall, logout } = useAuth();
   const [me, setMe] = useState<any>(null);
   const [perf, setPerf] = useState<any>(null);
@@ -141,6 +142,27 @@ export default function DriverProfile() {
           </View>
         ) : null}
 
+        <View style={s.card}>
+          <TX style={s.h2}>الإعدادات</TX>
+          <TX style={s.sub}>اللغة</TX>
+          <View style={s.langWrap}>
+            {LANGUAGES.map((l) => (
+              <TouchableOpacity key={l.code} testID={`drv-lang-${l.code}`} style={[s.langChip, lang === l.code && s.navOn]} onPress={() => setLang(l.code)}>
+                <Text style={[s.navTxt, lang === l.code && { color: colors.onBrandPrimary }]}>{l.flag} {l.nativeName}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TX style={s.sub}>المظهر</TX>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            {([['dark', 'داكن', 'moon'], ['light', 'فاتح', 'sunny']] as const).map(([k, l, ic]) => (
+              <TouchableOpacity key={k} testID={`drv-theme-${k}`} style={[s.navOpt, mode === k && s.navOn, { flexDirection: 'row', justifyContent: 'center', gap: 6 }]} onPress={() => setMode(k)}>
+                <Ionicons name={ic} size={16} color={mode === k ? colors.onBrandPrimary : colors.onSurface} />
+                <Text style={[s.navTxt, mode === k && { color: colors.onBrandPrimary }]}>{tSync(l, lang)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         <SecondaryButton label={tSync('تسجيل الخروج', lang)} icon="log-out" onPress={async () => { await stopBeacon(); logout(); }} />
       </ScrollView>
     </SafeAreaView>
@@ -174,6 +196,8 @@ function useStyles() {
     navOpt: { flex: 1, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingVertical: 12, alignItems: 'center' },
     navOn: { backgroundColor: colors.brand, borderColor: colors.brand },
     navTxt: { color: colors.onSurface, fontWeight: '700', fontSize: 13 },
+    langWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    langChip: { borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, minHeight: 44, justifyContent: 'center' },
     review: { borderBottomWidth: 1, borderBottomColor: colors.divider, paddingBottom: spacing.sm },
     stars: { color: colors.brand, fontSize: 16 },
   }), [themeKey]);

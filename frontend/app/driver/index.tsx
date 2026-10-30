@@ -35,12 +35,20 @@ export default function DriverHome() {
   const [eta, setEta] = useState<{ min: number; km: number } | null>(null);
   const [following, setFollowing] = useState(true);
   const [conn, setConn] = useState(true);
+  const [queue, setQueue] = useState<any>(null);
+  const pickupAll = async () => {
+    setBusy(true);
+    try { await apiCall('/api/driver/queue/pickup', { method: 'POST' }); await load(); setFollowing(true); }
+    catch (e: any) { notify(tSync('تنبيه', lang), e.message); }
+    finally { setBusy(false); }
+  };
   const lastRoute = useRef(0);
 
   const load = useCallback(async () => {
     try {
       const h = await apiCall('/api/driver/home');
       setHome(h);
+      setQueue(await apiCall('/api/driver/queue').catch(() => null));
       if (h.online && !h.active.length) setOpen(await apiCall('/api/driver/available-orders').catch(() => []));
     } catch (e: any) { notify(tSync('خطأ', lang), e.message); }
   }, []);
@@ -192,7 +200,24 @@ export default function DriverHome() {
         {!home ? null : home.offer ? (
           <OfferSheet offer={home.offer} onAccept={accept} onDecline={decline} busy={busy} />
         ) : active ? (
-          <ActiveDelivery order={active} eta={eta} navApp={home.nav_app} onStep={step} onDeliver={() => setProofOpen(true)} onIssue={issue} />
+          <>
+            {active.plan_seq ? (
+              <View style={s.stopTag}><Text style={s.stopTxt}>{tSync('التوصيلة', lang)} {active.plan_seq} / {(queue?.orders || []).length || home.active.length}</Text></View>
+            ) : null}
+            <ActiveDelivery order={active} eta={eta} navApp={home.nav_app} onStep={step} onDeliver={() => setProofOpen(true)} onIssue={issue} />
+          </>
+        ) : queue?.orders?.length && !queue.started ? (
+          <View style={s.idle} testID="driver-queue">
+            <View style={s.statusRow}><Ionicons name="calendar" size={20} color={colors.brand} />
+              <TX style={s.statusTxt}>طلبات ورديتك اليوم</TX></View>
+            <Text style={s.permTxt}>{queue.orders.length} {tSync('طلب', lang)}{queue.shift?.start ? ` · ${tSync('تبدأ الساعة', lang)} ${queue.shift.start}` : ''}{queue.shift?.slot ? ` · ${queue.shift.slot}` : ''}</Text>
+            <FlatList data={queue.orders} keyExtractor={(o: any) => o.id} style={{ maxHeight: 150 }}
+              renderItem={({ item }: any) => (
+                <View style={s.qRow}><Text style={s.qSeq}>{item.plan_seq}</Text><Text style={s.qAddr} numberOfLines={1}>{item.customer?.address}</Text>
+                  {item.cod ? <Ionicons name="cash" size={14} color={colors.brand} /> : null}</View>
+              )} />
+            <SwipeButton testID="driver-queue-pickup" label={tSync('اسحب: استلمت كل الطلبات — ابدأ المسار', lang)} onConfirm={pickupAll} loading={busy} />
+          </View>
         ) : (
           <View style={s.idle}>
             {home.status !== 'approved' ? (
@@ -261,5 +286,10 @@ function useStyles() {
     openFee: { color: colors.brand, fontWeight: '900', fontSize: 16 },
     openAddr: { color: colors.onSurfaceSecondary, fontSize: 12 },
     openTake: { color: colors.onSurface, fontSize: 11, fontWeight: '700', marginTop: 2 },
+    stopTag: { alignSelf: 'center', backgroundColor: colors.brand, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 4, marginBottom: 6 },
+    stopTxt: { color: colors.onBrandPrimary, fontWeight: '900', fontSize: 12 },
+    qRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.divider },
+    qSeq: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.brand, color: colors.onBrandPrimary, textAlign: 'center', lineHeight: 24, fontWeight: '900', overflow: 'hidden' },
+    qAddr: { flex: 1, color: colors.onSurface, fontSize: 13 },
   }), [themeKey]);
 }

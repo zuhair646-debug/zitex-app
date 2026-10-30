@@ -117,6 +117,7 @@ class OrderInput(BaseModel):
     branch_lat: Optional[float] = None
     branch_lng: Optional[float] = None
     scheduled_slot: Optional[dict] = None  # {label, start, end}
+    scheduled_date: str = ""  # YYYY-MM-DD (Riyadh) for scheduled delivery
     referral_code: Optional[str] = None    # affiliate/marketer referral code
 
 # ─── Auth Routes ───
@@ -930,6 +931,16 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
         # Legacy fallback
         delivery_cost = 25 if data.delivery_type in ("express", "same_day") else 15
 
+    if (fee_info.get("delivery_type") or data.delivery_type) == "scheduled":
+        days = await scheduled_days_with_capacity(await delivery_settings_doc())
+        day = next((d for d in days if d["date"] == data.scheduled_date), None)
+        if not day:
+            raise HTTPException(400, "اختر يوم توصيل متاحاً")
+        sl = next((x for x in day["slots"] if x.get("label") == (data.scheduled_slot or {}).get("label")), None)
+        if not sl:
+            raise HTTPException(400, "اختر فترة التوصيل")
+        if sl.get("full"):
+            raise HTTPException(409, "هذه الفترة ممتلئة، اختر فترة أخرى")
     tax = round((subtotal + delivery_cost) * 0.15, 2)  # VAT also applies to the delivery fee
     total = round(subtotal + tax + delivery_cost, 2)
     order_doc = {
@@ -947,6 +958,8 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
         "payment_method": data.payment_method,
         "notes": data.notes,
         "scheduled_slot": data.scheduled_slot,
+        "scheduled_date": data.scheduled_date,
+        "delivery_type": fee_info.get("delivery_type") or data.delivery_type,
         "dest_lat": data.dest_lat,
         "dest_lng": data.dest_lng,
         "branch_id": branch_id,
@@ -3074,20 +3087,22 @@ async def delete_branch(bid: str, user=Depends(get_current_user)):
 # ─── Delivery Settings (merchant) ───
 @api_router.get("/delivery/settings")
 async def get_delivery_settings():
-    s = await db.settings.find_one({"key": "delivery"})
-    if not s:
-        s = {"base_fee": 10, "base_distance_km": 10, "per_km_rate": 1.2,
+    return await delivery_settings_doc()
+
+
+async def delivery_settings_doc():
+    """Merchant delivery settings merged over safe defaults (used by every pricing path)."""
+    s = {"base_fee": 10, "base_distance_km": 10, "per_km_rate": 1.2,
              "free_delivery_threshold": 0, "max_distance_km": 50,
              "same_day_enabled": True, "same_day_flat_price": 30,
              "scheduled_enabled": True, "scheduled_flat_price": 20,
              "scheduled_slots": [
-                 {"label": "صباحاً 9 - 12", "start": "09:00", "end": "12:00"},
-                 {"label": "ظهراً 12 - 4", "start": "12:00", "end": "16:00"},
-                 {"label": "مساءً 4 - 8", "start": "16:00", "end": "20:00"},
-                 {"label": "ليلاً 8 - 11", "start": "20:00", "end": "23:00"},
+                 {"label": "الفترة الصباحية", "start": "09:00", "end": "14:00", "capacity": 0},
+                 {"label": "الفترة المسائية", "start": "16:00", "end": "22:00", "capacity": 0},
              ],
              "zones": []}
-    s.pop("_id", None); s.pop("key", None)
+    db_s = await db.settings.find_one({"key": "delivery"}) or {}
+    s.update({k: v for k, v in db_s.items() if k not in ("_id", "key")})
     return s
 
 @api_router.put("/merchant/delivery/settings")
@@ -3104,7 +3119,7 @@ async def calculate_delivery_fee(request: Request):
     customer_lat = body.get("lat", 0)
     customer_lng = body.get("lng", 0)
     delivery_type = body.get("delivery_type", "standard")  # "same_day" | "scheduled" | "standard"
-    s = await db.settings.find_one({"key": "delivery"}) or {}
+    s = await delivery_settings_doc()
 
     # Check zones — polygon first, then circle, only if delivery_type matches (or zone allows all)
     zones = s.get("zones", [])
@@ -3132,12 +3147,23 @@ async def calculate_delivery_fee(request: Request):
             }
 
     # Same-day flat rate if no zone match
+    max_dist = s.get("max_distance_km", 50)
+    if distance_km and distance_km > max_dist:
+        # Outside the branch's driver range → shipping (priced by distance)
+        if not s.get("shipping_enabled", True):
+            raise HTTPException(status_code=400, detail=f"Out of delivery range (max {max_dist} km)")
+        fee = float(s.get("shipping_base_fee", 25)) + distance_km * float(s.get("shipping_per_km", 0.15))
+        return {"distance_km": round(distance_km, 2), "delivery_fee": round(min(fee, float(s.get("shipping_max_fee", 99))), 2),
+                "delivery_type": "shipping", "in_zone": False, "out_of_range": True,
+                "eta_text": s.get("shipping_eta_text", "2-4 أيام عمل")}
+
     if delivery_type == "same_day":
+        # Express ("hot") delivery: base + price per km set by the merchant
         if not s.get("same_day_enabled", True):
             raise HTTPException(status_code=400, detail="Same-day delivery is not available")
-        fee = s.get("same_day_flat_price", 30)
-        return {"distance_km": distance_km, "delivery_fee": fee, "delivery_type": "same_day",
-                "in_zone": False, "estimated_minutes": 90}
+        fee = float(s.get("same_day_flat_price", 15)) + distance_km * float(s.get("express_per_km_rate", 1.5))
+        return {"distance_km": round(distance_km, 2), "delivery_fee": round(fee, 2), "delivery_type": "same_day",
+                "in_zone": False, "estimated_minutes": int(25 + distance_km * 3)}
 
     # Scheduled flat rate if no zone match
     if delivery_type == "scheduled":
@@ -3145,15 +3171,13 @@ async def calculate_delivery_fee(request: Request):
             raise HTTPException(status_code=400, detail="Scheduled delivery is not available")
         fee = s.get("scheduled_flat_price", 20)
         return {"distance_km": distance_km, "delivery_fee": fee, "delivery_type": "scheduled",
-                "in_zone": False, "scheduled_slots": s.get("scheduled_slots", [])}
+                "in_zone": False, "scheduled_slots": s.get("scheduled_slots", []),
+                "scheduled_days": await scheduled_days_with_capacity(s)}
 
     # Standard: distance-based
     base_fee = s.get("base_fee", 10)
     base_dist = s.get("base_distance_km", 10)
     per_km = s.get("per_km_rate", 1.2)
-    max_dist = s.get("max_distance_km", 50)
-    if distance_km > max_dist:
-        raise HTTPException(status_code=400, detail=f"Out of delivery range (max {max_dist} km)")
     if distance_km <= base_dist:
         fee = base_fee
     else:
@@ -3161,6 +3185,22 @@ async def calculate_delivery_fee(request: Request):
     return {"distance_km": distance_km, "delivery_fee": round(fee, 2),
             "base_fee": base_fee, "base_distance_km": base_dist, "per_km_rate": per_km,
             "delivery_type": "standard", "in_zone": False, "estimated_minutes": 45}
+
+async def scheduled_days_with_capacity(s):
+    """Next N days × slots with remaining capacity (merchant sets slot.capacity per day; 0 = unlimited)."""
+    out = []
+    today = (datetime.now(timezone.utc) + timedelta(hours=3)).date()
+    for i in range(int(s.get("scheduled_days_ahead", 3))):
+        d = (today + timedelta(days=i + (0 if s.get("scheduled_same_day", False) else 1))).isoformat()
+        slots = []
+        for sl in s.get("scheduled_slots", []):
+            cap = int(sl.get("capacity") or 0)
+            used = await db.orders.count_documents({"delivery_type": "scheduled", "scheduled_date": d,
+                                                    "scheduled_slot.label": sl.get("label"), "status": {"$ne": "cancelled"}})
+            slots.append({**sl, "remaining": max(0, cap - used) if cap else None, "full": bool(cap) and used >= cap})
+        out.append({"date": d, "slots": slots})
+    return out
+
 
 # ─── Smart delivery quote (handles items, branch availability, alternative branch) ───
 @api_router.post("/delivery/quote")

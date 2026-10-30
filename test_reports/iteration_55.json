@@ -1,0 +1,41 @@
+{
+  "summary": "Retest of the iteration_54 delivery v3 fixes. Backend: the new tests/test_delivery_v3_fixes.py passed 14/14 and the regression tests/test_delivery_v3_scheduling.py passed 11/11. Verified: with no settings doc, calculate-fee, quote and GET settings fall back to the default morning/evening slots. POST /orders rejects a scheduled order with no date, today's date, a date 10 days out, a bad slot or a missing slot (all 400). A full slot returns 409, and remaining is clamped to 0 when the slot is overbooked. A valid order returns 200 and saves date and slot. 8 concurrent tip requests give exactly one 200 (1 wallet debit, 1 transaction). A failed low-balance tip releases the lock. Shipping orders are never offered to drivers. queue/pickup skips orders assigned to another driver and pending/cancelled orders. A planned stop that is not yet en route gets no driver location or route from /live, while the en-route stop does. The WS sub initial location gating is correct by code review. UI (390x844): checkout scheduled flow worked end to end: day chips, slot modal, then place order returned 200 with the chosen date and slot saved. A full slot shows 'Full'/'ممتلئة' and is disabled. The ZENREX map label no longer overlaps the driver earnings chip. Fleet Scheduling plan-prev/plan-next change the date. Delivery-settings slot rows wrap. One fix is NOT complete: the delivery-settings tab pills are still 116px tall. No deprecated expo packages.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/orders (scheduled)", "issue": "The capacity check is read-then-insert with no atomic reservation, so two concurrent orders can both take the last spot in a slot. Low risk."},
+      {"endpoint": "POST /api/driver/queue/pickup", "issue": "find() then update_one() with no driver_id guard in the update filter. An express acceptance between the two calls could be overwritten. Add driver_id {$in:[None,'',uid]} to the update filter."},
+      {"endpoint": "WS sub", "issue": "The initial driver_loc is hidden for every viewer of a planned, not-en-route order, including merchant/fleet. /live hides it only for the customer. This is inconsistent but harmless."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "merchant/delivery-settings tabs", "issue": "STILL BROKEN: the horizontal ScrollView tab pills stretch to about 116px tall (they should be about 40px), with a big empty purple or grey block under each label. Fix: style={{flexGrow:0}} on the ScrollView plus alignItems:'center' (or 'flex-start') in contentContainerStyle s.tabs. Ref: app/merchant/delivery-settings.tsx:131,297", "testID": "ds-tab-scheduled", "priority": "MEDIUM"},
+      {"component": "checkout web success", "issue": "After a successful order on web, Alert.alert does nothing, so the user stays on checkout with no feedback (the order is created and the cart cleared). Works on native. Consider a web fallback such as router.replace to track-order. Ref: app/checkout.tsx:151", "testID": "place-order-btn", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "checkout", "issues": ["The slot button text uses the raw Arabic label in non-Arabic UI ('Period: الفترة الصباحية (14:00 - 09:00)'), and the mixed RTL reverses the time order. Wrap the label in tSync: tf(..., [tSync(scheduledSlot.label, lang), ...]). Ref: app/checkout.tsx:240"]},
+      {"screen": "merchant/fleet Scheduling", "issues": ["plan-prev/plan-next chips are 44x38 (below the 44 minimum height).", "In LTR (English) the chevrons point the wrong way: prev on the left shows '>' and next on the right shows '<'. Choose the icon based on RTL. Ref: app/merchant/fleet.tsx:128-130"]},
+      {"screen": "merchant/delivery-settings Scheduled", "issues": ["Slot rows now wrap, but the '-' separator is left at the end of the first line. The trash icon is an 18px touch target with no testID, and the '+ Period' button has no testID."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_delivery_v3_fixes.py", "/app/backend/tests/test_delivery_v3_scheduling.py", "/app/test_reports/pytest/delivery_v3_fixes.xml"],
+  "action_items": [
+    "Fix the delivery-settings tab pill height (ScrollView flexGrow:0 plus alignItems in contentContainerStyle). This iteration_54 item is still open.",
+    "Translate the slot label in the checkout slot button (tSync).",
+    "Fleet plan-prev/next: minHeight 44 and RTL-aware chevrons.",
+    "Optional: add a driver_id guard to the queue/pickup update filter; make the slot capacity reservation atomic."
+  ],
+  "critical_code_review_comments": [
+    "Fixed a test cleanup bug: test_delivery_v3_scheduling.py deleted loyalty_transactions by 'order_id', but the server stores 'ref_id'. Each run leaked about 11.5k loyalty points to the customer 0500000000. I removed 5 orphan earn transactions from 2026-10-30, which brings the customer's loyalty balance back to its previous value.",
+    "The tip lock and release pattern is correct (conditional $set on tip $exists:false, $unset when the wallet debit fails)."
+  ],
+  "updated_files": ["/app/backend/tests/test_delivery_v3_fixes.py (new)", "/app/backend/tests/test_delivery_v3_scheduling.py (loyalty cleanup key fixed)", "/app/frontend/app/merchant/delivery-settings.tsx (added testID ds-tab-{key})"],
+  "success_rate": {"backend": "100% (25/25)", "frontend": "90% (1 fix still open: ds tab height)"},
+  "seed_data_creation": "None kept. Test orders, settings doc, cart (restored to 1 item), stock (+1 restored), wallets, loyalty transactions and notifications were all cleaned up. Driver is offline with cash 0. The delivery settings doc is absent, as it was at the start.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run pytest tests/test_delivery_v3_fixes.py and tests/test_delivery_v3_scheduling.py; both clean up after themselves. Note that POST /orders awards loyalty points with ref_id=order id, so cleanup must delete by ref_id. The UI language for the customer is English. Server date is 2026-10-30 (Riyadh tz). sched-day chips start tomorrow. Fleet plan tab testID is tab-plan, and the plan starts at offset 1 (tomorrow)."
+}

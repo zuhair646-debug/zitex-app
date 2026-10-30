@@ -32,6 +32,12 @@ export default function TrackOrder() {
   const [o, setO] = useState<any>(null);
   const [stars, setStars] = useState(0);
   const [rated, setRated] = useState(false);
+  const [tipAmt, setTipAmt] = useState(0);
+  const [tipped, setTipped] = useState(false);
+  const sendTip = async () => {
+    try { await apiCall(`/api/orders/${id}/tip`, { method: 'POST', body: JSON.stringify({ amount: tipAmt }) }); setTipped(true); notify(tSync('شكراً لكرمك 🌟', lang), tSync('وصلت الإكرامية للسائق', lang)); }
+    catch (e: any) { notify(tSync('تنبيه', lang), e.message); }
+  };
   const fitted = useRef(false);
 
   const load = useCallback(async () => {
@@ -107,6 +113,18 @@ export default function TrackOrder() {
               <PrimaryButton testID="rate-submit" label={tSync('إرسال التقييم', lang)} onPress={rate} disabled={!stars} />
             </View>
           ) : null}
+          {o.status === 'delivered' && drv && !o.tipped && !tipped ? (
+            <View style={s.rate} testID="track-tip">
+              <TX style={s.stage}>🎁 إكرامية للسائق (اختياري)</TX>
+              <View style={s.stars}>{[5, 10, 15, 20].map((n) => (
+                <TouchableOpacity key={n} testID={`tip-${n}`} style={[s.tipChip, tipAmt === n && { backgroundColor: colors.brand }]} onPress={() => setTipAmt(n)}>
+                  <Text style={[s.tipTxt, tipAmt === n && { color: colors.onBrandPrimary }]}>{n} {tSync('ر.س', lang)}</Text>
+                </TouchableOpacity>
+              ))}</View>
+              <PrimaryButton testID="tip-send" label={tSync('إرسال الإكرامية من المحفظة', lang)} onPress={sendTip} disabled={!tipAmt} />
+            </View>
+          ) : null}
+          {o.queue_waiting ? <TX style={s.wait}>طلبك مع السائق ضمن جولة التوصيل، وسنشعرك فور توجهه إليك</TX> : null}
           <View style={s.addr}><Ionicons name="location" size={18} color={colors.brand} /><Text style={s.addrTxt}>{o.customer?.address}</Text></View>
         </>) : null}
       </ScrollView>
@@ -141,6 +159,8 @@ function useStyles() {
     wait: { color: colors.onSurfaceSecondary, textAlign: 'center' },
     rate: { alignItems: 'center', gap: spacing.sm },
     stars: { flexDirection: 'row', gap: spacing.sm },
+    tipChip: { borderRadius: radius.pill, borderWidth: 1, borderColor: colors.brand, paddingHorizontal: spacing.md, minHeight: 44, justifyContent: 'center' },
+    tipTxt: { color: colors.brand, fontWeight: '800' },
     addr: { flexDirection: 'row', gap: 6, alignItems: 'flex-start' },
     addrTxt: { color: colors.onSurfaceSecondary, flex: 1 },
   }), [themeKey]);

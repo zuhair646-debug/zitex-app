@@ -687,3 +687,10 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - Driver app tabs: Map (offer sheet, active delivery stepper, proof OTP/photo, SOS, hot zones), Earnings (charts, payouts min 50), Trips, Profile (performance/levels/badges, vehicle, documents, nav app).
 - Customer track-order live map + OTP + chat + rating. Merchant `/merchant/fleet`. Independent driver apply `/driver-apply` + approval.
 - Future: National Address (SPL) API when user gets key; geocoding search (Photon) self-host.
+
+## v1.30.0 — Delivery v3: express/standard/shipping + shifts + planner + tips (Oct 2026) — DONE
+- Checkout: express (base + km × express_per_km_rate), standard/scheduled (day chips + morning/evening slots with capacity, validated server-side), shipping auto when beyond max_distance_km (shipping_base_fee + km × shipping_per_km, eta text). Defaults via `delivery_settings_doc()` in server.py.
+- Driver shifts & pools: PUT /api/merchant/drivers/{did}/shift; express dispatch only to express pool, max_active_per_driver (default 1), auto-dispatch next hot order on completion.
+- Planner (delivery.py): auto at plan_hour (22 Riyadh) for tomorrow, by area sweep then equal split, nearest-neighbour sequence; merchant Fleet "الجدولة" tab (run/move, date nav). Driver queue card → pickup all → stop #1 en_route + customer push; next stop auto.
+- Customer bottom live banner (src/components/LiveDeliveryBanner.tsx, /api/delivery/active-order), tips via wallet (POST /api/orders/{oid}/tip, atomic).
+- Driver settings: language (20) + theme. Map: Z car marker + ZENREX brand pill on all maps.

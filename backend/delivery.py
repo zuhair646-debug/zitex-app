@@ -227,7 +227,9 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
                          "address": o.get("address", ""), "lat": o.get("dest_lat") or o.get("delivery_lat"), "lng": o.get("dest_lng") or o.get("delivery_lng"),
                          "notes": o.get("notes", "")},
             "created_at": o.get("created_at"), "accepted_at": o.get("accepted_at"), "delivered_at": o.get("delivered_at"),
-            "driver_earnings": o.get("driver_earnings"),
+            "driver_earnings": o.get("driver_earnings"), "delivery_type": o.get("delivery_type", ""),
+            "plan_seq": o.get("plan_seq"), "en_route": o.get("en_route", False),
+            "scheduled_date": o.get("scheduled_date", ""), "slot": (o.get("scheduled_slot") or {}).get("label", ""),
         }
 
     async def eligible_drivers(o, exclude):
@@ -236,7 +238,10 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
         async for d in db.drivers.find({"online": True}):
             if d["user_id"] in exclude or d.get("status", "approved") != "approved":
                 continue
-            if await db.orders.count_documents({"driver_id": d["user_id"], "status": {"$in": ACTIVE}}) >= 3:
+            if "express" not in (d.get("pools") or ["express", "standard"]):
+                continue
+            max_active = int((await db.settings.find_one({"key": "delivery"}) or {}).get("max_active_per_driver", 1))
+            if await db.orders.count_documents({"driver_id": d["user_id"], "status": {"$in": ACTIVE}}) >= max_active:
                 continue
             if await db.delivery_offers.count_documents({"driver_id": d["user_id"], "status": "pending"}):
                 continue
@@ -249,8 +254,8 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
     async def dispatch(oid: str):
         """Offer the order to the nearest free approved online driver (30s to accept)."""
         o = await db.orders.find_one({"_id": ObjectId(oid)})
-        if not o or o.get("driver_id") or o.get("status") != "ready_for_pickup":
-            return None
+        if not o or o.get("driver_id") or o.get("status") != "ready_for_pickup" or o.get("delivery_type") in ("scheduled", "shipping"):
+            return None  # scheduled orders are distributed by the shift planner
         tried = o.get("offered_to", [])
         cands = await eligible_drivers(o, tried)
         if not cands:
@@ -291,6 +296,10 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
                     await dispatch(off["order_id"])
             except Exception as e:
                 logger.error(f"offer expiry loop: {e}")
+            try:
+                await auto_plan_tick()
+            except Exception as e:
+                logger.error(f"auto plan: {e}")
             await asyncio.sleep(3)
 
     async def set_loc(uid, lat, lng, heading=0, speed=0, persist=True):
@@ -298,7 +307,8 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
         prev = hub.last_loc.get(uid)
         hub.last_loc[uid] = loc
         msg = {"t": "driver_loc", "driver_id": uid, **loc}
-        async for o in db.orders.find({"driver_id": uid, "status": {"$in": ACTIVE}}, {"_id": 1}):
+        # only customers whose order is actually on the way see the driver (not the rest of a planned route)
+        async for o in db.orders.find({"driver_id": uid, "status": {"$in": ACTIVE}, "$or": [{"plan_seq": {"$exists": False}}, {"en_route": True}]}, {"_id": 1}):
             await hub.to_room(str(o["_id"]), msg)
         await hub.to_fleet(msg)
         # Persist at most every 5s (realtime goes through memory)
@@ -363,10 +373,10 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
                 elif t == "sub":
                     oid = str(m.get("order_id", ""))
                     if ObjectId.is_valid(oid):
-                        o = await db.orders.find_one({"_id": ObjectId(oid)}, {"user_id": 1, "driver_id": 1})
+                        o = await db.orders.find_one({"_id": ObjectId(oid)}, {"user_id": 1, "driver_id": 1, "plan_seq": 1, "en_route": 1})
                         if o and can_view(u, o):
                             hub.rooms.setdefault(oid, set()).add(ws)
-                            if o.get("driver_id"):
+                            if o.get("driver_id") and not (o.get("plan_seq") and not o.get("en_route")):
                                 loc = await live_loc(o["driver_id"])
                                 if loc:
                                     await ws.send_text(json.dumps({"t": "driver_loc", "driver_id": o["driver_id"], **{k: v for k, v in loc.items() if k != "_saved"}}, default=str))
@@ -424,7 +434,7 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
             o = await db.orders.find_one({"_id": ObjectId(pend["order_id"])})
             if o:
                 offer = {**{k: v for k, v in pend.items() if k != "_id"}, "id": str(pend["_id"]), "order": await order_card(o)}
-        active = [await order_card(o) async for o in db.orders.find({"driver_id": user["id"], "status": {"$in": ACTIVE}}).sort("accepted_at", 1)]
+        active = [await order_card(o) async for o in db.orders.find({"driver_id": user["id"], "status": {"$in": ACTIVE}}).sort([("en_route", -1), ("plan_seq", 1), ("accepted_at", 1)])]
         return {"name": user.get("name", ""), "online": d.get("online", False), "status": d.get("status", "approved"),
                 "type": d.get("type", "store"), "photo_url": d.get("photo_url", ""),
                 "today_trips": len(today), "today_earnings": round(sum(float(x.get("driver_earnings") or 0) for x in today), 2),
@@ -547,6 +557,9 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
         if o.get("user_id"):
             await create_notification(o["user_id"], "تم تسليم طلبك ✅", "قيّم تجربتك مع السائق", {"type": "rate_driver", "order_id": oid})
         await push_order(oid)
+        await start_next_planned(user["id"])
+        async for w in db.orders.find({"status": "ready_for_pickup", "driver_id": {"$in": [None, ""]}, "delivery_type": {"$ne": "scheduled"}}, {"_id": 1}).limit(3):
+            await dispatch(str(w["_id"]))  # driver is free again → next hot order
         return {"ok": True, "earnings": earning, "cash_collected": cash}
 
     @router.post("/driver/orders/{oid}/issue")
@@ -676,6 +689,175 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
             await create_notification(str(m["_id"]), "طلب انضمام سائق جديد", body.name, {"type": "driver_application"})
         return {"ok": True, "message": "تم استلام طلبك، سيتم مراجعته من المتجر"}
 
+    # ─── Shift planner (scheduled / standard orders) ───
+    def bearing(b_lat, b_lng, lat, lng):
+        return math.atan2(lng - b_lng, lat - b_lat)
+
+    def nn_sequence(start, pts):
+        """Greedy nearest-neighbour route from the store through all drops."""
+        out, cur, rest = [], start, list(pts)
+        while rest:
+            nxt = min(rest, key=lambda o: hav_km(cur[0], cur[1], o.get("dest_lat") or 0, o.get("dest_lng") or 0) or 9999)
+            out.append(nxt); rest.remove(nxt); cur = (nxt.get("dest_lat") or cur[0], nxt.get("dest_lng") or cur[1])
+        return out
+
+    async def plan_day(date: str):
+        """Distribute that day's scheduled orders: per slot → slot's standard-pool drivers,
+        by area (angular sweep around the store) then equal counts, each route nearest-neighbour."""
+        orders = await db.orders.find({"delivery_type": "scheduled", "scheduled_date": date, "driver_id": {"$in": [None, ""]},
+                                       "status": {"$nin": ["cancelled", "delivered"]}}).to_list(5000)
+        drivers = [d async for d in db.drivers.find({"status": {"$in": ["approved", None]}})
+                   if "standard" in (d.get("pools") or ["express", "standard"])]
+        by_slot: dict = {}
+        for o in orders:
+            by_slot.setdefault((o.get("scheduled_slot") or {}).get("label", ""), []).append(o)
+        summary = []
+        for slot, lst in by_slot.items():
+            ds = [d for d in drivers if not (d.get("shift") or {}).get("slot") or d["shift"]["slot"] == slot]
+            if not ds:
+                summary.append({"slot": slot, "orders": len(lst), "drivers": 0})
+                continue
+            b_lat, b_lng = lst[0].get("branch_lat") or 0, lst[0].get("branch_lng") or 0
+            lst.sort(key=lambda o: bearing(b_lat, b_lng, o.get("dest_lat") or b_lat, o.get("dest_lng") or b_lng))
+            k = len(ds)
+            size = math.ceil(len(lst) / k)
+            for i, d in enumerate(ds):
+                chunk = nn_sequence((b_lat, b_lng), lst[i * size:(i + 1) * size])
+                du = await db.users.find_one({"_id": ObjectId(d["user_id"])}, {"name": 1}) or {}
+                for seq, o in enumerate(chunk, start=1):
+                    await db.orders.update_one({"_id": o["_id"]}, {"$set": {"planned_driver_id": d["user_id"], "planned_driver_name": du.get("name", ""),
+                                                                           "plan_seq": seq, "plan_date": date}})
+            summary.append({"slot": slot, "orders": len(lst), "drivers": k, "per_driver": size})
+        await db.settings.update_one({"key": "delivery_plan"}, {"$set": {f"done.{date}": iso()}}, upsert=True)
+        return summary
+
+    async def auto_plan_tick():
+        s = await db.settings.find_one({"key": "delivery"}) or {}
+        local = now() + RIYADH
+        if local.hour < int(s.get("plan_hour", 22)):
+            return
+        tomorrow = (local.date() + timedelta(days=1)).isoformat()
+        p = await db.settings.find_one({"key": "delivery_plan"}) or {}
+        if tomorrow not in (p.get("done") or {}):
+            await plan_day(tomorrow)
+
+    async def start_next_planned(uid):
+        """After pickup / each delivery: the next stop in the planned route goes 'on the way' + customer notified."""
+        if await db.orders.count_documents({"driver_id": uid, "status": "picked_up", "en_route": True}):
+            return
+        nxt = await db.orders.find_one({"driver_id": uid, "status": "picked_up", "plan_seq": {"$exists": True}}, sort=[("plan_seq", 1)])
+        if not nxt:
+            return
+        await db.orders.update_one({"_id": nxt["_id"]}, {"$set": {"en_route": True, "en_route_at": iso()}})
+        if nxt.get("user_id"):
+            await create_notification(nxt["user_id"], "🚚 السائق في الطريق إليك الآن", f"تابع وصوله على الخريطة • رمز الاستلام {nxt.get('delivery_otp', '')}",
+                                      {"type": "order", "order_id": str(nxt["_id"])})
+        await push_order(str(nxt["_id"]))
+
+    @router.get("/merchant/delivery/plan")
+    async def get_plan(date: str = "", user=Depends(get_current_user)):
+        require_merchant(user)
+        date = date or ((now() + RIYADH).date() + timedelta(days=1)).isoformat()
+        rows: dict = {}
+        async for o in db.orders.find({"delivery_type": "scheduled", "scheduled_date": date, "status": {"$ne": "cancelled"}}).sort("plan_seq", 1):
+            key = o.get("planned_driver_id") or o.get("driver_id") or ""
+            r = rows.setdefault(key, {"driver_user_id": key, "driver_name": o.get("planned_driver_name") or o.get("driver_name") or "", "orders": []})
+            r["orders"].append({"id": str(o["_id"]), "seq": o.get("plan_seq"), "slot": (o.get("scheduled_slot") or {}).get("label", ""),
+                                "address": o.get("address", ""), "status": o.get("status"), "total": o.get("total", 0)})
+        return {"date": date, "groups": list(rows.values())}
+
+    @router.post("/merchant/delivery/plan/run")
+    async def run_plan(body: dict, user=Depends(get_current_user)):
+        require_merchant(user)
+        date = body.get("date") or ((now() + RIYADH).date() + timedelta(days=1)).isoformat()
+        await db.orders.update_many({"delivery_type": "scheduled", "scheduled_date": date, "driver_id": {"$in": [None, ""]}},
+                                    {"$unset": {"planned_driver_id": "", "plan_seq": "", "planned_driver_name": ""}})
+        return {"date": date, "summary": await plan_day(date)}
+
+    @router.post("/merchant/delivery/plan/move")
+    async def move_plan(body: dict, user=Depends(get_current_user)):
+        require_merchant(user)
+        o = await get_order(body.get("order_id", ""))
+        if o.get("driver_id"):
+            raise HTTPException(409, "السائق استلم الطلب بالفعل")
+        did = body.get("driver_user_id", "")
+        du = await db.users.find_one({"_id": ObjectId(did), "role": "driver"}) if ObjectId.is_valid(did) else None
+        if not du:
+            raise HTTPException(404, "السائق غير موجود")
+        last = await db.orders.find_one({"planned_driver_id": did, "plan_date": o.get("scheduled_date")}, sort=[("plan_seq", -1)])
+        await db.orders.update_one({"_id": o["_id"]}, {"$set": {"planned_driver_id": did, "planned_driver_name": du.get("name", ""),
+                                                               "plan_seq": ((last or {}).get("plan_seq") or 0) + 1, "plan_date": o.get("scheduled_date")}})
+        return {"ok": True}
+
+    @router.put("/merchant/drivers/{did}/shift")
+    async def set_shift(did: str, body: dict, user=Depends(get_current_user)):
+        require_merchant(user)
+        pools = [p for p in (body.get("pools") or ["express", "standard"]) if p in ("express", "standard")] or ["express", "standard"]
+        shift = {"slot": str(body.get("slot") or ""), "start": str(body.get("start") or "08:00")[:5]}
+        r = await db.drivers.update_one({"_id": ObjectId(did)} if ObjectId.is_valid(did) else {"_id": None}, {"$set": {"pools": pools, "shift": shift}})
+        if not r.matched_count:
+            raise HTTPException(404)
+        return {"pools": pools, "shift": shift}
+
+    @router.get("/driver/queue")
+    async def queue(user=Depends(get_current_user)):
+        require_driver(user)
+        d = await driver_doc(user["id"])
+        today = (now() + RIYADH).date().isoformat()
+        lst = [await order_card(o) async for o in db.orders.find({"planned_driver_id": user["id"], "plan_date": today,
+                                                                   "status": {"$nin": ["cancelled", "delivered"]}}).sort("plan_seq", 1)]
+        return {"date": today, "shift": d.get("shift") or {}, "pools": d.get("pools") or ["express", "standard"],
+                "orders": lst, "started": any(o["status"] in ACTIVE for o in lst)}
+
+    @router.post("/driver/queue/pickup")
+    async def queue_pickup(user=Depends(get_current_user)):
+        """Driver collected all planned orders from the store → route starts with stop #1."""
+        require_driver(user)
+        today = (now() + RIYADH).date().isoformat()
+        n = 0
+        async for o in db.orders.find({"planned_driver_id": user["id"], "plan_date": today,
+                                       "status": {"$in": ["ready_for_pickup", "processing", "confirmed", "preparing", "assigned"]},
+                                       "driver_id": {"$in": [None, "", user["id"]]}}):
+            await db.orders.update_one({"_id": o["_id"], "driver_id": {"$in": [None, "", user["id"]]}}, {"$set": {
+                "driver_id": user["id"], "driver_name": user.get("name", ""), "driver_phone": user.get("phone", ""),
+                "status": "picked_up", "delivery_step": "picked_up", "delivery_otp": otp_for(o), "en_route": False,
+                "accepted_at": o.get("accepted_at") or iso(), "picked_up_at": iso(), "assign_method": "plan"}})
+            n += 1
+        if not n:
+            raise HTTPException(400, "لا توجد طلبات مجدولة لك اليوم")
+        await start_next_planned(user["id"])
+        return {"ok": True, "count": n}
+
+    @router.post("/orders/{oid}/tip")
+    async def tip(oid: str, body: PayoutIn, user=Depends(get_current_user)):
+        o = await get_order(oid)
+        if o.get("user_id") != user["id"] or o.get("status") != "delivered" or not o.get("driver_id"):
+            raise HTTPException(403, "Forbidden")
+        amt = round(float(body.amount), 2)
+        if amt <= 0 or amt > 500:
+            raise HTTPException(400, "مبلغ غير صالح")
+        lock = await db.orders.update_one({"_id": o["_id"], "tip": {"$exists": False}}, {"$set": {"tip": {"amount": amt, "at": iso()}}})
+        if not lock.modified_count:
+            raise HTTPException(400, "تم إرسال الإكرامية مسبقاً")
+        res = await db.users.update_one({"_id": ObjectId(user["id"]), "wallet_balance": {"$gte": amt}}, {"$inc": {"wallet_balance": -amt}})
+        if not res.modified_count:
+            await db.orders.update_one({"_id": o["_id"]}, {"$unset": {"tip": ""}})
+            raise HTTPException(400, "رصيد المحفظة غير كافٍ — اشحن محفظتك أولاً")
+        await db.users.update_one({"_id": ObjectId(o["driver_id"])}, {"$inc": {"wallet_balance": amt}})
+        await db.driver_transactions.insert_one({"driver_id": o["driver_id"], "order_id": oid, "amount": amt, "type": "tip", "created_at": iso()})
+        await create_notification(o["driver_id"], f"🎁 إكرامية {amt:.0f} ر.س", "شكراً لك من العميل على التوصيل المميز", {"type": "tip", "order_id": oid})
+        return {"ok": True}
+
+    @router.get("/delivery/active-order")
+    async def active_delivery(user=Depends(get_current_user)):
+        """For the customer's bottom live-tracking banner."""
+        o = await db.orders.find_one({"user_id": user["id"], "status": {"$in": ACTIVE}, "$or": [{"plan_seq": {"$exists": False}}, {"en_route": True}]},
+                                     sort=[("accepted_at", -1)])
+        if not o:
+            return {"order": None}
+        return {"order": {"id": str(o["_id"]), "status": o.get("status"), "step": o.get("delivery_step"), "driver_name": o.get("driver_name", ""),
+                          "otp": o.get("delivery_otp")}}
+
     # ─── Customer side ───
     @router.get("/orders/{oid}/live")
     async def order_live(oid: str, user=Depends(get_current_user)):
@@ -685,10 +867,15 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
         card = await order_card(o)
         out = {**card, "driver": None, "otp": o.get("delivery_otp") if o.get("user_id") == user["id"] else None,
                "rated": bool(o.get("driver_rating"))}
+        out["rated"] = bool(o.get("driver_rating"))
+        out["tipped"] = bool(o.get("tip"))
+        out["en_route"] = o.get("en_route", False)
+        out["queue_waiting"] = bool(o.get("plan_seq")) and not o.get("en_route") and o.get("status") in ACTIVE
         if o.get("driver_id"):
             d = await db.drivers.find_one({"user_id": o["driver_id"]}) or {}
             du = await db.users.find_one({"_id": ObjectId(o["driver_id"])}, {"name": 1, "phone": 1}) or {}
-            loc = await live_loc(o["driver_id"])
+            hidden = bool(o.get("plan_seq")) and not o.get("en_route") and o.get("user_id") == user["id"]
+            loc = None if hidden else await live_loc(o["driver_id"])  # not yet this customer's turn on the route
             out["driver"] = {"id": o["driver_id"], "name": du.get("name", ""), "phone": du.get("phone", ""),
                              "rating": round(float(d.get("rating_avg", 5) or 5), 1), "trips": d.get("total_deliveries", 0),
                              "vehicle": d.get("vehicle") or {"model": d.get("vehicle_info", "")}, "photo_url": d.get("photo_url", ""),
@@ -757,7 +944,8 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
                         "active_orders": await db.orders.count_documents({"driver_id": d["user_id"], "status": {"$in": ACTIVE}}),
                         "rating": round(float(d.get("rating_avg", 5) or 5), 1), "cash_in_hand": round(float(d.get("cash_in_hand", 0)), 2),
                         "total_deliveries": d.get("total_deliveries", 0), "vehicle": d.get("vehicle") or {"model": d.get("vehicle_info", "")},
-                        "docs": d.get("docs", {}), "loc": {k: v for k, v in loc.items() if k != "_saved"} if loc else None})
+                        "docs": d.get("docs", {}), "pools": d.get("pools") or ["express", "standard"], "shift": d.get("shift") or {},
+                        "loc": {k: v for k, v in loc.items() if k != "_saved"} if loc else None})
         waiting = [await order_card(o) async for o in db.orders.find({"status": "ready_for_pickup", "driver_id": {"$in": [None, ""]}}).limit(50)]
         issues = [{**{k: v for k, v in i.items() if k != "_id"}, "id": str(i["_id"])} async for i in db.driver_issues.find({"status": "open"}).sort("created_at", -1).limit(30)]
         payouts = [{**{k: v for k, v in p.items() if k != "_id"}, "id": str(p["_id"])} async for p in db.driver_payouts.find({"status": "pending"}).sort("created_at", -1)]

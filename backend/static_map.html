@@ -15,9 +15,12 @@ html,body,#map{margin:0;padding:0;width:100%;height:100%;background:#17151A;over
 .mk-driver svg{filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 .mk-other{width:26px;height:26px;background:#2A2731;border:2px solid #C9A85C;color:#C9A85C;font-size:12px}
 .pulse{position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(201,168,92,.35);animation:p 1.8s ease-out infinite}
+.brand{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:5;pointer-events:none;display:flex;align-items:center;gap:6px;
+  background:rgba(23,21,26,.82);border:1px solid #C9A85C;border-radius:999px;padding:4px 12px 4px 6px;font:900 13px 'Arial Black',Arial,sans-serif;color:#C9A85C;letter-spacing:2px}
+.brand i{display:inline-flex;width:20px;height:20px;border-radius:50%;background:#C9A85C;color:#17151A;font-style:normal;align-items:center;justify-content:center;font-size:12px;letter-spacing:0}
 @keyframes p{0%{transform:scale(.6);opacity:1}100%{transform:scale(2.2);opacity:0}}
 </style></head>
-<body><div id="map"></div>
+<body><div id="map"></div><div class="brand"><i>Z</i>ZENREX</div>
 <script>
 (function(){
   var TILES='__TILES__', THEME='__THEME__', LANG='__LANG__';
@@ -48,7 +51,7 @@ html,body,#map{margin:0;padding:0;width:100%;height:100%;background:#17151A;over
                bld:{type:'vector',url:'pmtiles://'+TILES+'/saudi-buildings.pmtiles'}},layers:layers}});
   var markers={}, driver=null, drvState=null, anim=null, follow=false, pick=false, selBld=null, heat=false;
   function el(kind,label){var d=document.createElement('div');d.className='mk mk-'+kind;
-    if(kind==='driver'){d.innerHTML='<div class="pulse"></div><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="15" fill="'+P.brand+'" stroke="#17151A" stroke-width="3"/><path d="M22 11 L29 28 L22 24 L15 28 Z" fill="#17151A"/></svg>';}
+    if(kind==='driver'){d.innerHTML='<div class="pulse"></div><svg width="44" height="44" viewBox="0 0 44 44"><g transform="translate(22 22)"><path d="M0 -20 L5 -16 L7 -6 L8 10 Q8 18 0 18 Q-8 18 -8 10 L-7 -6 L-5 -16 Z" fill="#17151A" stroke="'+P.brand+'" stroke-width="2.2"/><path d="M-5 -9 L5 -9 L4 -4 L-4 -4 Z" fill="'+P.brand+'" opacity=".55"/><text x="0" y="9" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="12" fill="'+P.brand+'">Z</text></g></svg>';}
     else d.textContent=label||(kind==='store'?'🏬':kind==='customer'?'🏠':'');
     return d;}
   function setMarkers(list){var keep={};(list||[]).forEach(function(m){keep[m.id]=1;

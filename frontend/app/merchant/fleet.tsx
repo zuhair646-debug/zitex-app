@@ -1,6 +1,6 @@
 /** Merchant fleet: live map of drivers, waiting orders (manual assign), approvals, cash, payouts, SOS/issues. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,17 +14,35 @@ import { FilterTabs, ScreenHeader, Badge, EmptyState, SecondaryButton } from '..
 import { useLive } from '../../src/utils/live';
 import { notify } from '../../src/utils/notify';
 
-type Tab = 'drivers' | 'orders' | 'requests' | 'alerts';
+type Tab = 'drivers' | 'orders' | 'plan' | 'requests' | 'alerts';
 
 export default function Fleet() {
   const s = useStyles();
-  const { lang, t } = useT();
+  const { lang, t, isRTL } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();
   const map = useRef<ZenMapHandle>(null);
   const [d, setD] = useState<any>(null);
   const [tab, setTab] = useState<Tab>('drivers');
   const [assignFor, setAssignFor] = useState<any>(null);
+  const [shiftFor, setShiftFor] = useState<any>(null);
+  const [plan, setPlan] = useState<any>(null);
+  const [moveFor, setMoveFor] = useState<any>(null);
+  const [slots, setSlots] = useState<any[]>([]);
+  const [planOffset, setPlanOffset] = useState(1);
+  const planDate = new Date(Date.now() + 3 * 3600e3 + planOffset * 86400e3).toISOString().slice(0, 10);
+  const loadPlan = useCallback(async (run = false) => {
+    try {
+      if (run) await apiCall('/api/merchant/delivery/plan/run', { method: 'POST', body: JSON.stringify({ date: planDate }) });
+      setPlan(await apiCall(`/api/merchant/delivery/plan?date=${planDate}`));
+    } catch (e: any) { notify(tSync('خطأ', lang), e.message); }
+  }, [planDate]);
+  useEffect(() => { if (tab === 'plan') loadPlan(); }, [tab, planDate]);
+  useEffect(() => { apiCall('/api/delivery/settings').then((x: any) => setSlots(x.scheduled_slots || [])).catch(() => {}); }, []);
+  const saveShift = async () => {
+    const x = shiftFor; setShiftFor(null);
+    await post(`/api/merchant/drivers/${x.id}/shift`, { pools: x.pools, slot: x.shift?.slot || '', start: x.shift?.start || '08:00' });
+  };
   const locs = useRef<Record<string, any>>({});
 
   const load = useCallback(async () => {
@@ -72,9 +90,9 @@ export default function Fleet() {
         <Kpi s={s} v={pending.length} l={tSync('طلبات انضمام', lang)} />
         <Kpi s={s} v={(d?.issues || []).length} l={tSync('بلاغات', lang)} alert />
       </View>
-      <FilterTabs items={[{ key: 'drivers', label: tSync('السائقون', lang) }, { key: 'orders', label: tSync('الطلبات', lang) },
+      <FilterTabs items={[{ key: 'drivers', label: tSync('السائقون', lang) }, { key: 'orders', label: tSync('الطلبات', lang) }, { key: 'plan', label: tSync('الجدولة', lang) },
         { key: 'requests', label: tSync('الانضمام والسحب', lang) }, { key: 'alerts', label: tSync('البلاغات', lang) }] as any} value={tab} onChange={(k: any) => setTab(k)} />
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.sm, paddingBottom: 140 }}>
+      <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.sm, paddingBottom: 240 }}>
         {tab === 'drivers' && (approved.length ? approved.map((x: any) => (
           <View key={x.id} style={s.card} testID={`fleet-driver-${x.id}`}>
             <View style={s.row}>
@@ -83,6 +101,11 @@ export default function Fleet() {
               <Badge label={`★ ${x.rating}`} tone="gold" />
             </View>
             <Text style={s.sub}>{x.phone} · {x.vehicle?.model || '—'} · {x.active_orders} {tSync('طلب نشط', lang)} · {x.total_deliveries} {tSync('رحلة', lang)}</Text>
+            <TouchableOpacity testID={`fleet-shift-${x.id}`} style={s.shiftRow} onPress={() => setShiftFor({ ...x, shift: { ...(x.shift || {}) }, pools: [...(x.pools || [])] })}>
+              <Ionicons name="time" size={14} color={colors.brand} />
+              <Text style={s.shiftTxt}>{(x.pools || []).map((p: string) => tSync(p === 'express' ? 'سريع' : 'مجدول', lang)).join(' + ')}{x.shift?.slot ? ` · ${x.shift.slot}` : ''}{x.shift?.start ? ` · ${x.shift.start}` : ''}</Text>
+              <Ionicons name="create-outline" size={14} color={colors.onSurfaceTertiary} />
+            </TouchableOpacity>
             {x.cash_in_hand > 0 ? (
               <TouchableOpacity style={s.cash} onPress={() => post(`/api/merchant/drivers/${x.id}/settle-cash`)}>
                 <Ionicons name="cash" size={16} color={colors.onBrandPrimary} />
@@ -99,6 +122,28 @@ export default function Fleet() {
             <SecondaryButton label={tSync('تعيين سائق', lang)} icon="person-add" onPress={() => setAssignFor(o)} />
           </View>
         )) : <EmptyState icon="checkmark-done-outline" title={tSync('كل الطلبات الجاهزة لها سائق', lang)} />)}
+
+        {tab === 'plan' && (<>
+          <View style={s.row}>
+            <TouchableOpacity testID="plan-prev" style={[s.chip, s.navBtn]} onPress={() => setPlanOffset((v) => Math.max(0, v - 1))}><Ionicons name={isRTL ? 'chevron-forward' : 'chevron-back'} size={18} color={colors.brand} /></TouchableOpacity>
+            <Text style={[s.name, { textAlign: 'center' }]}>{planOffset === 0 ? tSync('اليوم', lang) : planOffset === 1 ? tSync('الغد', lang) : ''} {plan?.date || planDate}</Text>
+            <TouchableOpacity testID="plan-next" style={[s.chip, s.navBtn]} onPress={() => setPlanOffset((v) => Math.min(7, v + 1))}><Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={18} color={colors.brand} /></TouchableOpacity>
+          </View>
+          <View style={s.row}>
+            <Text style={s.sub}>{tSync('التوزيع التلقائي يتم مساء اليوم السابق، ويمكنك التوزيع يدوياً الآن', lang)}</Text>
+            <SecondaryButton testID="plan-run" label={tSync('وزّع الآن', lang)} icon="shuffle" onPress={() => loadPlan(true)} />
+          </View>
+          {(plan?.groups || []).length ? plan.groups.map((g: any) => (
+            <View key={g.driver_user_id || 'none'} style={s.card}>
+              <Text style={[s.name, !g.driver_user_id && { color: colors.error }]}>{g.driver_user_id ? g.driver_name : tSync('بدون سائق (أضف سائقين لهذه الفترة)', lang)} · {g.orders.length}</Text>
+              {g.orders.map((o: any) => (
+                <TouchableOpacity key={o.id} testID={`plan-order-${o.id}`} style={s.pick} onPress={() => setMoveFor(o)}>
+                  <Text style={s.pickTxt}>{o.seq ?? '—'}. {o.address}</Text><Text style={s.sub}>{o.slot}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )) : <EmptyState icon="calendar-outline" title={tSync('لا توجد طلبات مجدولة للغد بعد', lang)} />}
+        </>)}
 
         {tab === 'requests' && (<>
           {pending.map((x: any) => (
@@ -133,6 +178,47 @@ export default function Fleet() {
           </View>
         )) : <EmptyState icon="shield-checkmark-outline" title={tSync('لا توجد بلاغات', lang)} />)}
       </ScrollView>
+
+      <Modal visible={!!shiftFor} transparent animationType="fade" onRequestClose={() => setShiftFor(null)}>
+        <View style={s.overlay}>
+          <View style={s.modal} testID="shift-modal">
+            <Text style={s.name}>{shiftFor?.name}</Text>
+            <TX style={s.sub}>نوع الطلبات</TX>
+            <View style={s.row}>{(['express', 'standard'] as const).map((p) => {
+              const on = shiftFor?.pools?.includes(p);
+              return (
+                <TouchableOpacity key={p} testID={`pool-${p}`} style={[s.chip, on && s.chipOn]} onPress={() => setShiftFor({ ...shiftFor, pools: on ? shiftFor.pools.filter((x: string) => x !== p) : [...shiftFor.pools, p] })}>
+                  <Text style={[s.chipTxt, on && { color: colors.onBrandPrimary }]}>{tSync(p === 'express' ? 'سريع (حار)' : 'مجدول (عادي)', lang)}</Text>
+                </TouchableOpacity>);
+            })}</View>
+            <TX style={s.sub}>الوردية</TX>
+            <View style={[s.row, { flexWrap: 'wrap', justifyContent: 'flex-start' }]}>{[{ label: '' }, ...slots].map((sl: any) => (
+              <TouchableOpacity key={sl.label || 'all'} style={[s.chip, (shiftFor?.shift?.slot || '') === sl.label && s.chipOn]}
+                onPress={() => setShiftFor({ ...shiftFor, shift: { ...shiftFor.shift, slot: sl.label, start: sl.start || shiftFor.shift?.start } })}>
+                <Text style={[s.chipTxt, (shiftFor?.shift?.slot || '') === sl.label && { color: colors.onBrandPrimary }]}>{sl.label ? tSync(sl.label, lang) : tSync('كل الفترات', lang)}</Text>
+              </TouchableOpacity>
+            ))}</View>
+            <TX style={s.sub}>بداية الدوام</TX>
+            <TextInput testID="shift-start" style={s.input} value={shiftFor?.shift?.start || ''} placeholder="08:00" placeholderTextColor={colors.onSurfaceTertiary}
+              onChangeText={(t) => setShiftFor({ ...shiftFor, shift: { ...shiftFor.shift, start: t } })} />
+            <SecondaryButton testID="shift-save" label={tSync('حفظ', lang)} icon="save" onPress={saveShift} />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={!!moveFor} transparent animationType="fade" onRequestClose={() => setMoveFor(null)}>
+        <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={() => setMoveFor(null)}>
+          <View style={s.modal}>
+            <TX style={s.name}>نقل الطلب إلى سائق</TX>
+            {approved.map((x: any) => (
+              <TouchableOpacity key={x.id} testID={`move-to-${x.user_id}`} style={s.pick} onPress={async () => { const o = moveFor; setMoveFor(null);
+                try { await apiCall('/api/merchant/delivery/plan/move', { method: 'POST', body: JSON.stringify({ order_id: o.id, driver_user_id: x.user_id }) }); loadPlan(); } catch (e: any) { notify(tSync('خطأ', lang), e.message); } }}>
+                <Text style={s.pickTxt}>{x.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <Modal visible={!!assignFor} transparent animationType="fade" onRequestClose={() => setAssignFor(null)}>
         <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={() => setAssignFor(null)}>
@@ -177,5 +263,12 @@ function useStyles() {
     modal: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
     pick: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.divider, flexDirection: 'row', justifyContent: 'space-between' },
     pickTxt: { color: colors.onSurface, fontWeight: '700' },
+    shiftRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
+    shiftTxt: { color: colors.brand, fontSize: 12, fontWeight: '700', flex: 1 },
+    chip: { borderRadius: 999, borderWidth: 1, borderColor: colors.brand, paddingHorizontal: spacing.md, paddingVertical: 8, marginBottom: 6 },
+    chipOn: { backgroundColor: colors.brand },
+    navBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 0 },
+    chipTxt: { color: colors.brand, fontWeight: '700', fontSize: 13 },
+    input: { backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, color: colors.onSurface, padding: 12 },
   }), [themeKey]);
 }
