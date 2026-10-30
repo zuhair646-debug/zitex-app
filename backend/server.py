@@ -1960,8 +1960,16 @@ async def merchant_update_order_status(oid: str, request: Request, user=Depends(
         raise HTTPException(status_code=400, detail="Invalid status")
     order = await db.orders.find_one({"_id": ObjectId(oid)})
     if not order: raise HTTPException(status_code=404, detail="Order not found")
+    if new_status in ("assigned", "picked_up") and not order.get("driver_id"):
+        raise HTTPException(status_code=400, detail="عيّن سائقاً من شاشة الأسطول أولاً")
     await db.orders.update_one({"_id": ObjectId(oid)}, {"$set": {"status": new_status,
                                                                    "status_updated_at": datetime.now(timezone.utc).isoformat()}})
+    if new_status == "cancelled":
+        await db.delivery_offers.update_many({"order_id": oid, "status": "pending"}, {"$set": {"status": "cancelled"}})
+        if order.get("driver_id"):
+            await create_notification(order["driver_id"], "❌ تم إلغاء الطلب", f"#{oid[-6:].upper()}", {"type": "order_cancelled", "order_id": oid})
+    elif new_status == "ready_for_pickup" and not order.get("driver_id") and _delivery_dispatch:
+        await _delivery_dispatch(oid)
     # Notify customer about status change
     STATUS_MSG = {
         "processing":       ("⏳ جاري تحضير طلبك",      "Your order is being prepared"),
@@ -3290,22 +3298,6 @@ async def driver_profile(user=Depends(get_current_user)):
     d["wallet_balance"] = user.get("wallet_balance", 0)
     return d
 
-@api_router.post("/driver/online")
-async def set_driver_online(request: Request, user=Depends(get_current_user)):
-    require_driver(user)
-    body = await request.json()
-    await db.drivers.update_one({"user_id": user["id"]}, {"$set": {"online": bool(body.get("online", True))}})
-    return {"message": "Status updated"}
-
-@api_router.post("/driver/location")
-async def update_driver_location(request: Request, user=Depends(get_current_user)):
-    require_driver(user)
-    body = await request.json()
-    await db.drivers.update_one({"user_id": user["id"]}, {"$set": {
-        "current_lat": body.get("lat", 0), "current_lng": body.get("lng", 0),
-        "last_location_at": datetime.now(timezone.utc).isoformat()}})
-    return {"message": "Location updated"}
-
 @api_router.get("/driver/active-orders")
 async def driver_active_orders(user=Depends(get_current_user)):
     require_driver(user)
@@ -3317,56 +3309,6 @@ async def driver_available_orders(user=Depends(get_current_user)):
     require_driver(user)
     orders = await db.orders.find({"status": "ready_for_pickup", "driver_id": {"$in": [None, ""]}}).sort("created_at", 1).to_list(20)
     return [serialize_doc(o) for o in orders]
-
-@api_router.post("/driver/orders/{oid}/accept")
-async def driver_accept_order(oid: str, user=Depends(get_current_user)):
-    require_driver(user)
-    o = await db.orders.find_one({"_id": ObjectId(oid)})
-    if not o: raise HTTPException(status_code=404, detail="Not found")
-    if o.get("driver_id"): raise HTTPException(status_code=400, detail="Already assigned")
-    await db.orders.update_one({"_id": ObjectId(oid)}, {"$set": {
-        "driver_id": user["id"], "driver_name": user.get("name", ""),
-        "driver_phone": user.get("phone", ""), "status": "assigned",
-        "accepted_at": datetime.now(timezone.utc).isoformat()}})
-    return {"message": "Accepted"}
-
-@api_router.post("/driver/orders/{oid}/pickup")
-async def driver_pickup_order(oid: str, user=Depends(get_current_user)):
-    require_driver(user)
-    await db.orders.update_one({"_id": ObjectId(oid), "driver_id": user["id"]},
-        {"$set": {"status": "picked_up", "picked_up_at": datetime.now(timezone.utc).isoformat()}})
-    return {"message": "Picked up"}
-
-@api_router.post("/driver/orders/{oid}/deliver")
-async def driver_deliver_order(oid: str, user=Depends(get_current_user)):
-    require_driver(user)
-    o = await db.orders.find_one({"_id": ObjectId(oid), "driver_id": user["id"]})
-    if not o: raise HTTPException(status_code=404, detail="Not found")
-    # Calculate earnings
-    d = await db.drivers.find_one({"user_id": user["id"]})
-    delivery_fee = o.get("delivery_fee", 0)
-    earnings = 0
-    merchant_cut = 0
-    if d and d.get("payment_model") == "commission":
-        if d.get("commission_type") == "percentage":
-            merchant_cut = delivery_fee * (d.get("merchant_commission_value", 0) / 100)
-        else:
-            merchant_cut = d.get("merchant_commission_value", 0)
-        earnings = max(delivery_fee - merchant_cut, 0)
-    # Update order
-    await db.orders.update_one({"_id": ObjectId(oid)}, {"$set": {
-        "status": "delivered", "delivered_at": datetime.now(timezone.utc).isoformat(),
-        "driver_earnings": earnings, "merchant_cut": merchant_cut}})
-    # Add earnings to driver wallet
-    if earnings > 0:
-        await db.users.update_one({"_id": ObjectId(user["id"])}, {"$inc": {"wallet_balance": earnings}})
-        await db.driver_transactions.insert_one({
-            "driver_id": user["id"], "order_id": oid, "amount": earnings,
-            "type": "delivery_earnings", "created_at": datetime.now(timezone.utc).isoformat()})
-    # Update driver stats
-    today = datetime.now(timezone.utc).date().isoformat()
-    await db.drivers.update_one({"user_id": user["id"]}, {"$inc": {"total_deliveries": 1, "today_deliveries": 1, "today_earnings": earnings}})
-    return {"message": "Delivered", "earnings": earnings}
 
 @api_router.get("/driver/history")
 async def driver_history(user=Depends(get_current_user)):
@@ -3408,29 +3350,15 @@ async def mark_order_ready(oid: str, user=Depends(get_current_user)):
     require_merchant(user)
     o = await db.orders.find_one({"_id": ObjectId(oid)})
     if not o: raise HTTPException(status_code=404, detail="Not found")
+    if o.get("driver_id") or o.get("status") not in ("pending", "processing", "confirmed", "preparing", "ready_for_pickup"):
+        raise HTTPException(status_code=409, detail="لا يمكن تجهيز هذا الطلب للتوصيل بحالته الحالية")
     await db.orders.update_one({"_id": ObjectId(oid)}, {"$set": {"status": "ready_for_pickup",
         "marked_ready_at": datetime.now(timezone.utc).isoformat()}})
-    # Try to auto-assign to nearest online driver
-    branch_lat = o.get("branch_lat", 0); branch_lng = o.get("branch_lng", 0)
-    drivers = await db.drivers.find({"online": True}).to_list(100)
-    if drivers and branch_lat:
-        # Find drivers with no active order
-        free_drivers = []
-        for d in drivers:
-            active = await db.orders.count_documents({"driver_id": d.get("user_id"), "status": {"$in": ["assigned", "picked_up"]}})
-            if active < 5:  # allow up to 5 simultaneous
-                d["_dist"] = haversine_km(branch_lat, branch_lng, d.get("current_lat", 0), d.get("current_lng", 0)) if d.get("current_lat") else 999
-                free_drivers.append(d)
-        free_drivers.sort(key=lambda x: x["_dist"])
-        if free_drivers:
-            nearest = free_drivers[0]
-            u = await db.users.find_one({"_id": ObjectId(nearest["user_id"])})
-            if u:
-                await db.orders.update_one({"_id": ObjectId(oid)}, {"$set": {
-                    "driver_id": nearest["user_id"], "driver_name": u.get("name", ""),
-                    "driver_phone": u.get("phone", ""), "status": "assigned",
-                    "auto_assigned_at": datetime.now(timezone.utc).isoformat()}})
-                return {"message": "Order assigned to nearest driver", "driver_name": u.get("name", "")}
+    # Offer to the nearest free driver (30s countdown, then next driver) — see delivery.py
+    if _delivery_dispatch:
+        offer = await _delivery_dispatch(oid)
+        if offer:
+            return {"message": "Offer sent to nearest driver", "offer_id": offer["id"]}
     return {"message": "Order ready, waiting for driver to accept"}
 
 async def seed_data():
@@ -6860,6 +6788,20 @@ try:
     logger.info("Invoicing router mounted")
 except Exception as _e:
     logger.error(f"Failed to mount invoicing router: {_e}")
+
+# ─── Delivery v2: realtime driver system ───
+_delivery_dispatch = None
+try:
+    from delivery import build_router as _build_delivery_router
+    _dr, _delivery_dispatch, _delivery_loop = _build_delivery_router(db, get_current_user, require_merchant, hash_password, JWT_SECRET, create_notification)
+    app.include_router(_dr)
+
+    @app.on_event("startup")
+    async def _start_delivery_loop():
+        asyncio.create_task(_delivery_loop())
+    logger.info("Delivery v2 router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount delivery router: {_e}")
 
 # ─── POS barcodes / labels / WhatsApp receipts ───
 try:

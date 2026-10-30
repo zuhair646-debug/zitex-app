@@ -3,6 +3,8 @@ import React, { useEffect, useState, createContext, useContext } from 'react';
 import { Text, TextInput } from 'react-native';
 import * as ExpoLinking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import '../src/utils/driverTracking'; // registers the background GPS task at startup
+import { live } from '../src/utils/live';
 import { StatusBar } from 'expo-status-bar';
 import { I18nProvider } from '../src/i18n';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
@@ -91,6 +93,7 @@ export default function RootLayout() {
   };
 
   const logout = async () => {
+    live.close(); // drop the realtime socket of the previous account
     await AsyncStorage.removeItem('token');
     setToken(null);
     setUser(null);

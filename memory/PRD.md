@@ -679,3 +679,11 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - Post-sale in-app modal: WhatsApp / Print / New sale.
 - Pending: automatic WhatsApp sending from official store number (needs WhatsApp Business Cloud API credentials from user).
 - Postponed by user: Chamber of Commerce dashboards.
+
+## v1.29.0 — World-class Driver System + Own Free Map (Oct 2026) — DONE
+- Own map (no Google/keys): Protomaps OSM Saudi tiles + Overture building footprints (OSM+Microsoft+Google ML) PMTiles on Hetzner `/opt/zenrex-maps/public` → https://api.zenrex.ai/tiles ; OSRM routing docker `zenrex-osrm` (127.0.0.1:5000, nginx /osrm/). Map HTML `/api/map/view` (backend/static_map.html, MapLibre GL) rendered by `src/components/ZenMap.tsx` (WebView native / iframe web).
+- Realtime: WebSocket `/api/ws/live` (backend/delivery.py Hub, single worker) — driver loc 1s, customer/fleet rooms, offers, chat. Frontend `src/utils/live.ts`, GPS `src/utils/driverTracking.ts` (foreground 1s + background task, native build only).
+- Dispatch: nearest approved online driver, 30s offer, decline/expire → next; open list claim; manual assign from fleet.
+- Driver app tabs: Map (offer sheet, active delivery stepper, proof OTP/photo, SOS, hot zones), Earnings (charts, payouts min 50), Trips, Profile (performance/levels/badges, vehicle, documents, nav app).
+- Customer track-order live map + OTP + chat + rating. Merchant `/merchant/fleet`. Independent driver apply `/driver-apply` + approval.
+- Future: National Address (SPL) API when user gets key; geocoding search (Photon) self-host.

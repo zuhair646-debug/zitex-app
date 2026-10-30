@@ -1,152 +1,147 @@
-import { useT, curLang } from '../../src/i18n';
-import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking } from 'react-native';
+/** Customer live tracking: driver moves on our own map in real time, ETA, OTP, chat, call, rating. */
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
-import ZitexMap from '../../src/components/MapView';
+import { colors, spacing, radius } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 import { TX, tSync } from '../../src/useAutoT';
-import { NameInitial } from '../../src/components/TranslatableName';
+import { useT } from '../../src/i18n';
+import ZenMap, { ZenMapHandle } from '../../src/components/ZenMap';
+import { PrimaryButton } from '../../src/components/ui';
+import { useLive } from '../../src/utils/live';
+import { notify } from '../../src/utils/notify';
 
-const STATUS_ORDER = ['pending', 'processing', 'ready_for_pickup', 'assigned', 'picked_up', 'delivered'];
-const STATUS_AR: Record<string, string> = {
-  pending: 'قيد الانتظار', processing: 'قيد التحضير', ready_for_pickup: 'جاهز للاستلام',
-  assigned: 'تم تعيين سائق', picked_up: 'تم الاستلام - في الطريق', delivered: 'تم التوصيل',
-};
+const STAGES = [
+  { key: 'processing', label: 'قيد التحضير', icon: 'cube' },
+  { key: 'assigned', label: 'السائق في الطريق للمتجر', icon: 'storefront' },
+  { key: 'picked_up', label: 'الطلب في الطريق إليك', icon: 'bicycle' },
+  { key: 'delivered', label: 'تم التسليم', icon: 'checkmark-done' },
+];
+const stageIdx = (st: string) => (st === 'delivered' ? 3 : st === 'picked_up' ? 2 : st === 'assigned' ? 1 : 0);
 
 export default function TrackOrder() {
-  useT(); // re-render when language or on-demand translations change
+  const s = useStyles();
+  const { lang } = useT();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { apiCall } = useAuth();
-  const [order, setOrder] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const map = useRef<ZenMapHandle>(null);
+  const [o, setO] = useState<any>(null);
+  const [stars, setStars] = useState(0);
+  const [rated, setRated] = useState(false);
+  const fitted = useRef(false);
 
   const load = useCallback(async () => {
-    try { const o = await apiCall(`/api/orders/${id}/tracking`); setOrder(o); }
-    catch (e: any) { console.error(e); }
-    finally { setLoading(false); }
+    try {
+      const d = await apiCall(`/api/orders/${id}/live`);
+      setO(d); setRated(d.rated);
+      const list: any[] = [];
+      if (d.store?.lat) list.push({ id: 'store', kind: 'store', lat: d.store.lat, lng: d.store.lng });
+      if (d.customer?.lat) list.push({ id: 'cust', kind: 'customer', lat: d.customer.lat, lng: d.customer.lng });
+      map.current?.send({ type: 'markers', list });
+      if (d.driver?.loc) map.current?.send({ type: 'driver', loc: d.driver.loc });
+      map.current?.send({ type: 'route', coords: d.route || [] });
+      if (!fitted.current) {
+        fitted.current = true;
+        map.current?.send({ type: 'fit', points: [d.driver?.loc && [d.driver.loc.lng, d.driver.loc.lat], d.customer?.lat && [d.customer.lng, d.customer.lat], d.store?.lat && [d.store.lng, d.store.lat]].filter(Boolean), padding: 80 });
+      }
+    } catch (e: any) { notify(tSync('خطأ', lang), e.message); }
   }, [id]);
-  useEffect(() => { load(); const iv = setInterval(load, 8000); return () => clearInterval(iv); }, [load]);
+  useEffect(() => { load(); const iv = setInterval(load, 30000); return () => clearInterval(iv); }, [load]); // ETA/route refresh; position is live
 
-  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#F5C518" /></View>;
-  if (!order) return <View style={s.center}><TX>لم يتم العثور على الطلب</TX></View>;
+  useLive((m) => {
+    if (m.t === 'driver_loc') map.current?.send({ type: 'driver', loc: { lat: m.lat, lng: m.lng, heading: m.heading } });
+    else if (m.t === 'order_update' && m.order_id === id) load();
+  }, { orderId: id });
 
-  const stepIdx = STATUS_ORDER.indexOf(order.status);
-  const showMap = ['assigned', 'picked_up'].includes(order.status) && (order.driver_lat || order.dest_lat);
-  const openExternalMap = () => {
-    if (order.driver_lat && order.driver_lng)
-      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${order.driver_lat},${order.driver_lng}`);
+  const rate = async () => {
+    if (!stars) return;
+    try { await apiCall(`/api/orders/${id}/rate-driver`, { method: 'POST', body: JSON.stringify({ stars }) }); setRated(true); notify(tSync('شكراً لتقييمك 🌟', lang)); }
+    catch (e: any) { notify(tSync('خطأ', lang), e.message); }
   };
 
+  const idx = o ? stageIdx(o.status) : 0;
+  const drv = o?.driver;
   return (
-    <SafeAreaView style={s.safe}>
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
-        <TX style={s.title}>تتبع الطلب</TX>
-        <TouchableOpacity onPress={load}><Ionicons name="refresh" size={20} color="#F5C518" /></TouchableOpacity>
-      </View>
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <View style={s.orderCard}>
-          <Text style={s.orderNo}>#{order.id?.slice(-8).toUpperCase()}</Text>
-          <Text style={s.orderStatus}>{tSync(STATUS_AR[order.status] || order.status, curLang())}</Text>
-          <Text style={s.orderTotal}>{order.total?.toFixed(2)} {tSync('ر.س', curLang())}</Text>
-          {!!order.eta_minutes && <Text style={s.eta}>{tSync('الوصول المتوقع:', curLang())} {order.eta_minutes} {tSync('دقيقة', curLang())}</Text>}
-        </View>
-
-        {showMap && (
-          <View style={{ marginTop: 14 }}>
-            <TX style={s.section}>📍 الموقع المباشر</TX>
-            <ZitexMap
-              mode="tracking"
-              driverLat={order.driver_lat}
-              driverLng={order.driver_lng}
-              destLat={order.dest_lat}
-              destLng={order.dest_lng}
-              branchLat={order.branch_lat}
-              branchLng={order.branch_lng}
-              initialLat={order.driver_lat || order.dest_lat || 24.7136}
-              initialLng={order.driver_lng || order.dest_lng || 46.6753}
-              height={300}
-            />
-            <TX style={s.mapHint}>🟠 السائق · 🟣 الفرع · 🟢 موقعك</TX>
-          </View>
-        )}
-
-        <TX style={s.section}>تقدم الطلب</TX>
-        <View style={s.steps}>
-          {STATUS_ORDER.map((st, i) => (
-            <View key={st} style={s.step}>
-              <View style={[s.stepDot, i <= stepIdx ? s.stepDotActive : null]}>
-                {i <= stepIdx && <Ionicons name="checkmark" size={12} color="white" />}
-              </View>
-              <Text style={[s.stepLabel, i <= stepIdx && s.stepLabelActive]}>{tSync(STATUS_AR[st], curLang())}</Text>
+    <View style={s.root}>
+      <ZenMap ref={map} style={s.map} testID="track-map" />
+      <SafeAreaView edges={['top']} style={s.top} pointerEvents="box-none">
+        <TouchableOpacity style={s.back} onPress={() => router.back()} testID="track-back"><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
+      </SafeAreaView>
+      <ScrollView style={s.sheet} contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl * 2 }}>
+        {o ? (<>
+          <View style={s.headRow}>
+            <View style={{ flex: 1 }}>
+              <TX style={s.stage}>{STAGES[idx].label}</TX>
+              <Text style={s.no}>#{o.id.slice(-8).toUpperCase()}</Text>
             </View>
-          ))}
-        </View>
-
-        {order.driver_name ? (
-          <View style={s.driverBox}>
-            <TX style={s.section}>السائق</TX>
-            <View style={s.driverRow}>
-              <View style={s.avatar}><NameInitial name={order.driver_name} style={s.avatarText} /></View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={s.driverName}>{order.driver_name}</Text>
-                <Text style={s.driverPhone}>{order.driver_phone}</Text>
-              </View>
-              {order.driver_phone && (
-                <TouchableOpacity onPress={() => Linking.openURL(`tel:${order.driver_phone}`)} style={s.callBtn}>
-                  <Ionicons name="call" size={20} color="white" />
-                </TouchableOpacity>
-              )}
-            </View>
-            {order.driver_lat && order.driver_lng && (
-              <TouchableOpacity onPress={openExternalMap} style={s.mapBtn}>
-                <Ionicons name="map" size={16} color="white" />
-                <TX style={s.mapBtnText}>فتح في خرائط Google</TX>
-              </TouchableOpacity>
-            )}
+            {o.eta_min && o.status !== 'delivered' ? (<View style={s.eta}><Text style={s.etaMin}>{o.eta_min}</Text><TX style={s.etaLbl}>دقيقة</TX></View>) : null}
           </View>
-        ) : order.status === 'pending' || order.status === 'processing' ? (
-          <TX style={s.empty}>قيد تجهيز الطلب — سيتم تعيين سائق قريباً</TX>
-        ) : null}
-
-        <TX style={s.section}>عنوان التوصيل</TX>
-        <View style={s.box}><Text style={s.text}>{order.address}</Text></View>
+          <View style={s.progress}>{STAGES.map((st, i) => <View key={st.key} style={[s.seg, i <= idx && { backgroundColor: colors.brand }]} />)}</View>
+          {o.otp && o.status !== 'delivered' && drv ? (
+            <View style={s.otp} testID="track-otp">
+              <TX style={s.otpLbl}>رمز الاستلام — أعطه للسائق عند التسليم</TX>
+              <Text style={s.otpVal}>{o.otp}</Text>
+            </View>
+          ) : null}
+          {drv ? (
+            <View style={s.drv}>
+              {drv.photo_url ? <Image source={{ uri: drv.photo_url }} style={s.avatar} /> : <View style={s.avatar}><Ionicons name="person" size={24} color={colors.brand} /></View>}
+              <View style={{ flex: 1 }}>
+                <Text style={s.drvName}>{drv.name}</Text>
+                <Text style={s.drvSub}>★ {drv.rating} · {drv.trips} {tSync('رحلة', lang)}{drv.vehicle?.model ? ` · ${drv.vehicle.model}` : ''}{drv.vehicle?.plate ? ` · ${drv.vehicle.plate}` : ''}</Text>
+              </View>
+              <TouchableOpacity testID="track-chat" style={s.round} onPress={() => router.push(`/chat/${o.id}`)}><Ionicons name="chatbubbles" size={20} color={colors.brand} /></TouchableOpacity>
+              <TouchableOpacity testID="track-call" style={s.round} onPress={() => Linking.openURL(`tel:${drv.phone}`)}><Ionicons name="call" size={20} color={colors.brand} /></TouchableOpacity>
+            </View>
+          ) : <TX style={s.wait}>نجهز طلبك وسيتم تعيين أقرب سائق قريباً</TX>}
+          {o.status === 'delivered' && drv && !rated ? (
+            <View style={s.rate} testID="track-rate">
+              <TX style={s.stage}>كيف كانت تجربة التوصيل؟</TX>
+              <View style={s.stars}>{[1, 2, 3, 4, 5].map((n) => (
+                <TouchableOpacity key={n} onPress={() => setStars(n)} testID={`star-${n}`}><Ionicons name={n <= stars ? 'star' : 'star-outline'} size={36} color={colors.brand} /></TouchableOpacity>
+              ))}</View>
+              <PrimaryButton testID="rate-submit" label={tSync('إرسال التقييم', lang)} onPress={rate} disabled={!stars} />
+            </View>
+          ) : null}
+          <View style={s.addr}><Ionicons name="location" size={18} color={colors.brand} /><Text style={s.addrTxt}>{o.customer?.address}</Text></View>
+        </>) : null}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
-  backBtn: { padding: 4 }, title: { fontSize: 18, fontWeight: '700' },
-  orderCard: { backgroundColor: '#F5C518', padding: 16, borderRadius: 16, alignItems: 'center' },
-  orderNo: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700' },
-  orderStatus: { color: 'white', fontSize: 18, fontWeight: '900', marginVertical: 8 },
-  orderTotal: { color: '#FBBF24', fontSize: 20, fontWeight: '800' },
-  eta: { color: 'white', fontSize: 12, marginTop: 6, opacity: 0.9 },
-  section: { fontSize: 14, fontWeight: '700', color: '#0A0A0A', marginTop: 16, marginBottom: 8 },
-  steps: { backgroundColor: 'white', padding: 14, borderRadius: 12 },
-  step: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
-  stepDot: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  stepDotActive: { backgroundColor: '#10B981' },
-  stepLabel: { fontSize: 13, color: '#9CA3AF' },
-  stepLabelActive: { color: '#0A0A0A', fontWeight: '600' },
-  driverBox: { backgroundColor: 'white', padding: 14, borderRadius: 12, marginTop: 8 },
-  driverRow: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F5C518', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: 'white', fontSize: 18, fontWeight: '800' },
-  driverName: { fontSize: 14, fontWeight: '700' },
-  driverPhone: { fontSize: 12, color: '#6B7280' },
-  callBtn: { backgroundColor: '#10B981', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  mapBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#3B82F6', padding: 10, borderRadius: 8, marginTop: 10 },
-  mapBtnText: { color: 'white', fontSize: 12, fontWeight: '700' },
-  mapHint: { fontSize: 11, color: '#6B7280', textAlign: 'center', marginTop: 6 },
-  empty: { color: '#9CA3AF', textAlign: 'center', marginTop: 16, fontStyle: 'italic' },
-  box: { backgroundColor: 'white', padding: 12, borderRadius: 10 },
-  text: { fontSize: 13, color: '#374151', textAlign: 'right' },
-});
+function useStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.surface },
+    map: { height: '55%' },
+    top: { position: 'absolute', top: 0, left: 0 },
+    back: { margin: spacing.lg, width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+    sheet: { flex: 1, marginTop: -20, backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl },
+    headRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    stage: { color: colors.onSurface, fontSize: 19, fontWeight: '900' },
+    no: { color: colors.onSurfaceTertiary, fontSize: 12, marginTop: 2 },
+    eta: { alignItems: 'center', backgroundColor: colors.brand, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 6 },
+    etaMin: { color: colors.onBrandPrimary, fontSize: 24, fontWeight: '900' },
+    etaLbl: { color: colors.onBrandPrimary, fontSize: 11 },
+    progress: { flexDirection: 'row', gap: 4 },
+    seg: { flex: 1, height: 5, borderRadius: 3, backgroundColor: colors.surfaceTertiary },
+    otp: { backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, padding: spacing.md, alignItems: 'center', borderWidth: 1, borderColor: colors.brand },
+    otpLbl: { color: colors.onSurfaceSecondary, fontSize: 12 },
+    otpVal: { color: colors.brand, fontSize: 34, fontWeight: '900', letterSpacing: 12 },
+    drv: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, padding: spacing.md },
+    avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.brand },
+    drvName: { color: colors.onSurface, fontWeight: '800', fontSize: 16 },
+    drvSub: { color: colors.onSurfaceTertiary, fontSize: 12 },
+    round: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
+    wait: { color: colors.onSurfaceSecondary, textAlign: 'center' },
+    rate: { alignItems: 'center', gap: spacing.sm },
+    stars: { flexDirection: 'row', gap: spacing.sm },
+    addr: { flexDirection: 'row', gap: 6, alignItems: 'flex-start' },
+    addrTxt: { color: colors.onSurfaceSecondary, flex: 1 },
+  }), [themeKey]);
+}

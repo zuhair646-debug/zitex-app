@@ -5,9 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { useT } from '../src/i18n';
+import { tSync } from '../src/useAutoT';
 
 export default function LoginScreen() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const router = useRouter();
   const { login } = useAuth();
   const [phone, setPhone] = useState('');
@@ -98,6 +99,9 @@ export default function LoginScreen() {
               <Text style={styles.linkText}>{t('auth.signup')}</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity testID="go-to-driver-apply" onPress={() => router.push('/driver-apply' as any)} style={{ alignSelf: 'center', marginTop: 12, padding: 8 }}>
+            <Text style={styles.linkText}>{tSync('🛵 انضم إلينا كسائق توصيل', lang)}</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

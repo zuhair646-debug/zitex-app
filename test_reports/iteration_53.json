@@ -1,0 +1,56 @@
+{
+  "summary": "Retest of the driver v2 fixes from iteration_52. Backend: 32 pytest tests across 3 files (the 2 existing regression files plus the new test_driver_v2_fixes_iter53.py). 30 pass and 2 fail. A third bug is an intermittent race. Verified fixed: the legacy /driver/orders/{oid}/accept|pickup|deliver routes now return 404/405. take_order only accepts ready_for_pickup (manual assign also allows processing/confirmed/preparing). An expired offer returns 410 even before the expiry loop runs. Accepting an offer after the order is cancelled, or on a processing order, returns 409. mark-ready returns 409 for delivered, cancelled or already-assigned orders. Assigning a non-approved driver returns 400 and assigning a delivered order returns 409. Steps must be sequential (skipping returns 400). can_view denies chamber and marketer accounts and allows an employee with the orders permission (no OTP shown to them). Today and earnings figures use Riyadh midnight. Invalid ids return 4xx. UI smoke (390x844) passed: driver login, swipe knob starts at the edge (knob 22-74px inside a 16-374px track), going online, offer sheet with 30s ring, accept, active delivery (all 4 buttons), 3 sequential swipes, proof modal (wrong OTP keeps the modal open with an error, correct OTP delivers), home stats update, earnings/trips/profile tabs, customer track-order (OTP, ETA, route, 44px buttons), chat (first message shows once, driver reply arrives live), route cleared after delivery, rating card hidden after submit, merchant Live Fleet (title translated, KPIs, driver cards, cash-in-hand chip, tabs). No page errors. Deprecated packages detected: none (no expo-av, expo-barcode-scanner or expo-background-fetch).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/driver/orders/{oid}/complete", "issue": "Race condition (TOCTOU): the status check and the update are separate, and the update filter does not include status. With 4 concurrent requests, 2 returned 200, two delivery_earnings transactions were written and the wallet was credited +30 instead of +15 (cash_in_hand is also counted twice). Happened in 1 of 4 runs. Fix: include status: {$in: ACTIVE} and driver_id in the update_one filter, and only credit when modified_count == 1 (or use find_one_and_update).", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/driver/orders/{oid}/complete", "issue": "The step sequence is not enforced at completion. An order still at step to_store (never picked up) can be completed with the OTP and returns 200 with earnings credited. Require delivery_step in (picked_up, at_customer)."},
+      {"endpoint": "POST /api/driver/offers/{id}/accept", "issue": "When take_order raises 409 (order cancelled or taken), the offer stays 'pending'. eligible_drivers() skips any driver with a pending offer, so this driver gets no new offers until the 30s expiry. Reproduced in test_delivery_edge_cases, where the second mark-ready produced no offer_id. Fix: mark the offer cancelled or expired before re-raising."},
+      {"endpoint": "PUT /api/merchant/orders/{oid}/status", "issue": "Not connected to the delivery state machine. 'cancelled' does not cancel pending delivery_offers and does not push an order_update to an assigned driver. 'ready_for_pickup' does not call dispatch. 'assigned' and 'delivered' can be set with no driver and no proof."},
+      {"endpoint": "CORS", "issue": "allow_origins=['*'] with allow_credentials=True reflects any Origin (tested https://evil.example) together with allow-credentials:true. Low risk because auth uses a bearer token and no cookies, but origins should be listed explicitly."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Chat bubble / Fleet alerts time", "issue": "The time is shown with String(created_at).slice(11,16), which is the UTC time (06:48 shown when Riyadh time is 09:48). Format it in local time. Reference: app/chat/[orderId].tsx:59, app/merchant/fleet.tsx:130", "testID": "chat-input", "priority": "medium"},
+      {"component": "ActiveDelivery step label", "issue": "The swipe label for the picked_up -> at_customer step reads 'Swipe: Delivered to customer' in English mode. This is misleading because the next swipe is the actual delivery. It should say 'Arrived at customer'.", "testID": "ad-next", "priority": "low"},
+      {"component": "Track order after delivery", "issue": "The route is cleared, but the driver marker stays on the map after delivery. The thank-you is only a transient notify toast, so nothing persistent shows once rated.", "testID": "track-map", "priority": "low"}
+    ],
+    "integration_issues": [
+      {"flow": "Open /driver with no token", "issue": "A fresh session opening /driver directly shows an empty map: home stays null, there is no bottom sheet, no redirect to /login and no error state (apiCall failure is swallowed in load()).", "affected_testIDs": ["driver-map", "driver-online-swipe"]}
+    ],
+    "design_issues": [
+      {"screen": "Chat", "issues": ["The ScreenHeader top-right shows an empty square button with no icon", "Quick-reply chips have no testID", "Header title is 'Conversations' (plural) for a single order chat"]},
+      {"screen": "Merchant Fleet", "issues": ["Settle-cash, assign, approve/reject, payout and resolve buttons have no testIDs", "Settle cash zeroes the driver's cash with one tap and no confirmation", "Issue cards show the raw type key (e.g. customer_absent) instead of a translated label"]},
+      {"screen": "Offer sheet / Driver profile / names", "issues": ["Arabic text (names, addresses, backend errors) renders as disconnected letters in headless Chromium, but no letterSpacing is set on these styles. Probably a font artifact of the test environment; verify on a device.", "In English mode the offer sheet first shows Arabic labels (ربحك, إلى المتجر, اسحب لقبول الطلب) until auto-translation finishes (known non-issue)"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_driver_v2_fixes_iter53.py", "/app/backend/tests/test_driver_delivery_v2.py", "/app/backend/tests/test_delivery_edge_cases.py", "/app/backend/tests/ui_prep_driver_iter53.py", "/app/test_reports/pytest/pytest_iter53_all.xml"],
+  "action_items": [
+    "HIGH: Make /driver/orders/{oid}/complete atomic. Put status {$in: ACTIVE} and driver_id in the update filter and credit the wallet, transaction and cash_in_hand only when modified_count == 1.",
+    "complete: reject with 409/400 unless delivery_step is picked_up or at_customer.",
+    "accept_offer: when take_order raises 409, set the offer status to 'cancelled' so the driver can get new offers right away.",
+    "merchant status PUT: on 'cancelled', cancel pending offers and push_order to the driver. On 'ready_for_pickup', call dispatch. Block assigned/picked_up/delivered without a driver, or send those changes through the delivery endpoints.",
+    "Chat and fleet times: format created_at in local time instead of slicing the UTC string.",
+    "Driver home: redirect to /login on a 401 and show an error/retry state when /driver/home fails.",
+    "Fleet: add testIDs to the action buttons, add a confirmation for settle-cash, and translate issue type keys.",
+    "Optional: LiveSocket.close() should clear subs and fleet, and onclose should only null this.ws if this.ws === ws (prevents a stale socket from overwriting a new one after a quick re-login).",
+    "CORS: use explicit origins instead of '*' with credentials."
+  ],
+  "critical_code_review_comments": [
+    "delivery.py complete(): read-check-write without an atomic guard leads to double credit (see critical).",
+    "delivery.py accept_offer(): a 409 leaves the offer pending, which blocks dispatch to that driver.",
+    "src/utils/live.ts: close() keeps subs and fleet=true, and the old socket's onclose can set the new socket reference to null (race on fast re-login).",
+    "server.py mark-ready still uses ObjectId(oid) without validating it, but invalid ids returned 4xx in testing, so this is fine at the ingress level."
+  ],
+  "updated_files": ["/app/backend/tests/test_driver_v2_fixes_iter53.py (new)", "/app/backend/tests/ui_prep_driver_iter53.py (new UI prep/cleanup helper)"],
+  "success_rate": {"backend": "94% (30/32), plus 1 flaky race (double-complete, failed 1 of 4 runs)", "frontend": "95% (all smoke flows pass; minor UI issues only)"},
+  "flaky_tests": [{"test": "test_driver_v2_fixes_iter53.py::test_double_complete_single_credit", "failure_rate": "1/4", "reason": "real race condition in complete()"}],
+  "seed_data_creation": "None persistent. Created _test orders and an applicant (05999xxx) and cleaned them up. Test driver is offline with cash_in_hand 0, the other drivers are back online, and the wallet was restored by the fixture.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run: pytest tests/test_driver_delivery_v2.py tests/test_delivery_edge_cases.py tests/test_driver_v2_fixes_iter53.py. For UI, run `python tests/ui_prep_driver_iter53.py` (prints a processing order id, isolates the driver), then mark-ready through the API from the browser script. Use `... active` for a picked_up order to view on track-order, and `... cleanup` to restore. A fresh browser context needs an explicit login: /driver without a token renders an empty map with no redirect. Swipe on web: long-press '<testID>-tap' for 700ms with mouse down/up. Grant geolocation in the context.",
+  "rca_of_issue": "Double credit: complete() checks status in ACTIVE on a document it read earlier, then calls update_one({_id}) with no status guard. Two concurrent requests both pass the check, and each runs $inc wallet_balance and inserts a transaction. Reproduce: an order at step at_customer with status picked_up; fire 4 parallel POST /complete calls with the right OTP; sometimes 2x 200 and 2 driver_transactions. Fix: res = update_one({_id, driver_id, status: {$in: ACTIVE}}, {$set: ...}); if not res.modified_count: raise 409, before crediting."
+}

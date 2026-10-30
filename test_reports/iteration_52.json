@@ -1,0 +1,59 @@
+{
+  "summary": "Driver/delivery module tested end-to-end (backend pytest 13/14 + edge-case probes, WS realtime, UI flows on 390x844 web preview). Core flow works: dispatch offer over WS -> offer sheet with 30s ring -> accept -> live driver_loc to customer -> steps -> OTP proof (wrong OTP 400 shown in modal) -> delivered -> customer rating; chat both ways, earnings/payout min 50, trips, profile (veh/doc/nav testIDs), driver-apply, merchant fleet. Found 1 CRITICAL (legacy /api/driver/orders/{oid}/deliver credits wallet repeatedly w/o OTP), 3 HIGH backend logic bugs, and 1 blocking UI bug I fixed (merchant fleet map had 0px height). No deprecated Expo packages detected.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/driver/orders/{oid}/deliver (legacy, server.py ~3324)", "issue": "Still live. Delivers with NO OTP/photo proof, NO status check -> calling it twice on an already-delivered order credited the wallet twice (+30 SAR verified). Also legacy /driver/orders/{oid}/accept (no approval/OTP, non-atomic) and /pickup bypass the new flow. Remove or route to delivery.py logic.", "priority": "CRITICAL"},
+      {"endpoint": "POST /api/driver/offers/{id}/accept", "issue": "Does not check order status: after order was cancelled, accept returned 200 and flipped status cancelled -> assigned. take_order() filter only checks driver_id empty; add status:'ready_for_pickup' to the update filter. Also does not check expires_at (expired offer accepted with 200 inside the 3s expiry-loop window).", "priority": "HIGH"},
+      {"endpoint": "POST /api/merchant/orders/{oid}/mark-ready (server.py 3389)", "issue": "No status guard: a 'delivered' order was reset to 'ready_for_pickup' and re-dispatched (also picked up by set_online dispatch loop). Restrict to processing/confirmed/preparing.", "priority": "HIGH"},
+      {"endpoint": "GET/POST /api/orders/{oid}/messages, GET /orders/{oid}/live, WS sub", "issue": "can_view() allows any role in (merchant, chamber, employee). Chamber account 0550000000 read private customer-driver chat (200). Spec: only owner customer, assigned driver, merchant.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/merchant/orders/{oid}/assign", "issue": "Allows assigning to a pending/rejected (unapproved) driver and ignores 3-active-orders cap."},
+      {"endpoint": "POST /api/driver/orders/{oid}/step", "issue": "Allows skipping steps (to_store -> at_customer directly) since only index ordering is checked."},
+      {"endpoint": "POST /api/orders/{oid}/rate-driver", "issue": "Check-then-set not atomic (double submit race could double-count rating)."},
+      {"endpoint": "WS /api/ws/live", "issue": "Any malformed JSON/float in a message hits the broad except and silently closes the socket; validate per-message instead."},
+      {"endpoint": "GET /api/driver/home today stats", "issue": "'today' uses UTC midnight, not Asia/Riyadh (+3) -> trips 00:00-03:00 local counted in previous day."},
+      {"endpoint": "CORS", "issue": "access-control-allow-origin: * together with allow-credentials: true (even for Origin evil.example.com). Use explicit origins."},
+      {"endpoint": "Error messages", "issue": "Backend error details are Arabic-only (e.g. 'رمز التسليم غير صحيح', 'الحد الأدنى للسحب') and show untranslated in English UI."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "SwipeButton (src/components/driver/SwipeButton.tsx:58)", "issue": "track style has justifyContent:'center' so the knob starts in the MIDDLE of the pill covering the label ('Slide t[knob]onnect', 'Swipe: [knob]r Order'); on native the swipe range (w-KNOB-8) from center pushes the knob out of the track. Use justifyContent:'flex-start' (RTL aware).", "testID": "driver-online-swipe / offer-accept / ad-next", "priority": "HIGH"},
+      {"component": "Merchant fleet map (app/merchant/fleet.tsx:161)", "issue": "FIXED by tester: style {height:260, flex:0} became 'flex: 0 1 0%' on web -> map height 0 (hidden). Changed to flexGrow:0, flexShrink:0, flexBasis:'auto'; verified 260px with markers.", "testID": "fleet-map", "priority": "HIGH"},
+      {"component": "Customer chat (app/chat/[orderId].tsx)", "issue": "First time opening chat from track-order and sending, the customer's own message was saved (DB) but not rendered; appeared after reload. Driver side rendered fine. Likely race between initial load() GET and optimistic append. Retest.", "testID": "chat-send", "priority": "MEDIUM"},
+      {"component": "Track order after delivered", "issue": "Map still shows the old driver->store route line and driver marker after status delivered; no thank-you state after rating (rate box just disappears).", "testID": "track-map", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Driver Map/Offer/Active/Earnings/Profile, Chat, Driver Apply (English mode)", "issues": ["Many strings stay Arabic in English UI: offer sheet 'طلب توصيل جديد', 'ربحك', 'مسافة التوصيل', 'كاش', swipe labels 'اسحب لقبول الطلب'/'اسحب: وصلت للمتجر', action labels 'ملاحة/محادثة/مشكلة' (first render), earnings header/labels, profile 'المستندات', 'تطبيق الملاحة المفضل', 'آخر التقييمات', 'ارفع', driver-apply header/subtitle and success text", "Arabic text renders with disconnected letters in the web preview (e.g. 'ا س ح ب', chat chips) - check for letterSpacing on Text styles; verify on device", "Merchant fleet header says 'Direct Fleet' (translation of البث/الأسطول) while menu says 'Live Fleet'"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_driver_delivery_v2.py", "/app/backend/tests/test_delivery_edge_cases.py", "/app/test_reports/pytest/driver_delivery_v2.xml"],
+  "action_items": [
+    "CRITICAL: remove/disable legacy server.py /api/driver/orders/{oid}/accept|pickup|deliver (deliver gives repeat wallet credits without OTP).",
+    "take_order(): add status 'ready_for_pickup' (or allowed statuses for manual assign) to the atomic update filter; accept_offer: reject if expires_at < now.",
+    "mark-ready: only allow from processing/confirmed/preparing; validate ObjectId.",
+    "can_view(): drop 'chamber' (and decide on 'employee') for messages/live/WS sub.",
+    "SwipeButton: track justifyContent 'flex-start' so knob starts at edge and doesn't cover label.",
+    "Fix customer chat optimistic append race (merge GET result with existing msgs instead of replacing).",
+    "Translate remaining hardcoded Arabic strings in driver components/earnings/profile/driver-apply and backend error details; check Arabic letterSpacing.",
+    "assign: require approved driver; step: enforce sequential steps; CORS explicit origins.",
+    "Clear route/driver marker on track-order when delivered; show thank-you after rating."
+  ],
+  "critical_code_review_comments": [
+    "delivery.py 800 lines (>700) - consider splitting driver/customer/merchant routers.",
+    "src/utils/live.ts singleton socket is never closed on logout (no live.close() anywhere) - after logout/login as another user on same device the socket stays authenticated as the previous user (receives their offers/chat). Call live.close() in logout.",
+    "order_live() calls OSRM on every poll per customer (4s timeout) - cache route per driver/step.",
+    "map_view reads static_map.html synchronously on every request - cache at startup.",
+    "driver-apply.tsx: j.detail may be a list (422) -> shows [object Object]."
+  ],
+  "updated_files": ["/app/frontend/app/merchant/fleet.tsx (map style fix)", "/app/frontend/app/track-order/[id].tsx (added testID rate-submit)", "/app/backend/tests/test_driver_delivery_v2.py (new)", "/app/backend/tests/test_delivery_edge_cases.py (new)"],
+  "success_rate": {"backend": "93% (13/14 pytest; + 3 edge-case bugs and 1 critical legacy endpoint bug found)", "frontend": "~85% (all requested flows functional; swipe knob layout bug, fleet map 0-height (fixed), customer chat optimistic render miss)"},
+  "seed_data_creation": "Test orders (_test:true) created and deleted; 2 applicant users deleted; driver 0540001111 reset to offline, cash_in_hand 0, wallet 15, nav_app google, rating 5/1, total_deliveries 188; the 2 other originally-online drivers restored online.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Other seeded drivers are online by default and will steal dispatch offers - tests set them offline temporarily (see fixtures). Web geolocation: grant via context.grant_permissions to see online swipe; otherwise driver-perm card shows. Swipe on web = long-press '<testID>-tap' (>=350ms). Browser API latency via ingress is ~2-4s, wait accordingly. Env var is EXPO_PUBLIC_BACKEND_URL (not EXPO_BACKEND_URL).",
+  "rca_of_issue": "Fleet map: RN-web converts flex:0 to 'flex: 0 1 0%' -> basis 0 + shrink -> height 0 despite height:260. Accept-after-cancel: take_order filter only on driver_id. Repeat wallet credit: legacy deliver endpoint lacks status/driver checks beyond driver_id match."
+}
