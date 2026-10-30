@@ -698,4 +698,4 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 ## v1.30.1 (2026-10-30)
 - Driver profile preferences now identical to merchant/more.tsx (Appearance page link, Dark/Light switch, language bottom sheet) — same i18n keys, no new translation system.
 - Map: gold top-down car pin with real Zenrex Z logo (backend/static_logo.b64), brand badge moved bottom-left; driver map hides it (brand=0) and shows round logo between earnings chip and SOS.
-- Pending: deploy backend map files to Hetzner (SSH key rejected from new pod).
+- Backend map files deployed to Hetzner (root + id_ed25519). Store submissions done ✅.
