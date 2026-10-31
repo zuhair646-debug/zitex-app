@@ -699,3 +699,9 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - Driver profile preferences now identical to merchant/more.tsx (Appearance page link, Dark/Light switch, language bottom sheet) — same i18n keys, no new translation system.
 - Map: gold top-down car pin with real Zenrex Z logo (backend/static_logo.b64), brand badge moved bottom-left; driver map hides it (brand=0) and shows round logo between earnings chip and SOS.
 - Backend map files deployed to Hetzner (root + id_ed25519). Store submissions done ✅.
+
+## v1.31.0 (2026-10-31) — Driver system finalised
+- Pay models (merchant /merchant/drivers, tap card to edit): commission per trip (fixed/%), salary (monthly + bonus_per_extra_order above daily bonus_threshold_orders), per_km (driver_base_fare + driver_km_rate × trip km). estimate_earning in delivery.py; driver Earnings shows pay card (GET /api/driver/earnings → pay).
+- Near-arrival: set_loc → notify_if_near (ETA ≤ 180s while picked_up) → in-app notification + ws {t:'near'}; customer banner + track-order banner. No real push (not integrated).
+- Map: ZenBrand animated (wordmark → spinning full logo), full logo on car roof, follow zoom 16.5 pitch 50, bearing follows heading when route exists, camera bottom padding 42%.
+- Tests: tests/test_driver_pay_near_iter56.py; iteration_56 report.

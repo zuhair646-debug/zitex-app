@@ -143,3 +143,8 @@ Feature category → semver bump:
 - iOS e9b7be8e-2244-4258-bc5d-8c0e0107afa8 (build 83), Android 9e0d72da-c9fe-4454-8a1b-4268023671d0 (versionCode 88). Commit aa326c3. Log /tmp/eas_release_v1.30.1.log
 - Driver prefs = merchant pattern (appearance page, theme switch, language sheet); gold Z car pin; map brand badge moved bottom-left (hidden on driver map, logo in top row).
 - Backend deployed to Hetzner via root@91.98.154.148 with /root/.ssh/id_ed25519 (zenrex_deploy key rejected). iOS+Android submitted manually ✅.
+
+## v1.31.0 release — 2026-10-31
+- iOS 3341b512-2c58-454d-a36b-751de39642fc (build 84), Android e02c37ae-8724-4b86-8044-6fc83f728c1e (versionCode 89). Commit 64e3279. Backend deployed to Hetzner (root@91.98.154.148 via /root/.ssh/id_ed25519). Log /tmp/eas_release_v1.31.0.log
+- Driver pay models wired (salary+daily bonus / per trip / per km), 3-min near notice, animated ZenBrand, full-logo car pin, follow camera with bottom padding.
+- NOTE: eas-cli disappears on pod restart → `npm i -g eas-cli`. If poller dies, submit manually: `eas submit --platform ios|android --id <id> --non-interactive`.
