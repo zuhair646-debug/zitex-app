@@ -3269,12 +3269,14 @@ class DriverInput(BaseModel):
     phone: str
     password: str = ""
     vehicle_info: str = ""
-    payment_model: str = "commission"  # "salary" | "commission"
-    salary_monthly: float = 0
-    bonus_threshold_orders: int = 20
-    bonus_per_extra_order: float = 2
-    commission_type: str = "fixed"  # "fixed" | "percentage"
-    merchant_commission_value: float = 5  # SAR (fixed) or % of delivery fee
+    payment_model: str = Field("commission", pattern="^(salary|commission|per_km)$")  # per trip | monthly | per km
+    salary_monthly: float = Field(0, ge=0)
+    bonus_threshold_orders: int = Field(20, ge=0)
+    bonus_per_extra_order: float = Field(2, ge=0)
+    driver_km_rate: float = Field(1.0, ge=0)  # SAR per km (per_km model)
+    driver_base_fare: float = Field(0, ge=0)  # SAR fixed start fare per trip (per_km model)
+    commission_type: str = Field("fixed", pattern="^(fixed|percentage)$")
+    merchant_commission_value: float = Field(5, ge=0)  # SAR (fixed) or % of delivery fee
 
 @api_router.post("/merchant/drivers")
 async def create_driver(data: DriverInput, user=Depends(get_current_user)):
@@ -3289,6 +3291,7 @@ async def create_driver(data: DriverInput, user=Depends(get_current_user)):
     driver_doc = {"user_id": str(u.inserted_id), "vehicle_info": data.vehicle_info,
                   "payment_model": data.payment_model, "salary_monthly": data.salary_monthly,
                   "bonus_threshold_orders": data.bonus_threshold_orders, "bonus_per_extra_order": data.bonus_per_extra_order,
+                  "driver_km_rate": data.driver_km_rate, "driver_base_fare": data.driver_base_fare,
                   "commission_type": data.commission_type, "merchant_commission_value": data.merchant_commission_value,
                   "online": False, "current_lat": 0, "current_lng": 0, "last_location_at": "",
                   "total_deliveries": 0, "today_deliveries": 0, "today_earnings": 0,
@@ -3315,7 +3318,13 @@ async def list_drivers(user=Depends(get_current_user)):
 async def update_driver(did: str, data: DriverInput, user=Depends(get_current_user)):
     require_merchant(user)
     upd = data.model_dump(); upd.pop("phone", None); upd.pop("password", None)
+    name = upd.pop("name", "")
+    d = await db.drivers.find_one({"_id": ObjectId(did)}) if ObjectId.is_valid(did) else None
+    if not d:
+        raise HTTPException(status_code=404, detail="Driver not found")
     await db.drivers.update_one({"_id": ObjectId(did)}, {"$set": upd})
+    if name and ObjectId.is_valid(d.get("user_id", "")):
+        await db.users.update_one({"_id": ObjectId(d["user_id"])}, {"$set": {"name": name}})
     return {"message": "Updated"}
 
 @api_router.delete("/merchant/drivers/{did}")

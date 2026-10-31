@@ -1,0 +1,48 @@
+{
+  "summary": "Driver system finalisation tested end-to-end. BACKEND: new suite tests/test_driver_pay_near_iter56.py 8/8 PASS (commission fixed/percentage, salary threshold+bonus, per_km with distance_km and haversine*1.3 fallback — offer est_earning, /complete earnings and wallet credit all match; PUT/POST merchant drivers new fields + name + 404; /driver/earnings pay object; near-arrival fires exactly once only for picked_up within 180s ETA, notification type order_near to customer, active-order.near and /orders/{id}/live near true; /map/view brand=0/1 + base64 logo + car svg). Regression 39/39 PASS (test_driver_delivery_v2, v3_scheduling, v3_fixes). FRONTEND (375x667): driver Map top row (earnings chip, animated ZenBrand text→logo cycle verified by opacity sampling, SOS) OK; Earnings pay card OK and reflects merchant model change (per_km 3.00); My Account appearance/theme toggle/language sheet (20 languages) OK; merchant edit modal 'تعديل السائق' hides phone/password, pm-per-km + pm-km-rate, save persists and card shows per-km label; customer track-order shows track-near banner and home live banner shows near text. Follow mode zooms to 16.5 and gold route is drawn. Issues: ZENREX wordmark truncated ('ZENR…'), car centered behind bottom sheet so route ahead is hidden, wrong English translations ('By the kilogram', 'Price per kilogram'), no validation on payment_model/negative values, PUT is full-replace. Driver 0540001111 restored to commission/fixed/5 + vehicle 'Toyota Hilux 2022'.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PUT /api/merchant/drivers/{did}", "issue": "No validation: payment_model='bogus' and merchant_commission_value=-50 accepted (200). Unknown model silently falls back to commission in estimate_earning; negative cut makes driver earning > delivery fee. Use Literal['commission','salary','per_km'], Literal['fixed','percentage'], Field(ge=0) (and le=100 for percentage)."},
+      {"endpoint": "PUT /api/merchant/drivers/{did}", "issue": "Full-replace semantics: any omitted field resets to DriverInput defaults (vehicle_info '', driver_km_rate 1.0, bonus_threshold 20...). A partial PUT wiped seeded vehicle_info during testing (restored). Use model_dump(exclude_unset=True)."},
+      {"endpoint": "POST /api/driver/orders/{oid}/complete", "issue": "merchant_cut = fee - earning can go negative for per_km/salary (e.g. per_km base 3 + 1.5/km on a 15km trip = 25.5 > 20 fee → merchant_cut -5.5). Clamp or store as a separate 'merchant_cost' field if intended."},
+      {"endpoint": "CORS (server-wide)", "issue": "Preflight reflects arbitrary Origin (https://evil.example.com) with Access-Control-Allow-Credentials: true. Pre-existing; restrict to explicit origins."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ZenBrand wordmark", "issue": "'ZENREX' wordmark is truncated to 'ZENR…' on driver map (96px wrap, fontSize 14, letterSpacing 3, paddingHorizontal 10, numberOfLines=1). User explicitly asked the full wordmark to show first. Widen wrap (~120px) / reduce letterSpacing / drop numberOfLines. Ref: src/components/driver/ZenBrand.tsx:44,52-58", "testID": "driver-brand", "priority": "HIGH"},
+      {"component": "Driver map follow camera", "issue": "In follow mode the car is centered on the full map height (y≈295 of 607) so it sits on the top edge of the active-delivery bottom sheet (starts y≈318); the route ahead and the customer pin are hidden behind the sheet. Use map.setPadding({bottom: sheetHeight}) / easeTo padding or offset so the car sits in the upper third. Ref: backend/static_map.html:79,84,115", "testID": "driver-map", "priority": "HIGH"},
+      {"component": "Pay card / merchant drivers i18n", "issue": "English auto-translations wrong: 'بالكيلو' → 'By the kilogram' (merchant card + option), 'سعر الكيلو' → 'Price per kilogram' (driver pay card). Use unambiguous source text 'بالكيلومتر' / 'سعر الكيلومتر'. Ref: app/merchant/drivers.tsx:66,91; app/driver/earnings.tsx:110", "testID": "pm-per-km / driver-pay-card", "priority": "MEDIUM"},
+      {"component": "Driver ETA chip", "issue": "ETA unit shows 'd' ('4 d · 2.1 km') in English – minutes abbreviation mistranslated; use 'min'.", "testID": "active-delivery", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Driver map route", "issue": "/api/map/route is requested twice per mount (two identical route messages posted to the map). Minor wasted call.", "affected_testIDs": ["driver-map"]}
+    ],
+    "design_issues": [
+      {"screen": "merchant/drivers", "issues": ["Trash icon has no testID and ~20px touch target (<44) and is nested inside the card touchable", "Name/base-fare/commission inputs & options lack testIDs", "Card 'Today: 8' uses stale drivers.today_deliveries field (driver API shows 0 today)", "A driver with empty name ('• No Vehicle') exists in list (leftover data)"]},
+      {"screen": "home live-delivery-banner", "issues": ["Near text truncated to one line ('Your order is almost here, get r…')", "'Collection Code' vs 'Pickup Code' on track screen – inconsistent wording"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_driver_pay_near_iter56.py", "/app/backend/tests/ui_prep_near_iter56.py", "/app/test_reports/pytest/iter56_pay_near.xml", "/app/test_reports/pytest/iter56_regression.xml"],
+  "action_items": [
+    "Fix ZenBrand wordmark truncation so full 'ZENREX' shows before morphing into the logo (ZenBrand.tsx)",
+    "Offset follow camera for bottom sheet (map padding) so car + route ahead are visible above the active-delivery sheet (static_map.html)",
+    "Fix km translations: use 'بالكيلومتر' / 'سعر الكيلومتر' sources (drivers.tsx, earnings.tsx)",
+    "Add Pydantic validation to DriverInput (Literal models, ge=0, percentage le=100) and use exclude_unset on PUT",
+    "Dedupe /api/map/route call on driver map mount; translate ETA unit to 'min'"
+  ],
+  "critical_code_review_comments": [
+    "server.py is 6927 lines and delivery.py 1065 lines (>700) – split into modules",
+    "estimate_earning: d.get('merchant_commission_value', 0) not float-coerced; a None value would raise TypeError in percentage branch",
+    "Salary model pays only bonus per trip; monthly salary itself is not credited anywhere (display-only) – confirm intended",
+    "DELETE /api/merchant/drivers/{did} with invalid ObjectId will 500 (no is_valid guard) – pre-existing"
+  ],
+  "updated_files": ["/app/backend/tests/test_driver_pay_near_iter56.py (new)", "/app/backend/tests/ui_prep_near_iter56.py (new)"],
+  "success_rate": {"backend": "100% (47/47 incl. 39 regression)", "frontend": "~85% (all requested flows work; wordmark truncation + camera offset + translations issues)"},
+  "seed_data_creation": "Temporary _test56/_ui56 orders created and deleted. Driver 0540001111 restored to commission/fixed/5, vehicle_info 'Toyota Hilux 2022', name 'محمد السائق'. Test driver 0599956000 created/deleted.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login on web via login-phone-input/login-password-input/login-submit-button. Merchant save in drivers modal needs ~5s wait on preview. Driver map is iframe /api/map/view; listen to window message events inside frame to inspect posted map messages. Grant geolocation in Playwright context to get driver position on web. Driver doc id for 0540001111 = 6ab6206971b6ad54069c12ae (user id 6ab6206971b6ad54069c12ad). Auth: bcrypt $2b$ OK, lockout 429 after 5 fails OK, bearer token (no httpOnly cookie)."
+}

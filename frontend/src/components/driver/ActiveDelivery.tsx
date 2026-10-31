@@ -60,7 +60,7 @@ export default function ActiveDelivery({ order, eta, navApp, onStep, onDeliver, 
           <Text style={s.tName} numberOfLines={1}>{atStorePhase ? tgt.name : tgt.name || tSync('العميل', lang)}</Text>
           <Text style={s.tAddr} numberOfLines={2}>{tgt.address || '—'}</Text>
         </View>
-        {eta ? (<View style={s.eta}><Text style={s.etaMin}>{eta.min}</Text><Text style={s.etaLbl}>{tSync('د', lang)} · {eta.km.toFixed(1)} {tSync('كم', lang)}</Text></View>) : null}
+        {eta ? (<View style={s.eta}><Text style={s.etaMin}>{eta.min}</Text><Text style={s.etaLbl}>{tSync('دقيقة', lang)} · {eta.km.toFixed(1)} {tSync('كم', lang)}</Text></View>) : null}
       </View>
       {!atStorePhase && order.cod ? (
         <View style={s.cod}><Ionicons name="cash" size={16} color={colors.onBrandPrimary} /><Text style={s.codTxt}>{tSync('تحصيل كاش', lang)}: {Number(order.cash_to_collect).toFixed(2)} {tSync('ر.س', lang)}</Text></View>

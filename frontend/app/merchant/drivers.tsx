@@ -16,7 +16,15 @@ export default function MerchantDrivers() {
   const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState<any>({ name: '', phone: '', password: 'driver1234', vehicle_info: '', payment_model: 'commission', salary_monthly: '0', bonus_threshold_orders: '20', bonus_per_extra_order: '2', commission_type: 'fixed', merchant_commission_value: '5' });
+  const EMPTY = { name: '', phone: '', password: 'driver1234', vehicle_info: '', payment_model: 'commission', salary_monthly: '0', bonus_threshold_orders: '20', bonus_per_extra_order: '2', commission_type: 'fixed', merchant_commission_value: '5', driver_km_rate: '1', driver_base_fare: '0' };
+  const [form, setForm] = useState<any>(EMPTY);
+  const [editId, setEditId] = useState<string | null>(null);
+  const openNew = () => { setEditId(null); setForm(EMPTY); setModal(true); };
+  const openEdit = (d: any) => {
+    setEditId(d.id);
+    setForm({ ...EMPTY, ...Object.fromEntries(Object.keys(EMPTY).map(k => [k, d[k] === undefined || d[k] === null ? (EMPTY as any)[k] : String(d[k])])), password: '' });
+    setModal(true);
+  };
 
   const load = useCallback(async () => {
     try { const d = await apiCall('/api/merchant/drivers'); setDrivers(d); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
@@ -26,9 +34,14 @@ export default function MerchantDrivers() {
   const save = async () => {
     if (!form.name || !form.phone) { Alert.alert(tSync('مطلوب', curLang()), tSync('الاسم ورقم الجوال مطلوبان', curLang())); return; }
     try {
-      const body = { ...form, salary_monthly: parseFloat(form.salary_monthly) || 0, bonus_threshold_orders: parseInt(form.bonus_threshold_orders) || 0, bonus_per_extra_order: parseFloat(form.bonus_per_extra_order) || 0, merchant_commission_value: parseFloat(form.merchant_commission_value) || 0 };
-      await apiCall('/api/merchant/drivers', { method: 'POST', body: JSON.stringify(body) });
-      Alert.alert(tSync('تم الإنشاء', curLang()), tf('بيانات دخول المندوب: {0} / {1}', curLang(), [form.phone, form.password]));
+      const body = { ...form, salary_monthly: parseFloat(form.salary_monthly) || 0, bonus_threshold_orders: parseInt(form.bonus_threshold_orders) || 0, bonus_per_extra_order: parseFloat(form.bonus_per_extra_order) || 0, merchant_commission_value: parseFloat(form.merchant_commission_value) || 0, driver_km_rate: parseFloat(form.driver_km_rate) || 0, driver_base_fare: parseFloat(form.driver_base_fare) || 0 };
+      if (editId) {
+        await apiCall(`/api/merchant/drivers/${editId}`, { method: 'PUT', body: JSON.stringify(body) });
+        Alert.alert(tSync('تم الحفظ', curLang()));
+      } else {
+        await apiCall('/api/merchant/drivers', { method: 'POST', body: JSON.stringify(body) });
+        Alert.alert(tSync('تم الإنشاء', curLang()), tf('بيانات دخول المندوب: {0} / {1}', curLang(), [form.phone, form.password]));
+      }
       setModal(false); load();
     } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
   };
@@ -39,22 +52,22 @@ export default function MerchantDrivers() {
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <Text style={s.title}>{tSync('السائقون (', lang)}{drivers.length})</Text>
-        <TouchableOpacity onPress={() => setModal(true)} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
+        <TouchableOpacity onPress={openNew} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
       {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           {drivers.length === 0 && <TX style={s.empty}>لا يوجد سائقون بعد. اضغط + لإضافة سائق.</TX>}
           {drivers.map(d => (
-            <View key={d.id} style={s.card}>
+            <TouchableOpacity key={d.id} style={s.card} onPress={() => openEdit(d)} activeOpacity={0.8} testID={`driver-card-${d.id}`}>
               <View style={[s.statusDot, { backgroundColor: d.online ? '#10B981' : '#9CA3AF' }]} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <TranslatableName text={d.name || ''} style={s.name} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}><Text style={s.phone}>{d.phone} • </Text>{d.vehicle_info ? <TranslatableName text={d.vehicle_info} style={s.phone} noToggle /> : <Text style={s.phone}>{tSync('لا توجد مركبة', curLang())}</Text>}</View>
-                <Text style={s.payment}>{d.payment_model === 'salary' ? tf('راتب {0} ر.س / شهرياً', lang, [d.salary_monthly]) : tf('عمولة: {0} لكل طلب', lang, [d.commission_type === 'percentage' ? d.merchant_commission_value + '%' : d.merchant_commission_value + ' ' + tSync('ر.س', lang)])}</Text>
+                <Text style={s.payment}>{d.payment_model === 'salary' ? tf('راتب {0} ر.س / شهرياً', lang, [d.salary_monthly]) : d.payment_model === 'per_km' ? `${tSync('بالكيلومتر', lang)}: ${d.driver_km_rate ?? 0} ${tSync('ر.س', lang)} / ${tSync('كم', lang)}` : tf('عمولة: {0} لكل طلب', lang, [d.commission_type === 'percentage' ? d.merchant_commission_value + '%' : d.merchant_commission_value + ' ' + tSync('ر.س', lang)])}</Text>
                 <Text style={s.stats}>{tSync('الإجمالي:', lang)} {d.total_deliveries || 0} {tSync('• اليوم:', lang)} {d.today_deliveries || 0} {tSync('• المحفظة:', lang)} {(d.wallet_balance || 0).toFixed(0)} {tSync('ر.س', lang)}</Text>
               </View>
-              <TouchableOpacity onPress={() => del(d.id, d.name)}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
-            </View>
+              <TouchableOpacity testID={`driver-del-${d.id}`} onPress={() => del(d.id, d.name)} style={{ padding: 12 }} hitSlop={8}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       }
@@ -62,18 +75,28 @@ export default function MerchantDrivers() {
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
             <TouchableOpacity onPress={() => setModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
-            <TX style={s.title}>سائق جديد</TX>
+            <TX style={s.title}>{editId ? 'تعديل السائق' : 'سائق جديد'}</TX>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
             <TX style={s.label}>الاسم *</TX><TextInput style={s.input} value={form.name} onChangeText={t => setForm({ ...form, name: t })} />
-            <TX style={s.label}>رقم الجوال *</TX><TextInput style={s.input} value={form.phone} onChangeText={t => setForm({ ...form, phone: t })} keyboardType="phone-pad" />
-            <TX style={s.label}>كلمة مرور الدخول *</TX><TextInput style={s.input} value={form.password} onChangeText={t => setForm({ ...form, password: t })} secureTextEntry />
+            {!editId ? (<>
+              <TX style={s.label}>رقم الجوال *</TX><TextInput style={s.input} value={form.phone} onChangeText={t => setForm({ ...form, phone: t })} keyboardType="phone-pad" />
+              <TX style={s.label}>كلمة مرور الدخول *</TX><TextInput style={s.input} value={form.password} onChangeText={t => setForm({ ...form, password: t })} secureTextEntry />
+            </>) : null}
             <TX style={s.label}>معلومات المركبة</TX><TextInput style={s.input} value={form.vehicle_info} onChangeText={t => setForm({ ...form, vehicle_info: t })} placeholder="Toyota Hilux 2022" />
             <TX style={s.label}>نموذج الدفع</TX>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <TouchableOpacity style={[s.opt, form.payment_model === 'commission' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'commission' })}><TX style={[s.optText, form.payment_model === 'commission' && s.optTextActive]}>عمولة لكل طلب</TX></TouchableOpacity>
-              <TouchableOpacity style={[s.opt, form.payment_model === 'salary' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'salary' })}><TX style={[s.optText, form.payment_model === 'salary' && s.optTextActive]}>راتب شهري</TX></TouchableOpacity>
+              <TouchableOpacity testID="pm-salary" style={[s.opt, form.payment_model === 'salary' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'salary' })}><TX style={[s.optText, form.payment_model === 'salary' && s.optTextActive]}>راتب شهري</TX></TouchableOpacity>
+              <TouchableOpacity testID="pm-per-km" style={[s.opt, form.payment_model === 'per_km' && s.optActive]} onPress={() => setForm({ ...form, payment_model: 'per_km' })}><TX style={[s.optText, form.payment_model === 'per_km' && s.optTextActive]}>بالكيلومتر</TX></TouchableOpacity>
             </View>
+            {form.payment_model === 'per_km' && (<>
+              <TX style={s.label}>سعر الكيلومتر للسائق (ر.س)</TX>
+              <TextInput testID="pm-km-rate" style={s.input} keyboardType="numeric" value={form.driver_km_rate} onChangeText={t => setForm({ ...form, driver_km_rate: t })} />
+              <TX style={s.label}>أجرة بداية الرحلة (ر.س)</TX>
+              <TextInput style={s.input} keyboardType="numeric" value={form.driver_base_fare} onChangeText={t => setForm({ ...form, driver_base_fare: t })} />
+              <TX style={s.hint}>ربح السائق = أجرة البداية + (سعر الكيلومتر × مسافة التوصيل)</TX>
+            </>)}
             {form.payment_model === 'commission' && (<>
               <TX style={s.label}>نوع العمولة</TX>
               <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -93,7 +116,7 @@ export default function MerchantDrivers() {
               <TextInput style={s.input} keyboardType="numeric" value={form.bonus_per_extra_order} onChangeText={t => setForm({ ...form, bonus_per_extra_order: t })} />
               <TX style={s.hint}>فوق الحد، يكسب السائق مكافأة لكل طلب إضافي</TX>
             </>)}
-            <TouchableOpacity style={s.saveBtn} onPress={save}><TX style={s.saveText}>إضافة السائق</TX></TouchableOpacity>
+            <TouchableOpacity testID="driver-save" style={s.saveBtn} onPress={save}><TX style={s.saveText}>{editId ? 'حفظ التعديلات' : 'إضافة السائق'}</TX></TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
       </Modal>

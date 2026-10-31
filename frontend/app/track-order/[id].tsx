@@ -61,6 +61,7 @@ export default function TrackOrder() {
   useLive((m) => {
     if (m.t === 'driver_loc') map.current?.send({ type: 'driver', loc: { lat: m.lat, lng: m.lng, heading: m.heading } });
     else if (m.t === 'order_update' && m.order_id === id) load();
+    else if (m.t === 'near' && m.order_id === id) setO((x: any) => x && ({ ...x, near: true }));
   }, { orderId: id });
 
   const rate = async () => {
@@ -87,6 +88,10 @@ export default function TrackOrder() {
             {o.eta_min && o.status !== 'delivered' ? (<View style={s.eta}><Text style={s.etaMin}>{o.eta_min}</Text><TX style={s.etaLbl}>دقيقة</TX></View>) : null}
           </View>
           <View style={s.progress}>{STAGES.map((st, i) => <View key={st.key} style={[s.seg, i <= idx && { backgroundColor: colors.brand }]} />)}</View>
+          {o.near && o.status === 'picked_up' && o.step !== 'at_customer' ? (
+            <View style={s.near} testID="track-near"><Ionicons name="notifications" size={18} color={colors.onBrandPrimary} />
+              <TX style={s.nearTxt}>طلبك قريب، خلك مستعد لاستلامه</TX></View>
+          ) : null}
           {o.otp && o.status !== 'delivered' && drv ? (
             <View style={s.otp} testID="track-otp">
               <TX style={s.otpLbl}>رمز الاستلام — أعطه للسائق عند التسليم</TX>
@@ -149,6 +154,8 @@ function useStyles() {
     progress: { flexDirection: 'row', gap: 4 },
     seg: { flex: 1, height: 5, borderRadius: 3, backgroundColor: colors.surfaceTertiary },
     otp: { backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, padding: spacing.md, alignItems: 'center', borderWidth: 1, borderColor: colors.brand },
+    near: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.brand, borderRadius: radius.md, padding: spacing.md },
+    nearTxt: { color: colors.onBrandPrimary, fontWeight: '900', fontSize: 14, flex: 1 },
     otpLbl: { color: colors.onSurfaceSecondary, fontSize: 12 },
     otpVal: { color: colors.brand, fontSize: 34, fontWeight: '900', letterSpacing: 12 },
     drv: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, padding: spacing.md },

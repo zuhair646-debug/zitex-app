@@ -48,6 +48,7 @@ export default function DriverEarnings() {
           <Text style={s.balVal}>{Number(d?.wallet_balance || 0).toFixed(2)} <Text style={s.cur}>{tSync('ر.س', lang)}</Text></Text>
           <View style={s.cashRow}><Ionicons name="cash" size={16} color={colors.brand} /><Text style={s.cashTxt}>{tSync('كاش بحوزتك (يُسلَّم للمتجر)', lang)}: {Number(d?.cash_in_hand || 0).toFixed(2)}</Text></View>
         </View>
+        {d?.pay ? <PayCard s={s} p={d.pay} lang={lang} /> : null}
         <FilterTabs items={[{ key: 'day', label: tSync('اليوم', lang) }, { key: 'week', label: tSync('الأسبوع', lang) }, { key: 'month', label: tSync('الشهر', lang) }] as any}
           value={period} onChange={(k: any) => { setPeriod(k); load(k); }} />
         <View style={s.stats}>
@@ -91,6 +92,40 @@ function Stat({ s, label, value }: any) {
   return <View style={s.stat}><Text style={s.statVal}>{value}</Text><Text style={s.statLbl}>{label}</Text></View>;
 }
 
+/** How this driver is paid — set by the merchant in Drivers (salary / per trip / per km). */
+function PayCard({ s, p, lang }: any) {
+  const cur = tSync('ر.س', lang);
+  const rows: [string, string][] = [];
+  let title = '';
+  if (p.model === 'salary') {
+    title = 'راتب شهري + مكافآت';
+    const left = Math.max(0, p.bonus_threshold_orders - p.today_trips);
+    rows.push([tSync('الراتب الشهري', lang), `${p.salary_monthly.toFixed(0)} ${cur}`]);
+    rows.push([tSync('مكافأة كل طلب فوق الحد اليومي', lang), `${p.bonus_per_extra_order.toFixed(2)} ${cur}`]);
+    rows.push([tSync('طلبات اليوم', lang), `${p.today_trips} / ${p.bonus_threshold_orders}`]);
+    rows.push([tSync('مكافآت هذا الشهر', lang), `${p.month_earnings.toFixed(2)} ${cur}`]);
+    if (left > 0) rows.push([tSync('باقي لبدء المكافأة', lang), `${left} ${tSync('طلب', lang)}`]);
+  } else if (p.model === 'per_km') {
+    title = 'أجر حسب الكيلومتر';
+    rows.push([tSync('سعر الكيلومتر', lang), `${p.driver_km_rate.toFixed(2)} ${cur}`]);
+    if (p.driver_base_fare > 0) rows.push([tSync('أجرة بداية الرحلة', lang), `${p.driver_base_fare.toFixed(2)} ${cur}`]);
+    rows.push([tSync('أرباح هذا الشهر', lang), `${p.month_earnings.toFixed(2)} ${cur}`]);
+  } else {
+    title = 'أجر لكل مشوار';
+    rows.push([tSync('حصة المتجر من رسوم التوصيل', lang), p.commission_type === 'percentage' ? `${p.merchant_commission_value}%` : `${p.merchant_commission_value.toFixed(2)} ${cur}`]);
+    rows.push([tSync('أرباح هذا الشهر', lang), `${p.month_earnings.toFixed(2)} ${cur}`]);
+  }
+  rows.push([tSync('مشاوير هذا الشهر', lang), String(p.month_trips)]);
+  return (
+    <View style={s.card} testID="driver-pay-card">
+      <View style={s.payHead}><Ionicons name="briefcase" size={18} color={colors.brand} /><Text style={s.h2}>{tSync(title, lang)}</Text></View>
+      {rows.map(([k, v]) => (
+        <View key={k} style={s.payRow}><Text style={s.payK}>{k}</Text><Text style={s.payV}>{v}</Text></View>
+      ))}
+    </View>
+  );
+}
+
 function useStyles() {
   const { themeKey } = useTheme();
   return useMemo(() => StyleSheet.create({
@@ -117,5 +152,9 @@ function useStyles() {
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.divider },
     rowVal: { color: colors.onSurface, fontWeight: '800', flex: 1 },
     rowDate: { color: colors.onSurfaceTertiary, fontSize: 12 },
+    payHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    payRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4, gap: spacing.md },
+    payK: { color: colors.onSurfaceSecondary, fontSize: 13, flex: 1 },
+    payV: { color: colors.onSurface, fontWeight: '800', fontSize: 14 },
   }), [themeKey]);
 }

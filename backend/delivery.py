@@ -22,6 +22,7 @@ from pydantic import BaseModel
 
 logger = logging.getLogger("delivery")
 OFFER_SECONDS = 30
+NEAR_SECONDS = 180  # "your order is ~3 min away" heads-up to the customer
 ACTIVE = ["assigned", "picked_up"]
 STEPS = ["to_store", "at_store", "picked_up", "at_customer", "delivered"]
 LEVELS = [(0, "bronze"), (50, "silver"), (200, "gold"), (500, "platinum")]
@@ -280,10 +281,24 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
         await create_notification(d["user_id"], "طلب توصيل جديد", f"لديك {OFFER_SECONDS} ثانية لقبول الطلب", {"type": "delivery_offer", "offer_id": offer["id"]})
         return offer
 
+    def trip_km_of(o):
+        if o.get("distance_km"):
+            return float(o["distance_km"])
+        km = hav_km(o.get("branch_lat"), o.get("branch_lng"), o.get("dest_lat") or o.get("delivery_lat"), o.get("dest_lng") or o.get("delivery_lng"))
+        return round(km * 1.3, 2) if km else 0  # straight line → approx road distance
+
     async def estimate_earning(d, o):
+        """Driver pay per trip, driven by the merchant's per-driver payment model."""
         fee = float(o.get("delivery_fee", 0) or 0)
-        if d.get("payment_model") == "salary":
-            return 0
+        model = d.get("payment_model", "commission")
+        if model == "salary":  # monthly salary + bonus for each delivery above the daily threshold
+            per = float(d.get("bonus_per_extra_order", 0) or 0)
+            if per <= 0:
+                return 0
+            done_today = await db.orders.count_documents({"driver_id": d["user_id"], "status": "delivered", "delivered_at": {"$gte": riyadh_midnight(0)}})
+            return round(per, 2) if done_today + 1 > int(d.get("bonus_threshold_orders", 0) or 0) else 0
+        if model == "per_km":
+            return round(float(d.get("driver_base_fare", 0) or 0) + float(d.get("driver_km_rate", 0) or 0) * trip_km_of(o), 2)
         cut = fee * d.get("merchant_commission_value", 0) / 100 if d.get("commission_type") == "percentage" else d.get("merchant_commission_value", 0)
         return round(max(fee - cut, 0), 2)
 
@@ -308,8 +323,10 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
         hub.last_loc[uid] = loc
         msg = {"t": "driver_loc", "driver_id": uid, **loc}
         # only customers whose order is actually on the way see the driver (not the rest of a planned route)
-        async for o in db.orders.find({"driver_id": uid, "status": {"$in": ACTIVE}, "$or": [{"plan_seq": {"$exists": False}}, {"en_route": True}]}, {"_id": 1}):
+        async for o in db.orders.find({"driver_id": uid, "status": {"$in": ACTIVE}, "$or": [{"plan_seq": {"$exists": False}}, {"en_route": True}]},
+                                      {"_id": 1, "user_id": 1, "delivery_step": 1, "near_notified": 1, "dest_lat": 1, "dest_lng": 1, "delivery_lat": 1, "delivery_lng": 1}):
             await hub.to_room(str(o["_id"]), msg)
+            await notify_if_near(o, lat, lng, speed)
         await hub.to_fleet(msg)
         # Persist at most every 5s (realtime goes through memory)
         if persist and (not prev or prev.get("_saved", "") < (now() - timedelta(seconds=5)).isoformat()):
@@ -318,6 +335,26 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
                                                                      "speed": speed, "last_location_at": loc["ts"]}})
         elif prev:
             loc["_saved"] = prev.get("_saved", "")
+
+    async def notify_if_near(o, lat, lng, speed):
+        """~3 minutes before arrival → tell the customer to get ready (once per order)."""
+        if o.get("near_notified") or o.get("delivery_step") != "picked_up" or not o.get("user_id"):
+            return
+        km = hav_km(lat, lng, o.get("dest_lat") or o.get("delivery_lat"), o.get("dest_lng") or o.get("delivery_lng"))
+        if km is None:
+            return
+        eta_s = km * 1300 / (speed if speed and speed > 3 else 8.3)
+        if eta_s > NEAR_SECONDS:
+            return
+        r = await db.orders.update_one({"_id": o["_id"], "near_notified": {"$ne": True}}, {"$set": {"near_notified": True, "near_notified_at": iso()}})
+        if not r.modified_count:
+            return
+        oid, mins = str(o["_id"]), max(1, round(eta_s / 60))
+        await create_notification(o["user_id"], "🚗 طلبك قريب منك", f"السائق على بُعد {mins} دقائق تقريباً، خلك مستعد لاستلام طلبك",
+                                  {"type": "order_near", "order_id": oid})
+        near = {"t": "near", "order_id": oid, "eta_min": mins}
+        await hub.to_room(oid, near)
+        await hub.to_user(o["user_id"], near)
 
     async def push_order(o_id, extra=None):
         o = await db.orders.find_one({"_id": ObjectId(o_id)})
@@ -609,7 +646,18 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
         payouts = [{**{k: v for k, v in p.items() if k != "_id"}, "id": str(p["_id"])}
                    async for p in db.driver_payouts.find({"driver_id": user["id"]}).sort("created_at", -1).limit(20)]
         total = round(sum(series.values()), 2)
-        return {"period": period, "total": total, "trips": len(orders), "avg_per_trip": round(total / len(orders), 2) if orders else 0,
+        model = d.get("payment_model", "commission")
+        today_trips = await db.orders.count_documents({"driver_id": user["id"], "status": "delivered", "delivered_at": {"$gte": riyadh_midnight(0)}})
+        month_start = (now() + RIYADH).replace(day=1, hour=0, minute=0, second=0, microsecond=0) - RIYADH
+        month_orders = await db.orders.find({"driver_id": user["id"], "status": "delivered", "delivered_at": {"$gte": month_start.isoformat()}},
+                                            {"driver_earnings": 1}).to_list(10000)
+        pay = {"model": model, "today_trips": today_trips, "month_trips": len(month_orders),
+               "month_earnings": round(sum(float(x.get("driver_earnings") or 0) for x in month_orders), 2),
+               "salary_monthly": float(d.get("salary_monthly", 0) or 0),
+               "bonus_threshold_orders": int(d.get("bonus_threshold_orders", 0) or 0), "bonus_per_extra_order": float(d.get("bonus_per_extra_order", 0) or 0),
+               "driver_km_rate": float(d.get("driver_km_rate", 0) or 0), "driver_base_fare": float(d.get("driver_base_fare", 0) or 0),
+               "commission_type": d.get("commission_type", "fixed"), "merchant_commission_value": float(d.get("merchant_commission_value", 0) or 0)}
+        return {"period": period, "total": total, "pay": pay, "trips": len(orders), "avg_per_trip": round(total / len(orders), 2) if orders else 0,
                 "series": [{"date": k, "amount": round(v, 2)} for k, v in series.items()],
                 "wallet_balance": round(float((u or {}).get("wallet_balance", 0)), 2), "cash_in_hand": round(float(d.get("cash_in_hand", 0)), 2),
                 "payout_min": float((await db.settings.find_one({"key": "driver_payout_min"}) or {}).get("value", 50)), "payouts": payouts}
@@ -858,7 +906,7 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
         if not o:
             return {"order": None}
         return {"order": {"id": str(o["_id"]), "status": o.get("status"), "step": o.get("delivery_step"), "driver_name": o.get("driver_name", ""),
-                          "otp": o.get("delivery_otp")}}
+                          "otp": o.get("delivery_otp"), "near": bool(o.get("near_notified"))}}
 
     # ─── Customer side ───
     @router.get("/orders/{oid}/live")
@@ -871,6 +919,7 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
                "rated": bool(o.get("driver_rating"))}
         out["rated"] = bool(o.get("driver_rating"))
         out["tipped"] = bool(o.get("tip"))
+        out["near"] = bool(o.get("near_notified"))
         out["en_route"] = o.get("en_route", False)
         out["queue_waiting"] = bool(o.get("plan_seq")) and not o.get("en_route") and o.get("status") in ACTIVE
         if o.get("driver_id"):
