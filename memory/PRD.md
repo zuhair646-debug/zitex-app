@@ -708,3 +708,9 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 
 ## v1.32.0 (2026-11-01)
 - AccountPrefs shared component (Appearance/Theme/Language sheet) in Driver, Chamber, Marketer. Chamber + Marketer + payouts card fully themed (dark/light/custom). Chamber web logout fixed. iteration_57 report.
+
+## v1.33.0 (2026-11-01) — Chamber Draw Studio
+- backend/chamber_draws.py (/api/draws/*): commit-reveal fair draw (seed_hash shown before, HMAC-SHA256 picks, seed revealed after), one open session per competition (atomic lock open_draw_session), atomic finish, 1 or up to 4 picks per pull, redraw per-winner after 30 days (won_at) with reason, public verify + public mp4.
+- backend/draw_video.py: ffmpeg (imageio-ffmpeg) composes 720x1280 MP4: face intro + lower third, then draw stage frames (PIL+raqm, Cairo font) with face PiP top-left.
+- Frontend: app/draw-studio.tsx (CameraView front video, PiP animation, reels), app/merchant/chamber-hub.tsx (officers, permit, assignment), src/components/draw/{RollingReel,DrawProof}.tsx (customer video + verify). Legacy draw endpoints removed; chamber officers only see assigned comps.
+- Tests: tests/e2e_chamber_draws.py, tests/test_chamber_draws_access_redraw.py, tests/race_chamber_draws.py; iteration_58.

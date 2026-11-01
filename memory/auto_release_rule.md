@@ -152,3 +152,6 @@ Feature category → semver bump:
 ## v1.32.0 release — 2026-11-01
 - iOS d5f62dc9-b93c-4326-b797-dad2800d97c6 (build 85), Android c802ed31-4342-4ff3-ac6f-a0e08203451b (versionCode 90). Commit 8b220c8. Frontend only.
 - Shared src/components/AccountPrefs.tsx (merchant prefs pattern) used in driver profile, chamber, my-affiliate; chamber/marketer/AffiliatePayouts themed via tokens.
+
+## v1.33.0 release — 2026-11-01
+- iOS d229d013-fe38-407b-8816-161cf2666059 (build 86), Android 2c7f637d-b8bd-4684-a44d-a8e1dd3b7067 (versionCode 91). Commit fbf27ff. Backend deployed (chamber_draws.py, draw_video.py, fonts/Cairo.ttf, imageio-ffmpeg in venv); nginx api.zenrex.ai client_max_body_size 100M.
