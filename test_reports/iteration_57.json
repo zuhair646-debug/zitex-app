@@ -1,0 +1,39 @@
+{
+  "summary": "Frontend-only test of the unified prefs system (AccountPrefs) at 375x667. Chamber /chamber: whole screen themed via tokens; the gear (chamber-settings) scrolls to the Settings section; chamber-appearance goes to /appearance; chamber-theme-toggle switches Dark<->Light and the colours change; chamber-language sheet works (ar switches the UI to Arabic, en switches it back); the competition detail modal is readable in both themes. Marketer /my-affiliate: themed in both modes, Light mode readable; MarketerPayouts card themed; mkt-appearance, mkt-theme-toggle, mkt-language (ar/en) and marketer-logout all work. Merchant: More tab renders; MerchantPayouts (min-withdrawal rules: 50/50) renders fine at /merchant/marketing?tab=affiliates. Driver: drv-appearance, drv-theme-toggle and drv-language all work. Customer settings: language, appearance and quick mode toggle all work. No page errors or console errors in any test run. One functional gap, web preview only: chamber-logout does nothing because it uses Alert.alert with buttons, which is a no-op on react-native-web. No deprecated packages (expo-av, expo-barcode-scanner, expo-background-fetch) in package.json.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Chamber logout", "issue": "On web, tapping chamber-logout does nothing (URL stays /chamber). handleLogout uses Alert.alert with confirm buttons, and that is a no-op on react-native-web. It should work on native. The marketer logout signs out directly and works. Reference: app/chamber.tsx:68-73", "testID": "chamber-logout", "priority": "MEDIUM"},
+      {"component": "Chamber detail modal title", "issue": "The modal title shows the raw Arabic competition title (selectedComp?.title in plain Text) while the list card shows it translated through TranslatableName. With English selected the header reads 'المتسوق الأول' instead of 'Top Shopper'. Prize value and draw-history names are also not translated. Reference: app/chamber.tsx:157,167", "testID": "close-detail", "priority": "LOW"},
+      {"component": "Chamber header in RTL", "issue": "In Arabic the header row does not mirror. The right-aligned title 'الغرفة التجارية' runs up to the settings gear (gear x=259, text touches it).", "testID": "chamber-settings", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Chamber detail modal", "issues": ["The 'Ended' status pill text (onSurfaceTertiary #A9A5B0) on a near-transparent background is low contrast (about 2.3:1) in both themes.", "The header spacer is 40px but closeBtn is 44px, so the title is off-centre by 4px (chamber.tsx:158).", "Button label 'Conducting Draw #2' is a wrong translation; it should read 'Conduct Draw #2'."]},
+      {"screen": "Marketer dashboard (Light)", "issues": ["White text on brand gold rgb(184,146,74) for Copy, Share and Withdrawal Request is about 2.9:1, below WCAG AA 4.5:1 for 12-13px text. This colour pair comes from the theme and is used app-wide.", "White text on WhatsApp green #25D366 is about 2:1.", "The 'Settings' heading uses cardTitle (13px gold), while chamber uses an 18px sectionTitle, so the two panels are inconsistent.", "The 'تحويل' grid label is translated as 'Transfer' instead of 'Conversions'."]},
+      {"screen": "Merchant marketing (affiliates tab)", "issues": ["The MerchantPayouts card sits inside the parent's padding, so it is about 17px more indented than the stat cards."]},
+      {"screen": "AccountPrefs (all panels) in RTL", "issues": ["The language row subtitle ('🇸🇦 العربية') stays left-aligned while the title is right-aligned. Same behaviour as merchant/more.tsx."]},
+      {"screen": "Customer Settings", "issues": ["This is a different visual implementation (MenuItem rows with badge pills and a language modal with search), not the AccountPrefs block that the merchant, driver, chamber and marketer panels now share. If the user wants exactly the same look, replace it with AccountPrefs.", "In RTL the chevrons still point right."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/root/.emergent/automation_output/ (playwright runs 20261101_0828xx-0832xx)"],
+  "action_items": [
+    "Make chamber-logout work on web: use a Platform.OS==='web' window.confirm fallback, or log out directly like marketer-logout (app/chamber.tsx:68).",
+    "Use TranslatableName (or a translation) for the chamber modal title, prize and winner names (app/chamber.tsx:157,167).",
+    "Optional: fix header overlap in Arabic for the chamber screen, the 'Ended' pill contrast, and the 'Conducting Draw' / 'Transfer' wording.",
+    "Optional: decide whether the customer Settings tab should also use AccountPrefs so every panel looks identical."
+  ],
+  "critical_code_review_comments": [
+    "AccountPrefs.tsx is a clean extraction. Its styles are rebuilt on themeKey and both theme contexts are toggled, matching merchant/more.tsx. However merchant/more.tsx still contains its own copy of the same prefs block instead of using AccountPrefs (DRY).",
+    "my-affiliate.tsx:197 hardcodes toLocaleDateString('ar') whatever language is selected.",
+    "my-affiliate.tsx:16 uses process.env.EXPO_PUBLIC_BACKEND_URL || '' as a fallback."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "95% (all requested pref, theme, language and navigation flows pass; chamber logout is a no-op on web only)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login: fill login-phone-input and login-password-input, then click login-submit-button. Clear localStorage between roles. AccountPrefs testIDs: {prefix}-appearance, {prefix}-theme-toggle, {prefix}-language, {prefix}-lang-{code}, with prefixes chamber, mkt and drv. Customer settings uses settings-language, settings-color-palette, settings-moon/sunny/color-wand and lang-option-{code}. MerchantPayouts is at /merchant/marketing?tab=affiliates (rule-marketer-min, rule-save). Driver tabs have no testIDs; use the 'My Account' text.",
+  "rca_of_issue": "chamber-logout on web: RN-web's Alert.alert is an empty stub, so the confirm callback never runs."
+}

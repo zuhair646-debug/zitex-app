@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../app/_layout';
 import { TX, tSync } from '../useAutoT';
 import { useT } from '../i18n';
+import { colors } from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 
 const STATUS: Record<string, [string, string]> = { pending: ['قيد المراجعة', '#F59E0B'], paid: ['تم التحويل', '#10B981'], rejected: ['مرفوض', '#EF4444'] };
 
@@ -11,6 +13,7 @@ const STATUS: Record<string, [string, string]> = { pending: ['قيد المرا�
 export function MarketerPayouts({ affiliateId }: { affiliateId: string }) {
   const { apiCall } = useAuth();
   const { lang } = useT();
+  const s = useStyles();
   const [data, setData] = useState<any>(null);
   const [amount, setAmount] = useState('');
   const [iban, setIban] = useState('');
@@ -31,7 +34,7 @@ export function MarketerPayouts({ affiliateId }: { affiliateId: string }) {
     finally { setBusy(false); }
   };
 
-  if (!data) return <ActivityIndicator color="#F5C518" style={{ margin: 16 }} />;
+  if (!data) return <ActivityIndicator color={colors.brand} style={{ margin: 16 }} />;
   return (
     <View style={s.card}>
       <TX style={s.title}>💰 أرباحي وطلبات الصرف</TX>
@@ -40,11 +43,11 @@ export function MarketerPayouts({ affiliateId }: { affiliateId: string }) {
         <View style={s.stat}><TX style={s.statLabel}>تم صرفه</TX><Text style={s.statVal}>{data.paid_total.toFixed(2)}</Text></View>
       </View>
       <Text style={s.reqMeta}>{tSync('الحد الأدنى للسحب', lang)}: {data.min_amount} {tSync('ر.س', lang)}</Text>
-      <TextInput testID="payout-amount" style={s.input} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder={tSync('المبلغ (ر.س)', lang)} placeholderTextColor="#777" />
-      <TextInput testID="payout-iban" style={s.input} value={iban} onChangeText={setIban} autoCapitalize="characters" placeholder="SA0000000000000000000000" placeholderTextColor="#777" />
-      <TextInput testID="payout-name" style={s.input} value={name} onChangeText={setName} placeholder={tSync('اسم صاحب الحساب', lang)} placeholderTextColor="#777" />
+      <TextInput testID="payout-amount" style={s.input} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder={tSync('المبلغ (ر.س)', lang)} placeholderTextColor={colors.onSurfaceTertiary} />
+      <TextInput testID="payout-iban" style={s.input} value={iban} onChangeText={setIban} autoCapitalize="characters" placeholder="SA0000000000000000000000" placeholderTextColor={colors.onSurfaceTertiary} />
+      <TextInput testID="payout-name" style={s.input} value={name} onChangeText={setName} placeholder={tSync('اسم صاحب الحساب', lang)} placeholderTextColor={colors.onSurfaceTertiary} />
       <TouchableOpacity testID="payout-submit" style={s.btn} onPress={submit} disabled={busy}>
-        {busy ? <ActivityIndicator color="#0A0A0A" /> : <TX style={s.btnTxt}>طلب صرف</TX>}
+        {busy ? <ActivityIndicator color={colors.onBrandPrimary} /> : <TX style={s.btnTxt}>طلب صرف</TX>}
       </TouchableOpacity>
       {data.requests.map((r: any) => (
         <View key={r.id} style={s.req}>
@@ -61,6 +64,7 @@ export function MarketerPayouts({ affiliateId }: { affiliateId: string }) {
 export function MerchantPayouts() {
   const { apiCall } = useAuth();
   const { lang } = useT();
+  const s = useStyles();
   const [list, setList] = useState<any[]>([]);
   const [refs, setRefs] = useState<Record<string, string>>({});
   const [rules, setRules] = useState<{ marketer_min: string; driver_min: string } | null>(null);
@@ -105,13 +109,13 @@ export function MerchantPayouts() {
           <Text style={s.reqMeta}>{r.iban} • {r.account_name}</Text>
           {r.status === 'pending' ? (
             <View style={{ gap: 6, marginTop: 6 }}>
-              <TextInput testID={`payout-ref-${r.id}`} style={s.input} value={refs[r.id] || ''} onChangeText={(v) => setRefs({ ...refs, [r.id]: v })} placeholder={tSync('رقم الحوالة البنكية', lang)} placeholderTextColor="#777" />
+              <TextInput testID={`payout-ref-${r.id}`} style={s.input} value={refs[r.id] || ''} onChangeText={(v) => setRefs({ ...refs, [r.id]: v })} placeholder={tSync('رقم الحوالة البنكية', lang)} placeholderTextColor={colors.onSurfaceTertiary} />
               <View style={s.row}>
                 <TouchableOpacity testID={`payout-approve-${r.id}`} style={[s.btn, { flex: 1 }]} onPress={() => decide(r.id, true)}>
-                  <Ionicons name="checkmark" size={16} color="#0A0A0A" /><TX style={s.btnTxt}>تم التحويل</TX>
+                  <Ionicons name="checkmark" size={16} color={colors.onBrandPrimary} /><TX style={s.btnTxt}>تم التحويل</TX>
                 </TouchableOpacity>
                 <TouchableOpacity testID={`payout-reject-${r.id}`} style={[s.btn, s.btnGhost, { flex: 1 }]} onPress={() => decide(r.id, false)}>
-                  <TX style={[s.btnTxt, { color: '#EF4444' }]}>رفض</TX>
+                  <TX style={[s.btnTxt, { color: colors.error }]}>رفض</TX>
                 </TouchableOpacity>
               </View>
             </View>
@@ -122,19 +126,22 @@ export function MerchantPayouts() {
   );
 }
 
-const s = StyleSheet.create({
-  card: { margin: 16, padding: 16, borderRadius: 16, backgroundColor: '#161616', borderWidth: 1, borderColor: '#2A2A2A', gap: 8 },
-  title: { color: '#F5C518', fontSize: 15, fontWeight: '800' },
+function useStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
+  card: { margin: 16, padding: 16, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, gap: 8 },
+  title: { color: colors.brand, fontSize: 15, fontWeight: '800' },
   row: { flexDirection: 'row', gap: 8 },
-  stat: { flex: 1, padding: 12, borderRadius: 12, backgroundColor: '#0F0F0F' },
-  statLabel: { color: '#999', fontSize: 12 },
-  statVal: { color: '#FFF', fontSize: 18, fontWeight: '800', marginTop: 4 },
-  input: { minHeight: 46, borderRadius: 10, borderWidth: 1, borderColor: '#2A2A2A', paddingHorizontal: 12, color: '#FFF', backgroundColor: '#0F0F0F' },
-  btn: { minHeight: 46, borderRadius: 10, backgroundColor: '#F5C518', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
-  btnGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#EF4444' },
-  btnTxt: { color: '#0A0A0A', fontWeight: '800', fontSize: 14 },
-  req: { paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#2A2A2A' },
-  reqAmt: { color: '#FFF', fontWeight: '700' },
+  stat: { flex: 1, padding: 12, borderRadius: 12, backgroundColor: colors.surfaceSecondary },
+  statLabel: { color: colors.onSurfaceSecondary, fontSize: 12 },
+  statVal: { color: colors.onSurface, fontSize: 18, fontWeight: '800', marginTop: 4 },
+  input: { minHeight: 46, borderRadius: 10, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, color: colors.onSurface, backgroundColor: colors.surfaceSecondary },
+  btn: { minHeight: 46, borderRadius: 10, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  btnGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.error },
+  btnTxt: { color: colors.onBrandPrimary, fontWeight: '800', fontSize: 14 },
+  req: { paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border },
+  reqAmt: { color: colors.onSurface, fontWeight: '700' },
   reqStatus: { fontSize: 12, fontWeight: '700', marginTop: 2 },
-  reqMeta: { color: '#888', fontSize: 11, marginTop: 2 },
-});
+  reqMeta: { color: colors.onSurfaceTertiary, fontSize: 11, marginTop: 2 },
+  }), [themeKey]);
+}

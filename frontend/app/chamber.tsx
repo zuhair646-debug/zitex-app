@@ -1,15 +1,20 @@
 import { useT, curLang } from '../src/i18n';
 import { tSync, tf } from '../src/useAutoT';
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal, RefreshControl } from 'react-native';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal, RefreshControl, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TranslatableName, { NameInitial } from '../src/components/TranslatableName';
 import { useAuth } from './_layout';
+import AccountPrefs from '../src/components/AccountPrefs';
+import { colors } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 export default function ChamberScreen() {
-  useT(); // re-render when language or on-demand translations change
+  const { isRTL } = useT(); // re-render when language or on-demand translations change
+  const s = useStyles();
+  const listRef = useRef<ScrollView>(null);
   const router = useRouter();
   const { apiCall, user, logout } = useAuth();
   const [comps, setComps] = useState<any[]>([]);
@@ -61,9 +66,11 @@ export default function ChamberScreen() {
   };
 
   const handleLogout = () => {
+    const doLogout = async () => { await logout(); router.replace('/login'); };
+    if (Platform.OS === 'web') { if (window.confirm(tSync('هل أنت متأكد؟', curLang()))) doLogout(); return; }
     Alert.alert(tSync('تسجيل الخروج', curLang()), tSync('هل أنت متأكد؟', curLang()), [
       { text: tSync('إلغاء', curLang()), style: 'cancel' },
-      { text: tSync('تسجيل الخروج', curLang()), style: 'destructive', onPress: async () => { await logout(); router.replace('/login'); } }
+      { text: tSync('تسجيل الخروج', curLang()), style: 'destructive', onPress: doLogout }
     ]);
   };
 
@@ -83,24 +90,24 @@ export default function ChamberScreen() {
   };
 
   const statusLabel = (s: string) => tSync(s === 'open' ? 'نشطة' : s === 'ended' ? 'منتهية' : 'قريباً', curLang());
-  const statusColor = (s: string) => s === 'open' ? '#10B981' : s === 'ended' ? '#6B7280' : '#3B82F6';
+  const statusColor = (st: string) => st === 'open' ? colors.success : st === 'ended' ? colors.onSurfaceTertiary : colors.info;
 
-  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#1E3A5F" /></View>;
+  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color={colors.brand} /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <View style={s.headerLogo}><Ionicons name="shield-checkmark" size={24} color="#FFF" /></View>
+        <View style={s.headerLogo}><Ionicons name="shield-checkmark" size={24} color={colors.brand} /></View>
         <View style={s.headerInfo}>
           <Text style={s.headerTitle}>{tSync('الغرفة التجارية', curLang())}</Text>
           <Text style={s.headerSub}>{tSync('غرفة تحكم المسابقات', curLang())}</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity onPress={() => router.push('/appearance' as any)} style={[s.logoutBtn, { backgroundColor: 'rgba(212,175,55,0.15)' }]}>
-            <Ionicons name="color-palette-outline" size={20} color="#D4AF37" />
+          <TouchableOpacity testID="chamber-settings" onPress={() => listRef.current?.scrollToEnd({ animated: true })} style={s.iconBtn}>
+            <Ionicons name="settings-outline" size={20} color={colors.brand} />
           </TouchableOpacity>
           <TouchableOpacity testID="chamber-logout" onPress={handleLogout} style={s.logoutBtn}>
-            <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+            <Ionicons name="log-out-outline" size={20} color={colors.error} />
           </TouchableOpacity>
         </View>
       </View>
@@ -112,7 +119,7 @@ export default function ChamberScreen() {
         <View style={s.statCard}><Text style={s.statNum}>{comps.reduce((a: number, c: any) => a + (c.total_participants || 0), 0)}</Text><Text style={s.statLabel}>{tSync('عدد المشاركين', curLang())}</Text></View>
       </View>
 
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E3A5F" />}
+      <ScrollView ref={listRef} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
         showsVerticalScrollIndicator={false} contentContainerStyle={s.list}>
         <Text style={s.sectionTitle}>{tSync('المسابقات المسندة لي', curLang())}</Text>
         {comps.map((c: any) => (
@@ -126,8 +133,8 @@ export default function ChamberScreen() {
             </View>
             <TranslatableName text={c.title} style={s.compTitle} />
             <View style={s.compMeta}>
-              <View style={s.metaItem}><Ionicons name="people" size={14} color="#52525B" /><Text style={s.metaText}>{tf('{0} مشارك', curLang(), [c.total_participants || c.joined_count || 0])}</Text></View>
-              <View style={s.metaItem}><Ionicons name="trophy" size={14} color="#F59E0B" /><Text style={s.metaText}>{tf('{0} جوائز', curLang(), [c.prize_count || 0])}</Text></View>
+              <View style={s.metaItem}><Ionicons name="people" size={14} color={colors.onSurfaceSecondary} /><Text style={s.metaText}>{tf('{0} مشارك', curLang(), [c.total_participants || c.joined_count || 0])}</Text></View>
+              <View style={s.metaItem}><Ionicons name="trophy" size={14} color={colors.warning} /><Text style={s.metaText}>{tf('{0} جوائز', curLang(), [c.prize_count || 0])}</Text></View>
             </View>
             {c.winners?.length > 0 && (
               <View style={s.winnersPreview}>
@@ -135,9 +142,11 @@ export default function ChamberScreen() {
                 <TranslatableName text={c.winners.map((w: any) => w.user_name).join('، ')} style={s.winnersNames} inline={false} containerStyle={{ flex: 1 }} />
               </View>
             )}
-            <View style={s.viewMore}><Text style={s.viewMoreText}>{tSync('عرض التفاصيل وإجراء السحب', curLang())}</Text><Ionicons name="chevron-forward" size={16} color="#1E3A5F" /></View>
+            <View style={s.viewMore}><Text style={s.viewMoreText}>{tSync('عرض التفاصيل وإجراء السحب', curLang())}</Text><Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={16} color={colors.brand} /></View>
           </TouchableOpacity>
         ))}
+        <Text style={[s.sectionTitle, { marginTop: 12 }]}>{tSync('الإعدادات', curLang())}</Text>
+        <AccountPrefs testPrefix="chamber" />
       </ScrollView>
 
       {/* Competition Detail Modal */}
@@ -145,9 +154,9 @@ export default function ChamberScreen() {
         <SafeAreaView style={s.modalSafe}>
           <View style={s.modalHeader}>
             <TouchableOpacity testID="close-detail" onPress={() => setShowDetail(false)} style={s.closeBtn}>
-              <Ionicons name="close" size={24} color="#0A0A0A" />
+              <Ionicons name="close" size={24} color={colors.onSurface} />
             </TouchableOpacity>
-            <Text style={s.modalTitle}>{selectedComp?.title}</Text>
+            <TranslatableName text={selectedComp?.title || ''} style={s.modalTitle} containerStyle={{ flex: 1 }} />
             <View style={{ width: 40 }} />
           </View>
 
@@ -157,7 +166,7 @@ export default function ChamberScreen() {
             </View>
 
             <View style={s.detailGrid}>
-              <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('الجائزة', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.prize}</Text></View>
+              <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('الجائزة', curLang())}</Text><TranslatableName text={String(selectedComp?.prize || '')} style={s.detailVal} /></View>
               <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('عدد الجوائز', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.prize_count}</Text></View>
               <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('تاريخ البداية', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.start_date}</Text></View>
               <View style={s.detailItem}><Text style={s.detailLabel}>{tSync('تاريخ السحب', curLang())}</Text><Text style={s.detailVal}>{selectedComp?.draw_date}</Text></View>
@@ -167,15 +176,15 @@ export default function ChamberScreen() {
 
             {/* Draw Button */}
             <TouchableOpacity testID="chamber-draw-btn" style={s.drawBtn} onPress={performDraw} disabled={drawing}>
-              {drawing ? <ActivityIndicator color="#FFF" /> : (
-                <><Ionicons name="dice" size={24} color="#FFF" /><Text style={s.drawBtnText}>{tf('إجراء السحب رقم {0}', curLang(), [(selectedComp?.draw_history?.length || 0) + 1])}</Text></>
+              {drawing ? <ActivityIndicator color={colors.onBrandPrimary} /> : (
+                <><Ionicons name="dice" size={24} color={colors.onBrandPrimary} /><Text style={s.drawBtnText}>{tf('إجراء السحب رقم {0}', curLang(), [(selectedComp?.draw_history?.length || 0) + 1])}</Text></>
               )}
             </TouchableOpacity>
 
             {/* Draw Result */}
             {drawResult && (
               <View style={s.resultCard}>
-                <Ionicons name="trophy" size={28} color="#F59E0B" />
+                <Ionicons name="trophy" size={28} color={colors.warning} />
                 <Text style={s.resultTitle}>{tf('الفائزون في السحب رقم {0}', curLang(), [drawResult.draw_number])}</Text>
                 <Text style={s.resultBy}>{tSync('أجرى السحب:', curLang())} {drawResult.drawn_by}</Text>
                 {drawResult.winners?.map((w: any, i: number) => (
@@ -220,7 +229,7 @@ export default function ChamberScreen() {
                   </View>
                   <Text style={s.pDate}>{p.joined_at?.split('T')[0]}</Text>
                   {selectedComp?.winners?.some((w: any) => w.user_name === p.user_name) && (
-                    <View style={s.winBadge}><Ionicons name="trophy" size={12} color="#F59E0B" /></View>
+                    <View style={s.winBadge}><Ionicons name="trophy" size={12} color={colors.warning} /></View>
                   )}
                 </View>
               ))}
@@ -232,73 +241,77 @@ export default function ChamberScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F8FAFC' },
-  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#1E3A5F' },
-  headerLogo: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#2D5F8B', alignItems: 'center', justifyContent: 'center', marginEnd: 12 },
+function useStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerLogo: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center', marginEnd: 12 },
   headerInfo: { flex: 1 },
-  headerTitle: { fontSize: 16, fontWeight: '800', color: '#FFF' },
-  headerSub: { fontSize: 12, color: '#94A3B8' },
-  logoutBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(239,68,68,0.15)', alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 16, fontWeight: '800', color: colors.onSurface },
+  headerSub: { fontSize: 12, color: colors.onSurfaceSecondary },
+  iconBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center' },
+  logoutBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.errorSoft, alignItems: 'center', justifyContent: 'center' },
   statsRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 16 },
-  statCard: { flex: 1, backgroundColor: '#FFF', borderRadius: 14, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
-  statNum: { fontSize: 22, fontWeight: '800', color: '#1E3A5F' },
-  statLabel: { fontSize: 11, color: '#64748B', marginTop: 2 },
+  statCard: { flex: 1, backgroundColor: colors.surface, borderRadius: 14, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  statNum: { fontSize: 22, fontWeight: '800', color: colors.brand },
+  statLabel: { fontSize: 11, color: colors.onSurfaceSecondary, marginTop: 2, textAlign: 'center' },
   list: { paddingHorizontal: 16, paddingBottom: 32 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1E3A5F', marginBottom: 12 },
-  compCard: { backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#E2E8F0' },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.onSurface, marginBottom: 12 },
+  compCard: { backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
   compHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
   statusText: { fontSize: 11, fontWeight: '600' },
-  drawCount: { fontSize: 12, color: '#64748B', fontWeight: '500' },
-  compTitle: { fontSize: 16, fontWeight: '700', color: '#0F172A', marginBottom: 8 },
+  drawCount: { fontSize: 12, color: colors.onSurfaceSecondary, fontWeight: '500' },
+  compTitle: { fontSize: 16, fontWeight: '700', color: colors.onSurface, marginBottom: 8 },
   compMeta: { flexDirection: 'row', gap: 16, marginBottom: 8 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 12, color: '#52525B' },
-  winnersPreview: { flexDirection: 'row', backgroundColor: '#FEF3C7', borderRadius: 8, padding: 8, marginBottom: 8 },
-  winnersLabel: { fontSize: 12, fontWeight: '600', color: '#92400E' },
-  winnersNames: { fontSize: 12, color: '#92400E', flex: 1 },
-  viewMore: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
-  viewMoreText: { fontSize: 13, fontWeight: '600', color: '#1E3A5F' },
-  modalSafe: { flex: 1, backgroundColor: '#F8FAFC' },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
-  closeBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' },
-  modalTitle: { fontSize: 16, fontWeight: '700', color: '#0F172A' },
+  metaText: { fontSize: 12, color: colors.onSurfaceSecondary },
+  winnersPreview: { flexDirection: 'row', backgroundColor: colors.warningSoft, borderRadius: 8, padding: 8, marginBottom: 8 },
+  winnersLabel: { fontSize: 12, fontWeight: '600', color: colors.warning },
+  winnersNames: { fontSize: 12, color: colors.warning, flex: 1 },
+  viewMore: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.border },
+  viewMoreText: { fontSize: 13, fontWeight: '600', color: colors.brand },
+  modalSafe: { flex: 1, backgroundColor: colors.background },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  closeBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 16, fontWeight: '700', color: colors.onSurface, flex: 1, textAlign: 'center' },
   modalContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 },
   detailStatus: { alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, marginBottom: 16 },
   detailStatusText: { fontSize: 14, fontWeight: '600' },
   detailGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
-  detailItem: { width: '48%', backgroundColor: '#FFF', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' },
-  detailLabel: { fontSize: 11, color: '#64748B', marginBottom: 4 },
-  detailVal: { fontSize: 14, fontWeight: '600', color: '#0F172A' },
-  drawBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#1E3A5F', borderRadius: 14, paddingVertical: 18, marginBottom: 16 },
-  drawBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
-  resultCard: { backgroundColor: '#FFF', borderRadius: 16, padding: 20, marginBottom: 20, alignItems: 'center', borderWidth: 2, borderColor: '#F59E0B' },
-  resultTitle: { fontSize: 18, fontWeight: '800', color: '#0F172A', marginTop: 8, marginBottom: 4 },
-  resultBy: { fontSize: 12, color: '#64748B', marginBottom: 16 },
-  resultWinner: { flexDirection: 'row', alignItems: 'center', width: '100%', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  resultRank: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F59E0B', alignItems: 'center', justifyContent: 'center', marginEnd: 12 },
-  rankNum: { color: '#FFF', fontSize: 12, fontWeight: '800' },
-  resultName: { flex: 1, fontSize: 15, fontWeight: '600', color: '#0F172A' },
-  resultPhone: { fontSize: 13, color: '#64748B' },
+  detailItem: { width: '48%', backgroundColor: colors.surface, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.border },
+  detailLabel: { fontSize: 11, color: colors.onSurfaceSecondary, marginBottom: 4 },
+  detailVal: { fontSize: 14, fontWeight: '600', color: colors.onSurface },
+  drawBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 18, marginBottom: 16 },
+  drawBtnText: { color: colors.onBrandPrimary, fontSize: 17, fontWeight: '700' },
+  resultCard: { backgroundColor: colors.surface, borderRadius: 16, padding: 20, marginBottom: 20, alignItems: 'center', borderWidth: 2, borderColor: colors.warning },
+  resultTitle: { fontSize: 18, fontWeight: '800', color: colors.onSurface, marginTop: 8, marginBottom: 4 },
+  resultBy: { fontSize: 12, color: colors.onSurfaceSecondary, marginBottom: 16 },
+  resultWinner: { flexDirection: 'row', alignItems: 'center', width: '100%', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  resultRank: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.warning, alignItems: 'center', justifyContent: 'center', marginEnd: 12 },
+  rankNum: { color: colors.onWarning, fontSize: 12, fontWeight: '800' },
+  resultName: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.onSurface },
+  resultPhone: { fontSize: 13, color: colors.onSurfaceSecondary },
   historySection: { marginBottom: 20 },
-  histTitle: { fontSize: 16, fontWeight: '700', color: '#0F172A', marginBottom: 12 },
-  histCard: { backgroundColor: '#FFF', borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: '#E2E8F0' },
+  histTitle: { fontSize: 16, fontWeight: '700', color: colors.onSurface, marginBottom: 12 },
+  histCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
   histHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  histNum: { fontSize: 14, fontWeight: '700', color: '#1E3A5F' },
-  histDate: { fontSize: 12, color: '#64748B' },
-  histBy: { fontSize: 12, color: '#64748B', marginBottom: 6 },
-  histWinner: { fontSize: 13, color: '#0F172A', paddingVertical: 2 },
+  histNum: { fontSize: 14, fontWeight: '700', color: colors.brand },
+  histDate: { fontSize: 12, color: colors.onSurfaceSecondary },
+  histBy: { fontSize: 12, color: colors.onSurfaceSecondary, marginBottom: 6 },
+  histWinner: { fontSize: 13, color: colors.onSurface, paddingVertical: 2 },
   participantsSection: { marginBottom: 20 },
-  participantRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  pNum: { width: 24, fontSize: 12, color: '#64748B', fontWeight: '500' },
-  pAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', marginEnd: 10 },
-  pAvatarText: { fontSize: 14, fontWeight: '700', color: '#1E3A5F' },
+  participantRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  pNum: { width: 24, fontSize: 12, color: colors.onSurfaceSecondary, fontWeight: '500' },
+  pAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center', marginEnd: 10 },
+  pAvatarText: { fontSize: 14, fontWeight: '700', color: colors.brand },
   pInfo: { flex: 1 },
-  pName: { fontSize: 14, fontWeight: '500', color: '#0F172A' },
-  pPhone: { fontSize: 12, color: '#64748B' },
-  pDate: { fontSize: 11, color: '#94A3B8' },
-  winBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center', marginStart: 8 },
-});
+  pName: { fontSize: 14, fontWeight: '500', color: colors.onSurface },
+  pPhone: { fontSize: 12, color: colors.onSurfaceSecondary },
+  pDate: { fontSize: 11, color: colors.onSurfaceTertiary },
+  winBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.warningSoft, alignItems: 'center', justifyContent: 'center', marginStart: 8 },
+  }), [themeKey]);
+}

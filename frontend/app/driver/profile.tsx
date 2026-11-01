@@ -1,15 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Modal, Pressable } from 'react-native';
-import { useFocusEffect, router } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
-import { colors, spacing, radius, typography } from '../../src/theme/tokens';
+import { colors, spacing, radius } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { useThemeMode } from '../../src/theme/mode';
 import { TX, tSync } from '../../src/useAutoT';
-import { useT, LANGUAGES } from '../../src/i18n';
+import { useT } from '../../src/i18n';
+import AccountPrefs from '../../src/components/AccountPrefs';
 import { PrimaryButton, SecondaryButton, Badge } from '../../src/components/ui';
 import { uploadMedia } from '../../src/utils/upload';
 import { notify } from '../../src/utils/notify';
@@ -24,13 +24,7 @@ const BADGE_AR: Record<string, [string, any]> = {
 
 export default function DriverProfile() {
   const s = useStyles();
-  const { lang, setLang, t, isRTL } = useT();
-  const { isDark, toggle: toggleTheme } = useTheme();
-  const { toggle: toggleThemeLegacy } = useThemeMode();
-  const syncedToggleTheme = async () => { await toggleTheme(); await toggleThemeLegacy(); };
-  const [langOpen, setLangOpen] = useState(false);
-  const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
-  const chevron = isRTL ? 'chevron-back' : 'chevron-forward';
+  const { lang } = useT();
   const { apiCall, logout } = useAuth();
   const [me, setMe] = useState<any>(null);
   const [perf, setPerf] = useState<any>(null);
@@ -148,75 +142,11 @@ export default function DriverProfile() {
           </View>
         ) : null}
 
-        {/* Same account preferences as the merchant panel (merchant/more.tsx) */}
-        <View style={s.groupCard}>
-          <TouchableOpacity testID="drv-appearance" style={s.prefRow} onPress={() => router.push('/appearance' as any)} activeOpacity={0.7}>
-            <View style={s.prefLeft}>
-              <View style={[s.prefIcon, { backgroundColor: colors.brandTertiary }]}>
-                <Ionicons name="color-palette" size={20} color={colors.brand} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.prefTitle} numberOfLines={1}>{t('mo.appearance.title')}</Text>
-                <Text style={s.prefSub} numberOfLines={2}>{t('mo.appearance.sub')}</Text>
-              </View>
-            </View>
-            <Ionicons name={chevron} size={18} color={colors.onSurfaceSecondary} />
-          </TouchableOpacity>
-
-          <View style={s.divider} />
-
-          <TouchableOpacity testID="drv-theme-toggle" style={s.prefRow} onPress={syncedToggleTheme} activeOpacity={0.7}>
-            <View style={s.prefLeft}>
-              <View style={[s.prefIcon, { backgroundColor: (isDark ? '#F5B547' : '#6EA8FF') + '25' }]}>
-                <Ionicons name={isDark ? 'moon' : 'sunny'} size={20} color={isDark ? '#F5B547' : '#6EA8FF'} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.prefTitle} numberOfLines={1}>{isDark ? t('mo.themeDark') : t('mo.themeLight')}</Text>
-                <Text style={s.prefSub} numberOfLines={2}>{t('mo.themeToggleHint')}</Text>
-              </View>
-            </View>
-            <View style={[s.switchTrack, isDark && s.switchTrackOn]}>
-              <View style={[s.switchThumb, isDark && s.switchThumbOn]} />
-            </View>
-          </TouchableOpacity>
-
-          <View style={s.divider} />
-
-          <TouchableOpacity testID="drv-language" style={s.prefRow} onPress={() => setLangOpen(true)} activeOpacity={0.7}>
-            <View style={s.prefLeft}>
-              <View style={[s.prefIcon, { backgroundColor: '#A895FF25' }]}>
-                <Ionicons name="language" size={20} color="#A895FF" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.prefTitle} numberOfLines={1}>{t('settings.language')}</Text>
-                <Text style={s.prefSub} numberOfLines={1}>{currentLang.flag}  {currentLang.nativeName}</Text>
-              </View>
-            </View>
-            <Ionicons name={chevron} size={18} color={colors.onSurfaceSecondary} />
-          </TouchableOpacity>
-        </View>
+        <AccountPrefs testPrefix="drv" />
 
         <SecondaryButton label={tSync('تسجيل الخروج', lang)} icon="log-out" onPress={async () => { await stopBeacon(); logout(); }} />
       </ScrollView>
 
-      <Modal transparent animationType="slide" visible={langOpen} onRequestClose={() => setLangOpen(false)}>
-        <Pressable style={s.modalBg} onPress={() => setLangOpen(false)}>
-          <Pressable style={s.modalCard} onPress={(e) => e.stopPropagation()}>
-            <View style={s.modalHandle} />
-            <Text style={s.modalTitle}>{t('settings.changeLanguage')}</Text>
-            <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false}>
-              {LANGUAGES.map(L => (
-                <TouchableOpacity key={L.code} testID={`drv-lang-${L.code}`} style={s.langRow}
-                  onPress={async () => { await setLang(L.code); setLangOpen(false); }}>
-                  <Text style={{ fontSize: 22 }}>{L.flag}</Text>
-                  <View style={{ flex: 1 }}><Text style={s.langNative}>{L.nativeName}</Text></View>
-                  {L.code === lang && <Ionicons name="checkmark-circle" size={22} color={colors.brand} />}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -248,23 +178,6 @@ function useStyles() {
     navOpt: { flex: 1, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingVertical: 12, alignItems: 'center' },
     navOn: { backgroundColor: colors.brand, borderColor: colors.brand },
     navTxt: { color: colors.onSurface, fontWeight: '700', fontSize: 13 },
-    groupCard: { borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSecondary },
-    prefRow: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, gap: spacing.sm },
-    prefLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
-    prefIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    prefTitle: { ...typography.body, color: colors.onSurface, fontWeight: '700' as any },
-    prefSub: { ...typography.caption, color: colors.onSurfaceSecondary, marginTop: 2 },
-    switchTrack: { width: 44, height: 24, borderRadius: 12, backgroundColor: colors.border, padding: 2, justifyContent: 'center' },
-    switchTrackOn: { backgroundColor: colors.brand },
-    switchThumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#FFFFFF' },
-    switchThumbOn: { alignSelf: 'flex-end' },
-    divider: { height: 1, backgroundColor: colors.border, marginHorizontal: spacing.md },
-    modalBg: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' },
-    modalCard: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.lg, paddingBottom: 32, maxHeight: '85%' },
-    modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: spacing.md },
-    modalTitle: { ...typography.titleMedium, color: colors.onSurface, textAlign: 'center', marginBottom: spacing.md },
-    langRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 12, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: colors.border },
-    langNative: { ...typography.body, color: colors.onSurface, fontWeight: '700' as any },
     review: { borderBottomWidth: 1, borderBottomColor: colors.divider, paddingBottom: spacing.sm },
     stars: { color: colors.brand, fontSize: 16 },
   }), [themeKey]);

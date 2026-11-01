@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useT, curLang } from '../src/i18n';
 import { tSync, tf, TX } from '../src/useAutoT';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Share, Alert, StatusBar, Platform, Linking } from 'react-native';
@@ -9,11 +9,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import { useAuth } from './_layout';
 import { MarketerPayouts } from '../src/components/AffiliatePayouts';
+import AccountPrefs from '../src/components/AccountPrefs';
+import { colors } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 const APP_LINK_BASE = `${process.env.EXPO_PUBLIC_BACKEND_URL || ''}/api`;
 
 export default function MyAffiliate() {
   const { lang } = useT();
+  const s = useStyles();
+  const { isDark } = useTheme();
 
   const router = useRouter();
   const { apiCall, user, logout } = useAuth();
@@ -53,53 +58,54 @@ export default function MyAffiliate() {
   };
 
   if (loading) return (
-    <View style={s.root}><ActivityIndicator color="#F5C518" style={{ marginTop: 100 }} /></View>
+    <View style={s.root}><ActivityIndicator color={colors.brand} style={{ marginTop: 100 }} /></View>
   );
   if (!accounts.length) return (
     <View style={s.root}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={s.header}>
           {isMarketer ? (
             <TouchableOpacity testID="marketer-logout" onPress={async () => { await logout(); router.replace('/login' as any); }} style={s.iconBtn}>
-              <Ionicons name="log-out-outline" size={22} color="#F5C518" />
+              <Ionicons name="log-out-outline" size={22} color={colors.brand} />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-              <Ionicons name="arrow-back" size={22} color="#F5C518" />
+              <Ionicons name="arrow-back" size={22} color={colors.brand} />
             </TouchableOpacity>
           )}
           <TX style={s.headerTitle}>لوحة المسوّق</TX>
           <View style={s.iconBtn} />
         </View>
         <View style={s.emptyBox}>
-          <Ionicons name="megaphone-outline" size={80} color="#4A4A4A" />
+          <Ionicons name="megaphone-outline" size={80} color={colors.onSurfaceTertiary} />
           <TX style={s.emptyTitle}>لا يوجد حساب مسوّق نشط</TX>
           <TX style={s.emptyDesc}>افتح تبويب "السوشال" وقدّم على أحد برامج التسويق بالعمولة</TX>
         </View>
+        {isMarketer ? <View style={[s.prefsWrap, { marginBottom: 24 }]}><AccountPrefs testPrefix="mkt" /></View> : null}
       </SafeAreaView>
     </View>
   );
 
   return (
     <View style={s.root}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={s.header}>
           {isMarketer ? (
             <TouchableOpacity testID="marketer-logout" onPress={async () => { await logout(); router.replace('/login' as any); }} style={s.iconBtn}>
-              <Ionicons name="log-out-outline" size={22} color="#F5C518" />
+              <Ionicons name="log-out-outline" size={22} color={colors.brand} />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-              <Ionicons name="arrow-back" size={22} color="#F5C518" />
+              <Ionicons name="arrow-back" size={22} color={colors.brand} />
             </TouchableOpacity>
           )}
           <TX style={s.headerTitle}>لوحة المسوّق</TX>
           <View style={s.iconBtn} />
         </View>
 
-        <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#F5C518" />}>
+        <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brand} />}>
           {accounts.length > 1 && (
             <ScrollView horizontal contentContainerStyle={s.tabRow} showsHorizontalScrollIndicator={false}>
               {accounts.map((a: any, i: number) => (
@@ -111,7 +117,7 @@ export default function MyAffiliate() {
           )}
 
           {/* Hero commission card */}
-          <LinearGradient colors={['#F5C518', '#D4A017']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+          <LinearGradient colors={[colors.brand, colors.brandSecondary]} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
             <TX style={s.heroLabel}>عمولتك من كل عملية شراء</TX>
             <Text style={s.heroValue}>{cur.commission_percent}%</Text>
             <Text style={s.heroSub}>{tSync('تاجر:', lang)} {cur.merchant_name || 'Zenrex Store'}</Text>
@@ -125,11 +131,11 @@ export default function MyAffiliate() {
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
               <TouchableOpacity onPress={copy} style={s.actionBtn}>
-                <Ionicons name="copy" size={16} color="#0A0A0A" />
+                <Ionicons name="copy" size={16} color={colors.onBrandPrimary} />
                 <TX style={s.actionText}>نسخ</TX>
               </TouchableOpacity>
               <TouchableOpacity onPress={shareLink} style={s.actionBtn}>
-                <Ionicons name="share-social" size={16} color="#0A0A0A" />
+                <Ionicons name="share-social" size={16} color={colors.onBrandPrimary} />
                 <TX style={s.actionText}>مشاركة</TX>
               </TouchableOpacity>
               <TouchableOpacity onPress={shareWhatsApp} style={[s.actionBtn, { backgroundColor: '#25D366' }]}>
@@ -188,7 +194,7 @@ export default function MyAffiliate() {
                 <View key={c.id} style={s.histRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={s.histOrder}>{tSync('طلب #', lang)}{c.order_id?.slice(-6) || '—'}</Text>
-                    <Text style={s.histDate}>{new Date(c.created_at).toLocaleDateString('ar')}</Text>
+                    <Text style={s.histDate}>{new Date(c.created_at).toLocaleDateString(lang)}</Text>
                   </View>
                   <Text style={s.histAmount}>+{Number(c.earning ?? c.commission_amount ?? 0).toFixed(2)} {tSync('ر.س', lang)}</Text>
                 </View>
@@ -196,6 +202,12 @@ export default function MyAffiliate() {
             )}
           </View>
 
+          {isMarketer ? (
+            <View style={s.prefsWrap}>
+              <Text style={[s.cardTitle, { fontSize: 18, color: colors.onSurface }]}>{tSync('الإعدادات', lang)}</Text>
+              <AccountPrefs testPrefix="mkt" />
+            </View>
+          ) : null}
           <View style={{ height: 40 }} />
         </ScrollView>
       </SafeAreaView>
@@ -203,47 +215,48 @@ export default function MyAffiliate() {
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0A0A0A' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2A2A2A' },
-  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '800', color: 'white' },
+function useStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface },
+  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '800', color: colors.onSurface },
   emptyBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
-  emptyTitle: { color: 'white', fontSize: 16, fontWeight: '800', marginTop: 16 },
-  emptyDesc: { color: '#9CA3AF', fontSize: 13, marginTop: 8, textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { color: colors.onSurface, fontSize: 16, fontWeight: '800', marginTop: 16 },
+  emptyDesc: { color: colors.onSurfaceSecondary, fontSize: 13, marginTop: 8, textAlign: 'center', lineHeight: 20 },
   tabRow: { paddingHorizontal: 16, paddingVertical: 8, gap: 8 },
-  merchTab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: '#1F1F1F', borderWidth: 1, borderColor: '#2A2A2A' },
-  merchTabActive: { backgroundColor: '#F5C518', borderColor: '#F5C518' },
-  merchTabText: { color: '#9CA3AF', fontWeight: '700', fontSize: 12 },
-  merchTabTextActive: { color: '#0A0A0A', fontWeight: '800' },
+  merchTab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
+  merchTabActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  merchTabText: { color: colors.onSurfaceSecondary, fontWeight: '700', fontSize: 12 },
+  merchTabTextActive: { color: colors.onBrandPrimary, fontWeight: '800' },
   hero: { margin: 16, padding: 22, borderRadius: 16, alignItems: 'center' },
-  heroLabel: { color: '#0A0A0A', fontSize: 12, fontWeight: '700' },
-  heroValue: { color: '#0A0A0A', fontSize: 48, fontWeight: '900', marginVertical: 6 },
-  heroSub: { color: '#0A0A0A', fontSize: 13 },
-  card: { backgroundColor: '#151515', margin: 16, marginTop: 8, padding: 16, borderRadius: 14, borderWidth: 1, borderColor: '#2A2A2A' },
-  cardTitle: { color: '#F5C518', fontSize: 13, fontWeight: '800', marginBottom: 8 },
-  linkBox: { backgroundColor: '#0A0A0A', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#2E2404' },
-  linkText: { color: 'white', fontFamily: 'monospace', fontSize: 12 },
-  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#F5C518', paddingVertical: 10, borderRadius: 8 },
-  actionText: { color: '#0A0A0A', fontWeight: '800', fontSize: 12 },
-  codeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, alignSelf: 'flex-start', backgroundColor: '#2E2404', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
-  codeChipLabel: { color: '#9CA3AF', fontSize: 11 },
-  codeChipCode: { color: '#F5C518', fontFamily: 'monospace', fontWeight: '900' },
+  heroLabel: { color: colors.onBrandPrimary, fontSize: 12, fontWeight: '700' },
+  heroValue: { color: colors.onBrandPrimary, fontSize: 48, fontWeight: '900', marginVertical: 6 },
+  heroSub: { color: colors.onBrandPrimary, fontSize: 13 },
+  card: { backgroundColor: colors.surface, margin: 16, marginTop: 8, padding: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.border },
+  cardTitle: { color: colors.brand, fontSize: 13, fontWeight: '800', marginBottom: 8 },
+  linkBox: { backgroundColor: colors.background, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: colors.brandTertiaryStrong },
+  linkText: { color: colors.onSurface, fontFamily: 'monospace', fontSize: 12 },
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: colors.brand, paddingVertical: 12, borderRadius: 8, minHeight: 44 },
+  actionText: { color: colors.onBrandPrimary, fontWeight: '800', fontSize: 12 },
+  codeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, alignSelf: 'flex-start', backgroundColor: colors.brandTertiary, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  codeChipLabel: { color: colors.onSurfaceSecondary, fontSize: 11 },
+  codeChipCode: { color: colors.brand, fontFamily: 'monospace', fontWeight: '900' },
   gridRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
-  gridCell: { flex: 1, backgroundColor: '#151515', padding: 14, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#2A2A2A', marginBottom: 8 },
-  gridCellGold: { borderColor: '#F5C518' },
-  gridNum: { color: 'white', fontSize: 20, fontWeight: '900' },
-  gridNumGold: { color: '#F5C518', fontSize: 20, fontWeight: '900' },
-  gridLbl: { color: '#9CA3AF', fontSize: 11, marginTop: 2 },
-  walletValue: { flex: 1, color: '#F5C518', fontSize: 22, fontWeight: '900' },
-  withdrawBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999, backgroundColor: '#F5C518' },
-  withdrawText: { color: '#0A0A0A', fontWeight: '800' },
-  incentivesBox: { backgroundColor: '#2E2404', margin: 16, marginTop: 0, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#F5C518' },
-  incentivesTitle: { color: '#F5C518', fontSize: 13, fontWeight: '800', marginBottom: 6 },
-  incentivesText: { color: 'white', fontSize: 13, lineHeight: 20 },
-  emptyHist: { color: '#6B7280', fontSize: 12, textAlign: 'center', padding: 20 },
-  histRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#2A2A2A' },
-  histOrder: { color: 'white', fontSize: 13, fontWeight: '700' },
-  histDate: { color: '#6B7280', fontSize: 11 },
-  histAmount: { color: '#10B981', fontSize: 14, fontWeight: '900' },
-});
+  gridCell: { flex: 1, backgroundColor: colors.surface, padding: 14, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.border, marginBottom: 8 },
+  gridCellGold: { borderColor: colors.brand },
+  gridNum: { color: colors.onSurface, fontSize: 20, fontWeight: '900' },
+  gridNumGold: { color: colors.brand, fontSize: 20, fontWeight: '900' },
+  gridLbl: { color: colors.onSurfaceSecondary, fontSize: 11, marginTop: 2 },
+  incentivesBox: { backgroundColor: colors.brandTertiary, margin: 16, marginTop: 0, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.brand },
+  incentivesTitle: { color: colors.brand, fontSize: 13, fontWeight: '800', marginBottom: 6 },
+  incentivesText: { color: colors.onSurface, fontSize: 13, lineHeight: 20 },
+  emptyHist: { color: colors.onSurfaceTertiary, fontSize: 12, textAlign: 'center', padding: 20 },
+  histRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  histOrder: { color: colors.onSurface, fontSize: 13, fontWeight: '700' },
+  histDate: { color: colors.onSurfaceTertiary, fontSize: 11 },
+  histAmount: { color: colors.success, fontSize: 14, fontWeight: '900' },
+  prefsWrap: { marginHorizontal: 16, marginTop: 8, gap: 8 },
+  }), [themeKey]);
+}
