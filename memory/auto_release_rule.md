@@ -148,3 +148,7 @@ Feature category → semver bump:
 - iOS 3341b512-2c58-454d-a36b-751de39642fc (build 84), Android e02c37ae-8724-4b86-8044-6fc83f728c1e (versionCode 89). Commit 64e3279. Backend deployed to Hetzner (root@91.98.154.148 via /root/.ssh/id_ed25519). Log /tmp/eas_release_v1.31.0.log
 - Driver pay models wired (salary+daily bonus / per trip / per km), 3-min near notice, animated ZenBrand, full-logo car pin, follow camera with bottom padding.
 - NOTE: eas-cli disappears on pod restart → `npm i -g eas-cli`. If poller dies, submit manually: `eas submit --platform ios|android --id <id> --non-interactive`.
+
+## v1.32.0 release — 2026-11-01
+- iOS d5f62dc9-b93c-4326-b797-dad2800d97c6 (build 85), Android c802ed31-4342-4ff3-ac6f-a0e08203451b (versionCode 90). Commit 8b220c8. Frontend only.
+- Shared src/components/AccountPrefs.tsx (merchant prefs pattern) used in driver profile, chamber, my-affiliate; chamber/marketer/AffiliatePayouts themed via tokens.

@@ -705,3 +705,6 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - Near-arrival: set_loc → notify_if_near (ETA ≤ 180s while picked_up) → in-app notification + ws {t:'near'}; customer banner + track-order banner. No real push (not integrated).
 - Map: ZenBrand animated (wordmark → spinning full logo), full logo on car roof, follow zoom 16.5 pitch 50, bearing follows heading when route exists, camera bottom padding 42%.
 - Tests: tests/test_driver_pay_near_iter56.py; iteration_56 report.
+
+## v1.32.0 (2026-11-01)
+- AccountPrefs shared component (Appearance/Theme/Language sheet) in Driver, Chamber, Marketer. Chamber + Marketer + payouts card fully themed (dark/light/custom). Chamber web logout fixed. iteration_57 report.
