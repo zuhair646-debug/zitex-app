@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 import { useAuth } from '../_layout';
+import DrawProof from '../../src/components/draw/DrawProof';
 
 export default function CompetitionDetailScreen() {
   useT(); // re-render when language or on-demand translations change
@@ -65,14 +66,7 @@ export default function CompetitionDetailScreen() {
     ]);
   };
 
-  const performDraw = async () => {
-    setDrawing(true);
-    try {
-      const result = await apiCall(`/api/competitions/${id}/draw`, { method: 'POST' });
-      setDrawResult(result.winners || []);
-      setShowDraw(true);
-    } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); } finally { setDrawing(false); }
-  };
+  const performDraw = () => router.push({ pathname: '/draw-studio', params: { id: String(id) } } as any);
 
   if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
   if (!comp) return <View style={s.loadWrap}><Text>{tSync('غير موجود', curLang())}</Text></View>;
@@ -162,6 +156,8 @@ export default function CompetitionDetailScreen() {
               ))}
             </View>
           )}
+
+          <DrawProof competitionId={String(id)} />
 
           {isOpen && ['merchant', 'chamber'].includes(user?.role || '') && (
             <TouchableOpacity testID="draw-btn" style={s.drawBtn} onPress={performDraw} disabled={drawing}>

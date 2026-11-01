@@ -384,78 +384,13 @@ async def get_participants(comp_id: str, request: Request):
             e["user_phone"] = (p[:3] + "****" + p[-2:]) if len(p) > 5 else ""
     return out
 
-@api_router.post("/competitions/{comp_id}/draw")
-async def do_draw(comp_id: str, user=Depends(get_current_user)):
-    import random
-    if not (user.get("role") in ("merchant", "chamber") or (
-            user.get("role") == "employee" and {"all", "competitions"} & set(user.get("permissions", [])))):
-        raise HTTPException(status_code=403, detail="السحب للتاجر فقط")
-    if not ObjectId.is_valid(comp_id):
-        raise HTTPException(status_code=404, detail="Competition not found")
-    comp = await db.competitions.find_one({"_id": ObjectId(comp_id)})
-    if not comp:
-        raise HTTPException(status_code=404, detail="Competition not found")
-    if comp.get("status") == "ended" and comp.get("winners"):
-        raise HTTPException(status_code=409, detail="تم السحب على هذه المسابقة مسبقاً")
-    entries = await db.competition_entries.find({"competition_id": comp_id}).to_list(5000)
-    if len(entries) < 1:
-        raise HTTPException(status_code=400, detail="لا يوجد مشاركون")
-    prize_count = comp.get("prize_count", 1)
-    winners = random.sample(entries, min(prize_count, len(entries)))
-    winner_list = []
-    for w in winners:
-        winner_list.append({"user_id": w["user_id"], "user_name": w["user_name"], "user_phone": w["user_phone"],
-                            "prize_status": "pending"})
-    draw_record = {
-        "competition_id": comp_id, "draw_number": len(comp.get("draw_history", [])) + 1,
-        "winners": winner_list, "drawn_at": datetime.now(timezone.utc).isoformat(),
-        "drawn_by": user.get("name") or user["id"]
-    }
-    await db.competitions.update_one({"_id": ObjectId(comp_id)}, {
-        "$set": {"winners": winner_list, "status": "ended"},
-        "$push": {"draw_history": draw_record}
-    })
-    for w in winner_list:
-        try:
-            await create_notification(w["user_id"], "🏆 مبروك! فزت في المسابقة",
-                                      f"{comp.get('title', '')} — {comp.get('prize', '')}", {"competition_id": comp_id})
-        except Exception:
-            pass
-    return {"winners": winner_list, "draw_number": draw_record["draw_number"]}
-
-# ─── Chamber Draw (with auth tracking) ───
-@api_router.post("/chamber/competitions/{comp_id}/draw")
-async def chamber_draw(comp_id: str, user=Depends(get_current_user)):
-    if user.get("role") != "chamber":
-        raise HTTPException(status_code=403, detail="Chamber access only")
-    import random
-    comp = await db.competitions.find_one({"_id": ObjectId(comp_id)})
-    if not comp:
-        raise HTTPException(status_code=404, detail="Competition not found")
-    entries = await db.competition_entries.find({"competition_id": comp_id}).to_list(1000)
-    if len(entries) < 1:
-        raise HTTPException(status_code=400, detail="Not enough participants")
-    prize_count = comp.get("prize_count", 1)
-    winners = random.sample(entries, min(prize_count, len(entries)))
-    winner_list = []
-    for w in winners:
-        winner_list.append({"user_id": w["user_id"], "user_name": w["user_name"], "user_phone": w["user_phone"]})
-    draw_record = {
-        "competition_id": comp_id, "draw_number": len(comp.get("draw_history", [])) + 1,
-        "winners": winner_list, "drawn_at": datetime.now(timezone.utc).isoformat(),
-        "drawn_by": user["name"], "drawn_by_role": "chamber"
-    }
-    await db.competitions.update_one({"_id": ObjectId(comp_id)}, {
-        "$set": {"winners": winner_list},
-        "$push": {"draw_history": draw_record}
-    })
-    return {"winners": winner_list, "draw_number": draw_record["draw_number"], "drawn_by": user["name"]}
+# Draws now live in chamber_draws.py (provably-fair sessions + filmed draw video).
 
 @api_router.get("/chamber/competitions")
 async def chamber_get_competitions(user=Depends(get_current_user)):
     if user.get("role") != "chamber":
         raise HTTPException(status_code=403, detail="Chamber access only")
-    comps = await db.competitions.find({}).sort("created_at", -1).to_list(50)
+    comps = await db.competitions.find({"assigned_chamber_employee_id": user["id"]}).sort("created_at", -1).to_list(50)
     result = []
     for c in comps:
         c["id"] = str(c.pop("_id"))
@@ -468,8 +403,8 @@ async def chamber_get_competitions(user=Depends(get_current_user)):
 async def chamber_competition_full(comp_id: str, user=Depends(get_current_user)):
     if user.get("role") != "chamber":
         raise HTTPException(status_code=403, detail="Chamber access only")
-    comp = await db.competitions.find_one({"_id": ObjectId(comp_id)})
-    if not comp:
+    comp = await db.competitions.find_one({"_id": ObjectId(comp_id)}) if ObjectId.is_valid(comp_id) else None
+    if not comp or comp.get("assigned_chamber_employee_id") != user["id"]:
         raise HTTPException(status_code=404, detail="Competition not found")
     comp["id"] = str(comp.pop("_id"))
     entries = await db.competition_entries.find({"competition_id": comp_id}).to_list(1000)
@@ -6837,6 +6772,14 @@ try:
     logger.info("Invoicing router mounted")
 except Exception as _e:
     logger.error(f"Failed to mount invoicing router: {_e}")
+
+# ─── Chamber draws: provably-fair sessions + composed draw video ───
+try:
+    from chamber_draws import build_router as _build_draws_router
+    app.include_router(_build_draws_router(db, get_current_user, require_merchant, create_notification))
+    logger.info("Chamber draws router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount chamber draws router: {_e}")
 
 # ─── Delivery v2: realtime driver system ───
 _delivery_dispatch = None

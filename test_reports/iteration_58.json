@@ -1,0 +1,54 @@
+{
+  "summary": "Tested Chamber-supervised draws end to end. Backend: 13/14 new pytest cases pass (officer 403 on unassigned studio/sessions, /draws/competitions scoped per role, assign validation, the full 30-day redraw incl. claimed/delivered refusal, short reason 400, pool excludes winners, only that winner replaced + forfeited_user_ids, verify true, legacy draw endpoints 404/405). The existing e2e_chamber_draws.py also passes fully (video compose ready, public mp4 200, verify true). Pulling frames from the composed MP4 shows the full-screen face intro, then the face as a corner PiP with the reels. Frontend (375x667 web): merchant More → Chamber hub, stats, tabs, new-officer modal, assign modal, and studio navigation all work. Draw studio on web: intro shows the no-camera notice, pull-1 and pull-many (4 reels) roll ~4s and land, finish reveals the seed, and the overview lists winners and documented sessions with share. Chamber /chamber lists only the assigned competition. Its chamber-draw-btn had a blocking bug that I fixed (one line). Redraw via UI works. Customer competition page shows draw-proof, a working <video> (12s, readyState 4), and a verify modal with 3 green checks. Found: a race in finish/prepare (fairness hole), a participant data leak on the legacy /chamber/.../full endpoint, winner names going blank on the finish screen, and widespread English mistranslation of 'سحب' as 'Withdrawal'.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/chamber/competitions/{comp_id}/full (server.py:402)", "issue": "No assignment check. Any chamber officer gets 200 with the full participant list (incl. full phone numbers) for competitions NOT assigned to them. An invalid ObjectId gives a 500. The /chamber modal uses this endpoint. Add `if comp.get('assigned_chamber_employee_id') != user['id']: 403` and validate the ObjectId.", "priority": "HIGH"},
+      {"endpoint": "POST /api/draws/sessions/{sid}/finish + POST /api/draws/{cid}/sessions (chamber_draws.py:225-341)", "issue": "Race conditions, reproduced with /app/backend/tests/race_chamber_draws.py. (a) 6 parallel finish calls push draw_history twice and send duplicate win notifications. (b) 8 parallel prepare calls intermittently create 2 open sessions with different seeds. Finish for kind=initial does not check winners_finalized_at, so a second open session can be finished later and overwrite the winners. That is a manipulation vector: open 2 commitments, pick both, publish the preferred one. Fix: an atomic find_one_and_update on the session ({status: {$ne: 'finished'}} → finished) before updating the competition. For initial, use a conditional update with {winners_finalized_at: {$exists: false}}. Use a partial unique index (e.g. field open:true) so each competition can have only one open session.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/draws/sessions/{sid}/finish (redraw)", "issue": "A redraw sets winners_finalized_at = now, which restarts the 30-day clock for ALL remaining winners. Confirmed in the UI: after one redraw, every other 'Alternative draw' button is disabled again. Track the deadline per winner instead (e.g. winners[i].finalized_at)."},
+      {"endpoint": "POST /api/draws/sessions/{sid}/finish", "issue": "The finish response omits `names` (public_session without names=True). The frontend does setSess(fin), so RollingReel shows '...' instead of the winner names during the 3s seed-reveal frame."},
+      {"endpoint": "POST /api/draws/sessions/{sid}/video", "issue": "asyncio.create_task result is not kept in a reference, so the task can be garbage-collected. A server restart mid-compose leaves video_status='processing' forever, and compose() then refuses with an early return."},
+      {"endpoint": "POST /api/merchant/chamber-employees", "issue": "No validation of phone format or password length on the server (the client checks >=6). Redraw replacement does not notify the forfeited winner."},
+      {"endpoint": "CORS", "issue": "access-control-allow-origin: * together with allow-credentials: true. The app uses Bearer tokens, so the impact is low, but explicit origins are recommended."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "chamber.tsx performDraw", "issue": "FIXED by tester: after tapping chamber-draw-btn, the RN Modal (visible={showDetail}) stayed open over /draw-studio with empty data ('Coming Soon', 'Conducting Draw #1'), which blocked the studio. Added setShowDetail(false).", "testID": "chamber-draw-btn", "priority": "HIGH"},
+      {"component": "draw-studio finishing phase", "issue": "Winner names in the reels turn into '...' after studio-finish (see the backend minor issue about the missing names). This is the frame shown while the seed is revealed.", "testID": "reel-{k}", "priority": "MEDIUM"},
+      {"component": "draw-studio redraw", "issue": "No retry path when a native recording or upload fails ('يمكنك إعادة المحاولة' is shown, but there is no retry button). Sessions with video_status 'failed' have no re-upload action.", "testID": "studio-share-*", "priority": "LOW"},
+      {"component": "DrawProof VideoView", "issue": "testID draw-video-{sid} is not rendered to the DOM on web (expo-video VideoView does not forward it). Wrap it in a View with the testID.", "testID": "draw-video-{sid}", "priority": "LOW"},
+      {"component": "chamber.tsx decideApproval", "issue": "Dead code calling the non-existent POST /api/chamber/competitions/{id}/decision.", "testID": "", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "English i18n of the draw feature", "issues": ["'سحب' is machine-translated as 'Withdrawal' or 'Drag' everywhere: 'Drag Studio' (Draw Studio), 'Chamber of Commerce and Withdrawals', 'Withdraw 4 in one payment' (Draw 4 at once), 'End Withdrawal and Reveal Key', 'Withdrawal Fingerprint', 'Alternative Withdrawal' (Redraw), 'Verified Withdrawal History', 'Withdrawal is correct and matching'.", "Other mistranslations: 'Room Staff' (Chamber officers), 'Armrest:' (Assigned:), 'Declaration' (Permit), 'Payment Method' in the verify modal (Calculation method), 'Commercial chamber'.", "Arabic and English are mixed on one screen while translations load lazily (the fairness explainer shows in Arabic on the first render)."]},
+      {"screen": "draw-studio / RTL", "issues": ["Masked phones inside Arabic lines render bidi-reversed ('09****050' instead of '050****09') in the Winners list and the verify modal. Wrap phones in an LTR isolate (\\u2066…\\u2069) or a separate Text with writingDirection 'ltr'.", "During the draw stage the fixed bottom buttons cover the Winners card (no bottom padding on the scroll content).", "The redraw reason modal and the hub officer/assign modals have no KeyboardAvoidingView, so on native the keyboard will cover the inputs/save buttons."]},
+      {"screen": "merchant/chamber-hub", "issues": ["The 'الإشراف والتصريح' button label wraps to 3 lines on 375px in Arabic."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_chamber_draws_access_redraw.py", "/app/backend/tests/e2e_chamber_draws.py", "/app/backend/tests/race_chamber_draws.py", "/app/backend/tests/ui_seed_chamber_draw.py", "/app/backend/tests/ui_prep_chamber_redraw.py", "/app/test_reports/pytest/chamber_draws_access.xml"],
+  "action_items": [
+    "HIGH: add an assignment check (403) + ObjectId validation to GET /api/chamber/competitions/{id}/full.",
+    "HIGH: make finish atomic (conditional session status update; for initial require that winners_finalized_at does not exist) and enforce a single open session per competition (partial unique index) to close the race/manipulation vector.",
+    "Return names in the finish response (public_session(s, names=True)) or keep the previous names in the frontend when calling setSess(fin).",
+    "Track the 30-day redraw deadline per winner, not per competition.",
+    "Fix the English translations of 'سحب' (Draw, not Withdrawal/Drag) and the other mistranslations listed; isolate LTR phone numbers inside RTL text.",
+    "Add KeyboardAvoidingView to the redraw reason and hub modals; add a retry upload for failed draw videos; keep a reference to the compose task."
+  ],
+  "critical_code_review_comments": [
+    "chamber_draws.py finish(): there is no guard against concurrent finishes or against finishing a second initial session after winners exist.",
+    "chamber_draws.py prepare(): the check-then-insert for an active session is not atomic.",
+    "redraw_info uses datetime.fromisoformat(fin). If winners_finalized_at is ever stored as a BSON datetime, this raises TypeError (500).",
+    "Fairness design (commit/reveal with HMAC over the frozen snapshot) is sound, and verify replays it correctly."
+  ],
+  "updated_files": ["/app/frontend/app/chamber.tsx (added setShowDetail(false) in performDraw)", "/app/backend/tests/test_chamber_draws_access_redraw.py", "/app/backend/tests/race_chamber_draws.py", "/app/backend/tests/ui_seed_chamber_draw.py", "/app/backend/tests/ui_prep_chamber_redraw.py"],
+  "success_rate": {"backend": "93% (13/14 new cases + e2e all pass; 2 race bugs found separately)", "frontend": "90% (all requested flows work after the 1-line chamber modal fix; finish-screen names and i18n issues remain)"},
+  "seed_data_creation": "Created TEST_ competitions/entries/sessions and officer 0559990001 for testing; all removed via `python /app/backend/tests/ui_seed_chamber_draw.py clean`. Uploaded test face videos remain in object storage.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Use ui_seed_chamber_draw.py seed → it prints the cid (assigned to 0550000000, 10 entries, prize_count 5). ui_prep_chamber_redraw.py <cid> ages winners 31 days and composes a video for the initial session. Web login: fill login-phone-input/login-password-input and click login-submit-button; clear localStorage between roles. The redraw modal slides in, so wait ~2s before clicking studio-redraw-go. After a pull, wait ~5s (ROLL_MS 4000 + 300) before the next pull, because buttons are disabled while rolling. race_chamber_draws.py reproduces the finish/prepare races.",
+  "rca_of_issue": "Chamber draw button overlay: performDraw() cleared selectedComp but not showDetail, so <Modal visible={showDetail}> stayed mounted over the pushed route. Fixed. Blank names on finish: the finish endpoint returns public_session(s) without names, and draw-studio replaces sess with it."
+}

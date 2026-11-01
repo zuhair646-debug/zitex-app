@@ -5121,7 +5121,7 @@
   "ابدأ السحب": {
     "bn": "ড্র শুরু করুন",
     "de": "Verlosung starten",
-    "en": "Start draw",
+    "en": "Start the draw",
     "es": "Iniciar sorteo",
     "fa": "شروع قرعه‌کشی",
     "fr": "Lancer le tirage",
@@ -33959,7 +33959,7 @@
   "مسابقة": {
     "bn": "প্রতিযোগিতা",
     "de": "Wettbewerb",
-    "en": "Competition",
+    "en": "competitions",
     "es": "Concurso",
     "fa": "رقابت",
     "fr": "Concours",
@@ -43267,5 +43267,227 @@
     "tr": "🧾 Tek Fatura",
     "ur": "🧾 واحد انوائس",
     "zh": "🧾 单张发票"
+  },
+  "استوديو السحب": {
+    "en": "Draw Studio"
+  },
+  "الغرفة التجارية والسحوبات": {
+    "en": "Chamber of Commerce & Draws"
+  },
+  "ابدأ السحب المصوّر": {
+    "en": "Start filmed draw"
+  },
+  "استكمال السحب المصوّر": {
+    "en": "Resume filmed draw"
+  },
+  "اسحب فائز": {
+    "en": "Draw a winner"
+  },
+  "اسحب {0} دفعة وحدة": {
+    "en": "Draw {0} at once"
+  },
+  "إنهاء السحب وكشف المفتاح": {
+    "en": "Finish draw & reveal key"
+  },
+  "سحب بديل": {
+    "en": "Replacement draw"
+  },
+  "سحب بديل عن": {
+    "en": "Replacement draw for"
+  },
+  "ابدأ السحب البديل": {
+    "en": "Start replacement draw"
+  },
+  "السحب الأساسي": {
+    "en": "Main draw"
+  },
+  "السحب الرسمي": {
+    "en": "Official draw"
+  },
+  "سجل السحوبات الموثقة": {
+    "en": "Documented draws log"
+  },
+  "توثيق السحب": {
+    "en": "Draw documentation"
+  },
+  "تحقق من النزاهة": {
+    "en": "Verify fairness"
+  },
+  "السحب سليم ومطابق": {
+    "en": "Draw verified — results match"
+  },
+  "كيف نضمن عدالة السحب": {
+    "en": "How we guarantee a fair draw"
+  },
+  "بصمة السحب": {
+    "en": "Draw fingerprint"
+  },
+  "بصمة السحب (قبل البدء)": {
+    "en": "Draw fingerprint (before start)"
+  },
+  "مفتاح السحب (بعد الانتهاء)": {
+    "en": "Draw key (revealed after)"
+  },
+  "بصمة قائمة المشاركين": {
+    "en": "Participants list fingerprint"
+  },
+  "طريقة الحساب": {
+    "en": "Calculation method"
+  },
+  "اكتمل السحب — مفتاح السحب": {
+    "en": "Draw complete — draw key"
+  },
+  "جاهزين للسحب": {
+    "en": "Ready to draw"
+  },
+  "سحب رسمي": {
+    "en": "Official draw"
+  },
+  "فيديو السحب الرسمي": {
+    "en": "Official draw video"
+  },
+  "شارك فيديو السحب": {
+    "en": "Share draw video"
+  },
+  "موظفو الغرفة": {
+    "en": "Chamber officers"
+  },
+  "موظف غرفة": {
+    "en": "chamber officers"
+  },
+  "حساب موظف غرفة جديد": {
+    "en": "New chamber officer account"
+  },
+  "الإشراف والتصريح": {
+    "en": "Supervision & permit"
+  },
+  "رقم تصريح الغرفة التجارية": {
+    "en": "Chamber of Commerce permit number"
+  },
+  "تصريح": {
+    "en": "Permit"
+  },
+  "تصريح الغرفة التجارية": {
+    "en": "Chamber permit"
+  },
+  "المشرف": {
+    "en": "Supervisor"
+  },
+  "بدون مشرف": {
+    "en": "No supervisor"
+  },
+  "بدون إشراف الغرفة": {
+    "en": "Not chamber-supervised"
+  },
+  "تحت إشراف الغرفة": {
+    "en": "Chamber-supervised"
+  },
+  "مسند له": {
+    "en": "Assigned"
+  },
+  "لم تُسند له مسابقة بعد": {
+    "en": "No competition assigned yet"
+  },
+  "موظف الغرفة المسؤول — يشوف هذه المسابقة فقط": {
+    "en": "Responsible chamber officer — sees only this competition"
+  },
+  "بإشراف الغرفة التجارية — تصريح رقم": {
+    "en": "Supervised by the Chamber of Commerce — permit no."
+  },
+  "تحت إشراف الغرفة التجارية": {
+    "en": "Supervised by the Chamber of Commerce"
+  },
+  "عرّف بنفسك وبالمسابقة، ثم اضغط ابدأ السحب": {
+    "en": "Introduce yourself and the competition, then tap Start the draw"
+  },
+  "التصوير متاح في تطبيق الجوال — هنا يتم السحب بدون فيديو": {
+    "en": "Filming works in the mobile app — here the draw runs without video"
+  },
+  "الفيديو قيد التجهيز وبيظهر في صفحة المسابقة تلقائياً": {
+    "en": "The video is being prepared and will appear on the competition page automatically"
+  },
+  "الفيديو قيد التجهيز": {
+    "en": "Video is being prepared"
+  },
+  "لا يوجد فيديو لهذا السحب": {
+    "en": "No video for this draw"
+  },
+  "جارِ رفع الفيديو…": {
+    "en": "Uploading video…"
+  },
+  "غير متاح بعد": {
+    "en": "Not available yet"
+  },
+  "السحب البديل متاح بعد 30 يوماً من إعلان الفائز ({0})": {
+    "en": "Replacement draw opens 30 days after the winner was announced ({0})"
+  },
+  "اكتب سبب الاستبدال (مثال: لم يرد الفائز خلال 30 يوماً حسب وزارة التجارة)": {
+    "en": "Write the replacement reason (e.g. winner did not respond within 30 days per the Ministry of Commerce)"
+  },
+  "بانتظار التواصل": {
+    "en": "Awaiting contact"
+  },
+  "طلب الجائزة": {
+    "en": "Prize requested"
+  },
+  "الفائز رقم": {
+    "en": "Winner no."
+  },
+  "مشارك رقم": {
+    "en": "Entry no."
+  },
+  "المشاركون المؤهلون: {0} • المتبقي: {1}": {
+    "en": "Eligible entries: {0} • Remaining: {1}"
+  },
+  "المشاركون: {0} • بصمة السحب: {1}": {
+    "en": "Entries: {0} • Draw fingerprint: {1}"
+  },
+  "{0} مشارك • {1} جوائز • {2} سحب موثّق": {
+    "en": "{0} entries • {1} prizes • {2} documented draws"
+  },
+  "{0} مشارك • {1} جوائز": {
+    "en": "{0} entries • {1} prizes"
+  },
+  "المشاركون: {0} • الفائزون: {1}": {
+    "en": "Entries: {0} • Winners: {1}"
+  },
+  "قائمة المشاركين لم تتغير بعد التثبيت": {
+    "en": "Participant list unchanged since it was locked"
+  },
+  "المفتاح المكشوف يطابق البصمة المعروضة قبل السحب": {
+    "en": "Revealed key matches the fingerprint shown before the draw"
+  },
+  "إعادة الحساب أعطت نفس الفائزين": {
+    "en": "Recalculation gives the same winners"
+  },
+  "1. نثبّت قائمة المشاركين قبل البدء ونولّد مفتاحاً سرياً، وتُعرض بصمته على الكاميرا.": {
+    "en": "1. We lock the participant list before starting and generate a secret key; its fingerprint is shown on camera."
+  },
+  "2. كل فائز يُحسب رياضياً من المفتاح وقائمة المشاركين — لا أحد يقدر يختار الفائز.": {
+    "en": "2. Each winner is calculated mathematically from the key and the list — nobody can choose the winner."
+  },
+  "3. بعد السحب نكشف المفتاح، وأي شخص يقدر يعيد الحساب ويتأكد من نفس النتيجة.": {
+    "en": "3. After the draw we reveal the key, so anyone can recalculate and confirm the same result."
+  },
+  "جارِ السحب…": {
+    "en": "Drawing…"
+  },
+  "الفيديو": {
+    "en": "Video"
+  },
+  "قيد التجهيز": {
+    "en": "Processing"
+  },
+  "فشل": {
+    "en": "Failed"
+  },
+  "بدون فيديو": {
+    "en": "No video"
+  },
+  "تم إنشاء الحساب": {
+    "en": "Account created"
+  },
+  "بيانات دخول موظف الغرفة: {0} / {1}": {
+    "en": "Chamber officer login: {0} / {1}"
   }
 }

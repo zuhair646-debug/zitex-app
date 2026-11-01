@@ -26,13 +26,7 @@ export default function MerchantCompetitions() {
 
   const del = (id: string) => Alert.alert(tSync('حذف المسابقة؟', lang), tSync('لا يمكن التراجع', curLang()), [{ text: tSync('إلغاء', curLang()), style: 'cancel' }, { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/competitions/${id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }]);
 
-  const draw = (c: any) => Alert.alert(tSync('السحب على الفائزين', lang), tf('سيتم اختيار {0} فائز عشوائياً من {1} مشارك وإنهاء المسابقة', lang, [c.prize_count || 1, c.joined_count || 0]), [
-    { text: tSync('إلغاء', curLang()), style: 'cancel' },
-    { text: tSync('ابدأ السحب', curLang()), onPress: async () => {
-      try { const r = await apiCall(`/api/competitions/${c.id}/draw`, { method: 'POST' }); Alert.alert('🏆', (r.winners || []).map((w: any) => w.user_name).join('\n')); load(); }
-      catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); }
-    } },
-  ]);
+  const draw = (c: any) => router.push({ pathname: '/draw-studio', params: { id: c.id } } as any);
 
   const delivered = async (cid: string, uid: string) => {
     try { await apiCall(`/api/merchant/competitions/${cid}/winners/${uid}/delivered`, { method: 'POST' }); load(); }

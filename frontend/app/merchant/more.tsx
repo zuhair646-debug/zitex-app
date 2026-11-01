@@ -35,6 +35,7 @@ export default function MerchantMore() {
   const marketing = [
     { icon: 'megaphone', titleKey: 'mo.social.title',       subKey: 'mo.social.sub',       route: '/merchant/social' },
     { icon: 'trophy',    titleKey: 'mo.competitions.title', subKey: 'mo.competitions.sub', route: '/merchant/competitions' },
+    { icon: 'shield-checkmark', titleKey: 'mo.chamberHub.title', subKey: 'mo.chamberHub.sub', route: '/merchant/chamber-hub' },
     { icon: 'image',     titleKey: 'mo.banners.title',      subKey: 'mo.banners.sub',      route: '/merchant/banners' },
   ] as const;
 

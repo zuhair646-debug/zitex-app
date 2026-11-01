@@ -83,7 +83,7 @@ def build_router(get_current_user, JWT_SECRET, JWT_ALGORITHM):
 
         data = await file.read()
         # Size cap: 30MB for videos, 8MB for images
-        max_size = 30 * 1024 * 1024 if content_type.startswith("video/") else 8 * 1024 * 1024
+        max_size = 80 * 1024 * 1024 if content_type.startswith("video/") else 8 * 1024 * 1024
         if len(data) > max_size:
             raise HTTPException(status_code=413, detail=f"الملف كبير جداً (الحد {max_size // 1024 // 1024}MB)")
 

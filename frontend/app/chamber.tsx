@@ -47,22 +47,12 @@ export default function ChamberScreen() {
     } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
   };
 
-  const performDraw = async () => {
+  const performDraw = () => {
     if (!selectedComp) return;
-    Alert.alert(tSync('تأكيد السحب', curLang()), tf('هل أنت متأكد من إجراء السحب رقم {0} لمسابقة "{1}"؟', curLang(), [(selectedComp.draw_history?.length || 0) + 1, selectedComp.title]), [
-      { text: tSync('إلغاء', curLang()), style: 'cancel' },
-      { text: tSync('اسحب الآن', curLang()), onPress: async () => {
-        setDrawing(true);
-        try {
-          const result = await apiCall(`/api/chamber/competitions/${selectedComp.id}/draw`, { method: 'POST' });
-          setDrawResult(result);
-          const updated = await apiCall(`/api/chamber/competitions/${selectedComp.id}/full`);
-          setSelectedComp(updated);
-          loadComps();
-        } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
-        finally { setDrawing(false); }
-      }}
-    ]);
+    const cid = selectedComp.id;
+    setSelectedComp(null);
+    setShowDetail(false);
+    router.push({ pathname: '/draw-studio', params: { id: cid } } as any);
   };
 
   const handleLogout = () => {
@@ -71,21 +61,6 @@ export default function ChamberScreen() {
     Alert.alert(tSync('تسجيل الخروج', curLang()), tSync('هل أنت متأكد؟', curLang()), [
       { text: tSync('إلغاء', curLang()), style: 'cancel' },
       { text: tSync('تسجيل الخروج', curLang()), style: 'destructive', onPress: doLogout }
-    ]);
-  };
-
-  const decideApproval = (compId: string, title: string, decision: 'approve' | 'reject') => {
-    Alert.alert(tSync(decision === 'approve' ? tSync('اعتماد المسابقة', curLang()) : tSync('رفض المسابقة', curLang()), curLang()), tf('المسابقة: "{0}"', curLang(), [title]), [
-      { text: tSync('إلغاء', curLang()), style: 'cancel' },
-      { text: tSync(decision === 'approve' ? tSync('اعتماد', curLang()) : tSync('رفض', curLang()), curLang()), style: decision === 'reject' ? 'destructive' : 'default', onPress: async () => {
-        try {
-          await apiCall(`/api/chamber/competitions/${compId}/decision`, {
-            method: 'POST',
-            body: JSON.stringify({ decision, note: decision === 'reject' ? 'Rejected by chamber' : 'Approved by chamber' }),
-          });
-          loadComps();
-        } catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
-      }},
     ]);
   };
 
