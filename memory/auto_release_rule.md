@@ -158,3 +158,7 @@ Feature category → semver bump:
 
 ## v1.34.0 release — 2026-11-01
 - iOS 53a135f5-3148-4715-8995-def1a0db90ba (build 87), Android ed2dbe8b-85c8-4ee7-80b6-4ba71ff834fd (versionCode 92). Commit 5cba3d1. Backend deployed; unique index comp+user dropped on prod; prod TEST comp 6ae9a7aee2cf28750fe18d9e (15k entries, is_test).
+
+## v1.36.0 release — 2026-11-03
+- iOS 67b8b2ad-cd46-4e84-8898-c9d61792b516 (build 88), Android 13ac3e56-f62f-4aa2-9975-b8898606cec1 (versionCode 93). Commit f2dbeed. Backend deployed to Hetzner. Log /tmp/eas_release_v1.36.0.log
+- NOTE: backend/.env is modified locally with a GitHub token → NEVER commit it (push protection blocks). Use `git reset HEAD backend/.env` before committing.
