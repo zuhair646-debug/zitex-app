@@ -179,7 +179,8 @@ def frame(bg, s, picks_by_k, events, t, finish_ms):
     if finish_ms and t >= finish_ms:
         d.rounded_rectangle([30, 420, W - 30, 520], 16, fill=(16, 40, 24), outline=(80, 190, 120), width=3)
         text(d, (W / 2, 450), "اكتمل السحب — تم كشف مفتاح السحب للتحقق", 22, (150, 230, 170))
-        text(d, (W / 2, 490), f"{(s.get('seed') or '')[:32]}…", 16, WHITE, "Regular")
+        b = s.get("beacon") or {}
+        text(d, (W / 2, 490), f"رمز الموظف {ltr(s.get('officer_code', ''))} • drand #{b.get('round', '-')} • {(s.get('final_seed') or '')[:16]}…", 16, WHITE, "Regular")
     return im
 
 

@@ -87,7 +87,7 @@ INDEX_PLAN: list[tuple[str, list[tuple[Any, dict]]]] = [
         ("competition_type", {}),
     ]),
     ("competition_entries", [
-        ([("competition_id", 1), ("user_id", 1)], {"unique": True}),
+        ([("competition_id", 1), ("user_id", 1)], {"name": "comp_user_tickets"}),
         ([("user_id", 1), ("joined_at", -1)], {}),
     ]),
     ("services", [

@@ -12,7 +12,7 @@ def login(phone, pw):
 async def seed():
     db = AsyncIOMotorClient(os.environ['MONGO_URL'])[os.environ['DB_NAME']]
     off = await db.users.find_one({'phone': '0550000000'})
-    r = await db.competitions.insert_one({'title': 'TEST_DRAW سحب تجريبي', 'prize': 'آيفون', 'prize_count': 5, 'status': 'open',
+    r = await db.competitions.insert_one({'title': 'TEST_DRAW سحب تجريبي', 'is_test': True, 'prize': 'آيفون', 'prize_count': 5, 'status': 'open',
         'chamber_supervised': True, 'permit_number': 'CC-TEST-1', 'assigned_chamber_employee_id': str(off['_id']), 'created_at': '2026-11-01'})
     cid = str(r.inserted_id)
     for i in range(12):
@@ -26,6 +26,7 @@ ss = requests.post(f'{B}/draws/{cid}/sessions', headers=H, json={'kind': 'initia
 sid = ss['id']; print('session', sid, ss['seed'] is None, len(ss['names']))
 again = requests.post(f'{B}/draws/{cid}/sessions', headers=H, json={'kind': 'initial'}).json()
 print('resume same', again['id'] == sid, again['seed_hash'] == ss['seed_hash'])
+requests.post(f'{B}/draws/sessions/{sid}/start', headers=H, json={'officer_code': '123456'})
 r1 = requests.post(f'{B}/draws/sessions/{sid}/pick', headers=H, json={'count': 1}).json(); print('pick1', r1['remaining'])
 r2 = requests.post(f'{B}/draws/sessions/{sid}/pick', headers=H, json={'count': 4}).json(); print('pick4', r2['remaining'], len(r2['winners']))
 print('over-pick', requests.post(f'{B}/draws/sessions/{sid}/pick', headers=H, json={'count': 1}).status_code)

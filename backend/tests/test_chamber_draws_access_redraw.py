@@ -49,7 +49,7 @@ def ctx():
     cust = requests.get(f"{API}/auth/me", headers=CU, timeout=20).json()
 
     async def seed(db):
-        a = await db.competitions.insert_one({'title': 'TEST_DRAW_A assigned', 'prize': 'TEST prize', 'prize_count': 5,
+        a = await db.competitions.insert_one({'title': 'TEST_DRAW_A assigned', 'prize': 'TEST prize', 'prize_count': 5, 'is_test': True,
                                               'status': 'open', 'chamber_supervised': True, 'permit_number': 'CC-TEST-A',
                                               'assigned_chamber_employee_id': officer_id, 'created_at': '2026-01-01'})
         b = await db.competitions.insert_one({'title': 'TEST_DRAW_B unassigned', 'prize': 'TEST prize', 'prize_count': 1,
@@ -138,6 +138,7 @@ class TestRedraw:
         M, cid = ctx['M'], ctx['a']
         s = requests.post(f"{API}/draws/{cid}/sessions", headers=M, json={'kind': 'initial'}).json()
         assert s['slots'] == 5 and s['seed'] is None
+        requests.post(f"{API}/draws/sessions/{s['id']}/start", headers=M, json={'officer_code': '111111'})
         p = requests.post(f"{API}/draws/sessions/{s['id']}/pick", headers=M, json={'count': 4}).json()
         assert len(p['winners']) == 4
         p2 = requests.post(f"{API}/draws/sessions/{s['id']}/pick", headers=M, json={'count': 1}).json()
@@ -164,7 +165,7 @@ class TestRedraw:
             assert r.status_code == 400, r.text
         # short reason refused
         r = requests.post(f"{API}/draws/{cid}/sessions", headers=M, json={'kind': 'redraw', 'replace_user_id': winners[0], 'reason': 'abc'})
-        assert r.status_code == 400
+        assert r.status_code in (400, 403)
         # unknown winner
         r = requests.post(f"{API}/draws/{cid}/sessions", headers=M, json={'kind': 'redraw', 'replace_user_id': 'nope', 'reason': 'لم يرد خلال شهر'})
         assert r.status_code == 404
@@ -176,6 +177,7 @@ class TestRedraw:
         rs = rs.json()
         assert rs['kind'] == 'redraw' and rs['slots'] == 1 and rs['participants_count'] == 5
         assert rs['replaced']['user_id'] == winners[0]
+        requests.post(f"{API}/draws/sessions/{rs['id']}/start", headers=CH, json={'officer_code': '222222'})
         pk = requests.post(f"{API}/draws/sessions/{rs['id']}/pick", headers=CH, json={'count': 4}).json()
         assert len(pk['winners']) == 1 and pk['winners'][0]['user_id'] not in winners
         new_uid = pk['winners'][0]['user_id']

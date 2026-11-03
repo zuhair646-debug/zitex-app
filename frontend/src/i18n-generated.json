@@ -43489,5 +43489,47 @@
   },
   "بيانات دخول موظف الغرفة: {0} / {1}": {
     "en": "Chamber officer login: {0} / {1}"
+  },
+  "عرّف بنفسك وبالمسابقة، ثم اكتب رقماً عشوائياً من 6 خانات أمام الكاميرا واضغط ابدأ السحب": {
+    "en": "Introduce yourself and the competition, type a random 6-digit number on camera, then tap Start the draw"
+  },
+  "رمز موظف الغرفة": {
+    "en": "Chamber officer code"
+  },
+  "العشوائية العامة": {
+    "en": "Public randomness"
+  },
+  "المفتاح النهائي": {
+    "en": "Final key"
+  },
+  "عشوائية عامة مستقلة (drand) ظهرت بعد التثبيت": {
+    "en": "Independent public randomness (drand) appeared after locking"
+  },
+  "سجل الخطوات مختوم ولم يُعدّل": {
+    "en": "Step log is sealed and unaltered"
+  },
+  "فرص العميل في السحب (تُعلن ضمن الشروط)": {
+    "en": "Customer chances in the draw (published in the terms)"
+  },
+  "فرصة وحدة لكل عميل": {
+    "en": "One chance per customer"
+  },
+  "فرصة لكل طلب مؤهل": {
+    "en": "One chance per qualifying order"
+  },
+  "الحد الأقصى للفرص لكل عميل": {
+    "en": "Max chances per customer"
+  },
+  "الطلبات الملغاة أو المسترجعة تفقد فرصتها تلقائياً، والعميل يفوز بجائزة وحدة فقط": {
+    "en": "Cancelled or refunded orders lose their chance automatically; a customer can win only one prize"
+  },
+  "اشترك في المسابقة": {
+    "en": "Join the competition"
+  },
+  "تم تسجيلك في المسابقة": {
+    "en": "You're entered in the competition"
+  },
+  "تاريخ نهاية المسابقة مطلوب — بدونه ما يمكن إجراء السحب": {
+    "en": "Competition end date is required — the draw cannot run without it"
   }
 }

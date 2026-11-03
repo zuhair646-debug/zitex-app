@@ -35,7 +35,7 @@ export default function CompetitionForm() {
     title: '', description: '', prize: '', prize_count: '1',
     competition_type: 'general',
     question: '', correct_answer: '', options: ['', '', '', ''],
-    spend_requirement: '0', purchase_mode: 'single',
+    spend_requirement: '0', purchase_mode: 'single', tickets_mode: 'one', max_tickets_per_user: '1',
     max_submissions_per_user: '1', ugc_hashtag: '',
     start_date: '', end_date: '', draw_date: '',
     max_participants: '1000',
@@ -67,7 +67,7 @@ export default function CompetitionForm() {
     if (!editId) return;
     apiCall(`/api/competitions/${editId}`).then((c: any) => setData((d: any) => ({
       ...d, ...c,
-      prize_count: String(c.prize_count ?? 1), spend_requirement: String(c.spend_requirement ?? 0),
+      prize_count: String(c.prize_count ?? 1), spend_requirement: String(c.spend_requirement ?? 0), max_tickets_per_user: String(c.max_tickets_per_user ?? 1), tickets_mode: c.tickets_mode || 'one',
       max_participants: String(c.max_participants ?? 1000), max_submissions_per_user: String(c.max_submissions_per_user ?? 1),
       options: [...(c.options || []), '', '', '', ''].slice(0, Math.max(4, (c.options || []).length)),
     }))).catch(() => {});
@@ -86,6 +86,7 @@ export default function CompetitionForm() {
   const submit = async () => {
     if (!data.title || !data.prize) { Alert.alert(tSync('مطلوب', lang), tSync('العنوان والجائزة مطلوبان', curLang())); return; }
     if (data.competition_type === 'qa' && (!data.question || !data.correct_answer)) { Alert.alert(tSync('مطلوب', lang), tSync('السؤال والإجابة الصحيحة مطلوبان', curLang())); return; }
+    if (!data.end_date) { Alert.alert(tSync('مطلوب', lang), tSync('تاريخ نهاية المسابقة مطلوب — بدونه ما يمكن إجراء السحب', curLang())); return; }
     if (data.competition_type === 'ugc_video' && !data.end_date) { Alert.alert(tSync('مطلوب', lang), tSync('تاريخ نهاية المسابقة مطلوب لفيديوهات UGC', curLang())); return; }
     if (data.chamber_supervised && (!data.permit_number || !data.assigned_chamber_employee_id)) { Alert.alert(tSync('مطلوب', lang), tSync('رقم التصريح وموظف الغرفة مطلوبان', curLang())); return; }
     setLoading(true);
@@ -94,6 +95,7 @@ export default function CompetitionForm() {
         ...data,
         prize_count: parseInt(data.prize_count) || 1,
         spend_requirement: parseFloat(data.spend_requirement) || 0,
+        max_tickets_per_user: Math.max(1, parseInt(data.max_tickets_per_user) || 1),
         max_participants: parseInt(data.max_participants) || 1000,
         max_submissions_per_user: parseInt(data.max_submissions_per_user) || 1,
         options: (data.options || []).filter((o: string) => o.trim()),
@@ -114,7 +116,7 @@ export default function CompetitionForm() {
         <Text style={s.sectionTitle}>{tSync('النوع *', curLang())}</Text>
         <View style={s.typeGrid}>
           {TYPES.map(t => (
-            <TouchableOpacity key={t.id} onPress={() => setData({ ...data, competition_type: t.id })} style={[s.typeCard, data.competition_type === t.id && s.typeCardActive]}>
+            <TouchableOpacity key={t.id} testID={`comp-type-${t.id}`} onPress={() => setData({ ...data, competition_type: t.id })} style={[s.typeCard, data.competition_type === t.id && s.typeCardActive]}>
               <Ionicons name={t.icon as any} size={22} color={data.competition_type === t.id ? 'white' : '#8833FF'} />
               <Text style={[s.typeName, data.competition_type === t.id && { color: 'white' }]}>{tSync(t.name || '', curLang())}</Text>
               <Text style={[s.typeDesc, data.competition_type === t.id && { color: 'white' }]}>{tSync(t.desc || '', curLang())}</Text>
@@ -201,6 +203,20 @@ export default function CompetitionForm() {
               </TouchableOpacity>
             </View>
             <TX style={s.hint}>0 = أي عملية شراء تؤهل</TX>
+            <TX style={s.label}>فرص العميل في السحب (تُعلن ضمن الشروط)</TX>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TouchableOpacity testID="tickets-one" onPress={() => setData({ ...data, tickets_mode: 'one' })} style={[s.modePill, data.tickets_mode === 'one' && s.modePillActive]}>
+                <TX style={[s.modePillText, data.tickets_mode === 'one' && s.modePillTextActive]}>فرصة وحدة لكل عميل</TX>
+              </TouchableOpacity>
+              <TouchableOpacity testID="tickets-per-order" onPress={() => setData({ ...data, tickets_mode: 'per_order' })} style={[s.modePill, data.tickets_mode === 'per_order' && s.modePillActive]}>
+                <TX style={[s.modePillText, data.tickets_mode === 'per_order' && s.modePillTextActive]}>فرصة لكل طلب مؤهل</TX>
+              </TouchableOpacity>
+            </View>
+            {data.tickets_mode === 'per_order' ? (<>
+              <TX style={s.label}>الحد الأقصى للفرص لكل عميل</TX>
+              <TextInput testID="tickets-max" style={s.input} keyboardType="numeric" value={data.max_tickets_per_user} onChangeText={t => setData({ ...data, max_tickets_per_user: t })} />
+            </>) : null}
+            <TX style={s.hint}>الطلبات الملغاة أو المسترجعة تفقد فرصتها تلقائياً، والعميل يفوز بجائزة وحدة فقط</TX>
           </>
         )}
         {data.competition_type === 'ugc_video' && (
@@ -214,9 +230,9 @@ export default function CompetitionForm() {
         )}
 
         <TX style={s.label}>تاريخ السحب</TX>
-        <TextInput style={s.input} value={data.draw_date} onChangeText={t => setData({ ...data, draw_date: t })} placeholder="2026-09-01" />
+        <TextInput style={s.input} value={data.draw_date} onChangeText={t => setData({ ...data, draw_date: t })} placeholder="YYYY-MM-DD" />
         <TX style={s.label}>تاريخ الانتهاء</TX>
-        <TextInput style={s.input} value={data.end_date} onChangeText={t => setData({ ...data, end_date: t })} placeholder="2026-08-30" />
+        <TextInput style={s.input} value={data.end_date} onChangeText={t => setData({ ...data, end_date: t })} placeholder="YYYY-MM-DD" />
 
         <View style={s.divider} />
         <TX style={s.sectionTitle}>إشراف الغرفة التجارية</TX>
@@ -225,7 +241,7 @@ export default function CompetitionForm() {
             <TX style={s.toggleLbl}>مسابقة تحت إشراف الغرفة</TX>
             <TX style={s.toggleHint}>للسحوبات المرخصة التي تحتاج تصريح</TX>
           </View>
-          <Switch value={data.chamber_supervised} onValueChange={v => setData({ ...data, chamber_supervised: v })} trackColor={{ true: '#F5C518' }} />
+          <Switch testID="comp-chamber-switch" value={data.chamber_supervised} onValueChange={v => setData({ ...data, chamber_supervised: v })} trackColor={{ true: '#F5C518' }} />
         </View>
         {data.chamber_supervised && (
           <>

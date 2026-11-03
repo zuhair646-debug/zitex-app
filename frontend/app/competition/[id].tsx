@@ -159,6 +159,15 @@ export default function CompetitionDetailScreen() {
 
           <DrawProof competitionId={String(id)} />
 
+          {isOpen && ['general', 'signup'].includes(comp.competition_type || 'general') && !['merchant', 'chamber', 'employee', 'driver'].includes(user?.role || '') && (
+            <TouchableOpacity testID="join-competition-btn" style={s.quizBtn} onPress={async () => {
+              try { const r = await apiCall(`/api/competitions/${id}/join`, { method: 'POST' }); Alert.alert('🎉', tSync(r.already ? 'أنت مشترك بالفعل' : 'تم تسجيلك في المسابقة', curLang())); setComp((x: any) => ({ ...x, joined_count: (x?.joined_count || 0) + (r.already ? 0 : 1) })); }
+              catch (e: any) { Alert.alert(tSync('خطأ', curLang()), e.message); }
+            }}>
+              <Text style={s.quizBtnText}>{tSync('اشترك في المسابقة', curLang())}</Text>
+            </TouchableOpacity>
+          )}
+
           {isOpen && ['merchant', 'chamber'].includes(user?.role || '') && (
             <TouchableOpacity testID="draw-btn" style={s.drawBtn} onPress={performDraw} disabled={drawing}>
               {drawing ? <ActivityIndicator color="#FFF" /> : (

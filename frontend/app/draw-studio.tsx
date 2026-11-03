@@ -39,6 +39,7 @@ export default function DrawStudio() {
   const [videoStatus, setVideoStatus] = useState('');
   const [redraw, setRedraw] = useState<any>(null);
   const [reason, setReason] = useState('');
+  const [code, setCode] = useState('');
   const [camPerm, reqCam] = useCameraPermissions();
   const [micPerm, reqMic] = useMicrophonePermissions();
   const cam = useRef<CameraView>(null);
@@ -74,8 +75,8 @@ export default function DrawStudio() {
     setBusy(true);
     try {
       const ss = await apiCall(`/api/draws/${id}/sessions`, { method: 'POST', body: JSON.stringify({ kind, ...extra }) });
-      setSess(ss); setBatch([]); events.current = []; pip.setValue(0);
-      setPhase('intro');
+      setSess(ss); setBatch([]); setCode(''); events.current = []; pip.setValue(ss.started ? 1 : 0);
+      setPhase(ss.started ? 'draw' : 'intro');
       setTimeout(() => {
         recStart.current = Date.now();
         if (canFilm && cam.current) recPromise.current = cam.current.recordAsync({ maxDuration: 900 }).catch(() => null);
@@ -83,7 +84,14 @@ export default function DrawStudio() {
     } catch (e: any) { notify(T('خطأ'), e.message); } finally { setBusy(false); }
   };
 
-  const startDrawing = () => {
+  const startDrawing = async () => {
+    if (!/^[0-9]{6}$/.test(code)) return;
+    setBusy(true);
+    try {
+      const st2 = await apiCall(`/api/draws/sessions/${sess.id}/start`, { method: 'POST', body: JSON.stringify({ officer_code: code }) });
+      setSess(st2);
+    } catch (e: any) { notify(T('خطأ'), e.message); setBusy(false); return; }
+    setBusy(false);
     introMs.current = Date.now() - recStart.current;
     Animated.timing(pip, { toValue: 1, duration: 800, useNativeDriver: false }).start();
     setPhase('draw');
@@ -206,8 +214,10 @@ export default function DrawStudio() {
             {c.permit_number ? <Text style={s.ltSub}>{T('بإشراف الغرفة التجارية — تصريح رقم')} {c.permit_number}</Text> : null}
             <Text style={s.ltSub}>{tf('المشاركون: {0} • بصمة السحب: {1}', lang, [sess?.participants_count || 0, (sess?.seed_hash || '').slice(0, 16) + '…'])}</Text>
             {sess?.kind === 'redraw' ? <Text style={s.ltSub}>{T('سحب بديل عن')}: {sess?.replaced?.name} — {sess?.reason}</Text> : null}
-            <Text style={s.ltHint}>{T('عرّف بنفسك وبالمسابقة، ثم اضغط ابدأ السحب')}</Text>
-            <TouchableOpacity testID="studio-start-draw" style={s.btn} onPress={startDrawing}>
+            <Text style={s.ltHint}>{T('عرّف بنفسك وبالمسابقة، ثم اكتب رقماً عشوائياً من 6 خانات أمام الكاميرا واضغط ابدأ السحب')}</Text>
+            <TextInput testID="studio-officer-code" style={s.codeInput} value={code} onChangeText={t => setCode(t.replace(/[^0-9]/g, '').slice(0, 6))}
+              keyboardType="number-pad" maxLength={6} placeholder="••••••" placeholderTextColor="#8A8070" />
+            <TouchableOpacity testID="studio-start-draw" style={[s.btn, (code.length !== 6 || busy) && s.dim]} disabled={code.length !== 6 || busy} onPress={startDrawing}>
               <Ionicons name="play" size={20} color={colors.onBrandPrimary} /><Text style={s.btnTxt}>{T('ابدأ السحب')}</Text>
             </TouchableOpacity>
           </View>
@@ -361,6 +371,7 @@ function useStyles() {
     ltSub: { color: '#D9D2C3', fontSize: 12 },
     ltHint: { color: '#E8C778', fontSize: 13, fontWeight: '700', marginVertical: 8 },
     warn: { color: '#FFB020', fontSize: 12, fontWeight: '700' },
+    codeInput: { minHeight: 54, borderRadius: 12, borderWidth: 2, borderColor: '#E8C778', color: '#FFFFFF', fontSize: 26, fontWeight: '900', textAlign: 'center', letterSpacing: 10, marginBottom: 8, backgroundColor: 'rgba(0,0,0,0.4)' },
     modalBg: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' },
     modalCard: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 10, paddingBottom: 32 },
     input: { minHeight: 80, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12, color: colors.onSurface, backgroundColor: colors.surfaceSecondary, textAlignVertical: 'top' },

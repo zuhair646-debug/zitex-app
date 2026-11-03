@@ -16,6 +16,7 @@ import jwt
 import secrets
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, Field
+import competition_rules
 from typing import List, Optional
 import re
 
@@ -289,6 +290,8 @@ async def update_cart_item(item_id: str, quantity: int, user=Depends(get_current
 @api_router.get("/competitions")
 async def get_competitions():
     # Show all open competitions (approval workflow removed - merchant decides directly)
+    await db.competitions.update_many({"status": "open", "end_date": {"$nin": ["", None], "$lt": datetime.now(timezone.utc).isoformat()}},
+                                      {"$set": {"status": "ended"}})
     comps = await db.competitions.find({"status": "open"}).sort("created_at", -1).to_list(50)
     return [serialize_doc(c) for c in comps]
 
@@ -356,6 +359,7 @@ async def join_competition(comp_id: str, user=Depends(get_current_user)):
     ctype = comp.get("competition_type", "general")
     if ctype not in ("signup", "general"):
         raise HTTPException(status_code=400, detail="هذي المسابقة لا تدعم الانضمام المباشر")
+    competition_rules.require_entry_open(comp, user)
     existing = await db.competition_entries.find_one({"competition_id": comp_id, "user_id": user["id"]})
     if existing:
         # graceful — return success instead of hard 400
@@ -904,6 +908,10 @@ async def create_order(data: OrderInput, user=Depends(get_current_user)):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     result = await db.orders.insert_one(order_doc)
+    try:
+        await competition_rules.award_purchase_tickets(db, {**order_doc, "_id": result.inserted_id}, user)
+    except Exception as _e:
+        logger.error(f"purchase tickets failed: {_e}")
     # Auto-award loyalty points on order creation
     try:
         settings = await _ensure_merchant_settings()
@@ -2273,6 +2281,8 @@ class CompetitionInput(BaseModel):
     end_date: str = ""
     draw_date: str = ""
     max_participants: int = 1000
+    tickets_mode: str = Field("one", pattern="^(one|per_order)$")  # purchase: one chance per customer or per qualifying order
+    max_tickets_per_user: int = Field(1, ge=1, le=100)
     chamber_supervised: bool = False
     permit_number: str = ""
     assigned_chamber_employee_id: str = ""
@@ -2291,6 +2301,7 @@ async def merchant_create_competition(data: CompetitionInput, user=Depends(get_c
             raise HTTPException(status_code=422, detail="حدّد الإجابة الصحيحة")
         if data.correct_answer not in clean_opts:
             raise HTTPException(status_code=422, detail="الإجابة الصحيحة يجب أن تكون من ضمن الخيارات")
+    competition_rules.validate_dates(data.model_dump())
     doc = data.model_dump()
     doc.update({
         "status": "open",
@@ -2310,6 +2321,11 @@ async def merchant_update_competition(cid: str, data: CompetitionInput, user=Dep
         opts = [o for o in (data.options or []) if o and o.strip()]
         if len(opts) < 2 or not (data.correct_answer or "").strip() or data.correct_answer not in opts:
             raise HTTPException(422, "مسابقة سؤال وجواب تحتاج خيارين وإجابة صحيحة من ضمنها")
+    existing = await db.competitions.find_one({"_id": ObjectId(cid)})
+    if not existing:
+        raise HTTPException(404, "Competition not found")
+    competition_rules.validate_dates(data.model_dump())
+    await competition_rules.guard_update(db, existing, data.model_dump())
     r = await db.competitions.update_one({"_id": ObjectId(cid)}, {"$set": {**data.model_dump(), "updated_at": datetime.now(timezone.utc).isoformat()}})
     if r.matched_count == 0:
         raise HTTPException(404, "Competition not found")
@@ -2366,6 +2382,11 @@ async def mark_prize_delivered(cid: str, uid: str, user=Depends(get_current_user
 @api_router.delete("/merchant/competitions/{cid}")
 async def merchant_delete_competition(cid: str, user=Depends(get_current_user)):
     require_merchant(user)
+    comp = await db.competitions.find_one({"_id": ObjectId(cid)}) if ObjectId.is_valid(cid) else None
+    if not comp:
+        raise HTTPException(404, "Competition not found")
+    await competition_rules.guard_delete(db, comp)
+    await db.draw_sessions.delete_many({"competition_id": cid}) if comp.get("is_test") else None
     await db.competitions.delete_one({"_id": ObjectId(cid)})
     await db.competition_entries.delete_many({"competition_id": cid})
     return {"message": "Deleted"}
@@ -2424,6 +2445,7 @@ async def submit_answer(cid: str, request: Request, user=Depends(get_current_use
             answer = opts[i].strip().lower()
     if comp.get("competition_type") != "qa":
         raise HTTPException(status_code=400, detail="Not a Q&A competition")
+    competition_rules.require_entry_open(comp, user)
     correct = (comp.get("correct_answer") or "").strip().lower()
     # One attempt per customer (prevents trying every option until one passes)
     if await db.competition_answers.find_one({"competition_id": cid, "user_id": user["id"]}):
@@ -2444,18 +2466,6 @@ async def submit_answer(cid: str, request: Request, user=Depends(get_current_use
 
 # NOTE: /competitions/{id}/join is defined once at the top of this file (~L266).
 
-@api_router.post("/competitions/{cid}/draw-video")
-async def save_draw_video(cid: str, request: Request, user=Depends(get_current_user)):
-    if user.get("role") not in ["chamber", "merchant"]:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    body = await request.json()
-    video_url = body.get("video_url", "")
-    if not video_url:
-        raise HTTPException(status_code=400, detail="video_url required")
-    await db.competitions.update_one({"_id": ObjectId(cid)}, {"$set": {"draw_video_url": video_url}})
-    return {"message": "Video saved"}
-
-
 # ═══════════════════════════════════════════════════════════════════════════
 # ─── UGC Video Competition endpoints ───
 # ═══════════════════════════════════════════════════════════════════════════
@@ -2473,6 +2483,7 @@ async def submit_ugc_video(cid: str, data: UGCSubmitInput, request: Request, use
     if not comp: raise HTTPException(404, "المسابقة غير موجودة")
     if comp.get("competition_type") != "ugc_video":
         raise HTTPException(400, "هذه المسابقة ليست من نوع UGC")
+    competition_rules.require_entry_open(comp, user)
     cap = int(comp.get("max_submissions_per_user") or 1)
     existing = await db.competition_videos.count_documents({
         "competition_id": cid, "user_id": user["id"]
@@ -2596,8 +2607,19 @@ async def auto_finalize_ugc(cid: str, user=Depends(get_current_user)):
     if not comp: raise HTTPException(404)
     if comp.get("competition_type") != "ugc_video":
         raise HTTPException(400, "ليست UGC")
+    if comp.get("winners_finalized_at") or comp.get("winners"):
+        raise HTTPException(409, "تم اعتماد الفائزين مسبقاً — النتيجة نهائية")
+    competition_rules.require_draw_window(comp)
+    if user.get("role") == "chamber" and comp.get("assigned_chamber_employee_id") != user["id"]:
+        raise HTTPException(403, "هذه المسابقة غير مسندة لك")
+    claim = await db.competitions.update_one({"_id": comp["_id"], "ugc_finalizing": {"$ne": True}, "winners_finalized_at": {"$exists": False}},
+                                             {"$set": {"ugc_finalizing": True}})
+    if not claim.modified_count:
+        raise HTTPException(409, "تم اعتماد الفائزين مسبقاً — النتيجة نهائية")
     prize_count = int(comp.get("prize_count") or 1)
-    top = await db.competition_videos.find({"competition_id": cid}).sort("likes", -1).limit(prize_count).to_list(prize_count)
+    staff = {str(u["_id"]) async for u in db.users.find({"role": {"$in": list(competition_rules.STAFF_ROLES)}}, {"_id": 1})}
+    top = [v for v in await db.competition_videos.find({"competition_id": cid}).sort("likes", -1).limit(prize_count + 50).to_list(prize_count + 50)
+           if v.get("user_id") not in staff][:prize_count]
     winners = [{
         "user_id": v.get("user_id"),
         "user_name": v.get("user_name"),

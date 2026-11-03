@@ -1,0 +1,56 @@
+{
+  "summary": "Tested the hardened chamber draw system (backend and web UI). The draw lifecycle works: prepare (snapshot excludes staff, merchant and chamber; cancelled-order tickets excluded), start with a 6-digit code mixed with a drand round, pick before start returns 400, one prize per person, finish, and verify (all 5 checks true; the audit chain detects tampering). Also working: draw window (end_date/draw_date), ugc_video blocked from drawing, redraw rules (too early 400, merchant 403 on supervised comps, chamber OK, max 2 redraws, pool = frozen snapshot), join/answer blocked after end, when closed and for staff, locked fields return 409 after the first entry, delete guard, UGC finalize is one-shot. 15k performance: prepare 0.40-0.47s, pick 0.16s, verify 0.38s (1.41MB payload). CRITICAL: purchase tickets_mode=per_order is broken because of a UNIQUE (competition_id,user_id) index on competition_entries, and the resulting exception also stops tickets being awarded for every other purchase competition processed after it in the same order. Other bugs: a competition published without end_date can never be drawn (deadlock); invalid date formats are accepted; UGC video submission is accepted after end_date. Frontend: draw studio (code input, start disabled until 6 digits, draw stage, pull-1, pull-many), the merchant form tickets-one/per-order/max fields and the DrawProof modal (5 green checks) all work. No deprecated Expo packages detected. No SafeAreaView issues detected.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/orders → competition_rules.award_purchase_tickets", "issue": "perf.py:90 creates a UNIQUE index on competition_entries(competition_id,user_id). In per_order mode the 2nd ticket insert raises E11000 (logged as 'purchase tickets failed'), so customers never get more than 1 ticket. Because the exception aborts the whole loop, every purchase competition processed after a per_order comp (e.g. accumulated or one-ticket comps) also stops getting tickets. Reproduced: TestPurchaseTickets and TestAccumulated (accumulated passes alone and fails when a per_order comp is open).", "priority": "CRITICAL"},
+      {"endpoint": "PUT /api/merchant/competitions/{id} + POST /api/draws/{cid}/sessions", "issue": "Deadlock: the form allows publishing without end_date (only UGC requires it). After the first entry, end_date is locked (PUT 409 'مقفلة... end_date') and prepare needs end_date (400 'حدد تاريخ نهاية المسابقة'), so the competition can never be drawn. guard_update only allows None→value, not ''→value.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/merchant/competitions", "issue": "No validation of the date format or ordering: end_date '30/08/2026' is accepted. _ts() returns None, so entries never close and a draw is impossible. draw_date < end_date is not checked either."},
+      {"endpoint": "POST /api/competitions/{cid}/videos", "issue": "UGC video submission is accepted (200) after end_date, on closed comps and from staff roles. require_entry_open is not applied (server.py:2487)."},
+      {"endpoint": "POST /api/competitions/{cid}/auto-finalize", "issue": "Not atomic: there is no conditional update, so two parallel calls both pass the one-shot guard. It sets 'finalized_at' rather than winners_finalized_at. Zero videos gives winners=[] and the endpoint can be re-run. Staff videos are not excluded, and any chamber user can call it (no assignment check)."},
+      {"endpoint": "POST /api/draws/sessions/{sid}/start", "issue": "If drand is unreachable, start proceeds with beacon=None and verify still returns verified=true (public_beacon=false). The UI then shows '#undefined —'. Consider refusing to start or flagging this clearly."},
+      {"endpoint": "POST /api/draws/sessions/{sid}/start (resume)", "issue": "If a started session is resumed, the UI shows the intro and asks for a code again. A new code is accepted silently (200) but ignored, so the code typed on camera differs from the one actually recorded."},
+      {"endpoint": "POST /api/competitions/{cid}/draw-video (legacy)", "issue": "Merchant or any chamber user can overwrite draw_video_url at any time, which allows swapping the official draw evidence video. Remove or restrict this endpoint."},
+      {"endpoint": "GET /api/draws/sessions/{sid}/verify", "issue": "Returns all 15k participants (1.41MB) on every DrawProof 'verify' tap. Paginate or lazy-load the participant list."},
+      {"endpoint": "competition_rules.award_purchase_tickets", "issue": "accumulated + per_order: once the threshold is reached, every later order of any amount earns a ticket. tickets_mode=one: if the only ticket's order is cancelled, the customer loses the chance even if they have other qualifying orders. In a redraw, per_order tickets are deduped to 1 per person, so ticket weights differ from the initial draw."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Join general/signup competition", "issue": "No frontend code calls POST /api/competitions/{id}/join (grep found only group-buys), so customers apparently cannot join general/signup comps from the app.", "affected_testIDs": []},
+      {"flow": "Competition status badge", "issue": "isOpen = status==='open' (competition/[id].tsx:74, (tabs)/competitions.tsx:59). The backend never changes status after end_date, so expired comps (e.g. 'Spend & Win: Eid' end 2025-05-10) still show 'Open' while the backend rejects entries with 400. Expose an entry_open flag from the API.", "affected_testIDs": []}
+    ],
+    "design_issues": [
+      {"screen": "merchant/competition-form", "issues": ["Draw date/End date placeholders '2026-09-01'/'2026-08-30' have no placeholderTextColor and look like real values (both are already in the past). Use a date picker or a muted placeholder.", "tickets-max is not clamped client-side; the backend rejects values >100 with 422."]},
+      {"screen": "draw-studio (web)", "issues": ["Draw stage header leaves about 130px empty on the left, reserved for the camera PiP that is never rendered on web.", "Arabic names render with letters disconnected in the headless browser (possibly a font/shaping issue in this environment only). Verify on a device."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_draw_hardening_iter59.py", "/app/backend/tests/seed_finished_draw_iter59.py", "/app/test_reports/pytest/pytest_iter59.xml"],
+  "action_items": [
+    "CRITICAL: In perf.py:90, make the competition_entries (competition_id,user_id) index non-unique (or unique on competition_id+user_id+order_id), and drop the existing unique index in the DB (db.competition_entries.dropIndex('competition_id_1_user_id_1')). Also wrap each competition in award_purchase_tickets in its own try/except so one failure cannot block the other competitions.",
+    "Fix the end_date deadlock: require end_date for all draw-based types when creating/updating, and/or let guard_update treat ''→value as allowed when the old value is empty.",
+    "Validate the ISO date format and that draw_date >= end_date > start_date in CompetitionInput. Add a date picker or muted placeholders in the form.",
+    "Apply competition_rules.require_entry_open to POST /competitions/{cid}/videos.",
+    "Make UGC auto-finalize atomic (conditional update on winners_finalized_at), exclude staff videos, and check the chamber officer's assignment.",
+    "Remove or lock down the legacy POST /competitions/{cid}/draw-video.",
+    "Draw studio: when resuming an already-started session, skip the code entry (or show that the code was already recorded) instead of silently ignoring a new code.",
+    "Decide on behaviour when drand is down: block the start, or show a clear 'no public beacon' state (the UI currently shows '#undefined').",
+    "Expose entry_open (end_date-aware) from the competitions API and use it for the Open badge. Wire up the join button for general/signup comps."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 6891 lines and needs splitting into modules.",
+    "award_purchase_tickets catches nothing per competition; the single try/except in create_order hides the failures.",
+    "Join entries store 'joined_at' but no 'created_at', while prepare sorts by created_at then _id. This works because _id is a tiebreaker, but the field naming is inconsistent.",
+    "PUT /merchant/competitions overwrites assigned_chamber_employee_id/permit_number even after entries exist (chamber_supervised is locked, but the officer can be swapped)."
+  ],
+  "updated_files": ["/app/frontend/app/merchant/competition-form.tsx (added testIDs comp-type-{id}, comp-chamber-switch)"],
+  "success_rate": {"backend": "62% (10/16 tests; the 6 failures are real bugs)", "frontend": "100% of requested flows (studio intro/start/pull, form tickets fields, DrawProof 5 checks)"},
+  "seed_data_creation": "All TEST_ITER59 comps were deleted. The 15k test comp 6ae9a4a5b4ef244d1d1c4c5e was restored to its pristine state after the UI test (draw_session deleted, open_draw_session unset, status open, 15000 entries intact). The 15k perf test seeds and deletes its own copy.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run: cd /app/backend && python3 -m pytest tests/test_draw_hardening_iter59.py -v. Tests seed comps directly in Mongo and clean up. The per_order and accumulated failures come from the unique index. Running the UI studio test on 6ae9a4a5... starts a session; reset it afterwards with mongosh (delete draw_sessions for that cid, $unset open_draw_session, status open). The server clock is around 2026-11-03.",
+  "rca_of_issue": "per_order: perf.py ensure_indexes → unique(competition_id,user_id) → insert_one of the 2nd ticket raises DuplicateKeyError → the exception propagates out of the async for loop in award_purchase_tickets → logged in create_order as 'purchase tickets failed' → the remaining comps are skipped. Repro: create purchase comp tickets_mode=per_order max=2 → customer places 3 orders → only 1 entry. Deadlock: competition_rules.guard_update condition `new in (None,'',[],0) and comp.get(f) is None` only allows None→value; the stored value is '' so ''→date counts as a change → 409."
+}

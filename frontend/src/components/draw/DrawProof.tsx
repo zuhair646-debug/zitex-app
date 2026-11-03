@@ -64,11 +64,14 @@ export default function DrawProof({ competitionId }: { competitionId: string }) 
               <Text style={[s.title, { color: verify?.verified ? colors.success : colors.error }]}>{T(verify?.verified ? 'السحب سليم ومطابق' : 'تعذر التحقق')}</Text>
             </View>
             <ScrollView style={{ maxHeight: 460 }} contentContainerStyle={{ gap: 8 }}>
-              {[['participants_hash', 'قائمة المشاركين لم تتغير بعد التثبيت'], ['seed_hash', 'المفتاح المكشوف يطابق البصمة المعروضة قبل السحب'], ['winners_replay', 'إعادة الحساب أعطت نفس الفائزين']].map(([k, l]) => (
+              {[['participants_hash', 'قائمة المشاركين لم تتغير بعد التثبيت'], ['seed_hash', 'المفتاح المكشوف يطابق البصمة المعروضة قبل السحب'], ['public_beacon', 'عشوائية عامة مستقلة (drand) ظهرت بعد التثبيت'], ['winners_replay', 'إعادة الحساب أعطت نفس الفائزين'], ['audit_chain', 'سجل الخطوات مختوم ولم يُعدّل']].map(([k, l]) => (
                 <View key={k} style={s.row}><Ionicons name={verify?.checks?.[k] ? 'checkmark-circle' : 'close-circle'} size={18} color={verify?.checks?.[k] ? colors.success : colors.error} /><Text style={s.check}>{T(l)}</Text></View>
               ))}
               <Text style={s.label}>{T('بصمة السحب (قبل البدء)')}</Text><Text selectable style={s.mono}>{verify?.seed_hash}</Text>
               <Text style={s.label}>{T('مفتاح السحب (بعد الانتهاء)')}</Text><Text selectable style={s.mono}>{verify?.seed}</Text>
+              <Text style={s.label}>{T('رمز موظف الغرفة')}</Text><Text selectable style={s.mono}>{verify?.officer_code}</Text>
+              <Text style={s.label}>{T('العشوائية العامة')} (drand)</Text><Text selectable style={s.mono}>{verify?.beacon ? `#${verify.beacon.round} — ${verify.beacon.randomness}` : '—'}</Text>
+              <Text style={s.label}>{T('المفتاح النهائي')}</Text><Text selectable style={s.mono}>{verify?.final_seed}</Text>
               <Text style={s.label}>{T('بصمة قائمة المشاركين')}</Text><Text selectable style={s.mono}>{verify?.participants_hash}</Text>
               <Text style={s.label}>{T('الفائزون')}</Text>
               {(verify?.picks || []).map((p: any) => <Text key={p.k} style={s.check}>{p.k}. {p.name} • {'\u2066' + p.phone + '\u2069'} • {T('مشارك رقم')} {p.n}</Text>)}
