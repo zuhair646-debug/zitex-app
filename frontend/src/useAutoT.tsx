@@ -70,13 +70,23 @@ async function translate(source: string, targetLang: Lang): Promise<string> {
   const inflightKey = `${targetLang}::${source}`;
   const pending = inflight.get(inflightKey);
   if (pending) return pending;
-  const p = doFetch(source, targetLang);
+  const p = withSlot(() => doFetch(source, targetLang));
   inflight.set(inflightKey, p);
   try {
     return await p;
   } finally {
     inflight.delete(inflightKey);
   }
+}
+
+// At most 2 translation calls in flight, so app requests (login, draw…) never queue behind them
+const MAX_TRANSLATE = 2;
+let activeTranslate = 0;
+const translateQueue: (() => void)[] = [];
+async function withSlot<T>(fn: () => Promise<T>): Promise<T> {
+  if (activeTranslate >= MAX_TRANSLATE) await new Promise<void>(r => translateQueue.push(r));
+  activeTranslate++;
+  try { return await fn(); } finally { activeTranslate--; translateQueue.shift()?.(); }
 }
 
 async function doFetch(source: string, targetLang: Lang): Promise<string> {

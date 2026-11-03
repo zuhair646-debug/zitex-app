@@ -71,8 +71,12 @@ export default function CompetitionDetailScreen() {
   if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
   if (!comp) return <View style={s.loadWrap}><Text>{tSync('غير موجود', curLang())}</Text></View>;
 
-  const isOpen = comp.status === 'open';
-  const isEnded = comp.status === 'ended';
+  // entry_open comes from the server (status + start/end dates + running draw)
+  const isOpen = comp.entry_open ?? comp.status === 'open';
+  const notStarted = comp.phase ? comp.phase === 'soon' : !isOpen && !!comp.start_date && new Date(comp.start_date) > new Date();
+  const isEnded = !isOpen && !notStarted;
+  const day = (v?: string) => (v ? String(v).slice(0, 10) : '');
+  const isStaff = ['merchant', 'chamber'].includes(user?.role || '');
 
   return (
     <SafeAreaView style={s.safe}>
@@ -99,8 +103,11 @@ export default function CompetitionDetailScreen() {
           <TranslatableName text={comp.description} style={s.compDesc} inline={false} />
 
           <View style={s.infoGrid}>
-            <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('تاريخ البداية', curLang())}</Text><Text style={s.infoVal}>{comp.start_date}</Text></View>
-            <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('تاريخ السحب', curLang())}</Text><Text style={s.infoVal}>{comp.draw_date}</Text></View>
+            <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('تاريخ البداية', curLang())}</Text><Text style={s.infoVal}>{day(comp.start_date || comp.created_at) || '—'}</Text></View>
+            <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('آخر يوم للمشاركة', curLang())}</Text><Text style={s.infoVal}>{day(comp.end_date) || '—'}</Text></View>
+            {comp.competition_type !== 'ugc_video' && (
+              <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('تاريخ السحب', curLang())}</Text><Text style={s.infoVal}>{day(comp.draw_opens_at || comp.draw_date) || '—'}</Text></View>
+            )}
             <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('مسموح بالانضمام', curLang())}</Text><Text style={s.infoVal}>{tf('{0} مشارك', curLang(), [comp.max_participants])}</Text></View>
             <View style={s.infoItem}><Text style={s.infoLabel}>{tSync('انضممت مسبقاً', curLang())}</Text><Text style={s.infoVal}>{comp.joined_count}</Text></View>
           </View>
@@ -168,12 +175,19 @@ export default function CompetitionDetailScreen() {
             </TouchableOpacity>
           )}
 
-          {isOpen && ['merchant', 'chamber'].includes(user?.role || '') && (
+          {isStaff && comp.competition_type !== 'ugc_video' && (comp.draw_ready || comp.winners_finalized_at) && (
             <TouchableOpacity testID="draw-btn" style={s.drawBtn} onPress={performDraw} disabled={drawing}>
               {drawing ? <ActivityIndicator color="#FFF" /> : (
-                <><Ionicons name="dice" size={22} color="#FFF" /><Text style={s.drawBtnText}>{tSync('ابدأ السحب', curLang())}</Text></>
+                <><Ionicons name="dice" size={22} color="#FFF" /><Text style={s.drawBtnText}>{tSync(comp.winners_finalized_at ? 'استوديو السحب والفائزون' : 'ابدأ السحب', curLang())}</Text></>
               )}
             </TouchableOpacity>
+          )}
+          {isStaff && !comp.draw_ready && !comp.winners_finalized_at && comp.competition_type !== 'ugc_video' && (
+            <Text testID="draw-locked-note" style={s.drawLockedNote}>
+              {isOpen
+                ? tf('🔒 المشاركة مفتوحة حتى نهاية {0} — السحب يفتح بعدها', curLang(), [day(comp.end_date) || '—'])
+                : tf('🔒 انتهت المشاركة — موعد السحب {0}', curLang(), [day(comp.draw_opens_at) || '—'])}
+            </Text>
           )}
         </View>
         <View style={{ height: 40 }} />
@@ -241,7 +255,7 @@ const s = StyleSheet.create({
   compDesc: { fontSize: 14, color: '#52525B', lineHeight: 22, marginBottom: 16 },
   infoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 },
   infoItem: { width: '47%', backgroundColor: '#F9F9FB', borderRadius: 12, padding: 12 },
-  infoLabel: { fontSize: 11, color: '#A1A1AA', marginBottom: 4 },
+  infoLabel: { fontSize: 11, color: '#6B7280', fontWeight: '600', marginBottom: 4 },
   infoVal: { fontSize: 14, fontWeight: '600', color: '#0A0A0A' },
   prizeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#FEF3C7', borderRadius: 16, padding: 16, marginBottom: 20 },
   prizeInfo: { flex: 1 },
@@ -270,6 +284,7 @@ const s = StyleSheet.create({
   winnerPhone: { fontSize: 12, color: '#52525B' },
   giftBtn: { backgroundColor: '#10B981', borderRadius: 10, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' },
   giftBtnText: { color: '#FFF', fontSize: 12, fontWeight: '600' },
+  drawLockedNote: { textAlign: 'center', color: '#6B7280', fontSize: 13, fontWeight: '600', paddingVertical: 12, marginBottom: 16 },
   drawBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#F5C518', borderRadius: 16, paddingVertical: 18, marginBottom: 20 },
   drawBtnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },

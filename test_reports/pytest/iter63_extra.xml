@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="7" time="5.100" timestamp="2026-11-03T12:05:45.387808+00:00" hostname="agent-env-654051a1-cdd5-441c-bb0c-7c46b07553bb"><testcase classname="tests.test_officer_change_extra_iter63" name="test_reason_required_and_short_reason" time="2.761" /><testcase classname="tests.test_officer_change_extra_iter63" name="test_remove_supervision_after_entries_409" time="0.128" /><testcase classname="tests.test_officer_change_extra_iter63" name="test_permit_only_immediate" time="0.245" /><testcase classname="tests.test_officer_change_extra_iter63" name="test_change_after_draw_pending" time="0.386" /><testcase classname="tests.test_officer_change_extra_iter63" name="test_stale_request_permit" time="0.395"><failure message="AssertionError: permit reverted to P-9 by stale pending request&#10;assert 'P-9' == 'P-10'&#10;  &#10;  - P-10&#10;  + P-9">tests/test_officer_change_extra_iter63.py:75: in test_stale_request_permit
+    assert c['permit_number'] == 'P-10', f"permit reverted to {c['permit_number']} by stale pending request"
+E   AssertionError: permit reverted to P-9 by stale pending request
+E   assert 'P-9' == 'P-10'
+E     
+E     - P-10
+E     + P-9</failure></testcase><testcase classname="tests.test_officer_change_extra_iter63" name="test_hub_shows_pending" time="0.697" /><testcase classname="tests.test_officer_change_extra_iter63" name="test_chamber_latency" time="0.316" /></testsuite></testsuites>

@@ -1,0 +1,43 @@
+{
+  "summary": "Iter61 re-test of the iter60 fixes. Backend: the new suite tests/test_competition_phase_dates_iter61.py passed 33/33, and the regression suites (iter59 hardening, chamber draws/redraw, iter60 flags) passed 50/50. FIX1 verified: legacy comps (missing tickets_mode/competition_type/purchase_mode/max_tickets) and numeric-string fields can be edited after entries (200), and the real seeded comp 6ab6206a…bc was edited and then restored. Changes to the 7 locked fields still return 409 with the field name. FIX2 verified: phase is consistent across /competitions/{id}, /chamber/competitions and /full for open, soon, waiting, ready (with and without a same-day draw_date) and drawn. GET /competitions no longer writes status. FIX3 verified: an end_date of today keeps entries open and join returns 200 on the last day. draw_opens_at is the next day at 00:00+03:00. Creating with a past end, draw before end, a bad format, an empty end or start after end returns 422; a same-day draw is allowed. FIX4: login takes about 0.32s. FIX6: UGC draw_ready is false and initial-session POST is rejected. Bcrypt uses $2b$ and lockout triggers on the 6th attempt. Frontend at 375px: chamber pills are correct in AR (بانتظار موعد السحب / المشاركة مفتوحة) and EN (Awaiting draw date / Entries open / Ready to draw / Draw opens on …), with no 'Withdraw' wording. On /competition/{id}, start date, 'آخر يوم للمشاركة' and draw date show as YYYY-MM-DD, and the locked note differs between open and closed. UGC has no draw-btn. A customer sees the join button only on the open comp. A merchant UI edit of a comp with entries returns PUT 200 and is persisted. Minor issues remain (see below).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/competitions/{id} (used by merchant edit form)", "issue": "The public endpoint pops correct_answer, and competition-form.tsx loads edit data from it. Editing a QA comp therefore loads without the answer: the client blocks with 'السؤال والإجابة الصحيحة مطلوبان', or the backend returns 422 until the merchant re-stars the answer (and picking a different one after entries returns 409)."},
+      {"endpoint": "competition_rules.phase for ugc_video", "issue": "An ended UGC comp that is not yet finalised returns phase='waiting' indefinitely, because draw_ready is always false. The chamber shows 'بانتظار موعد السحب' and a locked box reading 'السحب يفتح في <past date>' (e.g. 2026-11-02), which is misleading because UGC winners are picked by likes via auto-finalize."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "merchant/competition-form.tsx placeholders", "issue": "Only comp-end-date and comp-draw-date have placeholderTextColor. The title, description, prize, question, options, ugc_hashtag and permit_number inputs (lines 128, 130, 132, 179, 186, 225, 249) render their placeholder in the same black as typed text on web, so it looks like a real value (e.g. 'سحب العيد الكبير').", "testID": "comp-title", "priority": "low"},
+      {"component": "competition/[id].tsx draw date", "issue": "'تاريخ السحب' falls back to end_date when draw_date is empty (and shows end_date for UGC), but the draw actually opens at draw_opens_at, which is the next day. Use day(comp.draw_opens_at) and hide the row for ugc_video.", "testID": "", "priority": "low"},
+      {"component": "merchant/competition-form.tsx save on web", "issue": "Alert.alert is a no-op on react-native-web, so after a successful PUT the user gets no success feedback and no router.back() on the web preview. Native is fine.", "testID": "comp-submit-btn", "priority": "low"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/competition/{id}", "issues": ["The infoLabel text (Start date / Last day to enter …) and the 'منتهية' badge are very light grey on a light card, so contrast is low."]},
+      {"screen": "/chamber detail modal", "issues": ["The modal says 'تاريخ الانتهاء' while the competition page says 'آخر يوم للمشاركة'. Use one term so it is clear that the end date is inclusive."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_competition_phase_dates_iter61.py", "/app/backend/tests/ui_seed_iter61.py", "/app/test_reports/pytest/iter61.xml", "/app/test_reports/pytest/iter61_regression.xml"],
+  "action_items": [
+    "competition-form edit: load from a merchant-scoped endpoint that includes correct_answer (or return correct_answer for the owning merchant), so QA comps can be edited.",
+    "Add placeholderTextColor (muted, e.g. #9CA3AF) to the remaining 7 TextInputs in merchant/competition-form.tsx.",
+    "UGC: give it its own phase/label (e.g. 'بانتظار اعتماد الفائز بالإعجابات') and hide the 'السحب يفتح في' locked box in chamber.tsx for ugc_video.",
+    "competition/[id].tsx: show day(draw_opens_at) for 'تاريخ السحب' and hide the row for UGC.",
+    "Optional: raise the infoLabel contrast; use a web-friendly success toast instead of Alert.alert in the form."
+  ],
+  "critical_code_review_comments": [
+    "PUT /merchant/competitions/{cid} does not check created_by_merchant == user.id (it relies only on require_merchant). This is fine for a single store but worth guarding.",
+    "validate_dates on PUT requires end_date for non-UGC comps, so a legacy comp without an end_date can only be edited if an end_date is also added (allowed via SET_ONCE). This is acceptable but should be documented.",
+    "_end_ts treats only exactly-10-character values as date-only. A value such as '2026-11-3' fails isoformat parsing (422), which is fine."
+  ],
+  "updated_files": ["/app/frontend/app/merchant/competition-form.tsx (added testIDs comp-title, comp-description, comp-prize only)", "/app/backend/tests/test_competition_phase_dates_iter61.py (new)", "/app/backend/tests/ui_seed_iter61.py (new)"],
+  "success_rate": {"backend": "100% (83/83 incl. regression)", "frontend": "~90% (all fix flows pass; minor placeholder/UGC label issues)"},
+  "seed_data_creation": "TEST_ITER61_* comps were created and all removed (0 left). The seeded legacy comp 6ab6206a71b6ad54069c12bc was restored to its original doc. The 15k comp 6ae9a4a5b4ef244d1d1c4c5e is untouched: status open, 0 draw sessions, 15000 entries.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Server clock is 2026-11-03 ~09:50 UTC. Use the D(n) Saudi-day helper in test_competition_phase_dates_iter61.py. Run 'python3 tests/ui_seed_iter61.py' to create the waiting/ugc/open UI comps assigned to chamber 0550000000, and 'python3 tests/ui_seed_iter61.py clean' to remove them. UI language is set via localStorage app_lang ('ar'/'en'). Draw sessions endpoint: POST /api/draws/{cid}/sessions.",
+  "rca_of_issue": "Iter60 legacy-edit 409 root cause (missing field != pydantic default) is fixed by competition_rules._norm, which uses DEFAULTS and float coercion. The QA edit issue is caused by the form reading the public endpoint that strips correct_answer."
+}

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Zenrex Store",
     "slug": "zitex",
-    "version": "1.34.0",
+    "version": "1.36.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "zenrex",
@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.smartangle.zitex",
-      "buildNumber": "87",
+      "buildNumber": "88",
       "infoPlist": {
         "NSCameraUsageDescription": "Scan barcodes, take photos and film official draws",
         "NSMicrophoneUsageDescription": "Record your voice in official draw videos",
@@ -36,7 +36,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.smartangle.zitex",
-      "versionCode": 92,
+      "versionCode": 93,
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",

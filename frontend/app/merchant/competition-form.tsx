@@ -61,17 +61,17 @@ export default function CompetitionForm() {
     setData((d: any) => ({ ...d, options: d.options.map((o: string, ix: number) => ix === i ? v : o) }));
 
   const loadEmps = async () => { try { const r = await apiCall('/api/merchant/chamber-employees'); setEmployees(r); } catch {} };
-  useEffect(() => { loadEmps(); }, []);
+  useEffect(() => { loadEmps(); }, []); // eslint-disable-line react-hooks/exhaustive-deps -- load once
   // Edit mode: load the existing competition into the form
   useEffect(() => {
     if (!editId) return;
-    apiCall(`/api/competitions/${editId}`).then((c: any) => setData((d: any) => ({
+    apiCall(`/api/merchant/competitions/${editId}/edit`).then((c: any) => setData((d: any) => ({
       ...d, ...c,
       prize_count: String(c.prize_count ?? 1), spend_requirement: String(c.spend_requirement ?? 0), max_tickets_per_user: String(c.max_tickets_per_user ?? 1), tickets_mode: c.tickets_mode || 'one',
       max_participants: String(c.max_participants ?? 1000), max_submissions_per_user: String(c.max_submissions_per_user ?? 1),
       options: [...(c.options || []), '', '', '', ''].slice(0, Math.max(4, (c.options || []).length)),
     }))).catch(() => {});
-  }, [editId]);
+  }, [editId]); // eslint-disable-line react-hooks/exhaustive-deps -- apiCall is recreated each render
 
   const createEmp = async () => {
     if (!newEmp.name || !newEmp.phone || !newEmp.password) { Alert.alert(tSync('مطلوب', curLang()), tSync('الاسم والجوال وكلمة المرور مطلوبة', curLang())); return; }
@@ -125,11 +125,11 @@ export default function CompetitionForm() {
         </View>
 
         <TX style={s.label}>عنوان المسابقة *</TX>
-        <TextInput style={s.input} value={data.title} onChangeText={t => setData({ ...data, title: t })} placeholder={tSync("سحب العيد الكبير", lang)} />
+        <TextInput testID="comp-title" style={s.input} value={data.title} onChangeText={t => setData({ ...data, title: t })} placeholderTextColor="#9CA3AF" placeholder={tSync("سحب العيد الكبير", lang)} />
         <TX style={s.label}>الوصف</TX>
-        <TextInput style={[s.input, { height: 80 }]} multiline value={data.description} onChangeText={t => setData({ ...data, description: t })} placeholder={tSync("تفاصيل المسابقة...", lang)} />
+        <TextInput testID="comp-description" style={[s.input, { height: 80 }]} multiline value={data.description} onChangeText={t => setData({ ...data, description: t })} placeholderTextColor="#9CA3AF" placeholder={tSync("تفاصيل المسابقة...", lang)} />
         <TX style={s.label}>الجائزة *</TX>
-        <TextInput style={s.input} value={data.prize} onChangeText={t => setData({ ...data, prize: t })} placeholder="iPhone 16 Pro" />
+        <TextInput testID="comp-prize" style={s.input} value={data.prize} onChangeText={t => setData({ ...data, prize: t })} placeholderTextColor="#9CA3AF" placeholder="iPhone 16 Pro" />
         <TX style={s.label}>عدد الفائزين</TX>
         <TextInput style={s.input} keyboardType="numeric" value={data.prize_count} onChangeText={t => setData({ ...data, prize_count: t })} />
 
@@ -176,14 +176,14 @@ export default function CompetitionForm() {
         {data.competition_type === 'qa' && (
           <>
             <TX style={s.label}>السؤال *</TX>
-            <TextInput style={s.input} value={data.question} onChangeText={t => setData({ ...data, question: t })} placeholder={tSync("ما عاصمة المملكة العربية السعودية؟", lang)} />
+            <TextInput style={s.input} value={data.question} onChangeText={t => setData({ ...data, question: t })} placeholderTextColor="#9CA3AF" placeholder={tSync("ما عاصمة المملكة العربية السعودية؟", lang)} />
             <TX style={s.label}>الخيارات (اضغط ⭐ للإجابة الصحيحة)</TX>
             {[0, 1, 2, 3].map(i => (
               <View key={i} style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6 }}>
                 <TouchableOpacity onPress={() => { if (data.options[i]?.trim()) setData({ ...data, correct_answer: data.options[i] }); }} style={s.starBtn} testID={`comp-star-${i}`}>
                   <Ionicons name={data.correct_answer && data.correct_answer === data.options[i] && data.options[i] ? 'star' : 'star-outline'} size={22} color="#F5C518" />
                 </TouchableOpacity>
-                <TextInput style={[s.input, { flex: 1, marginTop: 0 }]} value={data.options[i]} onChangeText={t => setOpt(i, t)} placeholder={tf('الخيار {0}', lang, [i + 1])} testID={`comp-option-${i}`} />
+                <TextInput style={[s.input, { flex: 1, marginTop: 0 }]} value={data.options[i]} onChangeText={t => setOpt(i, t)} placeholderTextColor="#9CA3AF" placeholder={tf('الخيار {0}', lang, [i + 1])} testID={`comp-option-${i}`} />
               </View>
             ))}
             <TX style={s.hint}>💡 اكتب الخيارات ثم اضغط ⭐ بجانب الإجابة الصحيحة</TX>
@@ -222,17 +222,17 @@ export default function CompetitionForm() {
         {data.competition_type === 'ugc_video' && (
           <>
             <TX style={s.label}>هاشتاق المسابقة (اختياري)</TX>
-            <TextInput style={s.input} value={data.ugc_hashtag} onChangeText={t => setData({ ...data, ugc_hashtag: t })} placeholder={tSync("زايتكس_challenge", lang)} autoCapitalize="none" />
+            <TextInput style={s.input} value={data.ugc_hashtag} onChangeText={t => setData({ ...data, ugc_hashtag: t })} placeholderTextColor="#9CA3AF" placeholder={tSync("زايتكس_challenge", lang)} autoCapitalize="none" />
             <TX style={s.label}>الحد الأقصى للفيديوهات لكل مستخدم</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.max_submissions_per_user} onChangeText={t => setData({ ...data, max_submissions_per_user: t })} />
             <TX style={s.hint}>💡 الأكثر لايكات يفوز — الترتيب يتحدث تلقائياً. عند انتهاء الوقت، يُختار الفائزون تلقائياً.</TX>
           </>
         )}
 
-        <TX style={s.label}>تاريخ السحب</TX>
-        <TextInput style={s.input} value={data.draw_date} onChangeText={t => setData({ ...data, draw_date: t })} placeholder="YYYY-MM-DD" />
-        <TX style={s.label}>تاريخ الانتهاء</TX>
-        <TextInput style={s.input} value={data.end_date} onChangeText={t => setData({ ...data, end_date: t })} placeholder="YYYY-MM-DD" />
+        <TX style={s.label}>تاريخ الانتهاء (آخر يوم للمشاركة)</TX>
+        <TextInput testID="comp-end-date" style={s.input} value={data.end_date} onChangeText={t => setData({ ...data, end_date: t.trim() })} placeholder="YYYY-MM-DD" placeholderTextColor="#9CA3AF" autoCapitalize="none" />
+        <TX style={s.label}>تاريخ السحب (بعد الانتهاء أو نفس اليوم)</TX>
+        <TextInput testID="comp-draw-date" style={s.input} value={data.draw_date} onChangeText={t => setData({ ...data, draw_date: t.trim() })} placeholder="YYYY-MM-DD" placeholderTextColor="#9CA3AF" autoCapitalize="none" />
 
         <View style={s.divider} />
         <TX style={s.sectionTitle}>إشراف الغرفة التجارية</TX>
@@ -246,7 +246,7 @@ export default function CompetitionForm() {
         {data.chamber_supervised && (
           <>
             <TX style={s.label}>رقم التصريح *</TX>
-            <TextInput style={s.input} value={data.permit_number} onChangeText={t => setData({ ...data, permit_number: t })} placeholder="CR-2026-1234" />
+            <TextInput style={s.input} value={data.permit_number} onChangeText={t => setData({ ...data, permit_number: t })} placeholderTextColor="#9CA3AF" placeholder="CR-2026-1234" />
             <TX style={s.hint}>سيُعرض للعملاء كإثبات للشرعية</TX>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
               <TX style={s.label}>موظف الغرفة المُكلَّف *</TX>

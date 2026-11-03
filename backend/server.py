@@ -157,7 +157,7 @@ async def login(data: LoginInput):
     if rec and rec[0] >= 5 and _t.time() - rec[1] < 900:
         raise HTTPException(status_code=429, detail="محاولات كثيرة، حاول بعد 15 دقيقة")
     user = await db.users.find_one({"phone": phone})
-    if not user or not verify_password(password, user["password_hash"]):
+    if not user or not await asyncio.to_thread(verify_password, password, user["password_hash"]):
         if not rec or _t.time() - rec[1] >= 900:
             rec = [0, _t.time()]
         rec[0] += 1
@@ -290,10 +290,10 @@ async def update_cart_item(item_id: str, quantity: int, user=Depends(get_current
 @api_router.get("/competitions")
 async def get_competitions():
     # Show all open competitions (approval workflow removed - merchant decides directly)
-    await db.competitions.update_many({"status": "open", "end_date": {"$nin": ["", None], "$lt": datetime.now(timezone.utc).isoformat()}},
-                                      {"$set": {"status": "ended"}})
-    comps = await db.competitions.find({"status": "open"}).sort("created_at", -1).to_list(50)
-    return [serialize_doc(c) for c in comps]
+    # Open competitions whose last participation day has not passed (read-only; no status rewrite on GET)
+    comps = await db.competitions.find({"status": "open"}).sort("created_at", -1).to_list(80)
+    comps = [c for c in comps if not (competition_rules._end_ts(c.get("end_date")) and competition_rules.now() >= competition_rules._end_ts(c.get("end_date")))][:50]
+    return [{**serialize_doc(c), **competition_rules.public_flags(c)} for c in comps]
 
 @api_router.get("/competitions/live-summary")
 async def competitions_live_summary():
@@ -304,8 +304,8 @@ async def competitions_live_summary():
     summary = []
     for c in all_comps:
         c = serialize_doc(c)
-        starts_at = c.get("starts_at") or c.get("created_at", "")
-        ends_at = c.get("ends_at") or c.get("draw_at", "")
+        starts_at = c.get("starts_at") or c.get("start_date") or c.get("created_at", "")
+        ends_at = c.get("ends_at") or c.get("end_date") or c.get("draw_at", "")
         remaining_ms = None
         if ends_at:
             try:
@@ -344,6 +344,7 @@ async def get_competition(comp_id: str):
     if out.get("competition_type") == "qa" and out.get("question") and not out.get("questions"):
         out["questions"] = [{"q": out["question"], "options": [o for o in (out.get("options") or []) if o]}]
     out.pop("correct_answer", None)  # never reveal the answer publicly
+    out.update(competition_rules.public_flags(comp))
     for w in out.get("winners") or []:
         p = str(w.get("user_phone") or "")
         w["user_phone"] = (p[:3] + "****" + p[-2:]) if len(p) > 5 else ""
@@ -394,12 +395,14 @@ async def get_participants(comp_id: str, request: Request):
 async def chamber_get_competitions(user=Depends(get_current_user)):
     if user.get("role") != "chamber":
         raise HTTPException(status_code=403, detail="Chamber access only")
-    comps = await db.competitions.find({"assigned_chamber_employee_id": user["id"]}).sort("created_at", -1).to_list(50)
+    comps = await db.competitions.find({"assigned_chamber_employee_id": user["id"]}).sort("created_at", -1).to_list(300)
     result = []
     for c in comps:
         c["id"] = str(c.pop("_id"))
         entries_count = await db.competition_entries.count_documents({"competition_id": c["id"]})
         c["total_participants"] = entries_count
+        c.update(competition_rules.public_flags(c))
+        c["draws"] = await db.draw_sessions.count_documents({"competition_id": c["id"], "status": "finished"})
         result.append(c)
     return result
 
@@ -411,7 +414,11 @@ async def chamber_competition_full(comp_id: str, user=Depends(get_current_user))
     if not comp or comp.get("assigned_chamber_employee_id") != user["id"]:
         raise HTTPException(status_code=404, detail="Competition not found")
     comp["id"] = str(comp.pop("_id"))
-    entries = await db.competition_entries.find({"competition_id": comp_id}).to_list(1000)
+    comp.update(competition_rules.public_flags(comp))
+    comp["draws"] = await db.draw_sessions.count_documents({"competition_id": comp_id, "status": "finished"})
+    comp["participants_count"] = await db.competition_entries.count_documents({"competition_id": comp_id})
+    # Latest 200 only — the full frozen list is in the draw proof (thousands of rows would freeze the phone)
+    entries = await db.competition_entries.find({"competition_id": comp_id}).sort("_id", -1).to_list(200)
     comp["participants"] = [serialize_doc(e) for e in entries]
     return comp
 
@@ -2301,7 +2308,7 @@ async def merchant_create_competition(data: CompetitionInput, user=Depends(get_c
             raise HTTPException(status_code=422, detail="حدّد الإجابة الصحيحة")
         if data.correct_answer not in clean_opts:
             raise HTTPException(status_code=422, detail="الإجابة الصحيحة يجب أن تكون من ضمن الخيارات")
-    competition_rules.validate_dates(data.model_dump())
+    competition_rules.validate_dates(data.model_dump(), creating=True)
     doc = data.model_dump()
     doc.update({
         "status": "open",
@@ -2396,6 +2403,15 @@ async def merchant_list_competitions(user=Depends(get_current_user)):
     require_merchant(user)
     comps = await db.competitions.find({}).sort("created_at", -1).to_list(100)
     return [serialize_doc(c) for c in comps]
+
+@api_router.get("/merchant/competitions/{comp_id}/edit")
+async def merchant_get_competition_for_edit(comp_id: str, user=Depends(get_current_user)):
+    """Full record for the edit form (includes correct_answer, hidden on the public endpoint)."""
+    require_merchant(user)
+    comp = await db.competitions.find_one({"_id": ObjectId(comp_id)}) if ObjectId.is_valid(comp_id) else None
+    if not comp:
+        raise HTTPException(404, "Competition not found")
+    return {**serialize_doc(comp), **competition_rules.public_flags(comp)}
 
 # ─── Merchant: Chamber employees list (for assigning supervisor) ───
 @api_router.get("/merchant/chamber-employees")
@@ -2629,7 +2645,7 @@ async def auto_finalize_ugc(cid: str, user=Depends(get_current_user)):
     } for i, v in enumerate(top)]
     await db.competitions.update_one(
         {"_id": ObjectId(cid)},
-        {"$set": {"winners": winners, "status": "ended",
+        {"$set": {"winners": winners, "status": "ended", "winners_finalized_at": datetime.now(timezone.utc).isoformat(),
                   "finalized_at": datetime.now(timezone.utc).isoformat()}}
     )
     return {"winners": winners}

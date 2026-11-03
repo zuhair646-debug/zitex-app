@@ -127,9 +127,12 @@ class TestAssign:
         assert r.status_code == 200
         st = requests.get(f"{API}/draws/{ctx['b']}/studio", headers=ctx['CH'])
         assert st.status_code == 200 and st.json()['competition']['permit_number'] == 'CC-TEST-B'
+        # Comp b has entries → removing supervision needs a reason and is refused (replace only)
         r = requests.post(f"{API}/draws/{ctx['b']}/assign", headers=ctx['M'], json={'officer_id': ''})
-        assert r.status_code == 200
-        assert requests.get(f"{API}/draws/{ctx['b']}/studio", headers=ctx['CH']).status_code == 403
+        assert r.status_code == 422
+        r = requests.post(f"{API}/draws/{ctx['b']}/assign", headers=ctx['M'], json={'officer_id': '', 'reason': 'remove supervision'})
+        assert r.status_code == 409
+        assert requests.get(f"{API}/draws/{ctx['b']}/studio", headers=ctx['CH']).status_code == 200
 
 
 # ── 30-day documented redraw ──

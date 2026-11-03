@@ -22,21 +22,30 @@ export default function ChamberHub() {
   const [assign, setAssign] = useState<any>(null);
   const [permit, setPermit] = useState('');
   const [officer, setOfficer] = useState('');
+  const [reason, setReason] = useState('');
   const [newOff, setNewOff] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
   const T = (x: string) => tSync(x, lang);
 
   const load = useCallback(async () => {
     try { setData(await apiCall('/api/draws/hub')); } catch (e: any) { notify(T('خطأ'), e.message); }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- apiCall/T are recreated each render
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const openAssign = (c: any) => { setAssign(c); setPermit(c.permit_number || ''); setOfficer(c.officer_id || ''); };
+  const openAssign = (c: any) => { setAssign(c); setPermit(c.permit_number || ''); setOfficer(c.officer_id || ''); setReason(''); };
+  // After entries (with an officer already set) every change needs a reason; a new officer must accept first
+  const controlled = !!assign && assign.has_entries && !!assign.officer_id;
+  const officerChanged = !!assign && officer !== (assign.officer_id || '');
   const saveAssign = async () => {
     try {
-      await apiCall(`/api/draws/${assign.id}/assign`, { method: 'POST', body: JSON.stringify({ officer_id: officer, permit_number: permit }) });
+      const r = await apiCall(`/api/draws/${assign.id}/assign`, { method: 'POST', body: JSON.stringify({ officer_id: officer, permit_number: permit, reason }) });
       setAssign(null); load();
+      if (r.pending) notify(T('تم إرسال الطلب'), T('سينتقل الإشراف بعد موافقة موظف الغرفة الجديد، وتم إشعار الموظف الحالي'));
+      else if (r.changed) notify(T('تم الحفظ'), controlled ? T('تم التعديل وحُفظ في سجل المسابقة') : '');
     } catch (e: any) { notify(T('خطأ'), e.message); }
+  };
+  const cancelRequest = async (c: any) => {
+    try { await apiCall(`/api/draws/${c.id}/officer-request/cancel`, { method: 'POST' }); load(); } catch (e: any) { notify(T('خطأ'), e.message); }
   };
   const createOfficer = async () => {
     try {
@@ -56,7 +65,7 @@ export default function ChamberHub() {
         <Text style={s.headerTitle}>{T('الغرفة التجارية والسحوبات')}</Text>
         <View style={s.iconBtn} />
       </View>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }} refreshControl={<RefreshControl refreshing={refreshing} tintColor={colors.brand} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} />}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 140 }} refreshControl={<RefreshControl refreshing={refreshing} tintColor={colors.brand} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} />}>
         <View style={s.stats}>
           {[[data.competitions.length, 'مسابقة'], [supervised, 'تحت إشراف الغرفة'], [data.officers.length, 'موظف غرفة']].map(([n, l]) => (
             <View key={String(l)} style={s.stat}><Text style={s.statNum}>{n}</Text><Text style={s.statLbl}>{T(String(l))}</Text></View>
@@ -77,6 +86,14 @@ export default function ChamberHub() {
               <Text style={s.meta}>{c.chamber_supervised ? `${T('تصريح')}: ${c.permit_number || '—'} • ${T('المشرف')}: ${c.officer_name || '—'}` : T('بدون إشراف الغرفة')}</Text>
             </View>
             {c.winners.length ? <Text style={s.meta}>{T('الفائزون')}: {c.winners.map((w: any) => w.user_name).join('، ')}</Text> : null}
+            {c.officer_request ? (
+              <View style={s.pending} testID={`hub-pending-${c.id}`}>
+                <Ionicons name="time" size={16} color={colors.warning} />
+                <Text style={[s.meta, { flex: 1 }]}>{tf('بانتظار موافقة {0} على الإشراف • {1}', lang, [c.officer_request.to_officer, c.officer_request.reason])}</Text>
+                <TouchableOpacity testID={`hub-pending-cancel-${c.id}`} onPress={() => cancelRequest(c)} style={s.pendingBtn}><Text style={s.pendingBtnTxt}>{T('إلغاء الطلب')}</Text></TouchableOpacity>
+              </View>
+            ) : null}
+            {c.officer_log?.length ? <Text style={s.meta}>{tf('سجل الإشراف: {0} تعديل • آخرها {1}', lang, [c.officer_log.length, String(c.officer_log[c.officer_log.length - 1].at || '').slice(0, 10)])}</Text> : null}
             <View style={s.row}>
               <TouchableOpacity testID={`hub-assign-${c.id}`} style={s.btnAlt} onPress={() => openAssign(c)}><Ionicons name="person-add" size={16} color={colors.brand} /><Text style={s.btnAltTxt}>{T('الإشراف والتصريح')}</Text></TouchableOpacity>
               <TouchableOpacity testID={`hub-studio-${c.id}`} style={s.btn} onPress={() => router.push({ pathname: '/draw-studio', params: { id: c.id } } as any)}>
@@ -103,20 +120,33 @@ export default function ChamberHub() {
       <Modal transparent animationType="slide" visible={!!assign} onRequestClose={() => setAssign(null)}>
         <KeyboardAvoidingView style={s.modalBg} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><View style={s.modalCard}>
           <Text style={s.title}>{T('الإشراف والتصريح')}</Text>
+          {controlled ? (
+            <View style={s.pending}>
+              <Ionicons name="information-circle" size={16} color={colors.info} />
+              <Text style={[s.meta, { flex: 1 }]}>{T('المسابقة فيها مشاركون: اذكر سبب التعديل. تصحيح رقم التصريح يُطبَّق فوراً، وتغيير الموظف ينتقل بعد موافقة الموظف الجديد. كل تعديل يُحفظ في سجل المسابقة، والسحوبات السابقة تحتفظ بالمشرف الذي حضرها.')}</Text>
+            </View>
+          ) : null}
+          {assign?.open_draw_session ? <Text style={[s.meta, { color: colors.error }]}>{T('يوجد سحب جارٍ الآن — التعديل متاح بعد انتهائه')}</Text> : null}
           <Text style={s.meta}>{T('رقم تصريح الغرفة التجارية')}</Text>
           <TextInput testID="hub-permit" style={s.input} value={permit} onChangeText={setPermit} placeholder="CC-2026-0001" placeholderTextColor={colors.onSurfaceTertiary} />
           <Text style={s.meta}>{T('موظف الغرفة المسؤول — يشوف هذه المسابقة فقط')}</Text>
           <ScrollView style={{ maxHeight: 220 }}>
-            {[{ id: '', name: T('بدون مشرف') }, ...data.officers].map((o: any) => (
+            {[...(controlled ? [] : [{ id: '', name: T('بدون مشرف') }]), ...data.officers].map((o: any) => (
               <TouchableOpacity key={o.id || 'none'} testID={`hub-officer-${o.id || 'none'}`} style={[s.pick, officer === o.id && s.pickOn]} onPress={() => setOfficer(o.id)}>
                 <Text style={s.pickTxt}>{o.name}{o.phone ? `  •  ${o.phone}` : ''}</Text>
                 {officer === o.id ? <Ionicons name="checkmark-circle" size={18} color={colors.brand} /> : null}
               </TouchableOpacity>
             ))}
           </ScrollView>
+          {controlled ? (
+            <TextInput testID="hub-assign-reason" style={[s.input, { minHeight: 70, textAlignVertical: 'top', paddingTop: 10 }]} value={reason} onChangeText={setReason} multiline
+              placeholder={T('سبب التعديل (مثال: خطأ في رقم التصريح / الموظف في إجازة)')} placeholderTextColor={colors.onSurfaceTertiary} />
+          ) : null}
           <View style={s.row}>
-            <TouchableOpacity style={s.btnAlt} onPress={() => setAssign(null)}><Text style={s.btnAltTxt}>{T('إلغاء')}</Text></TouchableOpacity>
-            <TouchableOpacity testID="hub-assign-save" style={s.btn} onPress={saveAssign}><Text style={s.btnTxt}>{T('حفظ')}</Text></TouchableOpacity>
+            <TouchableOpacity testID="hub-assign-cancel" style={s.btnAlt} onPress={() => setAssign(null)}><Text style={s.btnAltTxt}>{T('إلغاء')}</Text></TouchableOpacity>
+            <TouchableOpacity testID="hub-assign-save" style={[s.btn, controlled && reason.trim().length < 5 && { opacity: 0.45 }]} disabled={controlled && reason.trim().length < 5} onPress={saveAssign}>
+              <Text style={s.btnTxt}>{T(controlled && officerChanged ? 'إرسال طلب النقل' : 'حفظ')}</Text>
+            </TouchableOpacity>
           </View>
         </View></KeyboardAvoidingView>
       </Modal>
@@ -170,5 +200,8 @@ function useStyles() {
     pick: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 46, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, marginBottom: 6 },
     pickOn: { borderColor: colors.brand, backgroundColor: colors.brandTertiary },
     pickTxt: { color: colors.onSurface, fontWeight: '600' },
-  }), [themeKey]);
+    pending: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surfaceSecondary, borderRadius: 10, padding: 10 },
+    pendingBtn: { minHeight: 44, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: colors.error, justifyContent: 'center' },
+    pendingBtnTxt: { color: colors.error, fontWeight: '700', fontSize: 12 },
+  }), [themeKey]); // eslint-disable-line react-hooks/exhaustive-deps -- colors are mutable; themeKey triggers the rebuild
 }

@@ -937,7 +937,7 @@
   "{0} سحوبات": {
     "bn": "{0}টি ড্র",
     "de": "{0} Ziehungen",
-    "en": "{0} Draws",
+    "en": "{0} draws",
     "es": "{0} sorteos",
     "fa": "{0} قرعه‌کشی",
     "fr": "{0} tirages",
@@ -11190,7 +11190,7 @@
   "السحب": {
     "bn": "উত্তোলন",
     "de": "Abhebung",
-    "en": "Withdrawal",
+    "en": "Draw",
     "es": "Retiro",
     "fa": "برداشت",
     "fr": "Retrait",
@@ -12345,7 +12345,7 @@
   "الغرفة التجارية": {
     "bn": "বাণিজ্য কক্ষ",
     "de": "Handelskammer",
-    "en": "Commercial chamber",
+    "en": "Chamber of Commerce",
     "es": "Cámara de comercio",
     "fa": "اتاق تجاری",
     "fr": "Chambre de commerce",
@@ -13584,7 +13584,7 @@
   "المسابقات المسندة لي": {
     "bn": "আমার কাছে অর্পিত প্রতিযোগিতা",
     "de": "Mir zugewiesene Wettbewerbe",
-    "en": "Contests assigned to me",
+    "en": "Competitions assigned to me",
     "es": "Concursos asignados a mí",
     "fa": "مسابقات محول‌شده به من",
     "fr": "Concours qui me sont assignés",
@@ -26086,7 +26086,7 @@
   "طلب الاستلام": {
     "bn": "গ্রহণের অনুরোধ",
     "de": "Empfangsanfrage",
-    "en": "Pickup Request",
+    "en": "Claim requested",
     "es": "Solicitud de recepción",
     "fa": "درخواست دریافت",
     "fr": "Demande de réception",
@@ -26799,7 +26799,7 @@
   "عرض التفاصيل وإجراء السحب": {
     "bn": "বিস্তারিত দেখুন ও ড্র পরিচালনা করুন",
     "de": "Details anzeigen und Verlosung durchführen",
-    "en": "View details and conduct draw",
+    "en": "View details & run the draw",
     "es": "Ver detalles y realizar el sorteo",
     "fa": "مشاهده جزئیات و انجام قرعه‌کشی",
     "fr": "Afficher les détails et effectuer le tirage",
@@ -27681,7 +27681,7 @@
   "غرفة تحكم المسابقات": {
     "bn": "প্রতিযোগিতা নিয়ন্ত্রণ কক্ষ",
     "de": "Wettbewerbs-Kontrollraum",
-    "en": "Contest control room",
+    "en": "Competitions control room",
     "es": "Panel de control de concursos",
     "fa": "اتاق کنترل مسابقات",
     "fr": "Salle de contrôle des concours",
@@ -32531,7 +32531,7 @@
   "متابعة": {
     "bn": "অনুসরণ",
     "de": "Nachverfolgung",
-    "en": "Follow-up",
+    "en": "Continue",
     "es": "Seguimiento",
     "fa": "پیگیری",
     "fr": "Suivi",
@@ -43272,13 +43272,13 @@
     "en": "Draw Studio"
   },
   "الغرفة التجارية والسحوبات": {
-    "en": "Chamber of Commerce & Draws"
+    "en": "Chamber of Commerce & draws"
   },
   "ابدأ السحب المصوّر": {
-    "en": "Start filmed draw"
+    "en": "Start the filmed draw"
   },
   "استكمال السحب المصوّر": {
-    "en": "Resume filmed draw"
+    "en": "Resume the filmed draw"
   },
   "اسحب فائز": {
     "en": "Draw a winner"
@@ -43287,7 +43287,7 @@
     "en": "Draw {0} at once"
   },
   "إنهاء السحب وكشف المفتاح": {
-    "en": "Finish draw & reveal key"
+    "en": "Finish the draw and reveal the key"
   },
   "سحب بديل": {
     "en": "Replacement draw"
@@ -43296,7 +43296,7 @@
     "en": "Replacement draw for"
   },
   "ابدأ السحب البديل": {
-    "en": "Start replacement draw"
+    "en": "Start the replacement draw"
   },
   "السحب الأساسي": {
     "en": "Main draw"
@@ -43305,7 +43305,7 @@
     "en": "Official draw"
   },
   "سجل السحوبات الموثقة": {
-    "en": "Documented draws log"
+    "en": "Recorded draws log"
   },
   "توثيق السحب": {
     "en": "Draw documentation"
@@ -43347,7 +43347,7 @@
     "en": "Official draw video"
   },
   "شارك فيديو السحب": {
-    "en": "Share draw video"
+    "en": "Share the draw video"
   },
   "موظفو الغرفة": {
     "en": "Chamber officers"
@@ -43531,5 +43531,221 @@
   },
   "تاريخ نهاية المسابقة مطلوب — بدونه ما يمكن إجراء السحب": {
     "en": "Competition end date is required — the draw cannot run without it"
+  },
+  "المشاركة مفتوحة": {
+    "en": "Entries open"
+  },
+  "جاهزة للسحب": {
+    "en": "Ready to draw"
+  },
+  "تم السحب": {
+    "en": "Drawn"
+  },
+  "بانتظار موعد السحب": {
+    "en": "Awaiting draw date"
+  },
+  "افتح استوديو السحب": {
+    "en": "Open Draw Studio"
+  },
+  "استوديو السحب: الإثبات وإعادة السحب": {
+    "en": "Draw Studio: proof & redraw"
+  },
+  "استوديو السحب والفائزون": {
+    "en": "Draw Studio & winners"
+  },
+  "الفائزون المعتمدون": {
+    "en": "Confirmed winners"
+  },
+  "السحوبات الموثقة": {
+    "en": "Recorded draws"
+  },
+  "رقم التصريح": {
+    "en": "Permit number"
+  },
+  "آخر يوم للمشاركة": {
+    "en": "Last day to enter"
+  },
+  "السحب يفتح في {0}": {
+    "en": "Draw opens on {0}"
+  },
+  "المشاركة مفتوحة حتى {0} — السحب يفتح بعدها": {
+    "en": "Entries open until {0} — the draw opens after"
+  },
+  "🔒 المشاركة مفتوحة حتى نهاية {0} — السحب يفتح بعدها": {
+    "en": "🔒 Entries open until end of {0} — the draw opens after"
+  },
+  "🔒 انتهت المشاركة — موعد السحب {0}": {
+    "en": "🔒 Entries closed — draw date {0}"
+  },
+  "آخر المشاركين ({0} من {1})": {
+    "en": "Latest participants ({0} of {1})"
+  },
+  "إجراء السحب": {
+    "en": "Run the draw"
+  },
+  "الفائزون حسب الإعجابات": {
+    "en": "Winners by likes"
+  },
+  "مسابقة فيديو: الفائزون يُختارون تلقائياً حسب الإعجابات بعد الانتهاء — لا يوجد سحب": {
+    "en": "Video contest: winners are picked automatically by likes after it ends — no draw"
+  },
+  "تراجع": {
+    "en": "Go back"
+  },
+  "مبروك للفائز!": {
+    "en": "Congratulations to the winner!"
+  },
+  "مبروك للفائزين!": {
+    "en": "Congratulations to the winners!"
+  },
+  "اكتمل السحب الرسمي 🎉": {
+    "en": "Official draw complete 🎉"
+  },
+  "النتيجة نهائية وموثقة": {
+    "en": "The result is final and recorded"
+  },
+  "بدء السحب الرسمي": {
+    "en": "Start the official draw"
+  },
+  "نعم، ابدأ": {
+    "en": "Yes, start"
+  },
+  "هل أنت متأكد من بدء السحب؟": {
+    "en": "Are you sure you want to start the draw?"
+  },
+  "موافق — ابدأ السحب": {
+    "en": "Confirm — start the draw"
+  },
+  "إنهاء السحب واعتماد الفائزين": {
+    "en": "Finish the draw and confirm winners"
+  },
+  "اعتماد النتيجة": {
+    "en": "Confirm the result"
+  },
+  "بدء سحب بديل": {
+    "en": "Start a replacement draw"
+  },
+  "نعم، ابدأ السحب البديل": {
+    "en": "Yes, start the replacement draw"
+  },
+  "بمجرد البدء تُجمَّد قائمة المشاركين وتُعرض بصمة السحب، ويبدأ تسجيل الفيديو.": {
+    "en": "Once started, the participant list is frozen, the draw fingerprint is shown and video recording begins."
+  },
+  "لا يمكن إضافة أو حذف مشاركين بعد هذه الخطوة": {
+    "en": "Participants cannot be added or removed after this step"
+  },
+  "تُقفل المسابقة حتى ينتهي السحب": {
+    "en": "The competition is locked until the draw ends"
+  },
+  "بعد الموافقة لن تستطيع التراجع أو إلغاء السحب أو إعادته. الرقم الذي كتبته يدخل في حساب الفائزين.": {
+    "en": "After you confirm, you cannot go back, cancel or repeat the draw. The number you typed is part of the winner calculation."
+  },
+  "النتيجة تُحسب رياضياً ولا يمكن تغييرها": {
+    "en": "The result is calculated mathematically and cannot be changed"
+  },
+  "كل خطوة تُسجَّل في سجل التدقيق والفيديو": {
+    "en": "Every step is recorded in the audit log and the video"
+  },
+  "سيتم كشف مفتاح السحب وإعلان الفائزين وإشعارهم. النتيجة نهائية.": {
+    "en": "The draw key will be revealed and the winners announced and notified. The result is final."
+  },
+  "لا يمكن التراجع بعد الاعتماد": {
+    "en": "This cannot be undone after confirmation"
+  },
+  "السحب البديل متاح فقط بعد 30 يوماً ولسبب موثق": {
+    "en": "A replacement draw is only available after 30 days with a documented reason"
+  },
+  "سيُستبعد الفائز الحالي ويُسحب بديل من نفس قائمة المشاركين الأصلية. السبب يُحفظ ويظهر في الإثبات.": {
+    "en": "The current winner is excluded and a replacement is drawn from the same original participant list. The reason is saved and shown in the proof."
+  },
+  "لا يمكن التراجع بعد البدء": {
+    "en": "This cannot be undone once started"
+  },
+  "الحد الأقصى سحبان بديلان لكل جائزة": {
+    "en": "At most two replacement draws per prize"
+  },
+  "موعد السحب": {
+    "en": "Draw date"
+  },
+  "المسابقات الحالية": {
+    "en": "Current competitions"
+  },
+  "المسابقات السابقة": {
+    "en": "Past competitions"
+  },
+  "الحالية": {
+    "en": "Current"
+  },
+  "السابقة": {
+    "en": "Past"
+  },
+  "الإثبات والفائزون": {
+    "en": "Proof & winners"
+  },
+  "طلب إشراف جديد": {
+    "en": "New supervision request"
+  },
+  "قبول الإشراف": {
+    "en": "Accept supervision"
+  },
+  "قبول": {
+    "en": "Accept"
+  },
+  "قبول الإشراف على المسابقة": {
+    "en": "Accept supervising this competition"
+  },
+  "رفض طلب الإشراف": {
+    "en": "Reject the supervision request"
+  },
+  "سجل الإشراف والتصريح": {
+    "en": "Supervision & permit log"
+  },
+  "إسناد الإشراف": {
+    "en": "Supervision assigned"
+  },
+  "تصحيح رقم التصريح": {
+    "en": "Permit number corrected"
+  },
+  "طلب نقل الإشراف": {
+    "en": "Supervision transfer requested"
+  },
+  "قبول نقل الإشراف": {
+    "en": "Supervision transfer accepted"
+  },
+  "رفض نقل الإشراف": {
+    "en": "Supervision transfer rejected"
+  },
+  "إلغاء طلب النقل": {
+    "en": "Transfer request cancelled"
+  },
+  "تم قبول الإشراف": {
+    "en": "Supervision accepted"
+  },
+  "تم رفض الطلب": {
+    "en": "Request rejected"
+  },
+  "موظف الغرفة التجارية": {
+    "en": "Chamber of Commerce officer"
+  },
+  "لا توجد مسابقات حالية مسندة لك": {
+    "en": "No current competitions assigned to you"
+  },
+  "لا توجد مسابقات تم السحب عليها بعد": {
+    "en": "No drawn competitions yet"
+  },
+  "إرسال طلب النقل": {
+    "en": "Send transfer request"
+  },
+  "إلغاء الطلب": {
+    "en": "Cancel request"
+  },
+  "تم إرسال الطلب": {
+    "en": "Request sent"
+  },
+  "السبب:": {
+    "en": "Reason:"
+  },
+  "التصريح": {
+    "en": "Permit"
   }
 }

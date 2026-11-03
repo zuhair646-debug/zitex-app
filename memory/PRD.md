@@ -714,3 +714,24 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - backend/draw_video.py: ffmpeg (imageio-ffmpeg) composes 720x1280 MP4: face intro + lower third, then draw stage frames (PIL+raqm, Cairo font) with face PiP top-left.
 - Frontend: app/draw-studio.tsx (CameraView front video, PiP animation, reels), app/merchant/chamber-hub.tsx (officers, permit, assignment), src/components/draw/{RollingReel,DrawProof}.tsx (customer video + verify). Legacy draw endpoints removed; chamber officers only see assigned comps.
 - Tests: tests/e2e_chamber_draws.py, tests/test_chamber_draws_access_redraw.py, tests/race_chamber_draws.py; iteration_58.
+
+## v1.34.0 (2026-11-01) — Draw hardening
+- final_seed = sha256(server_seed:officer_code(6 digits on camera):drand quicknet randomness of a round after commit); start endpoint; 503 if drand unreachable.
+- Hash-linked audit chain (prepare/start/pick/finish); verify has 5 checks; participants list only with ?full=1.
+- competition_rules.py: entry window (start/end/status), staff roles excluded, locked fields after first entry, delete guard (is_test exempt), date validation (end_date mandatory), purchase tickets (tickets_mode one|per_order + max_tickets_per_user, cancelled orders excluded), UGC finalize one-shot after end_date.
+- Redraw: chamber officer only for supervised comps, max 2 per prize, pool = original frozen snapshot. Legacy /competitions/{id}/draw-video removed. Customer join button for general/signup.
+- seed_test_competition.py creates 15k-entry test comp (local + prod). Tests: test_draw_hardening_iter59.py, test_chamber_draws_access_redraw.py, e2e_chamber_draws.py.
+
+## v1.35.0 (2026-11-03) — Chamber dashboard & competitions finished
+- competition_rules: public_flags (entry_open, draw_ready, phase open|soon|waiting|ready|likes|drawn, draw_opens_at +03:00); end_date date-only is inclusive (end of Saudi day); past end_date rejected on create; locked-field compare normalizes defaults (old comps editable); officer/permit frozen after first entry (assign + PUT).
+- GET /competitions is read-only (no status rewrite); GET /merchant/competitions/{id}/edit (includes correct_answer for edit form); /chamber/competitions/{id}/full returns participants_count + latest 200; UGC auto-finalize sets winners_finalized_at; login bcrypt in thread.
+- Frontend: chamber.tsx live phase pills, locked draw box / studio button, winners list; competition/[id] draw button only when ready, dates shown, UGC no draw; form muted placeholders; English draw terms fixed; lint clean.
+- Tests: iteration_60, iteration_61 (83/83 backend).
+- Pending (user approval): CORS allow-all with credentials.
+
+## v1.36.0 — Chamber round 2
+- Controlled officer/permit change (chamber_draws.assign): free before entries; after entries reason ≥5 required, permit correction immediate + logged + officer notified; new officer → officer_request pending until new officer accepts/rejects (/api/draws/officer-requests, /{cid}/officer-request/{accept|reject|cancel}); blocked during open draw; can't remove supervision after entries. officer_log on competition; draw sessions freeze officer_name + permit_number.
+- Chamber portal rewritten: bottom bar (الحالية / السابقة / الإعدادات), pending request cards with accept/reject, officer log, fast detail (plain names, spinner).
+- Draw studio: ConfirmSheet before begin / start (irreversible warning) / finish / redraw; Celebration overlay (confetti + winner names) after each pull and on finish.
+- Tests: tests/test_officer_change_iter62.py (+ updated older tests), 87 pass.
+- Round 2 fixes (iteration_62): pending request follows permit corrections; new request withdraws old (old target notified, logged); cancel notifies target; hub bottom padding; en translations for draw/chamber strings; translation calls limited to 2 concurrent (useAutoT withSlot) so app calls never queue; chamber list cap 300.

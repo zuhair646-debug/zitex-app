@@ -126,6 +126,7 @@ class VideoInput(BaseModel):
 class AssignInput(BaseModel):
     officer_id: str
     permit_number: str = ""
+    reason: str = ""
 
 
 def build_router(db, get_current_user, require_merchant, create_notification):
@@ -169,6 +170,7 @@ def build_router(db, get_current_user, require_merchant, create_notification):
             "seed_hash": s.get("seed_hash"), "seed": s.get("seed") if (done or include_seed) else None,
             "picks": [{k: p[k] for k in ("k", "n", "name", "phone", "user_id")} for p in s.get("picks", [])],
             "replaced": s.get("replaced"), "drawn_by": s.get("drawn_by"), "drawn_by_role": s.get("drawn_by_role"),
+            "officer_name": s.get("officer_name", ""), "permit_number": s.get("permit_number", ""),
             "created_at": s.get("created_at"), "finished_at": s.get("finished_at"),
             "video_status": s.get("video_status", "none"), "video_path": s.get("video_path"),
             "video_error": s.get("video_error"), "started": bool(s.get("final_seed")),
@@ -210,6 +212,9 @@ def build_router(db, get_current_user, require_merchant, create_notification):
                 "winners": [{"user_id": w.get("user_id"), "user_name": w.get("user_name"), "user_phone": mask_phone(w.get("user_phone")),
                              "prize_status": w.get("prize_status", "pending")} for w in c.get("winners") or []],
                 "redraw_available_at": avail.isoformat() if avail else None,
+                "has_entries": n > 0, "open_draw_session": bool(c.get("open_draw_session")),
+                "officer_request": c.get("officer_request"), "officer_log": (c.get("officer_log") or [])[-20:],
+                **competition_rules.public_flags(c),
             })
         return out
 
@@ -227,16 +232,115 @@ def build_router(db, get_current_user, require_merchant, create_notification):
 
     @router.post("/{cid}/assign")
     async def assign_officer(cid: str, data: AssignInput, user=Depends(get_current_user)):
+        """Officer / permit changes. Before any entry: free. After entries: reason required, every change is logged,
+        a new officer must ACCEPT before taking over, and nothing changes while a draw is running.
+        The officer & permit used in each draw are frozen inside that draw session (the proof never changes)."""
         require_merchant(user)
-        await load_comp(cid)
-        upd = {"chamber_supervised": bool(data.officer_id), "assigned_chamber_employee_id": data.officer_id}
-        if data.officer_id:
-            o = await db.users.find_one({"_id": ObjectId(data.officer_id), "role": "chamber"}) if ObjectId.is_valid(data.officer_id) else None
-            if not o:
+        comp = await load_comp(cid)
+        new_oid, permit, reason = data.officer_id.strip(), data.permit_number.strip(), data.reason.strip()
+        cur_oid, cur_permit = comp.get("assigned_chamber_employee_id") or "", comp.get("permit_number") or ""
+        if comp.get("open_draw_session"):
+            raise HTTPException(409, "يوجد سحب جارٍ الآن — التعديل متاح بعد انتهائه")
+        new_o = None
+        if new_oid:
+            new_o = await db.users.find_one({"_id": ObjectId(new_oid), "role": "chamber"}) if ObjectId.is_valid(new_oid) else None
+            if not new_o:
                 raise HTTPException(404, "موظف الغرفة غير موجود")
-        if data.permit_number.strip():
-            upd["permit_number"] = data.permit_number.strip()
-        await db.competitions.update_one({"_id": ObjectId(cid)}, {"$set": upd})
+        has_entries = bool(await db.competition_entries.count_documents({"competition_id": cid}, limit=1))
+        officer_changed, permit_changed = new_oid != cur_oid, bool(permit) and permit != cur_permit
+        if not officer_changed and not permit_changed:
+            return {"ok": True, "changed": False}
+        log_base = {"at": now().isoformat(), "by": user.get("name", ""), "reason": reason,
+                    "from_officer": await officer_name(cur_oid), "to_officer": (new_o or {}).get("name", ""),
+                    "permit_old": cur_permit, "permit_new": permit or cur_permit}
+        # Free setup: nobody entered yet, or the very first assignment
+        if not has_entries or (not cur_oid and not comp.get("winners_finalized_at")):
+            upd = {"chamber_supervised": bool(new_oid), "assigned_chamber_employee_id": new_oid}
+            if permit:
+                upd["permit_number"] = permit
+            await db.competitions.update_one({"_id": comp["_id"]}, {"$set": upd, "$unset": {"officer_request": ""},
+                                                                    "$push": {"officer_log": {**log_base, "action": "assign"}}})
+            if new_oid and officer_changed:
+                await create_notification(new_oid, "مسابقة جديدة تحت إشرافك", f"أُسندت إليك مسابقة «{comp.get('title', '')}»", {"type": "chamber_assign", "competition_id": cid})
+            return {"ok": True, "changed": True}
+        if len(reason) < 5:
+            raise HTTPException(422, "اكتب سبب التعديل (5 أحرف على الأقل) — يُحفظ في سجل المسابقة")
+        if officer_changed and not new_oid:
+            raise HTTPException(409, "لا يمكن إلغاء إشراف الغرفة بعد بدء المشاركات — يمكنك استبدال الموظف بآخر")
+        if not officer_changed:  # permit correction only → immediate, logged, officer notified (pending request follows it)
+            upd = {"permit_number": permit, **({"officer_request.permit_number": permit} if comp.get("officer_request") else {})}
+            await db.competitions.update_one({"_id": comp["_id"]}, {"$set": upd,
+                                                                    "$push": {"officer_log": {**log_base, "action": "permit_change"}}})
+            if cur_oid:
+                await create_notification(cur_oid, "تعديل رقم التصريح", f"«{comp.get('title', '')}»: {cur_permit or '—'} ← {permit} • {reason}", {"type": "chamber_permit", "competition_id": cid})
+            return {"ok": True, "changed": True}
+        # New officer → pending until they accept (a previous pending request is withdrawn and its officer told)
+        old_req = comp.get("officer_request")
+        if old_req and old_req.get("to_officer_id") == new_oid and old_req.get("permit_number") == (permit or cur_permit):
+            return {"ok": True, "pending": True}
+        if old_req:
+            await db.competitions.update_one({"_id": comp["_id"]}, {"$push": {"officer_log": {
+                "at": now().isoformat(), "by": user.get("name", ""), "action": "cancelled", "to_officer": old_req.get("to_officer", ""), "reason": old_req.get("reason", "")}}})
+            if old_req.get("to_officer_id") != new_oid:
+                await create_notification(old_req["to_officer_id"], "أُلغي طلب الإشراف", f"ألغى التاجر طلب إشرافك على «{comp.get('title', '')}»", {"type": "chamber_request", "competition_id": cid})
+        req = {"to_officer_id": new_oid, "to_officer": new_o.get("name", ""), "from_officer_id": cur_oid,
+               "permit_number": permit or cur_permit, "reason": reason, "requested_by": user["id"],
+               "requested_by_name": user.get("name", ""), "requested_at": now().isoformat()}
+        await db.competitions.update_one({"_id": comp["_id"]}, {"$set": {"officer_request": req},
+                                                                "$push": {"officer_log": {**log_base, "action": "request"}}})
+        await create_notification(new_oid, "طلب إشراف على مسابقة", f"«{comp.get('title', '')}» — السبب: {reason}. افتح لوحة الغرفة للقبول أو الرفض", {"type": "chamber_request", "competition_id": cid})
+        if cur_oid:
+            await create_notification(cur_oid, "طلب نقل الإشراف", f"طلب التاجر نقل إشراف «{comp.get('title', '')}» إلى {new_o.get('name', '')} — {reason}", {"type": "chamber_request", "competition_id": cid})
+        return {"ok": True, "pending": True}
+
+    @router.post("/{cid}/officer-request/cancel")
+    async def cancel_officer_request(cid: str, user=Depends(get_current_user)):
+        require_merchant(user)
+        comp = await load_comp(cid)
+        req = comp.get("officer_request")
+        if not req:
+            raise HTTPException(404, "لا يوجد طلب معلّق")
+        await db.competitions.update_one({"_id": comp["_id"]}, {"$unset": {"officer_request": ""}, "$push": {"officer_log": {
+            "at": now().isoformat(), "by": user.get("name", ""), "action": "cancelled", "to_officer": req.get("to_officer", ""), "reason": req.get("reason", "")}}})
+        await create_notification(req["to_officer_id"], "أُلغي طلب الإشراف", f"ألغى التاجر طلب إشرافك على «{comp.get('title', '')}»", {"type": "chamber_request", "competition_id": cid})
+        return {"ok": True}
+
+    @router.get("/officer-requests")
+    async def my_officer_requests(user=Depends(get_current_user)):
+        if user.get("role") != "chamber":
+            raise HTTPException(403)
+        out = []
+        async for c in db.competitions.find({"officer_request.to_officer_id": user["id"]}, {"title": 1, "prize": 1, "officer_request": 1, "assigned_chamber_employee_id": 1}):
+            r = c["officer_request"]
+            out.append({"competition_id": str(c["_id"]), "title": c.get("title", ""), "prize": c.get("prize", ""),
+                        "from_officer": await officer_name(r.get("from_officer_id")), "permit_number": r.get("permit_number", ""),
+                        "reason": r.get("reason", ""), "requested_by": r.get("requested_by_name", ""), "requested_at": r.get("requested_at", ""),
+                        "participants": await db.competition_entries.count_documents({"competition_id": str(c["_id"])})})
+        return out
+
+    @router.post("/{cid}/officer-request/{decision}")
+    async def decide_officer_request(cid: str, decision: str, user=Depends(get_current_user)):
+        if user.get("role") != "chamber" or decision not in ("accept", "reject"):
+            raise HTTPException(403)
+        comp = await load_comp(cid)
+        req = comp.get("officer_request")
+        if not req or req.get("to_officer_id") != user["id"]:
+            raise HTTPException(404, "لا يوجد طلب موجّه لك")
+        if comp.get("open_draw_session"):
+            raise HTTPException(409, "يوجد سحب جارٍ الآن — حاول بعد انتهائه")
+        log = {"at": now().isoformat(), "by": user.get("name", ""), "action": "accepted" if decision == "accept" else "rejected",
+               "from_officer": await officer_name(req.get("from_officer_id")), "to_officer": user.get("name", ""),
+               "permit_old": comp.get("permit_number", ""), "permit_new": req.get("permit_number", ""), "reason": req.get("reason", "")}
+        upd = {"$unset": {"officer_request": ""}, "$push": {"officer_log": log}}
+        if decision == "accept":
+            upd["$set"] = {"assigned_chamber_employee_id": user["id"], "chamber_supervised": True, "permit_number": req.get("permit_number", "")}
+        r = await db.competitions.update_one({"_id": comp["_id"], "officer_request.to_officer_id": user["id"]}, upd)
+        if not r.modified_count:
+            raise HTTPException(409, "تمت معالجة الطلب مسبقاً")
+        msg = f"«{comp.get('title', '')}»: {'قبل' if decision == 'accept' else 'رفض'} {user.get('name', '')} الإشراف"
+        await create_notification(req["requested_by"], "رد موظف الغرفة", msg, {"type": "chamber_request", "competition_id": cid})
+        if decision == "accept" and req.get("from_officer_id"):
+            await create_notification(req["from_officer_id"], "انتقل الإشراف", msg, {"type": "chamber_request", "competition_id": cid})
         return {"ok": True}
 
     @router.get("/{cid}/studio")
@@ -336,7 +440,10 @@ def build_router(db, get_current_user, require_merchant, create_notification):
         doc = {"competition_id": cid, "kind": data.kind, "reason": data.reason.strip(), "replaced": replaced,
                "status": "prepared", "slots": slots, "snapshot": snap, "participants_hash": p_hash,
                "seed": seed, "seed_hash": sha(seed), "picks": [], "drawn_by": user.get("name", ""),
-               "drawn_by_id": user["id"], "drawn_by_role": user.get("role"), "created_at": now().isoformat()}
+               "drawn_by_id": user["id"], "drawn_by_role": user.get("role"), "created_at": now().isoformat(),
+               # witness frozen in the proof — later officer/permit changes never alter a past draw
+               "officer_id": comp.get("assigned_chamber_employee_id", ""), "officer_name": await officer_name(comp.get("assigned_chamber_employee_id")),
+               "permit_number": comp.get("permit_number", "")}
         beacon = await drand_latest()
         doc["beacon_commit_round"] = beacon["round"] if beacon else None
         doc["audit"] = [chain([], "prepare", {"seed_hash": doc["seed_hash"], "participants_hash": p_hash, "tickets": len(snap),

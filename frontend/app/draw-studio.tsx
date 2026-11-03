@@ -18,6 +18,8 @@ import { colors } from '../src/theme/tokens';
 import { useTheme } from '../src/theme/ThemeContext';
 import RollingReel, { ROLL_MS } from '../src/components/draw/RollingReel';
 import TranslatableName from '../src/components/TranslatableName';
+import ConfirmSheet from '../src/components/ConfirmSheet';
+import Celebration from '../src/components/draw/Celebration';
 
 const API = process.env.EXPO_PUBLIC_BACKEND_URL;
 type Phase = 'idle' | 'intro' | 'draw' | 'finishing' | 'uploading' | 'done';
@@ -40,6 +42,8 @@ export default function DrawStudio() {
   const [redraw, setRedraw] = useState<any>(null);
   const [reason, setReason] = useState('');
   const [code, setCode] = useState('');
+  const [confirm, setConfirm] = useState<null | { kind: 'begin' | 'start' | 'finish' | 'redraw'; run: () => void }>(null);
+  const [celebrate, setCelebrate] = useState<null | { title: string; subtitle?: string; winners: any[] }>(null);
   const [camPerm, reqCam] = useCameraPermissions();
   const [micPerm, reqMic] = useMicrophonePermissions();
   const cam = useRef<CameraView>(null);
@@ -53,7 +57,7 @@ export default function DrawStudio() {
 
   const load = useCallback(async () => {
     try { setSt(await apiCall(`/api/draws/${id}/studio`)); } catch (e: any) { notify(T('خطأ'), e.message); }
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps -- apiCall/T are recreated each render
   useEffect(() => { load(); }, [load]);
 
   const ensurePerms = async () => {
@@ -107,7 +111,10 @@ export default function DrawStudio() {
       events.current.push({ t_ms: Date.now() - recStart.current, pick_from: r.winners[0].k, pick_to: r.winners[r.winners.length - 1].k });
       setBatch(r.winners); setRolling(true);
       setSess((x: any) => ({ ...x, picks: [...(x.picks || []), ...r.winners] }));
-      setTimeout(() => setRolling(false), ROLL_MS + 300);
+      setTimeout(() => {
+        setRolling(false);
+        setCelebrate({ title: T(r.winners.length > 1 ? 'مبروك للفائزين!' : 'مبروك للفائز!'), subtitle: st?.competition?.title, winners: r.winners });
+      }, ROLL_MS + 300);
     } catch (e: any) { notify(T('خطأ'), e.message); } finally { setBusy(false); }
   };
 
@@ -116,6 +123,7 @@ export default function DrawStudio() {
     try {
       const fin = await apiCall(`/api/draws/sessions/${sess.id}/finish`, { method: 'POST' });
       setSess(fin);
+      setCelebrate({ title: T('اكتمل السحب الرسمي 🎉'), subtitle: `${st?.competition?.title || ''} — ${T('النتيجة نهائية وموثقة')}`, winners: fin.picks || [] });
       const finishMs = Date.now() - recStart.current;
       await new Promise(r => setTimeout(r, 3000)); // keep the revealed seed on camera
       const duration = Date.now() - recStart.current;
@@ -144,6 +152,28 @@ export default function DrawStudio() {
 
   const share = (sid: string) => Share.share({ message: `${T('فيديو السحب الرسمي')} — ${st?.competition?.title || ''}\n${API}/api/draws/sessions/${sid}/video.mp4` });
 
+
+  const CONFIRM: Record<string, { title: string; message: string; points: string[]; ok: string; danger?: boolean }> = {
+    begin: { title: T('بدء السحب الرسمي'), message: T('بمجرد البدء تُجمَّد قائمة المشاركين وتُعرض بصمة السحب، ويبدأ تسجيل الفيديو.'),
+      points: [T('لا يمكن إضافة أو حذف مشاركين بعد هذه الخطوة'), T('تُقفل المسابقة حتى ينتهي السحب')], ok: T('نعم، ابدأ') },
+    start: { title: T('هل أنت متأكد من بدء السحب؟'), message: T('بعد الموافقة لن تستطيع التراجع أو إلغاء السحب أو إعادته. الرقم الذي كتبته يدخل في حساب الفائزين.'),
+      points: [T('النتيجة تُحسب رياضياً ولا يمكن تغييرها'), T('كل خطوة تُسجَّل في سجل التدقيق والفيديو')], ok: T('موافق — ابدأ السحب'), danger: true },
+    finish: { title: T('إنهاء السحب واعتماد الفائزين'), message: T('سيتم كشف مفتاح السحب وإعلان الفائزين وإشعارهم. النتيجة نهائية.'),
+      points: [T('لا يمكن التراجع بعد الاعتماد'), T('السحب البديل متاح فقط بعد 30 يوماً ولسبب موثق')], ok: T('اعتماد النتيجة'), danger: true },
+    redraw: { title: T('بدء سحب بديل'), message: T('سيُستبعد الفائز الحالي ويُسحب بديل من نفس قائمة المشاركين الأصلية. السبب يُحفظ ويظهر في الإثبات.'),
+      points: [T('لا يمكن التراجع بعد البدء'), T('الحد الأقصى سحبان بديلان لكل جائزة')], ok: T('نعم، ابدأ السحب البديل'), danger: true },
+  };
+  const overlays = (
+    <>
+      {confirm ? (
+        <ConfirmSheet visible testID="draw-confirm" title={CONFIRM[confirm.kind].title} message={CONFIRM[confirm.kind].message}
+          points={CONFIRM[confirm.kind].points} confirmText={CONFIRM[confirm.kind].ok} cancelText={T('تراجع')} danger={CONFIRM[confirm.kind].danger}
+          onCancel={() => setConfirm(null)} onConfirm={() => { const run = confirm.run; setConfirm(null); run(); }} />
+      ) : null}
+      <Celebration visible={!!celebrate} title={celebrate?.title || ''} subtitle={celebrate?.subtitle} winners={celebrate?.winners || []}
+        closeText={T('متابعة')} onClose={() => setCelebrate(null)} />
+    </>
+  );
   if (!st) return <View style={s.center}><ActivityIndicator color={colors.brand} size="large" /></View>;
   const c = st.competition;
 
@@ -192,7 +222,7 @@ export default function DrawStudio() {
                 ) : null}
               </View>
             ) : (
-              <TouchableOpacity testID="studio-finish" style={[s.btn, (rolling || busy) && s.dim]} disabled={rolling || busy} onPress={finish}>
+              <TouchableOpacity testID="studio-finish" style={[s.btn, (rolling || busy) && s.dim]} disabled={rolling || busy} onPress={() => setConfirm({ kind: 'finish', run: finish })}>
                 <Ionicons name="checkmark-done" size={20} color={colors.onBrandPrimary} /><Text style={s.btnTxt}>{T('إنهاء السحب وكشف المفتاح')}</Text>
               </TouchableOpacity>
             )
@@ -217,11 +247,12 @@ export default function DrawStudio() {
             <Text style={s.ltHint}>{T('عرّف بنفسك وبالمسابقة، ثم اكتب رقماً عشوائياً من 6 خانات أمام الكاميرا واضغط ابدأ السحب')}</Text>
             <TextInput testID="studio-officer-code" style={s.codeInput} value={code} onChangeText={t => setCode(t.replace(/[^0-9]/g, '').slice(0, 6))}
               keyboardType="number-pad" maxLength={6} placeholder="••••••" placeholderTextColor="#8A8070" />
-            <TouchableOpacity testID="studio-start-draw" style={[s.btn, (code.length !== 6 || busy) && s.dim]} disabled={code.length !== 6 || busy} onPress={startDrawing}>
+            <TouchableOpacity testID="studio-start-draw" style={[s.btn, (code.length !== 6 || busy) && s.dim]} disabled={code.length !== 6 || busy} onPress={() => setConfirm({ kind: 'start', run: startDrawing })}>
               <Ionicons name="play" size={20} color={colors.onBrandPrimary} /><Text style={s.btnTxt}>{T('ابدأ السحب')}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
+        {overlays}
       </View>
     );
   }
@@ -251,7 +282,7 @@ export default function DrawStudio() {
         </View>
 
         {!st.initial_done ? (
-          <TouchableOpacity testID="studio-begin" style={[s.btn, busy && s.dim]} disabled={busy || st.participants < 1} onPress={() => begin('initial')}>
+          <TouchableOpacity testID="studio-begin" style={[s.btn, busy && s.dim]} disabled={busy || st.participants < 1} onPress={() => st.active_session ? begin('initial') : setConfirm({ kind: 'begin', run: () => begin('initial') })}>
             <Ionicons name="videocam" size={20} color={colors.onBrandPrimary} /><Text style={s.btnTxt}>{st.active_session ? T('استكمال السحب المصوّر') : T('ابدأ السحب المصوّر')}</Text>
           </TouchableOpacity>
         ) : null}
@@ -314,13 +345,14 @@ export default function DrawStudio() {
             <View style={s.row}>
               <TouchableOpacity style={s.btnAlt} onPress={() => setRedraw(null)}><Text style={s.btnAltTxt}>{T('إلغاء')}</Text></TouchableOpacity>
               <TouchableOpacity testID="studio-redraw-go" style={[s.btn, reason.trim().length < 5 && s.dim]} disabled={reason.trim().length < 5}
-                onPress={() => { const w = redraw; setRedraw(null); begin('redraw', { replace_user_id: w.user_id, reason }); }}>
+                onPress={() => { const w = redraw; setRedraw(null); setConfirm({ kind: 'redraw', run: () => begin('redraw', { replace_user_id: w.user_id, reason }) }); }}>
                 <Text style={s.btnTxt}>{T('ابدأ السحب البديل')}</Text>
               </TouchableOpacity>
             </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
+      {overlays}
     </SafeAreaView>
   );
 }
@@ -375,5 +407,5 @@ function useStyles() {
     modalBg: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' },
     modalCard: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 10, paddingBottom: 32 },
     input: { minHeight: 80, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12, color: colors.onSurface, backgroundColor: colors.surfaceSecondary, textAlignVertical: 'top' },
-  }), [themeKey]);
+  }), [themeKey]); // eslint-disable-line react-hooks/exhaustive-deps -- colors are mutable; themeKey triggers the rebuild
 }

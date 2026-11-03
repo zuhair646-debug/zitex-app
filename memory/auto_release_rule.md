@@ -155,3 +155,6 @@ Feature category → semver bump:
 
 ## v1.33.0 release — 2026-11-01
 - iOS d229d013-fe38-407b-8816-161cf2666059 (build 86), Android 2c7f637d-b8bd-4684-a44d-a8e1dd3b7067 (versionCode 91). Commit fbf27ff. Backend deployed (chamber_draws.py, draw_video.py, fonts/Cairo.ttf, imageio-ffmpeg in venv); nginx api.zenrex.ai client_max_body_size 100M.
+
+## v1.34.0 release — 2026-11-01
+- iOS 53a135f5-3148-4715-8995-def1a0db90ba (build 87), Android ed2dbe8b-85c8-4ee7-80b6-4ba71ff834fd (versionCode 92). Commit 5cba3d1. Backend deployed; unique index comp+user dropped on prod; prod TEST comp 6ae9a7aee2cf28750fe18d9e (15k entries, is_test).

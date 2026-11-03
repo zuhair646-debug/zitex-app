@@ -1,0 +1,51 @@
+{
+  "summary": "Iter60 re-test of the Chamber dashboard and competitions. Backend: 19 of 20 new tests pass (tests/test_chamber_flags_iter60.py), and 30 of 30 regression tests pass (test_draw_hardening_iter59 + test_chamber_draws_access_redraw). Verified: entry_open / draw_ready / draw_opens_at flags in every state; /chamber/competitions lists only assigned comps with flags, draws and total_participants; /full on the 15k comp returns participants_count=15000 and 200 participants with no _id; assign and PUT lock the officer and permit after the first entry (409), while setting them once when empty is allowed; UGC auto-finalize sets winners_finalized_at and a second call returns 409; live-summary takes ends_at from end_date. One failure: merchant PUT on legacy or seeded comps that lack tickets_mode etc. returns 409 after the first entry. Frontend (375px): the chamber pills for open, ready and drawn are correct; the detail modal shows end date, permit, participants_count, draws, winners and 'آخر المشاركين (200 من 15000)'; chamber-draw-btn and chamber-draw-locked behave correctly; chamber and merchant draw buttons open /draw-studio and no session is created. On the competition page, the merchant sees draw-btn or draw-locked-note correctly, and the customer sees the join button only when entry_open (the join was persisted to the DB). The badge reads Open or Ended correctly. In the form, comp-end-date comes before comp-draw-date, the date placeholders are muted, and publishing works (200). Bugs found: the chamber 'waiting' state shows 'قريباً'; English auto-translation renders 'السحب' as 'Withdrawal'; the end date is not inclusive; ugc comps show draw-btn; login is slow during translation bursts. Deprecated packages detected: none. SafeAreaView issues detected: none.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PUT /api/merchant/competitions/{id}", "issue": "Legacy or seeded competitions (all 11 existing comps that have entries, including the 15k comp) have no tickets_mode / max_tickets_per_user / purchase_mode / competition_type fields. CompetitionInput fills defaults ('one', 1, 'single', 'general'), so guard_update sees None→default as a change. After the first entry, ANY merchant edit (even just the description) returns 409 'مقفلة: purchase_mode، tickets_mode، max_tickets_per_user'. Reproduced in test_legacy_comp_edit_not_blocked."},
+      {"endpoint": "competition_rules._ts / end_date semantics", "issue": "A YYYY-MM-DD end_date is parsed as 00:00 UTC at the START of that day, but the form label says 'تاريخ الانتهاء (آخر يوم للمشاركة)'. Entries close about 24h early (03:00 KSA on the chosen day) and draw_ready becomes true right away. Reproduced: end_date='2026-11-03' (today) → entry_open=false, draw_ready=true. Creating a comp with end_date in the past or today is also accepted."},
+      {"endpoint": "GET /api/competitions", "issue": "This GET has a write side-effect: update_many sets status='ended' for comps past end_date. This is why the chamber UI's 'waiting' state depends on whether some customer has loaded the home screen (see the ui bug). It also flipped the 15k comp to 'ended' during testing (I reset it to open)."},
+      {"endpoint": "POST /api/auth/login", "issue": "Login latency is 12–48s while /api/translate bursts are running (reproduced: 12 parallel translate calls → login took 11.8s, while GET /competitions/{id} took 0.17s). The UI login spinner hung for over 30s after a chamber EN session triggered auto-translation. Likely the sync bcrypt.checkpw is starved, or the translate path is blocking. Move bcrypt to asyncio.to_thread and check the LLM translate path for blocking work."},
+      {"endpoint": "CORS", "issue": "allow_origins=['*'] is used together with allow_credentials=True (playbook expects explicit origins). Auth uses Bearer tokens, not httpOnly cookies. bcrypt $2b$ is OK, and the brute-force 429 after 5 fails is OK (it is in memory only)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "chamber.tsx stateOf (line 62)", "issue": "A comp past end_date with draw_date in the future and status still 'open' (the usual case until GET /competitions auto-ends it) shows 'قريباً'/'Coming Soon' instead of 'بانتظار موعد السحب'. Fix: if !entry_open && !draw_ready && end_date passed → 'waiting' (or use draw_opens_at > now).", "testID": "chamber-comp-{id}", "priority": "MEDIUM"},
+      {"component": "competition/[id].tsx draw-btn (line 174) + chamber-draw-btn", "issue": "ugc_video comps show the 'ابدأ السحب' draw button once draw_ready is true, but the backend blocks draws for UGC. The button should be hidden for ugc_video or replaced by auto-finalize.", "testID": "draw-btn", "priority": "LOW"},
+      {"component": "competition/[id].tsx draw-locked-note", "issue": "After entries have ended but before draw_date, the note still says 'السحب يفتح بعد انتهاء المشاركة: <draw date>'. The wording is misleading: participation has already ended.", "testID": "draw-locked-note", "priority": "LOW"},
+      {"component": "competition/[id].tsx info grid", "issue": "end_date is not shown, and start/draw dates render as raw ISO strings ('2026-10-29T09:39:04.762825+00:00') that wrap across 3 lines. Show end_date and format with split('T')[0], as chamber.tsx does. The participants header shows 'المشاركون (1000)' for the 15k comp because /participants caps at 1000.", "testID": "", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Chamber / competition / form in English UI", "issues": ["Auto-translation renders 'السحب' as 'Withdrawal/Withdraw/Drag' ('Ready to Withdraw', 'Withdrawal opens in…', 'Documented Withdrawals', 'Drag Studio: Attestation and Re-Drag', 'Withdrawal Date'). Add fixed EN dictionary entries using 'Draw'.", "Before the translations arrive, new Arabic strings in EN mode (pills, 'افتح استوديو السحب', form date labels) render with disconnected or letter-spaced Arabic glyphs."]},
+      {"screen": "merchant/competition-form", "issues": ["Only the 2 date inputs have placeholderTextColor. The title, description, prize, question, options, hashtag and permit placeholders render dark and look like real values (e.g. 'Competition Details...')."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_chamber_flags_iter60.py", "/app/backend/tests/ui_seed_iter60.py", "/app/test_reports/pytest/iter60_flags.xml", "/app/test_reports/pytest/iter60_regression.xml"],
+  "action_items": [
+    "guard_update: treat a missing old field as equal to the pydantic default (or normalise legacy docs / backfill tickets_mode='one', max_tickets_per_user=1, purchase_mode='single', competition_type='general'), so that legacy comps can be edited after entries.",
+    "Make end_date inclusive: when the value is a bare YYYY-MM-DD, interpret end as 23:59:59 Asia/Riyadh (or store end-of-day). Optionally reject end_date < today on create.",
+    "chamber.tsx stateOf: map 'ended entries, draw not yet open' to 'waiting' regardless of status.",
+    "Hide draw-btn / chamber-draw-btn for competition_type ugc_video.",
+    "Add manual EN translations for draw-related strings ('Draw', not 'Withdrawal').",
+    "Investigate the login latency during translate bursts (bcrypt in asyncio.to_thread; check the translate path for blocking work).",
+    "Competition page: show end_date, format dates, and fix the locked-note wording after end."
+  ],
+  "critical_code_review_comments": [
+    "GET /api/competitions performs writes (update_many status=ended). Move this to a scheduled job or compute the status on read.",
+    "/chamber/competitions returns the raw comp doc, including correct_answer and open_draw_session. That is acceptable for the officer, but consider projecting the fields.",
+    "participants_count counts ticket rows, not unique users (per_order comps will over-count people).",
+    "POST /competitions/{id}/join with an invalid ObjectId → 500 (no ObjectId.is_valid check).",
+    "server.py is 6900 lines, which should be split."
+  ],
+  "updated_files": ["/app/backend/tests/test_chamber_flags_iter60.py (new)", "/app/backend/tests/ui_seed_iter60.py (new)"],
+  "success_rate": {"backend": "98% (49/50 incl. regression)", "frontend": "85% (all requested flows work; 1 state-label bug + translation issues)"},
+  "seed_data_creation": "Temporary TEST_UI60 comps (tag TEST_UI60) were created and then cleaned with `python3 tests/ui_seed_iter60.py clean`. TEST_ITER60 comps were removed by the pytest teardown. The 15k comp 6ae9a4a5b4ef244d1d1c4c5e was reset to status=open with no sessions and 15000 entries.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run: cd /app/backend && python3 -m pytest tests/test_chamber_flags_iter60.py tests/test_draw_hardening_iter59.py tests/test_chamber_draws_access_redraw.py -q. test_legacy_comp_edit_not_blocked is expected to fail until the guard_update default fix lands. For UI: `python3 tests/ui_seed_iter60.py` seeds open/waiting/drawn chamber comps (prints ids); clean with the 'clean' arg. Any customer load of GET /api/competitions flips the 15k comp to status 'ended'. Reset it to open afterwards. The chamber account UI is in English, which triggers auto-translate bursts that slow down login.",
+  "rca_of_issue": "The legacy 409 happens because guard_update compares new.get(f) != comp.get(f), and pydantic defaults ('one', 1, 'single') do not count as 'empty', so None→default is seen as a change. The 'Coming Soon' label happens because stateOf only returns 'waiting' when status is ended/closed, but the status only flips when someone calls GET /api/competitions."
+}

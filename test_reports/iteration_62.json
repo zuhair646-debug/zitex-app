@@ -1,0 +1,54 @@
+{
+  "summary": "Tested Chamber of Commerce round 2 on backend and frontend (390x844 web preview). Backend: the existing iter62 suite passes (4/4). The new extra suite passes 6 of 7. The one failure is an edge-case bug: a pending officer request overwrites a permit correction made later. Opening a competition is fast: GET /chamber/competitions/{15k}/full takes 0.18s through the public URL and returns 200 participants out of 15000 (48KB). In the UI the card opens in 0.11–0.34s, except one first open that took 5.9s while on-demand translation calls were still running (see rca). UI flows verified: the bottom bar (current/past/settings); the merchant hub assign modal (info note, reason input, 'none' option hidden, save disabled under 5 chars, 'send transfer request' label, pending banner, pending cancel); the new officer accepting through the ConfirmSheet (applied, officer-log-0 shows the acceptance); and the full draw studio flow: begin confirm, cancel, OK, 6-digit code, start confirm with the irreversible warning, pull 1, celebration with the winner name, close, pull 2, finish confirm, final celebration with both winners. The comp then shows in the Past tab. Problems found: the last card in the merchant hub is hidden behind the merchant bottom tab bar; English auto-translations render السحب as 'withdrawal' and 'متابعة' as 'Follow-up'; a few strings stay in Arabic or appear spaced-out while translation is pending.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/draws/{cid}/assign + /officer-request/accept", "issue": "Stale pending request: the merchant sends an officer-change request (permit P-9), then corrects the permit only (P-10, applied immediately). When the new officer accepts, the permit goes back to P-9 because accept sets permit_number = req.permit_number. Reproduced in tests/test_officer_change_extra_iter63.py::test_stale_request_permit. Fix: on a permit-only change, also update officer_request.permit_number (or block/clear the request). Reference: chamber_draws.py:270-275, 326"},
+      {"endpoint": "POST /api/draws/{cid}/assign", "issue": "A new officer-change request silently overwrites an existing pending request. The previously targeted officer gets no notification, their request card just disappears, and a duplicate 'request' entry is logged. Consider returning 409 'a request is already pending — cancel it first' or notifying the old target. Reference: chamber_draws.py:277-281"},
+      {"endpoint": "POST /api/draws/{cid}/officer-request/cancel", "issue": "Cancelling does not notify the target officer (who was notified of the request). Reference: chamber_draws.py:287-296"},
+      {"endpoint": "GET /api/chamber/competitions", "issue": "Uses to_list(50) with 2 count_documents per comp (N+1). The Past tab silently loses older comps once an officer has more than 50. Reference: server.py:398-405"},
+      {"endpoint": "CORS", "issue": "allow_origins=['*'] with credentials makes Starlette reflect any Origin with allow-credentials:true (verified with Origin https://example.com). Auth is a Bearer token (not cookies), so the risk is low, but explicit origins are recommended. Reference: server.py:4129"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "merchant/chamber-hub ScrollView", "issue": "The last competition card's buttons ('Supervision & permit' / 'Draw Studio') are hidden behind the merchant floating bottom tab bar (about 110px). contentContainerStyle paddingBottom is only 40. Increase it to about 140 or use the tab bar height. Reference: app/merchant/chamber-hub.tsx:68", "testID": "hub-assign-{id}", "priority": "MEDIUM"},
+      {"component": "Translations (English UI)", "issue": "On-demand MT mistranslates the draw domain: 'هل أنت متأكد من بدء السحب؟' becomes 'start the withdrawal', 'موعد السحب' becomes 'Withdrawal Date', 'موافق — ابدأ السحب' becomes 'Confirmed — Start Withdrawal', the finish sheet says 'Finalize Withdrawal'. The celebration close button 'متابعة' shows as 'Follow-up' (should be 'Continue'). Add curated translations/glossary: السحب = draw.", "testID": "draw-confirm, celebration-close", "priority": "MEDIUM"},
+      {"component": "chamber.tsx / hub / Celebration", "issue": "While translation is pending, Arabic strings in English mode show spaced-out, disconnected letters (tab labels 'الحالية/السابقة', header subtitle, empty-state text, pending banner, celebration title 'مبروك للفائز!', 'اكتمل السحب الرسمي'). Some stay in Arabic on the first view.", "testID": "chamber-tab-current, draw-celebration", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Draw studio begin (first visit, English language)", "issue": "On the first try, tapping draw-confirm-ok left the button busy for more than 15s. The session was created on the server, but the POST /sessions response only arrived after dozens of POST /api/translate calls had finished (seen in the backend access log). Direct API prepare takes 0.31–0.41s. Likely cause: the on-demand translation flood saturates the per-host connection pool (browser limit of 6; OkHttp limit of 5 per host on Android), so critical API calls queue behind slow LLM translate calls. The same cause explains the single 5.9s first open of the 15k comp. Suggest: a dedicated low-priority queue or a concurrency cap (e.g. 2) for translate requests, plus prefetching or curated strings.", "affected_testIDs": ["draw-confirm-ok", "studio-begin", "chamber-comp-{id}"]}
+    ],
+    "design_issues": [
+      {"screen": "merchant/chamber-hub", "issues": ["hub-pending-cancel button height is 36px (<44 minimum)", "The modal 'Cancel' button has no testID", "The assign modal does not show the existing pending request, so the merchant can unknowingly overwrite it"]},
+      {"screen": "chamber detail officer log", "issues": ["'from ← to' arrow reads backwards in LTR (English): 'Chamber of Commerce ← TEST Officer 63'", "The 'Drawn' status pill (onSurfaceTertiary on dark) has low contrast"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_officer_change_extra_iter63.py", "/app/backend/tests/test_officer_change_iter62.py", "/app/backend/tests/ui_seed_iter63.py", "/app/backend/tests/perf_prepare_iter63.py", "/app/backend/tests/auth_playbook_iter63.py", "/app/test_reports/pytest/iter63_chamber_all.xml"],
+  "action_items": [
+    "Fix the stale officer_request permit override: on a permit-only change while a request is pending, update or clear officer_request.permit_number (chamber_draws.py:270-275)",
+    "Block or notify when a new officer request overwrites an existing pending one; notify the target officer on cancel",
+    "Increase the bottom padding of the merchant chamber-hub ScrollView so the last card clears the floating tab bar",
+    "Add curated EN translations for draw terms (السحب = draw, not withdrawal; متابعة = Continue) used in draw-studio CONFIRM, Celebration and chamber detail 'موعد السحب'",
+    "Throttle or deprioritise on-demand /api/translate requests so they cannot starve critical API calls (draw begin, opening a comp)",
+    "Make hub-pending-cancel at least 44px tall; add a testID to the assign modal cancel button",
+    "Optional: replace allow_origins=['*'] with explicit origins; paginate /chamber/competitions beyond 50"
+  ],
+  "critical_code_review_comments": [
+    "chamber_draws.py assign: the permit-only branch ignores an existing officer_request, which leads to the stale permit on accept",
+    "server.py /chamber/competitions: N+1 count queries and a 50-item cap; acceptable now (0.13s) but it will not scale",
+    "/full sorts entries by _id while filtering by competition_id; there is no compound (competition_id, _id) index. Currently 0.18s for 15k; adding the index would keep it fast at larger scale",
+    "test_chamber_features.py is legacy (old /chamber/draw endpoints were removed, and it expects joined_at and seed counts). 5 failures are stale tests, not regressions; update or delete it",
+    "test_draw_hardening_iter59::test_redraw_rules failed once in the combined run but passed 16/16 on its own (flaky, probably shared state)"
+  ],
+  "updated_files": ["/app/backend/tests/test_officer_change_extra_iter63.py", "/app/backend/tests/ui_seed_iter63.py", "/app/backend/tests/perf_prepare_iter63.py", "/app/backend/tests/auth_playbook_iter63.py"],
+  "success_rate": {"backend": "97% of the new and related chamber tests (only the stale-permit edge case fails; legacy test_chamber_features failures are excluded as stale)", "frontend": "92% (all requested flows work; the hub last card is hidden behind the tab bar, plus translation quality issues)"},
+  "flaky_tests": ["tests/test_draw_hardening_iter59.py::TestDrawSession::test_redraw_rules (1 of 2 runs failed in the combined suite, passes alone)"],
+  "seed_data_creation": "Created TEST_ITER63_DRAW / TEST_ITER63_CHANGE comps and the 2nd chamber officer 0550009996/officer63pw via tests/ui_seed_iter63.py. All cleaned up (python tests/ui_seed_iter63.py clean) together with 64 TEST notifications. The 15k comp was untouched: status open, no sessions, open_draw_session None. Only one chamber user remains.",
+  "test_credentials": "Verified /app/memory/test_credentials.md. Chamber, merchant and customer logins work. bcrypt hashes start with $2b$. Auth uses a Bearer token in AsyncStorage (no httpOnly cookie). Brute-force lockout returns 429 after 5 failures.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Web notify uses window.alert. In Python Playwright the dialog handler must be async (await d.accept()); a sync lambda leaves the page frozen. To test officer change, seed a 2nd chamber user (ui_seed_iter63.py). The draw studio on web runs without video. Use is_test comps with end_date in the past. Merchant hub is at /merchant/chamber-hub.",
+  "rca_of_issue": "Slow first actions in non-Arabic UI: the backend access log showed POST /draws/{cid}/sessions completing only after about 40 POST /api/translate calls fired by newly rendered untranslated strings. The API alone takes 0.3–0.4s. Mitigation: cap translate concurrency on the client, batch strings with /translate/bulk only, and ship curated translations for new screens. For Arabic users (default) this flood does not occur, and opening a comp was 0.11–0.34s."
+}
