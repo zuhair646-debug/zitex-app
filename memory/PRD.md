@@ -735,3 +735,11 @@ Owner decisions: each merchant gets an independent full app copy (single-store, 
 - Draw studio: ConfirmSheet before begin / start (irreversible warning) / finish / redraw; Celebration overlay (confetti + winner names) after each pull and on finish.
 - Tests: tests/test_officer_change_iter62.py (+ updated older tests), 87 pass.
 - Round 2 fixes (iteration_62): pending request follows permit corrections; new request withdraws old (old target notified, logged); cancel notifies target; hub bottom padding; en translations for draw/chamber strings; translation calls limited to 2 concurrent (useAutoT withSlot) so app calls never queue; chamber list cap 300.
+
+## 🔜 NEXT (user request 2026-11-03, paused — server unreachable, user paying Hetzner)
+Customer ↔ Competitions/Chamber linkage:
+1. Customer app must show competitions sections: current (live) + past competitions (with draw video, winners, event).
+2. When the chamber officer / merchant finishes a draw and the video is ready, it is published automatically to the competition's section for customers; old competitions move to "past" with their videos/winners.
+3. Live countdown on competitions (time remaining until the draw/reveal) + event feel at the same time as the competition.
+4. Scheduled publish time (reveal_at): owner (chamber or normal merchant) can run the draw early (e.g. 4–5 h or a day before), verify everything; customers see NOTHING about result until the countdown ends; at reveal time the draw video + winners appear instantly (winner notifications also held until reveal).
+5. If there were errors before reveal: the draw/competition result can be deleted & redone only after mutual agreement between chamber officer and merchant (account owner) — two-party approval, logged — then re-run and publish the proper video.
