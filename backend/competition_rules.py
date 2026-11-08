@@ -86,7 +86,7 @@ def draw_ready(comp) -> bool:
 def phase(comp) -> str:
     """open | soon | waiting (entries closed, draw time not yet) | ready | drawn"""
     if comp.get("winners_finalized_at"):
-        return "drawn"
+        return "hidden" if comp.get("reveal_at") and not comp.get("revealed_at") else "drawn"
     if entry_open(comp):
         return "open"
     if draw_ready(comp):

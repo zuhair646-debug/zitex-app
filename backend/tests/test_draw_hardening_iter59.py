@@ -38,6 +38,7 @@ def cleanup():
         db.competitions.delete_one({'_id': ObjectId(cid)})
         db.competition_entries.delete_many({'competition_id': cid})
         db.draw_sessions.delete_many({'competition_id': cid})
+        db.social_posts.delete_many({'linked_competition_id': cid})
         db.competition_answers.delete_many({'competition_id': cid})
         db.competition_videos.delete_many({'competition_id': cid})
     db.orders.delete_many({'notes': 'TEST_ITER59'})

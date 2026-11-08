@@ -1,115 +1,138 @@
-import { useMemo, useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+/** Customer Competitions section — copy #2 of every competition (copy #1 is the social feed post).
+ *  Tabs: Current (open + drawn-awaiting-reveal countdowns) · Past (revealed winners + draw video). */
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import TranslatableName from '../../src/components/TranslatableName';
+import Countdown from '../../src/components/Countdown';
 import { useAuth } from '../_layout';
 import { useT } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
+
+const endOf = (c: any) => c.end_date && String(c.end_date).length === 10 ? `${c.end_date}T23:59:59+03:00` : c.end_date;
 
 export default function CompetitionsScreen() {
   const s = useSStyles();
   const router = useRouter();
-  const { apiCall, user } = useAuth();
-  const { t } = useT();
-  const [comps, setComps] = useState<any[]>([]);
+  const { apiCall } = useAuth();
+  const { lang } = useT();
+  const T = (x: string) => tSync(x, lang);
+  const [tab, setTab] = useState<'current' | 'past'>('current');
+  const [current, setCurrent] = useState<any[]>([]);
+  const [revealing, setRevealing] = useState<any[]>([]);
+  const [past, setPast] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    (async () => { try { const d = await apiCall('/api/competitions'); setComps(d); } catch { /* ignore */ } finally { setLoading(false); } })();
-  }, []);
+  const load = useCallback(async () => {
+    const [a, b, c] = await Promise.all([
+      apiCall('/api/competitions').catch(() => []), apiCall('/api/competitions-revealing').catch(() => []), apiCall('/api/competitions-past').catch(() => []),
+    ]);
+    setCurrent(a); setRevealing(b); setPast(c); setLoading(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- apiCall is recreated each render
+  useEffect(() => { load(); }, [load]);
+  const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
-  if (loading) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#F5C518" /></View>;
+  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#F5C518" /></View>;
 
-  const statusLabel = (st: string) => {
-    if (st === 'open') return t('cc.status.open');
-    if (st === 'coming_soon') return t('cc.status.coming');
-    return t('cc.status.ended');
-  };
+  const open = (c: any) => router.push(c.competition_type === 'ugc_video' ? `/ugc-contest?id=${c.id}` : `/competition/${c.id}` as any);
+  const by = (c: any) => T(c.chamber_supervised ? 'بإشراف الغرفة التجارية' : 'سحب المتجر');
+
+  const card = (c: any, kind: 'open' | 'reveal' | 'past') => (
+    <TouchableOpacity testID={`competition-${c.id}`} key={c.id} style={s.card} onPress={() => open(c)} activeOpacity={0.85}>
+      {c.cover_image ? <Image source={{ uri: c.cover_image }} style={s.cover} /> : null}
+      <View style={s.body}>
+        <View style={s.rowBetween}>
+          <View style={[s.badge, kind === 'reveal' && { backgroundColor: '#3B2A04' }, kind === 'past' && { backgroundColor: '#1F2937' }]}>
+            <View style={[s.dot, { backgroundColor: kind === 'open' ? (c.phase === 'soon' ? '#3B82F6' : '#10B981') : kind === 'reveal' ? '#F5C518' : '#9CA3AF' }]} />
+            <Text style={[s.badgeTxt, { color: kind === 'open' ? (c.phase === 'soon' ? '#60A5FA' : '#10B981') : kind === 'reveal' ? '#F5C518' : '#D1D5DB' }]}>
+              {T(kind === 'reveal' ? 'تم السحب — الإعلان قريباً' : kind === 'past' ? 'أُعلنت النتائج' : c.phase === 'soon' ? 'قريباً' : 'مفتوحة للمشاركة')}
+            </Text>
+          </View>
+          <View style={s.by}><Ionicons name={c.chamber_supervised ? 'shield-checkmark' : 'storefront'} size={12} color="#F5C518" /><Text style={s.byTxt} numberOfLines={1}>{by(c)}</Text></View>
+        </View>
+        <TranslatableName text={c.title} style={s.title} numberOfLines={2} />
+        <View style={s.prizeRow}><Ionicons name="trophy" size={15} color="#F59E0B" /><TranslatableName text={c.prize || ''} style={s.prizeTxt} numberOfLines={1} /></View>
+        {kind !== 'past' && (
+          <View style={s.timer}>
+            <Ionicons name="time" size={16} color="#F5C518" />
+            <Text style={s.timerLbl}>{T(kind === 'reveal' ? 'إعلان الفائزين بعد' : c.phase === 'soon' ? 'تبدأ بعد' : 'تنتهي المشاركة بعد')}</Text>
+            <Countdown to={kind === 'reveal' ? c.reveal_at : c.phase === 'soon' ? c.start_date : endOf(c)} style={s.timerVal} dayLabel={T('ي')} onDone={load} />
+          </View>
+        )}
+        {kind === 'past' && (
+          <>
+            <Text style={s.winners} numberOfLines={2}>🏆 {(c.winners || []).map((w: any) => w.user_name).join('، ')}</Text>
+            {c.has_proof || c.draw_video_url ? (
+              <View style={s.watch}><Ionicons name={c.draw_video_url ? 'play-circle' : 'shield-checkmark'} size={18} color="#F5C518" />
+                <Text style={s.watchTxt}>{T(c.draw_video_url ? 'شاهد فيديو السحب والإثبات' : 'شاهد إثبات السحب')}</Text></View>
+            ) : null}
+          </>
+        )}
+        {kind === 'open' && <Text style={s.meta}>{tSync('المشاركون', lang)}: {c.joined_count || 0}</Text>}
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
-    <SafeAreaView style={s.safe}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={s.header}>
-          <Text style={s.title}>{t('cc.title')}</Text>
-        </View>
-
-        <View style={s.statsRow}>
-          <View style={s.statCard}>
-            <View style={s.statIcon}><Ionicons name="trophy" size={22} color="#F5C518" /></View>
-            <Text style={s.statNum}>{comps.filter((c: any) => c.status === 'open').length}</Text>
-            <Text style={s.statLabel}>{t('cc.stat.active')}</Text>
-          </View>
-          <View style={s.statCard}>
-            <View style={s.statIcon}><Ionicons name="checkmark-circle" size={22} color="#10B981" /></View>
-            <Text style={s.statNum}>0</Text>
-            <Text style={s.statLabel}>{t('cc.stat.joined')}</Text>
-          </View>
-          <View style={s.statCard}>
-            <View style={s.statIcon}><Ionicons name="star" size={22} color="#F5C518" /></View>
-            <Text style={s.statNum}>{user?.points || 0}</Text>
-            <Text style={s.statLabel}>{t('cc.stat.points')}</Text>
-          </View>
-        </View>
-
-        {comps.map((comp: any) => (
-          <TouchableOpacity testID={`competition-${comp.id}`} key={comp.id} style={s.compCard}
-            onPress={() => router.push(comp.competition_type === 'ugc_video' ? `/ugc-contest?id=${comp.id}` : `/competition/${comp.id}`)}>
-            <View style={s.compTop}>
-              <View style={[s.statusBadge, { backgroundColor: comp.status === 'open' ? '#052E19' : comp.status === 'coming_soon' ? '#0B1B3B' : '#2A2A2A' }]}>
-                <View style={[s.statusDot, { backgroundColor: comp.status === 'open' ? '#10B981' : comp.status === 'coming_soon' ? '#3B82F6' : '#6B7280' }]} />
-                <Text style={[s.statusText, { color: comp.status === 'open' ? '#10B981' : comp.status === 'coming_soon' ? '#3B82F6' : '#9CA3AF' }]}>
-                  {statusLabel(comp.status)}
-                </Text>
-              </View>
-            </View>
-            <TranslatableName text={comp.title} style={s.compTitle} numberOfLines={2} />
-            <TranslatableName text={comp.description} style={s.compDesc} numberOfLines={2} />
-
-            <View style={s.prizeRow}>
-              <Ionicons name="trophy" size={16} color="#F59E0B" />
-              <TranslatableName text={comp.prize} style={s.prizeText} numberOfLines={1} />
-            </View>
-
-            <View style={s.progressSection}>
-              <View style={s.progressBar}>
-                <View style={[s.progressFill, { width: `${Math.min((comp.joined_count / (comp.max_participants || 1)) * 100, 100)}%`, backgroundColor: '#F5C518' }]} />
-              </View>
-              <View style={s.progressInfo}>
-                <Text style={s.progressLabel}>{t('cc.progress.joined', { n: comp.joined_count || 0, m: comp.max_participants || 0 })}</Text>
-              </View>
-            </View>
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <View style={s.header}><Text style={s.h1}>{T('المسابقات')}</Text></View>
+      <View style={s.seg}>
+        {(['current', 'past'] as const).map(k => (
+          <TouchableOpacity key={k} testID={`comp-tab-${k}`} style={[s.segBtn, tab === k && s.segOn]} onPress={() => setTab(k)}>
+            <Text style={[s.segTxt, tab === k && s.segTxtOn]}>{T(k === 'current' ? 'الحالية' : 'الماضية')} ({k === 'current' ? current.length + revealing.length : past.length})</Text>
           </TouchableOpacity>
         ))}
-        <View style={{ height: 100 }} />
+      </View>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F5C518" />}>
+        {tab === 'current' ? (
+          <>
+            {revealing.map(c => card(c, 'reveal'))}
+            {current.map(c => card(c, 'open'))}
+            {!current.length && !revealing.length && <Text style={s.empty}>{T('لا توجد مسابقات حالية')}</Text>}
+          </>
+        ) : (
+          <>{past.map(c => card(c, 'past'))}{!past.length && <Text style={s.empty}>{T('لا توجد مسابقات سابقة بعد')}</Text>}</>
+        )}
+        <View style={{ height: 110 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+// Fixed dark/gold look kept from the original screen
 function useSStyles() {
   return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0A0A0A' },
-  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  title: { fontSize: 24, fontWeight: '900', color: '#F5C518' },
-  statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: '#151515', borderRadius: 16, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: '#2A2A2A' },
-  statIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 8, backgroundColor: '#2E2404' },
-  statNum: { fontSize: 20, fontWeight: '800', color: 'white', marginBottom: 2 },
-  statLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '500' },
-  compCard: { marginHorizontal: 20, backgroundColor: '#151515', borderRadius: 20, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: '#2A2A2A' },
-  compTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#2E2404' },
-  statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusText: { fontSize: 11, fontWeight: '700' },
-  compTitle: { fontSize: 16, fontWeight: '700', color: 'white', marginBottom: 6 },
-  compDesc: { fontSize: 13, color: '#D0D0D0', lineHeight: 20, marginBottom: 12 },
-  prizeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#2E2404', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 14, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#F5C518', maxWidth: '100%' },
-  prizeText: { fontSize: 13, fontWeight: '700', color: '#F5C518', flexShrink: 1 },
-  progressSection: {},
-  progressBar: { height: 8, backgroundColor: '#2A2A2A', borderRadius: 4 },
-  progressFill: { height: '100%', borderRadius: 4 },
-  progressInfo: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 },
-  progressLabel: { fontSize: 12, color: '#9CA3AF', fontWeight: '500' },
-}), []);
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0A0A0A' },
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
+  h1: { fontSize: 24, fontWeight: '900', color: '#F5C518' },
+  seg: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 14, backgroundColor: '#151515', borderRadius: 14, padding: 4, borderWidth: 1, borderColor: '#2A2A2A' },
+  segBtn: { flex: 1, minHeight: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  segOn: { backgroundColor: '#F5C518' },
+  segTxt: { color: '#9CA3AF', fontWeight: '700' },
+  segTxtOn: { color: '#1A1405', fontWeight: '900' },
+  card: { marginHorizontal: 20, backgroundColor: '#151515', borderRadius: 20, marginBottom: 14, borderWidth: 1, borderColor: '#2A2A2A', overflow: 'hidden' },
+  cover: { width: '100%', height: 130, backgroundColor: '#222' },
+  body: { padding: 16, gap: 8 },
+  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#052E19' },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  badgeTxt: { fontSize: 11, fontWeight: '800' },
+  by: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
+  byTxt: { color: '#E8C778', fontSize: 11, fontWeight: '700' },
+  title: { fontSize: 16, fontWeight: '800', color: 'white' },
+  prizeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: '#2E2404', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, maxWidth: '100%' },
+  prizeTxt: { fontSize: 13, fontWeight: '700', color: '#F5C518', flexShrink: 1 },
+  timer: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1E1A0E', borderRadius: 12, padding: 10, borderWidth: 1, borderColor: '#3B2A04' },
+  timerLbl: { color: '#D9CFB8', fontSize: 12, fontWeight: '600', flex: 1 },
+  timerVal: { color: '#F5C518', fontSize: 16, fontWeight: '900' },
+  winners: { color: 'white', fontSize: 14, fontWeight: '700' },
+  watch: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  watchTxt: { color: '#F5C518', fontWeight: '800', fontSize: 13 },
+  meta: { color: '#9CA3AF', fontSize: 12 },
+  empty: { color: '#9CA3AF', textAlign: 'center', marginTop: 40 },
+  }), []);
 }

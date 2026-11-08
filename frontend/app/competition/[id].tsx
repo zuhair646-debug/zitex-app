@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 import { useAuth } from '../_layout';
 import DrawProof from '../../src/components/draw/DrawProof';
+import Countdown from '../../src/components/Countdown';
 
 export default function CompetitionDetailScreen() {
   useT(); // re-render when language or on-demand translations change
@@ -24,16 +25,15 @@ export default function CompetitionDetailScreen() {
   const [drawResult, setDrawResult] = useState<any[]>([]);
   const [drawing, setDrawing] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [c, p] = await Promise.all([
-          apiCall(`/api/competitions/${id}`), apiCall(`/api/competitions/${id}/participants`)
-        ]);
-        setComp(c); setParticipants(p);
-      } catch (e) { console.log(e); } finally { setLoading(false); }
-    })();
-  }, [id]);
+  const load = async () => {
+    try {
+      const [c, p] = await Promise.all([
+        apiCall(`/api/competitions/${id}`), apiCall(`/api/competitions/${id}/participants`)
+      ]);
+      setComp(c); setParticipants(p);
+    } catch (e) { console.log(e); } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps -- reload per competition
 
   const handleAnswer = (idx: number) => {
     const newAnswers = [...answers]; newAnswers[currentQ] = idx; setAnswers(newAnswers);
@@ -93,11 +93,22 @@ export default function CompetitionDetailScreen() {
         </View>
 
         <View style={s.content}>
-          <View style={[s.statusBadge, { backgroundColor: isOpen ? '#DCFCE7' : isEnded ? '#F3F4F6' : '#DBEAFE' }]}>
-            <Text style={[s.statusText, { color: isOpen ? '#10B981' : isEnded ? '#6B7280' : '#3B82F6' }]}>
-              {tSync(isOpen ? 'مفتوحة' : isEnded ? 'منتهية' : 'قريباً', curLang())}
+          <View style={[s.statusBadge, { backgroundColor: comp.result_hidden ? '#FEF3C7' : isOpen ? '#DCFCE7' : isEnded ? '#F3F4F6' : '#DBEAFE' }]}>
+            <Text style={[s.statusText, { color: comp.result_hidden ? '#92400E' : isOpen ? '#10B981' : isEnded ? '#6B7280' : '#3B82F6' }]}>
+              {tSync(comp.result_hidden ? 'تم السحب — الإعلان قريباً' : isOpen ? 'مفتوحة' : isEnded ? 'منتهية' : 'قريباً', curLang())}
             </Text>
           </View>
+          <Text style={s.byLine}>{tSync(comp.chamber_supervised ? 'بإشراف الغرفة التجارية' : 'سحب المتجر', curLang())}{!comp.chamber_supervised && comp.presenter_name ? ` • ${comp.presenter_name}` : ''}{comp.chamber_supervised && comp.permit_number ? ` • ${tSync('تصريح', curLang())} ${comp.permit_number}` : ''}</Text>
+
+          {(isOpen || notStarted || comp.result_hidden || (comp.reveal_at && !comp.winners?.length && !comp.revealed_at)) && comp.competition_type !== 'ugc_video' ? (
+            <View style={s.timerBox} testID="comp-countdown">
+              <Ionicons name="time" size={18} color="#F5C518" />
+              <Text style={s.timerLbl}>{tSync(comp.result_hidden || !isOpen && !notStarted ? 'إعلان الفائزين بعد' : notStarted ? 'تبدأ بعد' : 'تنتهي المشاركة بعد', curLang())}</Text>
+              <Countdown style={s.timerVal} dayLabel={tSync('ي', curLang())} onDone={load}
+                to={comp.result_hidden || (!isOpen && !notStarted) ? (comp.reveal_at || comp.draw_opens_at) : notStarted ? comp.start_date : (String(comp.end_date || '').length === 10 ? `${comp.end_date}T23:59:59+03:00` : comp.end_date)} />
+            </View>
+          ) : null}
+          {comp.result_hidden ? <Text style={s.hiddenNote}>{tSync('تم إجراء السحب وتوثيقه — الفائزون وفيديو السحب يظهرون هنا تلقائياً لما ينتهي العدّاد 🎉', curLang())}</Text> : null}
 
           <TranslatableName text={comp.title} style={s.compTitle} />
           <TranslatableName text={comp.description} style={s.compDesc} inline={false} />
@@ -251,6 +262,11 @@ const s = StyleSheet.create({
   content: { paddingHorizontal: 20 },
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginBottom: 12 },
   statusText: { fontSize: 13, fontWeight: '600' },
+  byLine: { color: '#6B7280', fontSize: 12, fontWeight: '700', marginBottom: 8 },
+  timerBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1A1405', borderRadius: 14, padding: 12, marginBottom: 12 },
+  timerLbl: { color: '#E8C778', fontSize: 13, fontWeight: '700', flex: 1 },
+  timerVal: { color: '#F5C518', fontSize: 18, fontWeight: '900' },
+  hiddenNote: { color: '#92400E', backgroundColor: '#FEF3C7', borderRadius: 12, padding: 12, fontSize: 13, fontWeight: '600', marginBottom: 12, lineHeight: 20 },
   compTitle: { fontSize: 22, fontWeight: '800', color: '#0A0A0A', marginBottom: 8 },
   compDesc: { fontSize: 14, color: '#52525B', lineHeight: 22, marginBottom: 16 },
   infoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 },

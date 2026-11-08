@@ -17,6 +17,7 @@ import secrets
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, Field
 import competition_rules
+import competition_reveal
 from typing import List, Optional
 import re
 
@@ -316,7 +317,8 @@ async def competitions_live_summary():
         status = c.get("status", "open")
         if status == "open" and ends_at and remaining_ms == 0:
             status = "ended"
-        winners = c.get("winners") or []
+        winners = [] if competition_reveal.hidden(c) else [
+            {**w, "user_phone": (str(w.get("user_phone") or "")[:3] + "****") if w.get("user_phone") else ""} for w in c.get("winners") or []]
         summary.append({
             "id": c["id"],
             "title": c.get("title", ""),
@@ -348,7 +350,32 @@ async def get_competition(comp_id: str):
     for w in out.get("winners") or []:
         p = str(w.get("user_phone") or "")
         w["user_phone"] = (p[:3] + "****" + p[-2:]) if len(p) > 5 else ""
+    return competition_reveal.mask_public(out)
+
+@api_router.get("/competitions-past")
+async def past_competitions():
+    """Competitions section → Past: revealed results (winners + draw video), newest first."""
+    comps = await db.competitions.find({"winners_finalized_at": {"$nin": [None, ""]}}).sort("winners_finalized_at", -1).to_list(60)
+    out = []
+    for c in comps:
+        if competition_reveal.hidden(c):
+            continue
+        c = serialize_doc(c)
+        c.pop("correct_answer", None)
+        c["has_proof"] = bool(await db.draw_sessions.count_documents({"competition_id": c["id"], "status": "finished", "voided": {"$ne": True}}, limit=1))
+        for w in c.get("winners") or []:
+            p = str(w.get("user_phone") or "")
+            w["user_phone"] = (p[:3] + "****" + p[-2:]) if len(p) > 5 else ""
+        out.append(c)
     return out
+
+@api_router.get("/competitions-revealing")
+async def revealing_competitions():
+    """Drawn but waiting for the announced reveal time → countdown cards (no results)."""
+    comps = await db.competitions.find({"winners_finalized_at": {"$nin": [None, ""]}, "reveal_at": {"$nin": [None, ""]},
+                                        "revealed_at": {"$exists": False}}).to_list(30)
+    keep = ("title", "prize", "prize_count", "cover_image", "prize_image", "reveal_at", "competition_type", "chamber_supervised", "joined_count")
+    return [{"id": str(c["_id"]), **{k: c.get(k) for k in keep}, "phase": "hidden", "result_hidden": True} for c in comps]
 
 @api_router.post("/competitions/{comp_id}/join")
 async def join_competition(comp_id: str, user=Depends(get_current_user)):
@@ -2295,6 +2322,8 @@ class CompetitionInput(BaseModel):
     assigned_chamber_employee_id: str = ""
     cover_image: str = ""
     prize_image: str = ""
+    reveal_at: str = ""        # results stay hidden from customers until this time (draw may run earlier)
+    presenter_name: str = ""   # store draw: name shown to customers (store / staff)
 
 @api_router.post("/merchant/competitions")
 async def merchant_create_competition(data: CompetitionInput, user=Depends(get_current_user)):
@@ -2309,6 +2338,7 @@ async def merchant_create_competition(data: CompetitionInput, user=Depends(get_c
         if data.correct_answer not in clean_opts:
             raise HTTPException(status_code=422, detail="الإجابة الصحيحة يجب أن تكون من ضمن الخيارات")
     competition_rules.validate_dates(data.model_dump(), creating=True)
+    competition_reveal.validate_reveal(data.model_dump())
     doc = data.model_dump()
     doc.update({
         "status": "open",
@@ -2317,6 +2347,10 @@ async def merchant_create_competition(data: CompetitionInput, user=Depends(get_c
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     r = await db.competitions.insert_one(doc)
+    try:  # copy #1: social feed post (copy #2 = Competitions section card)
+        await competition_reveal.create_competition_post(db, {**doc, "_id": r.inserted_id}, user)
+    except Exception as e:
+        logger.warning(f"competition post failed: {e}")
     return {"id": str(r.inserted_id), "message": "Competition published"}
 
 @api_router.put("/merchant/competitions/{cid}")
@@ -2332,6 +2366,7 @@ async def merchant_update_competition(cid: str, data: CompetitionInput, user=Dep
     if not existing:
         raise HTTPException(404, "Competition not found")
     competition_rules.validate_dates(data.model_dump())
+    competition_reveal.validate_reveal(data.model_dump(), existing)
     await competition_rules.guard_update(db, existing, data.model_dump())
     r = await db.competitions.update_one({"_id": ObjectId(cid)}, {"$set": {**data.model_dump(), "updated_at": datetime.now(timezone.utc).isoformat()}})
     if r.matched_count == 0:
@@ -2395,6 +2430,7 @@ async def merchant_delete_competition(cid: str, user=Depends(get_current_user)):
     await competition_rules.guard_delete(db, comp)
     await db.draw_sessions.delete_many({"competition_id": cid}) if comp.get("is_test") else None
     await db.competitions.delete_one({"_id": ObjectId(cid)})
+    await db.social_posts.delete_many({"linked_competition_id": cid})  # both copies go together
     await db.competition_entries.delete_many({"competition_id": cid})
     return {"message": "Deleted"}
 
@@ -6818,6 +6854,15 @@ try:
     logger.info("Chamber draws router mounted")
 except Exception as _e:
     logger.error(f"Failed to mount chamber draws router: {_e}")
+
+try:
+    app.include_router(competition_reveal.build_router(db, get_current_user, create_notification))
+
+    @app.on_event("startup")
+    async def _reveal_startup():
+        asyncio.create_task(competition_reveal.reveal_loop(db, create_notification))
+except Exception as _e:
+    logger.error(f"Failed to mount reveal router: {_e}")
 
 # ─── Delivery v2: realtime driver system ───
 _delivery_dispatch = None

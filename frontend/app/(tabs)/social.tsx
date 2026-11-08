@@ -217,6 +217,12 @@ export default function SocialScreen() {
                 {isEvent && (
                   <View style={[s.qBadge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="calendar" size={14} color="#10B981" /><TX style={[s.qBadgeText, { color: '#065F46' }]}>فعالية</TX></View>
                 )}
+                {post.linked_competition_id ? (
+                  <TouchableOpacity testID={`post-competition-${postId}`} style={[s.qBadge, { backgroundColor: '#2E2404', minHeight: 32 }]} onPress={() => router.push(`/competition/${post.linked_competition_id}` as any)}>
+                    <Ionicons name={post.type === 'competition_result' ? 'trophy' : 'gift'} size={14} color="#F5C518" />
+                    <Text style={[s.qBadgeText, { color: '#F5C518' }]}>{post.badge || ''} • {tSync(post.type === 'competition_result' ? 'شاهد النتيجة' : 'شارك الآن', curLang())}</Text>
+                  </TouchableOpacity>
+                ) : null}
                 <View style={s.postHeader}>
                   <View style={s.postAvatar}><Ionicons name="storefront" size={18} color="#F5C518" /></View>
                   <View style={s.postAuthorInfo}>

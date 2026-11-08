@@ -13563,7 +13563,7 @@
   "المسابقات": {
     "bn": "প্রতিযোগিতাসমূহ",
     "de": "Wettbewerbe",
-    "en": "Contests",
+    "en": "Competitions",
     "es": "Concursos",
     "fa": "مسابقات",
     "fr": "Concours",
@@ -43747,5 +43747,110 @@
   },
   "التصريح": {
     "en": "Permit"
+  },
+  "سحب المتجر": {
+    "en": "Store draw"
+  },
+  "بإشراف الغرفة التجارية": {
+    "en": "Supervised by the Chamber of Commerce"
+  },
+  "تم السحب — الإعلان قريباً": {
+    "en": "Drawn — results coming soon"
+  },
+  "أُعلنت النتائج": {
+    "en": "Results announced"
+  },
+  "مفتوحة للمشاركة": {
+    "en": "Open for entries"
+  },
+  "إعلان الفائزين بعد": {
+    "en": "Winners announced in"
+  },
+  "تبدأ بعد": {
+    "en": "Starts in"
+  },
+  "تنتهي المشاركة بعد": {
+    "en": "Entries close in"
+  },
+  "شاهد فيديو السحب والإثبات": {
+    "en": "Watch the draw video & proof"
+  },
+  "شاهد إثبات السحب": {
+    "en": "View the draw proof"
+  },
+  "الماضية": {
+    "en": "Past"
+  },
+  "لا توجد مسابقات حالية": {
+    "en": "No current competitions"
+  },
+  "لا توجد مسابقات سابقة بعد": {
+    "en": "No past competitions yet"
+  },
+  "شاهد النتيجة": {
+    "en": "See the result"
+  },
+  "شارك الآن": {
+    "en": "Join now"
+  },
+  "نتيجة السحب": {
+    "en": "Draw result"
+  },
+  "تم إجراء السحب وتوثيقه — الفائزون وفيديو السحب يظهرون هنا تلقائياً لما ينتهي العدّاد 🎉": {
+    "en": "The draw is done and recorded — winners and the draw video appear here automatically when the countdown ends 🎉"
+  },
+  "النتيجة مخفية عن العملاء حتى موعد الإعلان": {
+    "en": "Result hidden from customers until the reveal time"
+  },
+  "أُعلنت النتائج للعملاء": {
+    "en": "Results announced to customers"
+  },
+  "موعد إعلان النتائج": {
+    "en": "Results reveal time"
+  },
+  "إلغاء السحب وإعادته (قبل الإعلان فقط)": {
+    "en": "Void & redo the draw (before reveal only)"
+  },
+  "طلب إلغاء السحب": {
+    "en": "Request to void the draw"
+  },
+  "إلغاء السحب وإعادته": {
+    "en": "Void and redo the draw"
+  },
+  "أوافق على الإلغاء وإعادة السحب": {
+    "en": "I approve voiding and redoing the draw"
+  },
+  "سحب طلب الإلغاء": {
+    "en": "Withdraw the void request"
+  },
+  "رفض الإلغاء": {
+    "en": "Reject voiding"
+  },
+  "سبب الإلغاء": {
+    "en": "Reason for voiding"
+  },
+  "إلغاء السحب قبل الإعلان": {
+    "en": "Void the draw before reveal"
+  },
+  "تم إلغاء السحب — تقدر تعيده الآن": {
+    "en": "Draw voided — you can run it again now"
+  },
+  "تم إرسال طلب الإلغاء للطرف الآخر": {
+    "en": "Void request sent to the other party"
+  },
+  "سحب المتجر — يظهر للعملاء باسم": {
+    "en": "Store draw — shown to customers as"
+  },
+  "طلب إلغاء السحب وإعادته": {
+    "en": "Request to void and redo the draw"
+  },
+  "تم السحب — بانتظار الإعلان": {
+    "en": "Drawn — awaiting reveal"
+  },
+  "وقت إعلان النتائج (اختياري)": {
+    "en": "Results reveal time (optional)"
+  },
+  "اسم من يظهر في سحب المتجر": {
+    "en": "Name shown for the store draw"
   }
 }

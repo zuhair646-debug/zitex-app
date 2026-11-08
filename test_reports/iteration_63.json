@@ -1,0 +1,52 @@
+{
+  "summary": "Tested the competitions reveal / two-copy publishing / void-before-reveal work on backend and frontend (375x667 web preview). Backend: tests/test_reveal_iter63.py passes 5/5 and test_draw_hardening_iter59.py passes. The new tests/test_reveal_tz_iter64.py found one critical bug: the reveal loop compared ISO strings, so a reveal_at typed in the merchant form (no timezone, read as Saudi time +03:00) was revealed 3 hours late. I fixed it in competition_reveal.py and it now passes 3/3 (24/24 across the 3 suites). UI checks that work: the Current/Past tabs; the countdown card ('Withdrawn — Announcement Coming Soon') after a hidden draw; the detail page hides winners and shows the hidden note; /api/draws/public returns 404 to customers and anonymous users; the full store draw in the studio as merchant (begin, pull, finish, then the reveal and void cards); store void with a reason (the session is marked voided and the draw can be run again); chamber draw with code 246810, the chamber requests a void (pending, no approve button for the chamber), the merchant sees approve/reject and approving voids it; the chamber portal shows the reveal note and the void request card; social competition badges open the right competition; the form fields comp-reveal-at/comp-presenter save and create a social post whose badge uses the presenter name; reveal before end returns 422 from the backend. Issues: on web the merchant form never shows the 422 error or the success message (Alert.alert does nothing on react-native-web); seeded past comps show 'شاهد إثبات السحب' but have no draw session, so no DrawProof/video appears; deleting a competition leaves its social posts behind (8 orphan TEST posts from earlier runs are in the feed); naive reveal_at is stored without +03:00, so client countdowns depend on the device timezone.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "competition_reveal.reveal_loop", "issue": "FIXED: compared at.isoformat() <= now().isoformat() as strings. reveal_at from the merchant form is naive (KSA, +03:00) while now() is UTC, so the string comparison revealed 3h late. Changed to datetime comparison at <= now(). Reproduced by test_loop_reveals_naive_ksa_time (failed before, passes after).", "priority": "CRITICAL"}
+    ],
+    "minor": [
+      {"endpoint": "DELETE /api/merchant/competitions/{cid}", "issue": "Does not delete the social posts linked to the competition (social_post_id/results_post_id, linked_competition_id). They become orphan feed posts whose badge opens a competition that returns 404. 8 orphan TEST_ posts exist now (created 06:24 by earlier pytest runs, e.g. ids 6af015966db98f5d484d51ce, 6af015c16db98f5d484d5208), and they show at the top of the customer Social feed. The test fixture cleanup in test_draw_hardening_iter59 has the same gap: each run leaves about 5 posts behind."},
+      {"endpoint": "POST/PUT /api/merchant/competitions", "issue": "reveal_at is stored as typed ('2026-11-22T20:00', no offset). The backend reads it as KSA time, but the frontend Countdown uses new Date(naive), which uses the device's local timezone, so the countdown is wrong on devices outside UTC+3. Normalize to an explicit +03:00 offset on save (the seed already does this)."},
+      {"endpoint": "POST /api/draws/{cid}/void/{decision}", "issue": "'reject' and 'cancel' have no party check: the requester can 'reject' and the other party can 'cancel'. Cosmetic only, since both just clear the request, but the audit kind can be misleading."},
+      {"endpoint": "CORS", "issue": "access-control-allow-origin '*' is returned together with allow-credentials true. Auth uses bearer tokens with no httpOnly cookie, which is acceptable for mobile. Brute-force lockout was not tested, to avoid locking the shared test accounts."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "merchant/competition-form submit", "issue": "On web, Alert.alert does nothing in react-native-web, so the 422 error ('وقت إعلان النتائج لازم يكون بعد انتهاء المشاركة...') is never shown. After a successful create, no success message appears and router.back() never runs: the user stays on the form and may submit again. Verified: backend logs show 422 then 200, the UI shows no feedback. Use the same web notify (window.alert) helper as draw-studio.", "testID": "comp-submit-btn", "priority": "MEDIUM"},
+      {"component": "Competitions Past card", "issue": "Always shows 'شاهد إثبات السحب' even when the comp has no draw sessions. Both seeded past comps (رمضان / اليوم الوطني) have no draw_sessions and no draw_video_url, so the detail page shows no DrawProof and no video (/api/draws/public returns []). The seed should create a finished draw session (plus a demo video URL), or the card should hide the proof link. Ref: app/(tabs)/competitions.tsx:68", "testID": "competition-{id}", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Social badge -> competition", "issue": "Badges on orphan posts (competition deleted) open /competition/{deletedId}, which shows a spinner and then 'غير موجود'. Caused by the backend not cleaning up posts.", "affected_testIDs": ["post-competition-6af015c16db98f5d484d5208"]}
+    ],
+    "design_issues": [
+      {"screen": "Competitions current card", "issues": ["When the status pill text is long ('Withdrawn — Announcement Coming Soon'), the mode pill 'Store Withdrawal' overflows and is clipped at the card edge (needs flexWrap)."]},
+      {"screen": "i18n (EN)", "issues": ["'سحب المتجر' is auto-translated as 'Store Withdrawal', 'تم السحب' as 'Withdrawn' and 'سحب الغرفة' as 'Room Draw'. It should be 'Store draw' / 'Drawn' / 'Chamber draw'; add fixed translations.", "Some labels are still Arabic in the EN UI: 'وقت إعلان النتائج (اختياري)' on the form, and the studio void card body/buttons for the merchant."]},
+      {"screen": "Draw studio finish modal", "issues": ["Says 'The result is final and recorded' even when the result is still hidden and can be voided before the reveal. Mention the reveal time instead."]},
+      {"screen": "Chamber portal void card", "issues": ["Shows 'Open Studio to approve or reject' even when the chamber itself made the request (it can only withdraw it)."]}
+    ],
+    "react_native_issues": [
+      {"component": "Alert.alert on web", "issue": "Alert.alert does nothing on react-native-web, so the competition form gives no feedback on the web preview. Reference: /app/frontend/app/merchant/competition-form.tsx:105-106"}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_reveal_tz_iter64.py", "/app/backend/tests/test_reveal_iter63.py", "/app/test_reports/pytest/iter64_all.xml"],
+  "action_items": [
+    "Keep the reveal_loop fix (datetime comparison). Optionally normalize reveal_at to a +03:00 ISO string on create/update so the client Countdown is correct in any timezone.",
+    "Delete linked social posts (by linked_competition_id) in DELETE /api/merchant/competitions/{cid} and in the test cleanup fixtures. Remove the 8 orphan TEST_ posts now in the feed.",
+    "competition-form: use a cross-platform notify (window.alert on web) for errors and success, and navigate back after success.",
+    "Seed: give past demo comps a finished draw_session (plus a demo draw_video_url) so DrawProof/video appear, or hide 'شاهد إثبات السحب' when there is no proof.",
+    "Fix the clipped mode pill on competition cards (flexWrap) and the 'Withdrawal' mistranslation of سحب."
+  ],
+  "critical_code_review_comments": [
+    "competition_reveal.reveal_loop: string comparison of ISO timestamps across different offsets (fixed).",
+    "competition_reveal.party(): any 'merchant' role user counts as the merchant party. Fine for a single store, but worth checking against comp.created_by_merchant.",
+    "server.py is >6800 lines; it should be split into routers."
+  ],
+  "updated_files": ["/app/backend/competition_reveal.py (reveal_loop datetime comparison)", "/app/backend/tests/test_reveal_tz_iter64.py (new)"],
+  "success_rate": {"backend": "96% (24/25 before fix, 24/24 after)", "frontend": "85%"},
+  "seed_data_creation": "Re-ran seed_demo_competitions.py at the end (tag demo_mix), so the demo IDs changed. Deleted everything this run created: the TEST_ITER64 comps and their posts, plus the 5 orphan posts left by my iter59 run.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Seed IDs change on every seed run, so look them up by title. Store draws need no officer code; chamber code is 246810. A 'Congratulations' modal with a 'Continue' text button appears after a pull and after finishing, and must be dismissed. ConfirmSheet buttons are draw-confirm-ok/-cancel. Python Playwright dialog handler: asyncio.ensure_future(d.accept()). The test container's Chromium shows Arabic letters disconnected because of missing system Arabic fonts; this comes from the environment, not the app.",
+  "rca_of_issue": "Reveal delay: reveal_loop used at.isoformat() <= now().isoformat(). For reveal_at='2026-11-03T15:00' (KSA), _ts gives 15:00+03:00 (12:00 UTC), but the string '2026-11-03T15:00:00+03:00' is greater than '2026-11-03T12:30:...+00:00', so the loop skipped it until UTC reached 15:00, i.e. 3h late. Fix: compare datetime objects."
+}

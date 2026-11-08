@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { TX, tSync, tf } from '../../src/useAutoT';
+import { notify } from '../../src/utils/notify';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
 
@@ -40,7 +41,7 @@ export default function CompetitionForm() {
     start_date: '', end_date: '', draw_date: '',
     max_participants: '1000',
     chamber_supervised: false, permit_number: '', assigned_chamber_employee_id: '',
-    cover_image: '', prize_image: '',
+    cover_image: '', prize_image: '', reveal_at: '', presenter_name: '',
   });
 
   const pickPhoto = async (kind: 'cover' | 'prize') => {
@@ -100,10 +101,11 @@ export default function CompetitionForm() {
         max_submissions_per_user: parseInt(data.max_submissions_per_user) || 1,
         options: (data.options || []).filter((o: string) => o.trim()),
       };
+      if (body.reveal_at && !/[+-]\d\d:\d\d$|Z$/.test(body.reveal_at)) body.reveal_at = `${body.reveal_at.length === 16 ? body.reveal_at + ':00' : body.reveal_at}+03:00`; // Saudi time
       if (editId) await apiCall(`/api/merchant/competitions/${editId}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiCall('/api/merchant/competitions', { method: 'POST', body: JSON.stringify(body) });
-      Alert.alert(tSync('نجاح', lang), tSync(editId ? 'تم حفظ التعديلات' : 'تم نشر المسابقة', curLang()), [{ text: tSync('موافق', curLang()), onPress: () => router.back() }]);
-    } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
+      notify(tSync('نجاح', lang), tSync(editId ? 'تم حفظ التعديلات' : 'تم نشر المسابقة', curLang()), () => router.back());
+    } catch (e: any) { notify(tSync('خطأ', lang), e.message); } finally { setLoading(false); }
   };
 
   return (
@@ -233,6 +235,12 @@ export default function CompetitionForm() {
         <TextInput testID="comp-end-date" style={s.input} value={data.end_date} onChangeText={t => setData({ ...data, end_date: t.trim() })} placeholder="YYYY-MM-DD" placeholderTextColor="#9CA3AF" autoCapitalize="none" />
         <TX style={s.label}>تاريخ السحب (بعد الانتهاء أو نفس اليوم)</TX>
         <TextInput testID="comp-draw-date" style={s.input} value={data.draw_date} onChangeText={t => setData({ ...data, draw_date: t.trim() })} placeholder="YYYY-MM-DD" placeholderTextColor="#9CA3AF" autoCapitalize="none" />
+        <TX style={s.label}>وقت إعلان النتائج (اختياري)</TX>
+        <TextInput testID="comp-reveal-at" style={s.input} value={(data.reveal_at || '').replace('T', ' ').slice(0, 16)} placeholderTextColor="#9CA3AF" autoCapitalize="none"
+          onChangeText={t => setData({ ...data, reveal_at: t.trim() ? t.trim().replace(' ', 'T') : '' })} placeholder="YYYY-MM-DD HH:MM" />
+        <TX style={s.toggleHint}>تقدر تسوي السحب قبلها بساعات وتتأكد إن كل شي سليم — العملاء ما يشوفون الفائز ولا الفيديو إلا لما يخلص العدّاد. اتركه فاضي للإعلان فور انتهاء السحب.</TX>
+        <TX style={s.label}>اسم من يظهر في سحب المتجر</TX>
+        <TextInput testID="comp-presenter" style={s.input} value={data.presenter_name} onChangeText={t => setData({ ...data, presenter_name: t })} placeholder="مثال: متجر زينركس / أحمد — مدير الفرع" placeholderTextColor="#9CA3AF" />
 
         <View style={s.divider} />
         <TX style={s.sectionTitle}>إشراف الغرفة التجارية</TX>

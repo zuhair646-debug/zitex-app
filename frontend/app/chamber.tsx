@@ -69,8 +69,8 @@ export default function ChamberScreen() {
 
   const doLogout = async () => { setConfirmLogout(false); await logout(); router.replace('/login'); };
 
-  const stateLabel = (c: any) => L(({ open: 'المشاركة مفتوحة', ready: 'جاهزة للسحب', drawn: 'تم السحب', waiting: 'بانتظار موعد السحب', likes: 'الفائزون حسب الإعجابات', soon: 'قريباً' } as any)[c?.phase || 'soon']);
-  const stateColor = (c: any) => ({ open: colors.success, ready: colors.warning, drawn: colors.onSurfaceSecondary, waiting: colors.info, likes: colors.warning, soon: colors.info } as any)[c?.phase || 'soon'];
+  const stateLabel = (c: any) => L(({ open: 'المشاركة مفتوحة', ready: 'جاهزة للسحب', drawn: 'تم السحب', waiting: 'بانتظار موعد السحب', likes: 'الفائزون حسب الإعجابات', hidden: 'تم السحب — بانتظار الإعلان', soon: 'قريباً' } as any)[c?.phase || 'soon']);
+  const stateColor = (c: any) => ({ open: colors.success, ready: colors.warning, drawn: colors.onSurfaceSecondary, waiting: colors.info, likes: colors.warning, hidden: colors.warning, soon: colors.info } as any)[c?.phase || 'soon'];
 
   const current = comps.filter(c => c.phase !== 'drawn');
   const past = comps.filter(c => c.phase === 'drawn');
@@ -224,6 +224,17 @@ export default function ChamberScreen() {
                     : tf('السحب يفتح في {0}', curLang(), [day(selected.draw_opens_at)])}</Text></View>
               )}
 
+              {selected.void_request ? (
+                <View style={s.reqCard} testID="chamber-void-request">
+                  <Text style={s.reqTitle}>{L('طلب إلغاء السحب وإعادته')}</Text>
+                  <Text style={s.reqReason}>{selected.void_request.by_name}: {selected.void_request.reason}</Text>
+                  <TouchableOpacity style={s.btn} onPress={goStudio}><Text style={s.btnTxt}>{L(selected.void_request.by_party === 'chamber' ? 'بانتظار موافقة صاحب المتجر — افتح الاستوديو' : 'افتح الاستوديو للموافقة أو الرفض')}</Text></TouchableOpacity>
+                </View>
+              ) : null}
+              {selected.reveal_at && !selected.revealed_at ? (
+                <View style={s.lockedBox}><Ionicons name="time" size={18} color={colors.warning} />
+                  <Text style={s.lockedText}>{tf('إعلان النتائج للعملاء: {0}', curLang(), [String(selected.reveal_at).replace('T', ' ').slice(0, 16)])}</Text></View>
+              ) : null}
               {selected.winners?.length > 0 && (
                 <View style={s.section}>
                   <Text style={s.histTitle}>{L('الفائزون المعتمدون')}</Text>

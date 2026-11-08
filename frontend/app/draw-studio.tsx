@@ -14,6 +14,7 @@ import { useT } from '../src/i18n';
 import { tSync, tf } from '../src/useAutoT';
 import { uploadMedia } from '../src/utils/upload';
 import { notify } from '../src/utils/notify';
+import Countdown from '../src/components/Countdown';
 import { colors } from '../src/theme/tokens';
 import { useTheme } from '../src/theme/ThemeContext';
 import RollingReel, { ROLL_MS } from '../src/components/draw/RollingReel';
@@ -42,7 +43,19 @@ export default function DrawStudio() {
   const [redraw, setRedraw] = useState<any>(null);
   const [reason, setReason] = useState('');
   const [code, setCode] = useState('');
-  const [confirm, setConfirm] = useState<null | { kind: 'begin' | 'start' | 'finish' | 'redraw'; run: () => void }>(null);
+  const [confirm, setConfirm] = useState<null | { kind: 'begin' | 'start' | 'finish' | 'redraw' | 'void'; run: () => void }>(null);
+  const [voidReason, setVoidReason] = useState('');
+  const { user } = useAuth();
+  const myParty = user?.role === 'merchant' ? 'merchant' : user?.role === 'chamber' ? 'chamber' : '';
+  const voidAct = async (action: 'request' | 'approve' | 'reject' | 'cancel') => {
+    try {
+      const r = await apiCall(action === 'request' ? `/api/draws/${id}/void` : `/api/draws/${id}/void/${action}`,
+        { method: 'POST', body: JSON.stringify({ reason: voidReason }) });
+      setVoidReason('');
+      notify(T(r.voided ? 'تم إلغاء السحب — تقدر تعيده الآن' : r.pending ? 'تم إرسال طلب الإلغاء للطرف الآخر' : 'تم'));
+      load();
+    } catch (e: any) { notify(T('خطأ'), e.message); }
+  };
   const [celebrate, setCelebrate] = useState<null | { title: string; subtitle?: string; winners: any[] }>(null);
   const [camPerm, reqCam] = useCameraPermissions();
   const [micPerm, reqMic] = useMicrophonePermissions();
@@ -158,10 +171,15 @@ export default function DrawStudio() {
       points: [T('لا يمكن إضافة أو حذف مشاركين بعد هذه الخطوة'), T('تُقفل المسابقة حتى ينتهي السحب')], ok: T('نعم، ابدأ') },
     start: { title: T('هل أنت متأكد من بدء السحب؟'), message: T('بعد الموافقة لن تستطيع التراجع أو إلغاء السحب أو إعادته. الرقم الذي كتبته يدخل في حساب الفائزين.'),
       points: [T('النتيجة تُحسب رياضياً ولا يمكن تغييرها'), T('كل خطوة تُسجَّل في سجل التدقيق والفيديو')], ok: T('موافق — ابدأ السحب'), danger: true },
-    finish: { title: T('إنهاء السحب واعتماد الفائزين'), message: T('سيتم كشف مفتاح السحب وإعلان الفائزين وإشعارهم. النتيجة نهائية.'),
-      points: [T('لا يمكن التراجع بعد الاعتماد'), T('السحب البديل متاح فقط بعد 30 يوماً ولسبب موثق')], ok: T('اعتماد النتيجة'), danger: true },
+    finish: st?.competition?.reveal_at && !st?.competition?.revealed_at
+      ? { title: T('إنهاء السحب واعتماد الفائزين'), message: T('سيتم كشف مفتاح السحب وحفظ النتيجة. تبقى مخفية عن العملاء حتى موعد الإعلان، وتنعلن تلقائياً مع إشعار الفائزين.'),
+          points: [T('قبل الإعلان يمكن الإلغاء فقط بالإجراء الموثق'), T('بعد الإعلان: السحب البديل بعد 30 يوماً ولسبب موثق')], ok: T('اعتماد النتيجة'), danger: true }
+      : { title: T('إنهاء السحب واعتماد الفائزين'), message: T('سيتم كشف مفتاح السحب وإعلان الفائزين وإشعارهم. النتيجة نهائية.'),
+          points: [T('لا يمكن التراجع بعد الاعتماد'), T('السحب البديل متاح فقط بعد 30 يوماً ولسبب موثق')], ok: T('اعتماد النتيجة'), danger: true },
     redraw: { title: T('بدء سحب بديل'), message: T('سيُستبعد الفائز الحالي ويُسحب بديل من نفس قائمة المشاركين الأصلية. السبب يُحفظ ويظهر في الإثبات.'),
       points: [T('لا يمكن التراجع بعد البدء'), T('الحد الأقصى سحبان بديلان لكل جائزة')], ok: T('نعم، ابدأ السحب البديل'), danger: true },
+    void: { title: T('إلغاء السحب قبل الإعلان'), message: T('سيُلغى السحب الحالي وتُمسح نتيجته المخفية، ويبقى في سجل التدقيق. بعدها تقدر تعيد السحب من جديد.'),
+      points: [T('متاح فقط قبل وقت إعلان النتائج'), T('في مسابقات الغرفة يحتاج موافقة الطرفين')], ok: T('نعم، أكمل'), danger: true },
   };
   const overlays = (
     <>
@@ -272,7 +290,44 @@ export default function DrawStudio() {
           <Text style={s.meta}>{tf('{0} مشارك • {1} جوائز', lang, [st.participants, c.prize_count])}</Text>
           {c.permit_number ? <View style={s.permit}><Ionicons name="shield-checkmark" size={16} color={colors.brand} /><Text style={s.permitTxt}>{T('تصريح الغرفة التجارية')}: {c.permit_number}</Text></View> : null}
           {c.officer_name ? <Text style={s.meta}>{T('المشرف')}: {c.officer_name}</Text> : null}
+          {!c.chamber_supervised ? <Text style={s.meta}>{T('سحب المتجر — يظهر للعملاء باسم')}: {c.presenter_name}</Text> : null}
         </View>
+
+        {c.reveal_at ? (
+          <View style={s.card} testID="studio-reveal">
+            <View style={s.rowStart}><Ionicons name="time" size={18} color={colors.brand} /><Text style={s.cardTitle}>{T(c.result_hidden ? 'النتيجة مخفية عن العملاء حتى موعد الإعلان' : c.revealed_at ? 'أُعلنت النتائج للعملاء' : 'موعد إعلان النتائج')}</Text></View>
+            {!c.revealed_at ? <Countdown to={c.reveal_at} style={[s.title, { color: colors.brand }]} dayLabel={T('ي')} onDone={load} /> : null}
+            <Text style={s.meta}>{String(c.reveal_at).replace('T', ' ').slice(0, 16)}</Text>
+          </View>
+        ) : null}
+
+        {c.result_hidden ? (
+          <View style={s.card} testID="studio-void">
+            <View style={s.rowStart}><Ionicons name="refresh-circle" size={18} color={colors.error} /><Text style={s.cardTitle}>{T('إلغاء السحب وإعادته (قبل الإعلان فقط)')}</Text></View>
+            <Text style={s.body}>{T(c.chamber_supervised ? 'إذا صار خطأ: أحد الطرفين (الغرفة أو صاحب المتجر) يطلب الإلغاء مع السبب، والطرف الآخر يوافق. يبقى السحب الملغي في سجل التدقيق.' : 'إذا صار خطأ: صاحب المتجر يلغي السحب مع ذكر السبب ويعيده. يبقى السحب الملغي في سجل التدقيق.')}</Text>
+            {c.void_request ? (
+              <>
+                <Text style={s.meta}>{tf('طلب إلغاء من {0}: {1}', lang, [c.void_request.by_name, c.void_request.reason])}</Text>
+                {c.void_request.by_party !== myParty ? (
+                  <TouchableOpacity testID="studio-void-approve" style={[s.btn, { backgroundColor: colors.error }]} onPress={() => setConfirm({ kind: 'void', run: () => voidAct('approve') })}>
+                    <Text style={[s.btnTxt, { color: '#FFFFFF' }]}>{T('أوافق على الإلغاء وإعادة السحب')}</Text>
+                  </TouchableOpacity>
+                ) : null}
+                <TouchableOpacity testID="studio-void-cancel" style={s.btnAlt} onPress={() => voidAct(c.void_request.by_party === myParty ? 'cancel' : 'reject')}>
+                  <Text style={s.btnAltTxt}>{T(c.void_request.by_party === myParty ? 'سحب طلب الإلغاء' : 'رفض الإلغاء')}</Text>
+                </TouchableOpacity>
+              </>
+            ) : (myParty === 'merchant' || myParty === 'chamber') ? (
+              <>
+                <TextInput testID="studio-void-reason" style={s.input} value={voidReason} onChangeText={setVoidReason} placeholder={T('سبب الإلغاء')} placeholderTextColor={colors.onSurfaceTertiary} />
+                <TouchableOpacity testID="studio-void-request" style={[s.btnAlt, voidReason.trim().length < 5 && s.dim]} disabled={voidReason.trim().length < 5}
+                  onPress={() => setConfirm({ kind: 'void', run: () => voidAct('request') })}>
+                  <Text style={[s.btnAltTxt, { color: colors.error }]}>{T(c.chamber_supervised ? 'طلب إلغاء السحب' : 'إلغاء السحب وإعادته')}</Text>
+                </TouchableOpacity>
+              </>
+            ) : null}
+          </View>
+        ) : null}
 
         <View style={s.card}>
           <View style={s.rowStart}><Ionicons name="lock-closed" size={18} color={colors.brand} /><Text style={s.cardTitle}>{T('كيف نضمن عدالة السحب')}</Text></View>

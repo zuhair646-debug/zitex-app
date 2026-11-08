@@ -743,3 +743,12 @@ Customer ↔ Competitions/Chamber linkage:
 3. Live countdown on competitions (time remaining until the draw/reveal) + event feel at the same time as the competition.
 4. Scheduled publish time (reveal_at): owner (chamber or normal merchant) can run the draw early (e.g. 4–5 h or a day before), verify everything; customers see NOTHING about result until the countdown ends; at reveal time the draw video + winners appear instantly (winner notifications also held until reveal).
 5. If there were errors before reveal: the draw/competition result can be deleted & redone only after mutual agreement between chamber officer and merchant (account owner) — two-party approval, logged — then re-run and publish the proper video.
+
+## v1.37.0 — Competitions ↔ Customer linkage, scheduled reveal, void, two copies
+- competition_reveal.py: reveal_at (hidden results until time; 20s reveal loop with atomic claim), mask_public on /competitions/{id}, live-summary (phones masked), /draws/public, /sessions/{sid}/video.mp4, /verify (staff bypass via auth/?token). Winner notifications deferred to reveal (initial draws).
+- Two copies: social post type "competition" auto-created on publish (social_post_id); results post type "competition_result" at reveal (results_post_id, video added when ready).
+- Void before reveal: POST /api/draws/{cid}/void {reason}; chamber-supervised = request by one party + approve by other (/void/approve|reject|cancel); store mode = merchant owner only. Sessions kept with voided=True.
+- New endpoints: GET /api/competitions-past, GET /api/competitions-revealing. phase 'hidden'. CompetitionInput: reveal_at, presenter_name (store draw label).
+- Frontend: (tabs)/competitions Current/Past tabs + countdowns; competition/[id] countdown, by-line, hidden note; draw-studio reveal card + void UI; chamber detail void/reveal notes; social posts link to competition; form reveal_at + presenter.
+- Seed: backend/seed_demo_competitions.py (tag demo_mix, 10 comps: every type × store/chamber × open/soon/ready/past).
+- Tests: tests/test_reveal_iter63.py (5) — 92 pass total.

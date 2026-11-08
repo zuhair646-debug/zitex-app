@@ -24,13 +24,14 @@ import tempfile
 from datetime import datetime, timezone, timedelta
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 import draw_video
 import competition_rules
+import competition_reveal
 import httpx
 from object_storage import _get, _put, APP_NAME
 
@@ -349,13 +350,16 @@ def build_router(db, get_current_user, require_merchant, create_notification):
         require_draw(user, comp)
         n = await db.competition_entries.count_documents({"competition_id": cid})
         active = await db.draw_sessions.find_one({"competition_id": cid, "status": {"$in": ["prepared", "drawing"]}})
-        done = await db.draw_sessions.find({"competition_id": cid, "status": "finished"}).sort("finished_at", -1).to_list(50)
+        done = await db.draw_sessions.find({"competition_id": cid, "status": "finished", "voided": {"$ne": True}}).sort("finished_at", -1).to_list(50)
         avail = redraw_info(comp)
         return {
             "competition": {"id": cid, "title": comp.get("title", ""), "prize": comp.get("prize", ""),
                             "prize_count": comp.get("prize_count", 1), "permit_number": comp.get("permit_number", ""),
                             "chamber_supervised": bool(comp.get("chamber_supervised")), "status": comp.get("status", ""),
-                            "officer_name": await officer_name(comp.get("assigned_chamber_employee_id"))},
+                            "officer_name": await officer_name(comp.get("assigned_chamber_employee_id")),
+                            "presenter_name": competition_reveal.store_label(comp), "reveal_at": comp.get("reveal_at", ""),
+                            "revealed_at": comp.get("revealed_at", ""), "result_hidden": competition_reveal.hidden(comp),
+                            "void_request": comp.get("void_request")},
             "participants": n,
             "winners": [{"user_id": w.get("user_id"), "user_name": w.get("user_name"), "user_phone": mask_phone(w.get("user_phone")),
                          "prize_status": w.get("prize_status", "pending"), "rank": i + 1,
@@ -551,12 +555,15 @@ def build_router(db, get_current_user, require_merchant, create_notification):
                    "$addToSet": {"forfeited_user_ids": old}}
         upd.setdefault("$unset", {})["open_draw_session"] = ""
         await db.competitions.update_one({"_id": ObjectId(cid), "open_draw_session": sid}, upd)
-        for w in new_w:
-            try:
-                await create_notification(w["user_id"], "🏆 مبروك! فزت في السحب",
-                                          f"{comp.get('title', '')} — {comp.get('prize', '')}", {"competition_id": cid})
-            except Exception:
-                pass
+        if s["kind"] == "initial":  # winners are told at the reveal (now, or at the announced reveal time)
+            await competition_reveal.on_finished(db, cid, create_notification)
+        else:
+            for w in new_w:
+                try:
+                    await create_notification(w["user_id"], "🏆 مبروك! فزت في السحب",
+                                              f"{comp.get('title', '')} — {comp.get('prize', '')}", {"competition_id": cid})
+                except Exception:
+                    pass
         s.update(status="finished", finished_at=ts)
         return public_session(s, names=True)
 
@@ -596,29 +603,39 @@ def build_router(db, get_current_user, require_merchant, create_notification):
             await db.competitions.update_one({"_id": ObjectId(s["competition_id"])}, {
                 "$set": {"draw_video_url": f"/api/draws/sessions/{sid}/video.mp4"},
                 "$push": {"draw_videos": {"session_id": sid, "kind": s["kind"], "path": path, "created_at": now().isoformat()}}})
+            await competition_reveal.on_video_ready(db, s["competition_id"], f"/api/draws/sessions/{sid}/video.mp4")
         except Exception as e:  # keep the error visible to the officer so they can retry
             log.exception("draw video compose failed")
             await db.draw_sessions.update_one({"_id": s["_id"]}, {"$set": {"video_status": "failed", "video_error": str(e)[:300]}})
 
     # ─── public (customers / anyone) ───
+    async def gate_hidden(request, cid):
+        """Results hidden until reveal_at → only staff (merchant / assigned officer) can see sessions & video."""
+        comp = await db.competitions.find_one({"_id": ObjectId(cid)}) if ObjectId.is_valid(cid) else None
+        if comp and competition_reveal.hidden(comp) and not await competition_reveal.is_staff(request, get_current_user, comp):
+            raise HTTPException(404, "تُعلن النتائج في الموعد المحدد")
+
     @router.get("/sessions/{sid}/video.mp4")
-    async def public_video(sid: str):
-        s = await db.draw_sessions.find_one({"_id": ObjectId(sid)}, {"video_path": 1}) if ObjectId.is_valid(sid) else None
+    async def public_video(sid: str, request: Request):
+        s = await db.draw_sessions.find_one({"_id": ObjectId(sid)}, {"video_path": 1, "competition_id": 1, "voided": 1}) if ObjectId.is_valid(sid) else None
         if not s or not s.get("video_path"):
             raise HTTPException(404, "الفيديو غير متوفر")
+        await gate_hidden(request, s["competition_id"])
         data, ct = await run_in_threadpool(_get, s["video_path"])
         return Response(content=data, media_type="video/mp4", headers={"Cache-Control": "public, max-age=86400"})
 
     @router.get("/public/{cid}")
-    async def public_draws(cid: str):
-        ss = await db.draw_sessions.find({"competition_id": cid, "status": "finished"}).sort("finished_at", 1).to_list(50)
+    async def public_draws(cid: str, request: Request):
+        await gate_hidden(request, cid)
+        ss = await db.draw_sessions.find({"competition_id": cid, "status": "finished", "voided": {"$ne": True}}).sort("finished_at", 1).to_list(50)
         return [public_session(s) for s in ss]
 
     @router.get("/sessions/{sid}/verify")
-    async def verify(sid: str, full: int = 0):
+    async def verify(sid: str, request: Request, full: int = 0):
         s = await db.draw_sessions.find_one({"_id": ObjectId(sid)}) if ObjectId.is_valid(sid) else None
         if not s or s.get("status") != "finished":
             raise HTTPException(404, "السحب غير مكتمل")
+        await gate_hidden(request, s["competition_id"])
         snap = s["snapshot"]
         p_ok = sha(json.dumps([p["user_id"] for p in snap])) == s["participants_hash"]
         seed_ok = sha(s["seed"]) == s["seed_hash"]
