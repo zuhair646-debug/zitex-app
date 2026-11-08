@@ -162,3 +162,8 @@ Feature category → semver bump:
 ## v1.36.0 release — 2026-11-03
 - iOS 67b8b2ad-cd46-4e84-8898-c9d61792b516 (build 88), Android 13ac3e56-f62f-4aa2-9975-b8898606cec1 (versionCode 93). Commit f2dbeed. Backend deployed to Hetzner. Log /tmp/eas_release_v1.36.0.log
 - NOTE: backend/.env is modified locally with a GitHub token → NEVER commit it (push protection blocks). Use `git reset HEAD backend/.env` before committing.
+
+## v1.37.0 release — 2026-11-08
+- Commit 9667a8c. Backend deployed to Hetzner + seed_demo_competitions.py run on prod (use /opt/zenrex-store/venv/bin/python).
+- Builds with --auto-submit (server-side submit; survives container restarts): Android bfc0612d-789f-4666-ac78-697e5a9eb916 (vc 94), iOS 2990c8e6-45e7-44f9-9914-e7075274c0c5 (build 89).
+- PREFER `eas build --auto-submit` over the local poller (poller died on container restart in v1.36.0).
