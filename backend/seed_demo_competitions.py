@@ -53,6 +53,10 @@ async def main():
         ("سحب المتجر — جاهز للسحب، الإعلان بعد 3 ساعات", "signup", store, day(-6), day(-1), day(-1), at(3), 120, {}, "ready"),
         ("سحب الغرفة — جاهز للسحب، الإعلان بعد 5 ساعات", "general", chamber, day(-8), day(-1), day(-1), at(5), 300, {}, "ready"),
         ("سؤال وجواب (الغرفة) — جاهز للسحب، إعلان فوري", "qa", chamber, day(-7), day(-1), day(-1), "", 90, qa, "ready"),
+        ("تحدي القيمرز — اشترِ إكسسوار ألعاب وادخل السحب على PS5", "purchase", store, day(-1), day(7), day(7), "", 65, {"spend_requirement": 200, "prize": "بلايستيشن 5 برو", "cover_image": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=900"}, "open"),
+        ("سؤال سامسونج: كم عدسة في جالكسي S25 Ultra؟", "qa", store, day(-1), day(4), day(4), "", 48, {"question": "كم عدد العدسات الخلفية في جالكسي S25 Ultra؟", "options": ["3", "4", "5"], "correct_answer": "4", "prize": "ساعة جالكسي Watch 7", "cover_image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=900"}, "open"),
+        ("مسابقة العيد — سجّل واربح بطاقة هدايا 1000 ريال", "signup", chamber, day(-2), day(10), day(10), "", 210, {"prize": "بطاقة هدايا 1000 ر.س", "prize_count": 3}, "open"),
+        ("صوّر مكتبك التقني — مسابقة فيديو (أفضل إعداد)", "ugc_video", store, day(-1), day(8), day(8), "", 0, {"ugc_hashtag": "#مكتبي_زينركس", "prize": "شاشة سامسونج 32 بوصة"}, "open"),
         ("مسابقة رمضان — أُعلنت النتائج (المتجر)", "general", store, day(-30), day(-20), day(-20), "", 220, {"prize_count": 2}, "past"),
         ("مسابقة اليوم الوطني — أُعلنت النتائج (الغرفة)", "qa", chamber, day(-25), day(-15), day(-15), "", 160, qa, "past"),
     ]

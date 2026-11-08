@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { useT } from '../src/i18n';
 import TranslatableName from '../src/components/TranslatableName';
+import { colors, themed } from '../src/theme/tokens';
 
 export default function GroupBuysScreen() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function GroupBuysScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>👥 {t('gb.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
@@ -48,7 +49,7 @@ export default function GroupBuysScreen() {
         <Ionicons name="people" size={32} color="white" />
         <Text style={s.heroTitle}>{t('gb.subtitle')}</Text>
       </View>
-      {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> : (
+      {loading ? <ActivityIndicator size="large" color={colors.brand} style={{ marginTop: 40 }} /> : (
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 14 }}>
           {items.length === 0 && <Text style={s.empty}>{t('gb.empty')}</Text>}
           {items.map(g => {
@@ -84,7 +85,7 @@ export default function GroupBuysScreen() {
                   </View>
                 </View>
                 <View style={s.statsRow}>
-                  <View style={s.stat}><Ionicons name="people" size={14} color="#F5C518" /><Text style={s.statText}>{g.participant_count}/{g.min_participants} {t('gb.participants')}</Text></View>
+                  <View style={s.stat}><Ionicons name="people" size={14} color={colors.brand} /><Text style={s.statText}>{g.participant_count}/{g.min_participants} {t('gb.participants')}</Text></View>
                   <View style={s.stat}><Ionicons name="time" size={14} color="#F59E0B" /><Text style={s.statText}>{dl} {t('comp.daysLeft')}</Text></View>
                 </View>
                 <View style={s.progressBar}>
@@ -102,27 +103,27 @@ export default function GroupBuysScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: colors.surface },
   title: { fontSize: 17, fontWeight: '800' },
-  heroBox: { backgroundColor: '#F5C518', padding: 20, alignItems: 'center' },
+  heroBox: { backgroundColor: colors.brand, padding: 20, alignItems: 'center' },
   heroTitle: { color: 'white', fontSize: 14, fontWeight: '700', marginTop: 6, textAlign: 'center' },
-  card: { backgroundColor: 'white', padding: 14, borderRadius: 14, marginBottom: 10 },
-  img: { width: 80, height: 80, borderRadius: 10, backgroundColor: '#F3F4F6' },
-  gTitle: { fontSize: 15, fontWeight: '800', color: '#0A0A0A' },
-  gProduct: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  card: { backgroundColor: colors.surface, padding: 14, borderRadius: 14, marginBottom: 10 },
+  img: { width: 80, height: 80, borderRadius: 10, backgroundColor: colors.surfaceSecondary },
+  gTitle: { fontSize: 15, fontWeight: '800', color: colors.onSurface },
+  gProduct: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 2 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
-  gPrice: { fontSize: 18, fontWeight: '900', color: '#F5C518' },
-  gOrig: { fontSize: 13, color: '#9CA3AF', textDecorationLine: 'line-through' },
+  gPrice: { fontSize: 18, fontWeight: '900', color: colors.brand },
+  gOrig: { fontSize: 13, color: colors.onSurfaceTertiary, textDecorationLine: 'line-through' },
   discountBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   discountText: { color: '#DC2626', fontSize: 11, fontWeight: '800' },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  statText: { fontSize: 12, color: '#374151', fontWeight: '600' },
+  statText: { fontSize: 12, color: colors.onSurfaceSecondary, fontWeight: '600' },
   progressBar: { height: 8, backgroundColor: '#E5E7EB', borderRadius: 4, marginVertical: 10, overflow: 'hidden' },
   progressFill: { height: '100%' },
-  joinBtn: { backgroundColor: '#F5C518', padding: 12, borderRadius: 10, alignItems: 'center' },
+  joinBtn: { backgroundColor: colors.brand, padding: 12, borderRadius: 10, alignItems: 'center' },
   joinText: { color: 'white', fontWeight: '800', fontSize: 14 },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40 },
-});
+  empty: { textAlign: 'center', color: colors.onSurfaceTertiary, marginTop: 40 },
+}));

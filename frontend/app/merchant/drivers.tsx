@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import TranslatableName from '../../src/components/TranslatableName';
+import { colors, themed } from '../../src/theme/tokens';
 
 export default function MerchantDrivers() {
   const { lang } = useT();
@@ -50,11 +51,11 @@ export default function MerchantDrivers() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>{tSync('السائقون (', lang)}{drivers.length})</Text>
         <TouchableOpacity onPress={openNew} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
+      {loading ? <ActivityIndicator size="large" color={colors.brand} style={{ marginTop: 40 }} /> :
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           {drivers.length === 0 && <TX style={s.empty}>لا يوجد سائقون بعد. اضغط + لإضافة سائق.</TX>}
           {drivers.map(d => (
@@ -74,7 +75,7 @@ export default function MerchantDrivers() {
       <Modal visible={modal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModal(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setModal(false)}><Ionicons name="close" size={24} color={colors.onSurface} /></TouchableOpacity>
             <TX style={s.title}>{editId ? 'تعديل السائق' : 'سائق جديد'}</TX>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -124,25 +125,25 @@ export default function MerchantDrivers() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  backBtn: { padding: 4 }, title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: '#0A0A0A' },
-  addBtn: { backgroundColor: '#8833FF', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 12, borderRadius: 12, marginBottom: 10 },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  backBtn: { padding: 4 }, title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: colors.onSurface },
+  addBtn: { backgroundColor: colors.brand, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 12, borderRadius: 12, marginBottom: 10 },
   statusDot: { width: 10, height: 10, borderRadius: 5 },
-  name: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
-  phone: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  payment: { fontSize: 11, color: '#8833FF', marginTop: 4, fontWeight: '600' },
-  stats: { fontSize: 10, color: '#9CA3AF', marginTop: 2 },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40 },
-  label: { fontSize: 13, fontWeight: '600', color: '#374151', marginTop: 12, marginBottom: 6 },
-  hint: { fontSize: 11, color: '#9CA3AF', marginTop: 4, fontStyle: 'italic' },
-  input: { backgroundColor: 'white', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB' },
-  opt: { flex: 1, backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', padding: 10, borderRadius: 10, alignItems: 'center' },
-  optActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
-  optText: { fontSize: 12, color: '#374151', fontWeight: '600' },
+  name: { fontSize: 14, fontWeight: '700', color: colors.onSurface },
+  phone: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 2 },
+  payment: { fontSize: 11, color: colors.brand, marginTop: 4, fontWeight: '600' },
+  stats: { fontSize: 10, color: colors.onSurfaceTertiary, marginTop: 2 },
+  empty: { textAlign: 'center', color: colors.onSurfaceTertiary, marginTop: 40 },
+  label: { fontSize: 13, fontWeight: '600', color: colors.onSurfaceSecondary, marginTop: 12, marginBottom: 6 },
+  hint: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 4, fontStyle: 'italic' },
+  input: { backgroundColor: colors.surface, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
+  opt: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 10, borderRadius: 10, alignItems: 'center' },
+  optActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  optText: { fontSize: 12, color: colors.onSurfaceSecondary, fontWeight: '600' },
   optTextActive: { color: 'white' },
-  saveBtn: { backgroundColor: '#8833FF', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
+  saveBtn: { backgroundColor: colors.brand, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
   saveText: { color: 'white', fontWeight: '700', fontSize: 16 },
-});
+}));

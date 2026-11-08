@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
+import { colors, themed } from '../../src/theme/tokens';
 
 const FIELDS: { key: string; label: string; placeholder: string; icon: any; color: string; sub?: string }[] = [
   { key: 'whatsapp', label: 'WhatsApp (مع كود الدولة)', placeholder: '966500000000', icon: 'logo-whatsapp', color: '#25D366', sub: 'بدون + أو 00' },
@@ -46,12 +47,12 @@ export default function SupportSettings() {
     finally { setSaving(false); }
   };
 
-  if (loading || !data) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading || !data) return <View style={s.center}><ActivityIndicator size="large" color={colors.brand} /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <TX style={s.title}>📞 الدعم الفني</TX>
         <TouchableOpacity onPress={save} disabled={saving} style={s.saveBtn}>{saving ? <ActivityIndicator size="small" color="white" /> : <TX style={s.saveText}>حفظ</TX>}</TouchableOpacity>
       </View>
@@ -79,20 +80,20 @@ export default function SupportSettings() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: colors.surface },
   title: { fontSize: 16, fontWeight: '800', flex: 1, textAlign: 'center' },
-  saveBtn: { backgroundColor: '#8833FF', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8, minWidth: 60, alignItems: 'center' },
+  saveBtn: { backgroundColor: colors.brand, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8, minWidth: 60, alignItems: 'center' },
   saveText: { color: 'white', fontWeight: '800', fontSize: 13 },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 14 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 14, borderRadius: 12, marginBottom: 14 },
   toggleLabel: { fontSize: 13, fontWeight: '700' },
-  toggleHint: { fontSize: 11, color: '#9CA3AF', marginTop: 2 },
-  field: { backgroundColor: 'white', padding: 12, borderRadius: 12, marginBottom: 8 },
+  toggleHint: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 2 },
+  field: { backgroundColor: colors.surface, padding: 12, borderRadius: 12, marginBottom: 8 },
   fieldHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   fIcon: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   fLabel: { fontSize: 13, fontWeight: '700' },
-  input: { backgroundColor: '#F9FAFB', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#E5E7EB', textAlign: 'right' },
-  sub: { fontSize: 10, color: '#9CA3AF', marginTop: 4, fontStyle: 'italic' },
-});
+  input: { backgroundColor: colors.background, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: colors.border, textAlign: 'right' },
+  sub: { fontSize: 10, color: colors.onSurfaceTertiary, marginTop: 4, fontStyle: 'italic' },
+}));

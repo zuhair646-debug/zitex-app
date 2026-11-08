@@ -7,8 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import { colors, themed } from '../../src/theme/tokens';
 
-const PERM_AR: Record<string, string> = { pos: 'نقطة البيع', inventory: 'المخزون', invoices: 'الفواتير', orders: 'الطلبات', products: 'المنتجات', customers: 'العملاء', reports: 'التقارير', settings: 'الإعدادات', marketing: 'التسويق', employees: 'الموظفون', delivery: 'التوصيل', services: 'الخدمات', social: 'التواصل الاجتماعي', competitions: 'المسابقات', returns: 'المرتجعات', support: 'الدعم' };
+const PERM_AR: Record<string, string> = { tickets_reply: 'الرد على التذاكر', tasks: 'المهام', roles_manage: 'إدارة الأدوار', banners: 'البانرات', branches: 'الفروع', drivers: 'السائقون', analytics: 'التقارير المالية', all: 'كل الصلاحيات', pos: 'نقطة البيع', inventory: 'المخزون', invoices: 'الفواتير', orders: 'الطلبات', products: 'المنتجات', customers: 'العملاء', reports: 'التقارير', settings: 'الإعدادات', marketing: 'التسويق', employees: 'الموظفون', delivery: 'التوصيل', services: 'الخدمات', social: 'التواصل الاجتماعي', competitions: 'المسابقات', returns: 'المرتجعات', support: 'الدعم' };
 
 const DEPARTMENTS = [
   { id: 'marketing', label: 'تسويق / سوشال ميديا', icon: 'megaphone', color: '#EC4899', defaultPerms: ['social', 'banners'] },
@@ -87,12 +88,12 @@ export default function MerchantEmployees() {
     { text: tSync('حذف', curLang()), style: 'destructive', onPress: async () => { try { await apiCall(`/api/merchant/employees/${e.id}`, { method: 'DELETE' }); load(); } catch (e: any) { Alert.alert(tSync('خطأ', lang), e.message); } } }
   ]);
 
-  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading) return <View style={s.center}><ActivityIndicator size="large" color={colors.brand} /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>{tSync('👨‍💼 الموظفون (', lang)}{items.length})</Text>
         <TouchableOpacity onPress={openNew} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
@@ -123,9 +124,9 @@ export default function MerchantEmployees() {
       <Modal visible={modalOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModalOpen(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color={colors.onSurface} /></TouchableOpacity>
             <Text style={s.title}>{editing ? tSync('تعديل الموظف', curLang()) : tSync('موظف جديد', curLang())}</Text>
-            <TouchableOpacity onPress={save} disabled={saving}>{saving ? <ActivityIndicator size="small" color="#8833FF" /> : <TX style={{ color: '#8833FF', fontWeight: '800' }}>حفظ</TX>}</TouchableOpacity>
+            <TouchableOpacity onPress={save} disabled={saving}>{saving ? <ActivityIndicator size="small" color={colors.brand} /> : <TX style={{ color: colors.brand, fontWeight: '800' }}>حفظ</TX>}</TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={{ padding: 14 }}>
             <TX style={s.lbl}>الاسم *</TX>
@@ -191,31 +192,31 @@ export default function MerchantEmployees() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: colors.surface },
   title: { fontSize: 16, fontWeight: '800', flex: 1, textAlign: 'center' },
-  addBtn: { backgroundColor: '#8833FF', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40 },
-  empCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'white', padding: 12, borderRadius: 12, marginBottom: 8 },
+  addBtn: { backgroundColor: colors.brand, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  empty: { textAlign: 'center', color: colors.onSurfaceTertiary, marginTop: 40 },
+  empCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, padding: 12, borderRadius: 12, marginBottom: 8 },
   empIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  empName: { fontSize: 14, fontWeight: '800', color: '#0A0A0A' },
-  empMeta: { fontSize: 11, color: '#6B7280', marginTop: 2 },
+  empName: { fontSize: 14, fontWeight: '800', color: colors.onSurface },
+  empMeta: { fontSize: 11, color: colors.onSurfaceSecondary, marginTop: 2 },
   inactive: { color: '#EF4444', fontSize: 11 },
   permRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
-  permTag: { backgroundColor: '#F3E8FF', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 },
-  permTagText: { fontSize: 10, color: '#7C3AED', fontWeight: '700' },
-  morePerms: { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
-  lbl: { fontSize: 13, fontWeight: '700', color: '#374151', marginTop: 12, marginBottom: 6 },
-  hint: { fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' },
-  input: { backgroundColor: 'white', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', textAlign: 'right' },
-  section: { fontSize: 14, fontWeight: '800', color: '#0A0A0A', marginTop: 16, marginBottom: 8 },
-  deptCard: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'white', borderWidth: 1.5, borderColor: '#E5E7EB', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10 },
+  permTag: { backgroundColor: colors.brandTertiary, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 },
+  permTagText: { fontSize: 10, color: colors.brand, fontWeight: '700' },
+  morePerms: { fontSize: 11, color: colors.onSurfaceTertiary, fontWeight: '600' },
+  lbl: { fontSize: 13, fontWeight: '700', color: colors.onSurfaceSecondary, marginTop: 12, marginBottom: 6 },
+  hint: { fontSize: 11, color: colors.onSurfaceTertiary, fontStyle: 'italic' },
+  input: { backgroundColor: colors.surface, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, textAlign: 'right' },
+  section: { fontSize: 14, fontWeight: '800', color: colors.onSurface, marginTop: 16, marginBottom: 8 },
+  deptCard: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10 },
   deptText: { fontSize: 12, fontWeight: '700' },
-  permCard: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8 },
-  permActive: { backgroundColor: '#F3E8FF', borderColor: '#8833FF' },
-  permLbl: { fontSize: 12, color: '#6B7280' },
-  permLblActive: { color: '#7C3AED', fontWeight: '700' },
-  activeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: 12, borderRadius: 10, marginTop: 14 },
-});
+  permCard: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8 },
+  permActive: { backgroundColor: colors.brandTertiary, borderColor: colors.brand },
+  permLbl: { fontSize: 12, color: colors.onSurfaceSecondary },
+  permLblActive: { color: colors.brand, fontWeight: '700' },
+  activeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.surface, padding: 12, borderRadius: 10, marginTop: 14 },
+}));

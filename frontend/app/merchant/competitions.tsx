@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TranslatableName from '../../src/components/TranslatableName';
 import { useAuth } from '../_layout';
+import { colors, themed } from '../../src/theme/tokens';
 
 const APPROVAL_COLORS: any = { pending: '#F59E0B', approved: '#10B981', auto_approved: '#8833FF', rejected: '#EF4444' };
 
@@ -38,11 +39,11 @@ export default function MerchantCompetitions() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>{tSync('المسابقات', lang)} ({comps.length})</Text>
         <TouchableOpacity testID="new-comp" onPress={() => router.push('/merchant/competition-form')} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
+      {loading ? <ActivityIndicator size="large" color={colors.brand} style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16, paddingBottom: 140 }}>
           {comps.length === 0 ? <Text style={s.empty}>{tSync('ما في مسابقات لحد الآن', lang)}</Text> : comps.map(c => {
             const ap = c.approval_status || (c.requires_approval ? 'pending' : 'auto_approved');
@@ -83,10 +84,10 @@ export default function MerchantCompetitions() {
                 )}
                 <View style={s.actions}>
                   <TouchableOpacity testID={`edit-comp-${c.id}`} style={s.actBtn} onPress={() => router.push(`/merchant/competition-form?id=${c.id}` as any)}>
-                    <Ionicons name="create-outline" size={16} color="#8833FF" /><Text style={s.actText}>{tSync('تعديل', lang)}</Text>
+                    <Ionicons name="create-outline" size={16} color={colors.brand} /><Text style={s.actText}>{tSync('تعديل', lang)}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity testID={`stats-comp-${c.id}`} style={s.actBtn} onPress={() => router.push(`/merchant/competition-analytics?id=${c.id}` as any)}>
-                    <Ionicons name="stats-chart" size={16} color="#8833FF" /><Text style={s.actText}>{tSync('الإحصائيات', lang)}</Text>
+                    <Ionicons name="stats-chart" size={16} color={colors.brand} /><Text style={s.actText}>{tSync('الإحصائيات', lang)}</Text>
                   </TouchableOpacity>
                   {c.status !== 'ended' && (c.joined_count || 0) > 0 && (
                     <TouchableOpacity testID={`draw-comp-${c.id}`} style={[s.actBtn, s.drawBtn]} onPress={() => draw(c)}>
@@ -103,30 +104,30 @@ export default function MerchantCompetitions() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   backBtn: { padding: 4 },
-  title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: '#0A0A0A' },
-  addBtn: { backgroundColor: '#8833FF', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  card: { backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 10 },
+  title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: colors.onSurface },
+  addBtn: { backgroundColor: colors.brand, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  card: { backgroundColor: colors.surface, padding: 14, borderRadius: 12, marginBottom: 10 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  compTitle: { fontSize: 14, fontWeight: '700', color: '#0A0A0A', flex: 1, marginRight: 8 },
-  prize: { fontSize: 13, color: '#8833FF', fontWeight: '600' },
+  compTitle: { fontSize: 14, fontWeight: '700', color: colors.onSurface, flex: 1, marginRight: 8 },
+  prize: { fontSize: 13, color: colors.brand, fontWeight: '600' },
   statRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 8 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   badgeText: { fontSize: 11, fontWeight: '700' },
-  joined: { fontSize: 12, color: '#6B7280' },
+  joined: { fontSize: 12, color: colors.onSurfaceSecondary },
   note: { fontSize: 12, color: '#EF4444', marginTop: 6, fontStyle: 'italic' },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40, fontSize: 14 },
-  winners: { marginTop: 10, padding: 10, borderRadius: 10, backgroundColor: '#FFFBEB', gap: 6 },
+  empty: { textAlign: 'center', color: colors.onSurfaceTertiary, marginTop: 40, fontSize: 14 },
+  winners: { marginTop: 10, padding: 10, borderRadius: 10, backgroundColor: colors.brandTertiary, gap: 6 },
   winTitle: { fontSize: 13, fontWeight: '800', color: '#92400E' },
   winRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  winName: { fontSize: 13, fontWeight: '700', color: '#0A0A0A' },
+  winName: { fontSize: 13, fontWeight: '700', color: colors.onSurface },
   smallBtn: { backgroundColor: '#10B981', paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 8 },
   smallBtnText: { color: 'white', fontSize: 12, fontWeight: '700' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
-  actBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 40, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: '#8833FF' },
-  drawBtn: { backgroundColor: '#8833FF' },
-  actText: { color: '#8833FF', fontSize: 13, fontWeight: '700' },
-});
+  actBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 40, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.brand },
+  drawBtn: { backgroundColor: colors.brand },
+  actText: { color: colors.brand, fontSize: 13, fontWeight: '700' },
+}));

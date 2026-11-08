@@ -1,5 +1,5 @@
 import { useMemo,  useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions, Modal, RefreshControl, ActivityIndicator, TextInput, Alert, FlatList, Platform, Linking } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions, Modal, RefreshControl, ActivityIndicator, TextInput, Alert, FlatList, Platform, Linking, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -47,6 +47,19 @@ export default function SocialScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [storyOpen, setStoryOpen] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [applyPost, setApplyPost] = useState<any>(null);
+  const [applyForm, setApplyForm] = useState({ name: '', phone: '', note: '' });
+  const [applying, setApplying] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<'all' | 'offer' | 'job' | 'competition' | 'experience'>('all');
+  const submitApply = async () => {
+    if (applyForm.name.trim().length < 2 || applyForm.phone.trim().length < 8) { notify(tSync('أكمل الاسم ورقم الجوال', curLang())); return; }
+    setApplying(true);
+    try {
+      const r = await apiCall(`/api/social/posts/${applyPost.id}/apply`, { method: 'POST', body: JSON.stringify(applyForm) });
+      setPosts(ps => ps.map(p => p.id === applyPost.id ? { ...p, applicants: (p.applicants || 0) + 1 } : p));
+      setApplyPost(null); notify(tSync(r.message || 'تم استلام طلبك', curLang()));
+    } catch (e: any) { notify(tSync('خطأ', curLang()), e.message); } finally { setApplying(false); }
+  };
 
   // Comments thread
   const [threadPostId, setThreadPostId] = useState<string | null>(null);
@@ -156,7 +169,7 @@ export default function SocialScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storiesRow}>
             {stories.length === 0 && (
               <View style={s.storyItem}>
-                <View style={[s.storyCircle, { borderColor: '#E5E7EB' }]}>
+                <View style={[s.storyCircle, { borderColor: colors.border }]}>
                   <View style={s.storyAvatar}><Ionicons name="storefront" size={22} color={colors.onSurfaceTertiary} /></View>
                 </View>
                 <TX style={s.storyLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>لا حالات</TX>
@@ -172,8 +185,18 @@ export default function SocialScreen() {
             ))}
           </ScrollView>
 
+          {/* Feed filter chips */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filterRow}>
+            {([['all', 'الكل', 'apps'], ['offer', 'العروض', 'pricetag'], ['job', 'الوظائف', 'briefcase'], ['competition', 'المسابقات', 'trophy'], ['experience', 'تجارب العملاء', 'star']] as const).map(([k, label, icon]) => (
+              <TouchableOpacity key={k} testID={`feed-filter-${k}`} style={[s.filterChip, feedFilter === k && s.filterChipOn]} onPress={() => setFeedFilter(k)}>
+                <Ionicons name={icon as any} size={14} color={feedFilter === k ? colors.onBrandPrimary : colors.onSurfaceSecondary} />
+                <Text style={[s.filterTxt, feedFilter === k && { color: colors.onBrandPrimary }]}>{tSync(label, lang)}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
           {/* Marketing campaign cards */}
-          {campaigns.length > 0 && campaigns.map((c: any) => {
+          {feedFilter === 'all' && campaigns.length > 0 && campaigns.map((c: any) => {
             const isAff = c.campaign_type === 'affiliate';
             const label = c.cta_label || (isAff ? tSync('قدّم الآن', curLang()) : tSync('تسوّق الآن', curLang()));
             const onPress = async () => {
@@ -208,7 +231,7 @@ export default function SocialScreen() {
                   {!!c.incentives && isAff && <Text style={s.campaignIncentives}>🎯 {c.incentives}</Text>}
                   <View style={s.campaignCta}>
                     <Text style={s.campaignCtaText}>{label}</Text>
-                    <Ionicons name="arrow-back" size={16} color={colors.onSurface} />
+                    <Ionicons name="arrow-back" size={16} color={colors.onBrandPrimary} />
                   </View>
                 </View>
               </TouchableOpacity>
@@ -217,7 +240,7 @@ export default function SocialScreen() {
 
           {/* Posts */}
           {posts.length === 0 && campaigns.length === 0 && <TX style={s.empty}>لا توجد منشورات بعد</TX>}
-          {posts.map((post: any) => {
+          {posts.filter((p: any) => feedFilter === 'all' || (feedFilter === 'competition' ? (p.type === 'competition' || p.type === 'competition_result') : p.type === feedFilter)).map((post: any) => {
             const postId = post.id || post._id;
             const isPoll = post.type === 'poll';
             const isQuestion = post.type === 'question';
@@ -228,15 +251,15 @@ export default function SocialScreen() {
             return (
               <View key={postId} style={s.postCard}>
                 {isQuestion && (
-                  <View style={s.qBadge}><Ionicons name="help-circle" size={14} color="#F59E0B" /><TX style={s.qBadgeText}>سؤال</TX></View>
+                  <View style={s.qBadge}><Ionicons name="help-circle" size={14} color={colors.warning} /><TX style={s.qBadgeText}>سؤال</TX></View>
                 )}
                 {isEvent && (
-                  <View style={[s.qBadge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="calendar" size={14} color="#10B981" /><TX style={[s.qBadgeText, { color: '#065F46' }]}>فعالية</TX></View>
+                  <View style={[s.qBadge, { backgroundColor: colors.successSoft }]}><Ionicons name="calendar" size={14} color={colors.success} /><TX style={[s.qBadgeText, { color: colors.success }]}>فعالية</TX></View>
                 )}
                 {post.linked_competition_id ? (
                   <TouchableOpacity testID={`post-competition-${postId}`} style={[s.qBadge, { backgroundColor: colors.surfaceSecondary, minHeight: 36 }]} onPress={() => router.push(`/competition/${post.linked_competition_id}` as any)}>
                     <Ionicons name={post.type === 'competition_result' ? 'trophy' : 'gift'} size={14} color={colors.brand} />
-                    <Text style={[s.qBadgeText, { color: '#F5C518' }]}>{post.badge || ''} • {tSync(post.type === 'competition_result' ? 'شاهد النتيجة' : 'شارك الآن', curLang())}</Text>
+                    <Text style={[s.qBadgeText, { color: colors.brand }]}>{post.badge || ''} • {tSync(post.type === 'competition_result' ? 'شاهد النتيجة' : 'شارك الآن', curLang())}</Text>
                   </TouchableOpacity>
                 ) : null}
                 {post.question ? (
@@ -255,6 +278,35 @@ export default function SocialScreen() {
                     <Ionicons name="construct" size={14} color={colors.brand} />
                     <Text style={[s.qBadgeText, { color: colors.brand }]}>{post.badge} • {tSync('شاهد الخدمة والتقييمات', curLang())}</Text>
                   </TouchableOpacity>
+                ) : null}
+                {post.type === 'job' ? (
+                  <View style={s.jobBox} testID={`post-job-${postId}`}>
+                    <View style={s.jobHead}>
+                      <View style={s.jobIcon}><Ionicons name="briefcase" size={18} color={colors.onBrandPrimary} /></View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.jobBadge}>{tSync('مطلوب للتوظيف', lang)}</Text>
+                        <TranslatableName text={post.job_title} style={s.jobTitle} />
+                      </View>
+                    </View>
+                    <View style={s.jobMetaRow}>
+                      {!!post.job_city && <Text style={s.jobMeta}>📍 {tSync(post.job_city, lang)}</Text>}
+                      {!!post.job_type && <Text style={s.jobMeta}>⏱ {tSync(post.job_type, lang)}</Text>}
+                      {!!post.job_salary && <Text style={s.jobMeta}>💰 {tSync(post.job_salary, lang)}</Text>}
+                    </View>
+                    {(post.job_requirements || []).map((rq: string, i: number) => (
+                      <Text key={i} style={s.jobReq}>• {tSync(rq, lang)}</Text>
+                    ))}
+                    <TouchableOpacity testID={`job-apply-${postId}`} style={s.jobBtn} onPress={() => { setApplyPost(post); setApplyForm({ name: user?.name || '', phone: user?.phone || '', note: '' }); }}>
+                      <Ionicons name="send" size={16} color={colors.onBrandPrimary} />
+                      <Text style={s.jobBtnTxt}>{tSync('قدّم الآن', lang)}{post.applicants ? `  •  ${post.applicants}` : ''}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+                {post.type === 'offer' ? (
+                  <View style={s.offerRow} testID={`post-offer-${postId}`}>
+                    <View style={s.offerBadge}><Ionicons name="pricetag" size={12} color={colors.onBrandPrimary} /><Text style={s.offerBadgeTxt}>{tSync(post.badge || 'عرض خاص', lang)}</Text></View>
+                    {!!post.valid_until && <Text style={s.offerValid}>{tSync('ينتهي', lang)} {post.valid_until}</Text>}
+                  </View>
                 ) : null}
                 <View style={s.postHeader}>
                   <View style={s.postAvatar}><Ionicons name="storefront" size={18} color={colors.brand} /></View>
@@ -302,10 +354,26 @@ export default function SocialScreen() {
                   ) : null;
                 })()}
 
+                {/* Offer price + CTA */}
+                {post.type === 'offer' && (
+                  <View style={s.offerBox}>
+                    <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, flex: 1, flexWrap: 'wrap' }}>
+                      <Text style={s.offerPrice}>{post.offer_price} {tSync('ر.س', lang)}</Text>
+                      {post.offer_old_price > 0 && <Text style={s.offerOld}>{post.offer_old_price}</Text>}
+                    </View>
+                    <TouchableOpacity testID={`offer-cta-${postId}`} style={s.offerCta} onPress={() => {
+                      const l = post.cta_link || '/search';
+                      if (l.startsWith('http')) Linking.openURL(l); else router.push(l as any);
+                    }}>
+                      <Text style={s.offerCtaTxt}>{tSync(post.cta_label || 'تسوّق الآن', lang)}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 {/* Event details */}
                 {isEvent && (
                   <View style={s.eventBox}>
-                    <Ionicons name="time" size={14} color="#10B981" />
+                    <Ionicons name="time" size={14} color={colors.success} />
                     <Text style={s.eventText}>📅 {post.event_date} {post.event_location && `• 📍 ${post.event_location}`}</Text>
                   </View>
                 )}
@@ -316,9 +384,9 @@ export default function SocialScreen() {
                   const isSelected = userVoted === i;
                   return (
                     <TouchableOpacity key={i} style={[s.pollOption, isSelected && s.pollSelected]} onPress={() => votePoll(postId, i)}>
-                      <View style={[s.pollBarFill, { width: `${pct}%`, backgroundColor: isSelected ? '#8833FF40' : colors.surfaceSecondary }]} />
+                      <View style={[s.pollBarFill, { width: `${pct}%`, backgroundColor: isSelected ? colors.brandTertiary : colors.surfaceSecondary }]} />
                       <TranslatableName text={opt.text} style={[s.pollOptionText, isSelected && { fontWeight: '800' }] as any} />
-                      <Text style={[s.pollPct, isSelected && { color: '#F5C518' }]}>{pct}%</Text>
+                      <Text style={[s.pollPct, isSelected && { color: colors.brand }]}>{pct}%</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -442,9 +510,26 @@ export default function SocialScreen() {
           />
           <View style={s.commentBar}>
             <TextInput testID="comment-input" style={[s.commentInput]} value={threadText} onChangeText={setThreadText} placeholder={tSync("اكتب تعليقاً...", lang)} />
-            <TouchableOpacity testID="comment-send-btn" style={s.sendBtn} onPress={sendComment}><Ionicons name="send" size={18} color="white" /></TouchableOpacity>
+            <TouchableOpacity testID="comment-send-btn" style={s.sendBtn} onPress={sendComment}><Ionicons name="send" size={18} color={colors.onBrandPrimary} /></TouchableOpacity>
           </View>
         </SafeAreaView>
+      </Modal>
+      {/* Job application sheet */}
+      <Modal visible={!!applyPost} transparent animationType="slide" onRequestClose={() => setApplyPost(null)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.sheetBg}>
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setApplyPost(null)} />
+          <View style={s.sheet}>
+            <View style={s.sheetHandle} />
+            <Text style={s.sheetTitle}>{tSync('التقديم على وظيفة', lang)}</Text>
+            {!!applyPost && <TranslatableName text={applyPost.job_title} style={s.sheetSub} />}
+            <TextInput testID="apply-name" style={s.sheetInput} value={applyForm.name} onChangeText={v => setApplyForm({ ...applyForm, name: v })} placeholder={tSync('الاسم الكامل', lang)} placeholderTextColor={colors.onSurfaceTertiary} />
+            <TextInput testID="apply-phone" style={s.sheetInput} value={applyForm.phone} keyboardType="phone-pad" onChangeText={v => setApplyForm({ ...applyForm, phone: v })} placeholder={tSync('رقم الجوال', lang)} placeholderTextColor={colors.onSurfaceTertiary} />
+            <TextInput testID="apply-note" style={[s.sheetInput, { minHeight: 90, textAlignVertical: 'top' }]} multiline value={applyForm.note} onChangeText={v => setApplyForm({ ...applyForm, note: v })} placeholder={tSync('نبذة عن خبرتك (اختياري)', lang)} placeholderTextColor={colors.onSurfaceTertiary} />
+            <TouchableOpacity testID="apply-submit" style={s.jobBtn} onPress={submitApply} disabled={applying}>
+              {applying ? <ActivityIndicator color={colors.onBrandPrimary} /> : <Text style={s.jobBtnTxt}>{tSync('إرسال طلب التوظيف', lang)}</Text>}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
       <ConfirmSheet visible={!!reportId} testID="report-sheet" title={tSync('الإبلاغ عن المنشور', lang)}
         message={tSync('بلّغ فقط عن الإساءة أو الاحتيال أو المحتوى المخل أو نشر بيانات خاصة. الرأي الصادق حتى لو كان سلبياً مسموح ولا يُحذف.', lang)}
@@ -462,6 +547,35 @@ function useSStyles() {
   const { themeKey } = useTheme();
   return useMemo(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  filterRow: { paddingHorizontal: 16, gap: 8, paddingBottom: 12 },
+  filterChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, minHeight: 36, borderRadius: 18, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
+  filterChipOn: { backgroundColor: colors.brand, borderColor: colors.brand },
+  filterTxt: { fontSize: 12, fontWeight: '700', color: colors.onSurfaceSecondary },
+  jobBox: { padding: 12, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, marginBottom: 10, gap: 6 },
+  jobHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  jobIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
+  jobBadge: { fontSize: 11, fontWeight: '800', color: colors.brand },
+  jobTitle: { fontSize: 16, fontWeight: '900', color: colors.onSurface },
+  jobMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  jobMeta: { fontSize: 11, fontWeight: '700', color: colors.onSurfaceSecondary, backgroundColor: colors.surfaceSecondary, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, overflow: 'hidden' },
+  jobReq: { fontSize: 12, color: colors.onSurfaceSecondary },
+  jobBtn: { flexDirection: 'row', gap: 6, minHeight: 46, borderRadius: 12, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
+  jobBtnTxt: { color: colors.onBrandPrimary, fontWeight: '900', fontSize: 14 },
+  offerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  offerBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.brand, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  offerBadgeTxt: { color: colors.onBrandPrimary, fontSize: 11, fontWeight: '800' },
+  offerValid: { fontSize: 11, color: colors.onSurfaceTertiary, fontWeight: '600' },
+  offerBox: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.brand, marginTop: 8, marginBottom: 10 },
+  offerPrice: { fontSize: 20, fontWeight: '900', color: colors.brand },
+  offerOld: { fontSize: 13, color: colors.onSurfaceTertiary, textDecorationLine: 'line-through' },
+  offerCta: { backgroundColor: colors.brand, paddingHorizontal: 16, minHeight: 44, borderRadius: 12, justifyContent: 'center' },
+  offerCtaTxt: { color: colors.onBrandPrimary, fontWeight: '900', fontSize: 13 },
+  sheetBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
+  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 34, gap: 10 },
+  sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center' },
+  sheetTitle: { fontSize: 18, fontWeight: '900', color: colors.onSurface, textAlign: 'center' },
+  sheetSub: { fontSize: 13, color: colors.brand, fontWeight: '700', textAlign: 'center' },
+  sheetInput: { minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSecondary, paddingHorizontal: 14, color: colors.onSurface, fontSize: 14 },
   policyBar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 10, padding: 10, borderRadius: 12, backgroundColor: colors.surfaceSecondary, minHeight: 44 },
   policyTxt: { flex: 1, color: colors.onSurfaceSecondary, fontSize: 12, fontWeight: '700' },
   qaBox: { marginTop: 8, padding: 12, borderRadius: 14, backgroundColor: colors.surfaceSecondary, gap: 6 },
@@ -475,29 +589,29 @@ function useSStyles() {
   storiesRow: { paddingHorizontal: 16, gap: 14, paddingVertical: 12 },
   storyItem: { alignItems: 'center', width: 68 },
   storyCircle: { width: 62, height: 62, borderRadius: 31, borderWidth: 2.5, borderColor: '#EC4899', alignItems: 'center', justifyContent: 'center', marginBottom: 4, padding: 2 },
-  storyAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(245,197,24,0.15)', alignItems: 'center', justifyContent: 'center' },
+  storyAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center' },
   storyAvatarImg: { width: 50, height: 50, borderRadius: 25 },
   storyLabel: { fontSize: 10, color: colors.onSurfaceSecondary, fontWeight: '500', textAlign: 'center' },
 
   postCard: { marginHorizontal: 20, marginBottom: 16, backgroundColor: colors.surfaceSecondary, borderRadius: 20, padding: 16 },
-  campaignCard: { marginHorizontal: 20, marginBottom: 16, backgroundColor: '#0A0A0A', borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: colors.brand },
-  campaignImage: { width: '100%', height: 140, backgroundColor: '#1F1F1F' },
+  campaignCard: { marginHorizontal: 20, marginBottom: 16, backgroundColor: colors.surface, borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: colors.brand },
+  campaignImage: { width: '100%', height: 140, backgroundColor: colors.surfaceSecondary },
   campaignBody: { padding: 16 },
   campaignBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  campaignBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: '#2A2A2A' },
+  campaignBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: colors.surfaceSecondary },
   campaignBadgeGold: { backgroundColor: colors.brand },
   campaignBadgeText: { color: colors.brand, fontSize: 11, fontWeight: '800' },
-  campaignBadgeTextGold: { color: colors.onSurface },
-  campaignMerchant: { color: '#9CA3AF', fontSize: 11, marginLeft: 'auto' },
-  campaignTitle: { color: 'white', fontSize: 17, fontWeight: '900', marginBottom: 4 },
-  campaignDesc: { color: '#D0D0D0', fontSize: 13, lineHeight: 20 },
+  campaignBadgeTextGold: { color: colors.onBrandPrimary },
+  campaignMerchant: { color: colors.onSurfaceTertiary, fontSize: 11, marginLeft: 'auto' },
+  campaignTitle: { color: colors.onSurface, fontSize: 17, fontWeight: '900', marginBottom: 4 },
+  campaignDesc: { color: colors.onSurfaceSecondary, fontSize: 13, lineHeight: 20 },
   campaignIncentives: { color: colors.brand, fontSize: 12, marginTop: 8, fontWeight: '700' },
   campaignCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14, backgroundColor: colors.brand, paddingVertical: 12, borderRadius: 12 },
-  campaignCtaText: { color: colors.onSurface, fontSize: 15, fontWeight: '900' },
-  qBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FEF3C7', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 8 },
-  qBadgeText: { fontSize: 11, color: '#92400E', fontWeight: '700' },
+  campaignCtaText: { color: colors.onBrandPrimary, fontSize: 15, fontWeight: '900' },
+  qBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.warningSoft, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 8 },
+  qBadgeText: { fontSize: 11, color: colors.warning, fontWeight: '700' },
   postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  postAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(245,197,24,0.15)', alignItems: 'center', justifyContent: 'center', marginEnd: 10 },
+  postAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center', marginEnd: 10 },
   postAuthorInfo: { flex: 1 },
   postAuthor: { fontSize: 14, fontWeight: '700', color: colors.onSurface },
   postTime: { fontSize: 11, color: colors.onSurfaceTertiary },
@@ -508,8 +622,8 @@ function useSStyles() {
   imgScroll: { marginBottom: 12 },
   multiImg: { width: width - 72, height: 220, borderRadius: 14, marginRight: 8 },
 
-  eventBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#D1FAE5', padding: 10, borderRadius: 10, marginBottom: 10 },
-  eventText: { fontSize: 12, color: '#065F46', fontWeight: '700' },
+  eventBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.successSoft, padding: 10, borderRadius: 10, marginBottom: 10 },
+  eventText: { fontSize: 12, color: colors.success, fontWeight: '700' },
 
   pollOption: { flexDirection: 'row', alignItems: 'center', height: 44, borderRadius: 12, overflow: 'hidden', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14, marginBottom: 6 },
   pollSelected: { borderColor: colors.brand, borderWidth: 2 },
@@ -523,8 +637,8 @@ function useSStyles() {
   actionCount: { fontSize: 12, color: colors.onSurfaceSecondary, fontWeight: '500' },
   empty: { textAlign: 'center', color: colors.onSurfaceTertiary, marginTop: 40 },
 
-  contactBar: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F4F4F5' },
-  contactLabel: { fontSize: 11, color: '#71717A', fontWeight: '700', marginBottom: 6 },
+  contactBar: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border },
+  contactLabel: { fontSize: 11, color: colors.onSurfaceSecondary, fontWeight: '700', marginBottom: 6 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
   chipText: { color: 'white', fontSize: 11, fontWeight: '700' },
 
@@ -537,14 +651,14 @@ function useSStyles() {
   storyTime: { color: 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 4 },
 
   cmtCard: { flexDirection: 'row', backgroundColor: colors.surface, padding: 12, borderRadius: 12, marginBottom: 6 },
-  cmtMerchantStyle: { backgroundColor: '#F3E8FF' },
+  cmtMerchantStyle: { backgroundColor: colors.brandTertiary },
   cmtAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
-  cmtAvText: { color: 'white', fontWeight: '800', fontSize: 12 },
+  cmtAvText: { color: colors.onBrandPrimary, fontWeight: '800', fontSize: 12 },
   cmtName: { fontSize: 13, fontWeight: '700', color: colors.onSurface },
   cmtText: { fontSize: 13, color: colors.onSurfaceSecondary, marginTop: 2 },
   merchantTag: { color: colors.brand, fontSize: 10, fontWeight: '700' },
   commentBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, paddingBottom: Platform.OS === 'ios' ? 28 : 12 },
-  commentInput: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, textAlign: 'right' },
+  commentInput: { flex: 1, backgroundColor: colors.surfaceSecondary, color: colors.onSurface, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, textAlign: 'right' },
   sendBtn: { backgroundColor: colors.brand, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
 }), [themeKey]); // eslint-disable-line react-hooks/exhaustive-deps -- colors are mutable
 }

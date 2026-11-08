@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from './_layout';
 import TranslatableName from '../src/components/TranslatableName';
+import { colors, themed } from '../src/theme/tokens';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -112,7 +113,7 @@ export default function MyReturnsScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
   back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
@@ -126,4 +127,4 @@ const s = StyleSheet.create({
   pillText: { fontSize: 9, fontWeight: '900' },
   desc: { color: MUTED, fontSize: 10, textAlign: 'auto', marginTop: 4 },
   emptyBtn: { backgroundColor: GOLD, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999, marginTop: 12 },
-});
+}));

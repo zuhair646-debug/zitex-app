@@ -1,0 +1,47 @@
+{
+  "summary": "v1.40.0 fix-verification pass after iteration 67 (backend pytest plus Expo web at 390x844, English mode, dark and light themes). Backend: 12/14 pass in the new tests/test_staff_ops_iter68.py. Verified: employee social posts publish with author = store name ('Zenrex Store'), posted_by_staff = employee name and author_id = merchant. Employee comments on /comments use the store name with is_merchant_reply=true. /store-reply uses the store name, and a non-social employee gets 403 there. An invalid assignee (malformed or unknown ObjectId) returns 400 on PUT /merchant/tickets/{id}, POST /merchant/tasks and PUT /merchant/tasks/{id}. Dashboards for the social, support, ops and inventory specialists work. Inventory user gets 403 on tickets. Job apply works and blocks duplicates. Still failing: 2 employee social reply endpoints save the EMPLOYEE's name instead of the store name. Frontend: all the requested fixes work. /search?q=AirPods prefills the query and shows 2 AirPods results, both by deep link and by tapping the offer CTA in the feed. English mode shows correct labels on the staff dashboard widgets and stats, ticket filters and priorities ('High priority', 'Not yet assigned to an employee'), the new-ticket sheet, the task form ('Add Task'), composer job/offer labels and placeholders, feed chips (Deals/Jobs/Competitions/Customer Reviews), and the More items (Task Board/Support Tickets). The Employees screen shows 'Reply to tickets' etc. with no raw keys. Ticket filter toggles are hidden when the inventory user gets a permission error. In light theme, wallet amounts use brand/success colors and the merchant tab bar is light. merchant/social post cards are themed in dark. Regression: an ops user created a task through the UI and moved it to In Progress. Arabic left on screen is user or seed data (names, subjects), plus the backend's Arabic-only 403 text. ENVIRONMENT NOTE: while scripts/bulk_translate.py was running, the backend nearly stalled (login took 40s and first-run tests timed out). Results above are from a run after the load dropped. Deprecated packages: none re-checked in this pass (iteration 67 found none).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/social/posts/{pid}/comments/{cid}/reply (server.py:2784)", "issue": "is_merchant is now true for the social employee, but user_name is user.get('name') ('نورة أخصائية السوشال ميديا') instead of await store_display_name(user) when is_social_staff(user). Test: test_employee_reply_endpoint_store_name."},
+      {"endpoint": "POST /api/merchant/social/posts/{pid}/comments/{cid}/replies (server.py:~5609)", "issue": "user_name is f\"🏪 {user.get('name')}\", so it shows the employee name. Use f\"🏪 {await store_display_name(user)}\". Test: test_store_reply_and_replies_endpoints."},
+      {"endpoint": "POST /api/translate/bulk (translate.py:435-443)", "issue": "Unbounded asyncio.gather of LLM calls while bulk_translate.py runs starves the single uvicorn worker. All APIs slowed to 20-40s (login timed out). Add an asyncio.Semaphore (e.g. 4) around _llm, or run the bulk job outside the API process."},
+      {"endpoint": "GET /api/merchant/tickets 403 + job-apply ticket subject", "issue": "Still Arabic-only: the 403 detail 'يتطلب صلاحية: الرد على التذاكر' shows in English mode, and the job-application ticket subject is hardcoded 'طلب توظيف: {title}' (staff_ops.py:380)."},
+      {"endpoint": "CORS", "issue": "Pre-existing: access-control-allow-origin '*' is returned together with allow-credentials true, even for Origin https://evil.com. Use explicit origins."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "search.tsx category chips", "issue": "The horizontal category ScrollView (line 77) stretches vertically when there are few results, so the chips become ~250px tall pills. Add style={{ flexGrow: 0 }} to the ScrollView. Seen on /search?q=AirPods.", "testID": "n/a", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "merchant/employees, merchant/social, support headers", "issues": ["The back arrow and header title ('👨‍💼 Employees (9)', '🎧 Technical support') are very low-contrast dark-grey on a near-black header in dark mode"]},
+      {"screen": "merchant/social composer (English)", "issues": ["TextInputs are still right-aligned (textAlign right) in LTR English mode", "The Publish button draws a yellow pill nested inside a gold rectangle (double button)"]},
+      {"screen": "merchant/tickets permission error", "issues": ["The error text is dark red on black (low contrast) and Arabic-only in English"]},
+      {"screen": "Staff screens (English)", "issues": ["Employee names show in Arabic in the dashboard greeting, task assignee chips and ticket cards, while merchant/employees shows translated names (e.g. 'Noura, Social Media Specialist'). Inconsistent.", "Wording differs: 'Check in' on the merchant dashboard vs 'Clock in' on the staff dashboard", "Inventory/social bottom tab bar has a hidden-tab gap, and the 'Products' label sits partly under the Live Store FAB"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_staff_ops_iter68.py", "/app/test_reports/pytest/iter68.xml"],
+  "action_items": [
+    "server.py:2784 reply_to_comment: user_name = await store_display_name(user) if is_social_staff(user) else user['name']",
+    "server.py:~5609 reply_to_comment_as_store: use store_display_name(user) instead of user['name'] (keep the 🏪 prefix if wanted)",
+    "translate.py: limit concurrent LLM calls in /translate/bulk with an asyncio.Semaphore so background translation does not stall the API",
+    "search.tsx:77: add style={{flexGrow:0}} to the horizontal category ScrollView",
+    "Optional: bilingual 403 detail in staff_ops.need_tickets, bilingual job-application subject, LTR textAlign in the composer inputs, header title/back contrast in dark mode"
+  ],
+  "critical_code_review_comments": [
+    "server.py ~2793: Cloudinary api_key/api_secret are hardcoded as os.getenv defaults (pre-existing secret leak). Move them to .env only.",
+    "store-reply endpoint returns ok even when no comment matched (matched_count not checked), unlike /replies, which returns 404",
+    "DELETE /merchant/tasks/{id} still returns 200 when nothing was deleted",
+    "tickets.tsx: the tickets payload sets error on any failure (including network), and that also hides the toggles. Acceptable, but there is no retry CTA apart from the header refresh"
+  ],
+  "updated_files": ["/app/backend/tests/test_staff_ops_iter68.py (new)"],
+  "success_rate": {"backend": "86% (12/14)", "frontend": "100% of requested fix verifications pass; 1 new layout bug (search chips)"},
+  "seed_data_creation": "None. Test data was TEST_-prefixed posts, comments, tasks and one job-apply ticket, all deleted by id. One stray TEST_iter68 task and the TEST_ Dev job ticket left by timed-out runs were also removed by id.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run tests/test_staff_ops_iter68.py (needs MONGO_URL/DB_NAME; it seeds an embedded comments array on its own TEST post to test store-reply/replies). Language: localStorage app_lang='en'. Theme: '@zenrex_theme_mode_v2'='light'. If scripts/bulk_translate.py is running, the backend is very slow; wait for it to finish.",
+  "rca_of_issue": "Employee reply name: commit 'is_social_staff' broadened the permission checks on /reply and /replies, but the user_name fields were not switched to store_display_name(). Backend slowness: translate_bulk fans out unbounded concurrent LLM calls in one uvicorn worker while the bulk job posts back-to-back batches."
+}

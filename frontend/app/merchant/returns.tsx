@@ -8,6 +8,7 @@ import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
 import { FilterTabs } from '../../src/components/ui/FilterTabs';
 import { useT, curLang } from '../../src/i18n';
+import { colors, themed } from '../../src/theme/tokens';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -338,7 +339,7 @@ const DetailRow = ({ icon, label, value }: { icon: string; label: string; value:
   </View>
 );
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
   back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
@@ -369,4 +370,4 @@ const s = StyleSheet.create({
   confirmBox: { backgroundColor: BG, margin: 20, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: BORDER },
   confirmBtn: { flex: 1, padding: 12, borderRadius: 10, alignItems: 'center' },
   auditRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: CARD, borderWidth: 1, borderColor: BORDER, padding: 8, borderRadius: 8, marginTop: 4 },
-});
+}));

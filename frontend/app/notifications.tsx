@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { useT, curLang } from '../src/i18n';
 import { TX, tf, tSync } from '../src/useAutoT';
+import { colors, themed } from '../src/theme/tokens';
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -52,11 +53,11 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>🔔 {t('notif.title')} {unread > 0 && <Text style={{ color: '#EF4444' }}>({unread})</Text>}</Text>
         {unread > 0 ? <TouchableOpacity onPress={markAll}><TX style={s.markAll}>✓ تم</TX></TouchableOpacity> : <View style={{ width: 22 }} />}
       </View>
-      {loading ? <ActivityIndicator size="large" color="#F5C518" style={{ marginTop: 40 }} /> : (
+      {loading ? <ActivityIndicator size="large" color={colors.brand} style={{ marginTop: 40 }} /> : (
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 14 }}>
           {items.length === 0 && <Text style={s.empty}>{t('notif.empty')}</Text>}
           {items.map(n => (
@@ -67,7 +68,7 @@ export default function NotificationsScreen() {
                 <TranslatableName text={n.body} style={s.nBody} inline={false} />
                 <Text style={s.nTime}>{timeAgo(n.created_at)}</Text>
               </View>
-              <Ionicons name="chevron-back" size={18} color="#9CA3AF" />
+              <Ionicons name="chevron-back" size={18} color={colors.onSurfaceTertiary} />
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -76,16 +77,16 @@ export default function NotificationsScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: colors.surface },
   title: { fontSize: 17, fontWeight: '800' },
-  markAll: { color: '#F5C518', fontWeight: '700', fontSize: 13 },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40 },
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 8, gap: 10 },
-  cardUnread: { backgroundColor: '#FFF7DA' },
+  markAll: { color: colors.brand, fontWeight: '700', fontSize: 13 },
+  empty: { textAlign: 'center', color: colors.onSurfaceTertiary, marginTop: 40 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 14, borderRadius: 12, marginBottom: 8, gap: 10 },
+  cardUnread: { backgroundColor: colors.brandTertiary },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
-  nTitle: { fontSize: 14, fontWeight: '800', color: '#0A0A0A' },
-  nBody: { fontSize: 12, color: '#374151', marginTop: 2 },
-  nTime: { fontSize: 11, color: '#9CA3AF', marginTop: 4 },
-});
+  nTitle: { fontSize: 14, fontWeight: '800', color: colors.onSurface },
+  nBody: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 2 },
+  nTime: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 4 },
+}));

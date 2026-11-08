@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import TranslatableName from '../src/components/TranslatableName';
+import { colors, themed } from '../src/theme/tokens';
 
 export default function CartScreen() {
   const { lang } = useT();
@@ -73,13 +74,13 @@ export default function CartScreen() {
   const delivery = 15;
   const total = subtotal + tax + delivery;
 
-  if (loading) return <View style={styles.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
+  if (loading) return <View style={styles.loadWrap}><ActivityIndicator size="large" color={colors.brand} /></View>;
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity testID="cart-back-btn" style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
+          <Ionicons name="arrow-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{tSync('سلة التسوق', lang)}</Text>
         <Text style={styles.itemCount}>{items.length} {tSync('منتج', lang)}</Text>
@@ -87,7 +88,7 @@ export default function CartScreen() {
 
       {items.length === 0 ? (
         <View style={styles.emptyWrap}>
-          <View style={styles.emptyIconWrap}><Ionicons name="cart-outline" size={64} color="#A1A1AA" /></View>
+          <View style={styles.emptyIconWrap}><Ionicons name="cart-outline" size={64} color={colors.onSurfaceTertiary} /></View>
           <Text style={styles.emptyTitle}>{tSync('السلة فارغة', lang)}</Text>
           <Text style={styles.emptyDesc}>{tSync('ما أضفت أي منتجات لحد الآن', lang)}</Text>
           <TouchableOpacity testID="browse-products-btn" style={styles.browseBtn} onPress={() => router.back()}>
@@ -117,11 +118,11 @@ export default function CartScreen() {
                     <Text style={styles.cartPrice}>{price} {tSync('ر.س', lang)}</Text>
                     <View style={styles.qtyRow}>
                       <TouchableOpacity testID={`qty-minus-${item.id}`} style={styles.qtyBtn} onPress={() => updateQty(item.id, item.quantity - 1)}>
-                        <Ionicons name="remove" size={18} color="#0A0A0A" />
+                        <Ionicons name="remove" size={18} color={colors.onSurface} />
                       </TouchableOpacity>
                       <Text style={styles.qtyText}>{item.quantity}</Text>
                       <TouchableOpacity testID={`qty-plus-${item.id}`} style={styles.qtyBtn} onPress={() => updateQty(item.id, item.quantity + 1)}>
-                        <Ionicons name="add" size={18} color="#0A0A0A" />
+                        <Ionicons name="add" size={18} color={colors.onSurface} />
                       </TouchableOpacity>
                       <TouchableOpacity testID={`remove-item-${item.id}`} style={styles.removeBtn} onPress={() => removeItem(item.id)}>
                         <Ionicons name="trash-outline" size={18} color="#EF4444" />
@@ -158,42 +159,42 @@ export default function CartScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
-  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
+const styles = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.surface },
+  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
-  headerTitle: { flex: 1, fontSize: 20, fontWeight: '800', color: '#0A0A0A' },
-  itemCount: { fontSize: 14, color: '#52525B' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '800', color: colors.onSurface },
+  itemCount: { fontSize: 14, color: colors.onSurfaceSecondary },
   emptyWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
-  emptyIconWrap: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#0A0A0A', marginBottom: 8 },
-  emptyDesc: { fontSize: 14, color: '#52525B', marginBottom: 24 },
-  browseBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 32 },
+  emptyIconWrap: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.onSurface, marginBottom: 8 },
+  emptyDesc: { fontSize: 14, color: colors.onSurfaceSecondary, marginBottom: 24 },
+  browseBtn: { backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 32 },
   browseBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
   listContent: { paddingHorizontal: 20 },
-  cartItem: { flexDirection: 'row', padding: 14, backgroundColor: '#F9F9FB', borderRadius: 16, marginBottom: 12 },
-  cartImg: { width: 90, height: 90, borderRadius: 12, backgroundColor: '#FFF', marginEnd: 14 },
+  cartItem: { flexDirection: 'row', padding: 14, backgroundColor: colors.background, borderRadius: 16, marginBottom: 12 },
+  cartImg: { width: 90, height: 90, borderRadius: 12, backgroundColor: colors.surface, marginEnd: 14 },
   cartInfo: { flex: 1 },
-  cartName: { fontSize: 14, fontWeight: '600', color: '#0A0A0A', marginBottom: 4, lineHeight: 20 },
-  cartOption: { fontSize: 12, color: '#52525B', marginBottom: 2 },
-  cartPrice: { fontSize: 16, fontWeight: '800', color: '#F5C518', marginBottom: 8 },
+  cartName: { fontSize: 14, fontWeight: '600', color: colors.onSurface, marginBottom: 4, lineHeight: 20 },
+  cartOption: { fontSize: 12, color: colors.onSurfaceSecondary, marginBottom: 2 },
+  cartPrice: { fontSize: 16, fontWeight: '800', color: colors.brand, marginBottom: 8 },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  qtyBtn: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E4E4E7' },
-  qtyText: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', minWidth: 24, textAlign: 'center' },
+  qtyBtn: { width: 32, height: 32, borderRadius: 10, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+  qtyText: { fontSize: 16, fontWeight: '700', color: colors.onSurface, minWidth: 24, textAlign: 'center' },
   removeBtn: { marginStart: 'auto', padding: 6 },
-  summaryCard: { backgroundColor: '#F9F9FB', borderRadius: 16, padding: 20, marginTop: 8 },
-  summaryTitle: { fontSize: 18, fontWeight: '700', color: '#0A0A0A', marginBottom: 16 },
+  summaryCard: { backgroundColor: colors.background, borderRadius: 16, padding: 20, marginTop: 8 },
+  summaryTitle: { fontSize: 18, fontWeight: '700', color: colors.onSurface, marginBottom: 16 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  summaryLabel: { fontSize: 14, color: '#52525B' },
-  summaryVal: { fontSize: 14, color: '#0A0A0A', fontWeight: '500' },
-  totalRow: { borderTopWidth: 1, borderTopColor: '#E4E4E7', paddingTop: 12, marginTop: 4 },
-  totalLabel: { fontSize: 16, fontWeight: '700', color: '#0A0A0A' },
-  totalVal: { fontSize: 18, fontWeight: '800', color: '#F5C518' },
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', padding: 20, paddingBottom: 34, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F4F4F5' },
+  summaryLabel: { fontSize: 14, color: colors.onSurfaceSecondary },
+  summaryVal: { fontSize: 14, color: colors.onSurface, fontWeight: '500' },
+  totalRow: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, marginTop: 4 },
+  totalLabel: { fontSize: 16, fontWeight: '700', color: colors.onSurface },
+  totalVal: { fontSize: 18, fontWeight: '800', color: colors.brand },
+  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', padding: 20, paddingBottom: 34, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
   bottomInfo: { flex: 1 },
-  bottomTotal: { fontSize: 20, fontWeight: '800', color: '#0A0A0A' },
-  bottomCount: { fontSize: 12, color: '#52525B' },
-  orderBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 32, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
+  bottomTotal: { fontSize: 20, fontWeight: '800', color: colors.onSurface },
+  bottomCount: { fontSize: 12, color: colors.onSurfaceSecondary },
+  orderBtn: { backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 16, paddingHorizontal: 32, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
   orderBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-});
+}));

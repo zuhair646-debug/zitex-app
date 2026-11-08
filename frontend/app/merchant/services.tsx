@@ -11,6 +11,7 @@ import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
+import { colors, themed } from '../../src/theme/tokens';
 
 const GOLD = '#F5C518';
 const BG = '#0A0A0A';
@@ -326,7 +327,7 @@ export default function MerchantServices() {
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: BG, borderBottomWidth: 1, borderBottomColor: BORDER },
   iconBtn: { padding: 4 },
@@ -366,4 +367,4 @@ const s = StyleSheet.create({
   locBtnText: { color: BG, fontWeight: '800', fontSize: 13 },
   saveBtn: { backgroundColor: GOLD, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
   saveText: { color: BG, fontWeight: '900', fontSize: 16 },
-});
+}));

@@ -12,6 +12,7 @@ import { TX, tSync, tf } from '../../src/useAutoT';
 import { notify } from '../../src/utils/notify';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
+import { colors, themed } from '../../src/theme/tokens';
 
 const TYPES = [
   { id: 'general', name: 'سحب عام', icon: 'people', desc: 'أي مستخدم مسجّل يمكنه الانضمام' },
@@ -111,7 +112,7 @@ export default function CompetitionForm() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>{tSync(editId ? 'تعديل المسابقة' : 'مسابقة جديدة', lang)}</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }}>
@@ -127,11 +128,11 @@ export default function CompetitionForm() {
         </View>
 
         <TX style={s.label}>عنوان المسابقة *</TX>
-        <TextInput testID="comp-title" style={s.input} value={data.title} onChangeText={t => setData({ ...data, title: t })} placeholderTextColor="#9CA3AF" placeholder={tSync("سحب العيد الكبير", lang)} />
+        <TextInput testID="comp-title" style={s.input} value={data.title} onChangeText={t => setData({ ...data, title: t })} placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("سحب العيد الكبير", lang)} />
         <TX style={s.label}>الوصف</TX>
-        <TextInput testID="comp-description" style={[s.input, { height: 80 }]} multiline value={data.description} onChangeText={t => setData({ ...data, description: t })} placeholderTextColor="#9CA3AF" placeholder={tSync("تفاصيل المسابقة...", lang)} />
+        <TextInput testID="comp-description" style={[s.input, { height: 80 }]} multiline value={data.description} onChangeText={t => setData({ ...data, description: t })} placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("تفاصيل المسابقة...", lang)} />
         <TX style={s.label}>الجائزة *</TX>
-        <TextInput testID="comp-prize" style={s.input} value={data.prize} onChangeText={t => setData({ ...data, prize: t })} placeholderTextColor="#9CA3AF" placeholder="iPhone 16 Pro" />
+        <TextInput testID="comp-prize" style={s.input} value={data.prize} onChangeText={t => setData({ ...data, prize: t })} placeholderTextColor={colors.onSurfaceTertiary} placeholder="iPhone 16 Pro" />
         <TX style={s.label}>عدد الفائزين</TX>
         <TextInput style={s.input} keyboardType="numeric" value={data.prize_count} onChangeText={t => setData({ ...data, prize_count: t })} />
 
@@ -148,8 +149,8 @@ export default function CompetitionForm() {
               </View>
             ) : (
               <TouchableOpacity style={s.imgPickBox} onPress={() => pickPhoto('cover')} disabled={!!uploading}>
-                {uploading === 'cover' ? <ActivityIndicator color="#F5C518" /> : <>
-                  <Ionicons name="image" size={22} color="#F5C518" />
+                {uploading === 'cover' ? <ActivityIndicator color={colors.brand} /> : <>
+                  <Ionicons name="image" size={22} color={colors.brand} />
                   <TX style={s.imgPickTxt}>غلاف</TX>
                 </>}
               </TouchableOpacity>
@@ -166,8 +167,8 @@ export default function CompetitionForm() {
               </View>
             ) : (
               <TouchableOpacity style={s.imgPickBox} onPress={() => pickPhoto('prize')} disabled={!!uploading}>
-                {uploading === 'prize' ? <ActivityIndicator color="#F5C518" /> : <>
-                  <Ionicons name="trophy" size={22} color="#F5C518" />
+                {uploading === 'prize' ? <ActivityIndicator color={colors.brand} /> : <>
+                  <Ionicons name="trophy" size={22} color={colors.brand} />
                   <TX style={s.imgPickTxt}>جائزة</TX>
                 </>}
               </TouchableOpacity>
@@ -178,14 +179,14 @@ export default function CompetitionForm() {
         {data.competition_type === 'qa' && (
           <>
             <TX style={s.label}>السؤال *</TX>
-            <TextInput style={s.input} value={data.question} onChangeText={t => setData({ ...data, question: t })} placeholderTextColor="#9CA3AF" placeholder={tSync("ما عاصمة المملكة العربية السعودية؟", lang)} />
+            <TextInput style={s.input} value={data.question} onChangeText={t => setData({ ...data, question: t })} placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("ما عاصمة المملكة العربية السعودية؟", lang)} />
             <TX style={s.label}>الخيارات (اضغط ⭐ للإجابة الصحيحة)</TX>
             {[0, 1, 2, 3].map(i => (
               <View key={i} style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6 }}>
                 <TouchableOpacity onPress={() => { if (data.options[i]?.trim()) setData({ ...data, correct_answer: data.options[i] }); }} style={s.starBtn} testID={`comp-star-${i}`}>
-                  <Ionicons name={data.correct_answer && data.correct_answer === data.options[i] && data.options[i] ? 'star' : 'star-outline'} size={22} color="#F5C518" />
+                  <Ionicons name={data.correct_answer && data.correct_answer === data.options[i] && data.options[i] ? 'star' : 'star-outline'} size={22} color={colors.brand} />
                 </TouchableOpacity>
-                <TextInput style={[s.input, { flex: 1, marginTop: 0 }]} value={data.options[i]} onChangeText={t => setOpt(i, t)} placeholderTextColor="#9CA3AF" placeholder={tf('الخيار {0}', lang, [i + 1])} testID={`comp-option-${i}`} />
+                <TextInput style={[s.input, { flex: 1, marginTop: 0 }]} value={data.options[i]} onChangeText={t => setOpt(i, t)} placeholderTextColor={colors.onSurfaceTertiary} placeholder={tf('الخيار {0}', lang, [i + 1])} testID={`comp-option-${i}`} />
               </View>
             ))}
             <TX style={s.hint}>💡 اكتب الخيارات ثم اضغط ⭐ بجانب الإجابة الصحيحة</TX>
@@ -224,7 +225,7 @@ export default function CompetitionForm() {
         {data.competition_type === 'ugc_video' && (
           <>
             <TX style={s.label}>هاشتاق المسابقة (اختياري)</TX>
-            <TextInput style={s.input} value={data.ugc_hashtag} onChangeText={t => setData({ ...data, ugc_hashtag: t })} placeholderTextColor="#9CA3AF" placeholder={tSync("زايتكس_challenge", lang)} autoCapitalize="none" />
+            <TextInput style={s.input} value={data.ugc_hashtag} onChangeText={t => setData({ ...data, ugc_hashtag: t })} placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("زايتكس_challenge", lang)} autoCapitalize="none" />
             <TX style={s.label}>الحد الأقصى للفيديوهات لكل مستخدم</TX>
             <TextInput style={s.input} keyboardType="numeric" value={data.max_submissions_per_user} onChangeText={t => setData({ ...data, max_submissions_per_user: t })} />
             <TX style={s.hint}>💡 الأكثر لايكات يفوز — الترتيب يتحدث تلقائياً. عند انتهاء الوقت، يُختار الفائزون تلقائياً.</TX>
@@ -232,15 +233,15 @@ export default function CompetitionForm() {
         )}
 
         <TX style={s.label}>تاريخ الانتهاء (آخر يوم للمشاركة)</TX>
-        <TextInput testID="comp-end-date" style={s.input} value={data.end_date} onChangeText={t => setData({ ...data, end_date: t.trim() })} placeholder="YYYY-MM-DD" placeholderTextColor="#9CA3AF" autoCapitalize="none" />
+        <TextInput testID="comp-end-date" style={s.input} value={data.end_date} onChangeText={t => setData({ ...data, end_date: t.trim() })} placeholder="YYYY-MM-DD" placeholderTextColor={colors.onSurfaceTertiary} autoCapitalize="none" />
         <TX style={s.label}>تاريخ السحب (بعد الانتهاء أو نفس اليوم)</TX>
-        <TextInput testID="comp-draw-date" style={s.input} value={data.draw_date} onChangeText={t => setData({ ...data, draw_date: t.trim() })} placeholder="YYYY-MM-DD" placeholderTextColor="#9CA3AF" autoCapitalize="none" />
+        <TextInput testID="comp-draw-date" style={s.input} value={data.draw_date} onChangeText={t => setData({ ...data, draw_date: t.trim() })} placeholder="YYYY-MM-DD" placeholderTextColor={colors.onSurfaceTertiary} autoCapitalize="none" />
         <TX style={s.label}>وقت إعلان النتائج (اختياري)</TX>
-        <TextInput testID="comp-reveal-at" style={s.input} value={(data.reveal_at || '').replace('T', ' ').slice(0, 16)} placeholderTextColor="#9CA3AF" autoCapitalize="none"
+        <TextInput testID="comp-reveal-at" style={s.input} value={(data.reveal_at || '').replace('T', ' ').slice(0, 16)} placeholderTextColor={colors.onSurfaceTertiary} autoCapitalize="none"
           onChangeText={t => setData({ ...data, reveal_at: t.trim() ? t.trim().replace(' ', 'T') : '' })} placeholder="YYYY-MM-DD HH:MM" />
         <TX style={s.toggleHint}>تقدر تسوي السحب قبلها بساعات وتتأكد إن كل شي سليم — العملاء ما يشوفون الفائز ولا الفيديو إلا لما يخلص العدّاد. اتركه فاضي للإعلان فور انتهاء السحب.</TX>
         <TX style={s.label}>اسم من يظهر في سحب المتجر</TX>
-        <TextInput testID="comp-presenter" style={s.input} value={data.presenter_name} onChangeText={t => setData({ ...data, presenter_name: t })} placeholder="مثال: متجر زينركس / أحمد — مدير الفرع" placeholderTextColor="#9CA3AF" />
+        <TextInput testID="comp-presenter" style={s.input} value={data.presenter_name} onChangeText={t => setData({ ...data, presenter_name: t })} placeholder="مثال: متجر زينركس / أحمد — مدير الفرع" placeholderTextColor={colors.onSurfaceTertiary} />
 
         <View style={s.divider} />
         <TX style={s.sectionTitle}>إشراف الغرفة التجارية</TX>
@@ -254,14 +255,14 @@ export default function CompetitionForm() {
         {data.chamber_supervised && (
           <>
             <TX style={s.label}>رقم التصريح *</TX>
-            <TextInput style={s.input} value={data.permit_number} onChangeText={t => setData({ ...data, permit_number: t })} placeholderTextColor="#9CA3AF" placeholder="CR-2026-1234" />
+            <TextInput style={s.input} value={data.permit_number} onChangeText={t => setData({ ...data, permit_number: t })} placeholderTextColor={colors.onSurfaceTertiary} placeholder="CR-2026-1234" />
             <TX style={s.hint}>سيُعرض للعملاء كإثبات للشرعية</TX>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
               <TX style={s.label}>موظف الغرفة المُكلَّف *</TX>
               <TouchableOpacity onPress={() => setShowEmpModal(true)} style={s.smallBtn}><TX style={s.smallBtnText}>+ جديد</TX></TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
-              {employees.length === 0 && <Text style={{ color: '#9CA3AF', padding: 8 }}>No chamber employees. Tap + New to create one.</Text>}
+              {employees.length === 0 && <Text style={{ color: colors.onSurfaceTertiary, padding: 8 }}>No chamber employees. Tap + New to create one.</Text>}
               {employees.map(e => (
                 <TouchableOpacity key={e.id} onPress={() => setData({ ...data, assigned_chamber_employee_id: e.id })} style={[s.empChip, data.assigned_chamber_employee_id === e.id && s.empChipActive]}>
                   <TranslatableName text={e.name || ''} style={[s.empName, data.assigned_chamber_employee_id === e.id && { color: 'white' }]} />
@@ -285,7 +286,7 @@ export default function CompetitionForm() {
         <Modal visible={showPreview} animationType="slide" transparent={false} onRequestClose={() => setShowPreview(false)}>
           <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
             <View style={s.previewHeader}>
-              <TouchableOpacity onPress={() => setShowPreview(false)}><Ionicons name="close" size={24} color="#F5C518" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowPreview(false)}><Ionicons name="close" size={24} color={colors.brand} /></TouchableOpacity>
               <TX style={s.previewTitle}>معاينة (كما يراها العميل)</TX>
               <View style={{ width: 24 }} />
             </View>
@@ -316,7 +317,7 @@ export default function CompetitionForm() {
                 )}
                 {data.competition_type === 'purchase' && (
                   <View style={s.prevInfoBox}>
-                    <Ionicons name="cart" size={18} color="#F5C518" />
+                    <Ionicons name="cart" size={18} color={colors.brand} />
                     <Text style={s.prevInfoTxt}>
                       {tSync('اشترِ بـ', lang)} {data.spend_requirement || 0} {tSync('ر.س', lang)} {data.purchase_mode === 'accumulated' ? tSync('تراكمياً', curLang()) : tSync('في فاتورة واحدة', curLang())}
                     </Text>
@@ -324,7 +325,7 @@ export default function CompetitionForm() {
                 )}
                 {data.competition_type === 'ugc_video' && (
                   <View style={s.prevInfoBox}>
-                    <Ionicons name="videocam" size={18} color="#F5C518" />
+                    <Ionicons name="videocam" size={18} color={colors.brand} />
                     <Text style={s.prevInfoTxt}>{tSync('ارفع فيديو تسويقي — الأكثر لايكات يفوز', lang)} {data.ugc_hashtag ? `• #${data.ugc_hashtag}` : ''}</Text>
                   </View>
                 )}
@@ -343,7 +344,7 @@ export default function CompetitionForm() {
       <Modal visible={showEmpModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowEmpModal(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setShowEmpModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowEmpModal(false)}><Ionicons name="close" size={24} color={colors.onSurface} /></TouchableOpacity>
             <Text style={s.title}>{tSync('موظف غرفة جديد', lang)}</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -363,18 +364,18 @@ export default function CompetitionForm() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   backBtn: { padding: 4 },
-  title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: '#0A0A0A' },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#0A0A0A', marginTop: 8, marginBottom: 8 },
-  label: { fontSize: 13, fontWeight: '600', color: '#374151', marginTop: 12, marginBottom: 6 },
-  hint: { fontSize: 11, color: '#9CA3AF', marginTop: 4 },
+  title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: colors.onSurface },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.onSurface, marginTop: 8, marginBottom: 8 },
+  label: { fontSize: 13, fontWeight: '600', color: colors.onSurfaceSecondary, marginTop: 12, marginBottom: 6 },
+  hint: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 4 },
   starBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  imgPickBox: { alignItems: 'center', justifyContent: 'center', padding: 20, borderRadius: 10, borderWidth: 1.5, borderColor: '#F5C518', borderStyle: 'dashed', backgroundColor: '#FFF6E0', gap: 4 },
+  imgPickBox: { alignItems: 'center', justifyContent: 'center', padding: 20, borderRadius: 10, borderWidth: 1.5, borderColor: colors.brand, borderStyle: 'dashed', backgroundColor: '#FFF6E0', gap: 4 },
   imgPickTxt: { fontSize: 11, color: '#8B7500', fontWeight: '700' },
-  imgSlotBox: { height: 100, borderRadius: 10, overflow: 'hidden', backgroundColor: '#F3F4F6', position: 'relative' },
+  imgSlotBox: { height: 100, borderRadius: 10, overflow: 'hidden', backgroundColor: colors.surfaceSecondary, position: 'relative' },
   imgSlotImg: { width: '100%', height: '100%' },
   imgSlotRm: { position: 'absolute', top: 4, right: 4, backgroundColor: '#EF4444', width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   previewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2A2A2A' },
@@ -382,43 +383,43 @@ const s = StyleSheet.create({
   prevCover: { width: '100%', height: 180, borderRadius: 16, marginBottom: 12 },
   prevCard: { backgroundColor: '#151515', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#2A2A2A' },
   prevBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: '#2E2404', marginBottom: 8 },
-  prevBadgeText: { color: '#F5C518', fontSize: 11, fontWeight: '800' },
+  prevBadgeText: { color: colors.brand, fontSize: 11, fontWeight: '800' },
   prevH1: { color: 'white', fontSize: 20, fontWeight: '900', marginBottom: 6 },
   prevDesc: { color: '#D0D0D0', fontSize: 13, lineHeight: 20, marginBottom: 12 },
   prevPrize: { flexDirection: 'row', gap: 12, padding: 12, borderRadius: 14, alignItems: 'center', marginBottom: 12 },
-  prevPrizeImg: { width: 64, height: 64, borderRadius: 12, backgroundColor: 'white' },
-  prevPrizeLbl: { color: '#0A0A0A', fontWeight: '700', fontSize: 12 },
-  prevPrizeName: { color: '#0A0A0A', fontWeight: '900', fontSize: 18, marginTop: 2 },
-  prevPrizeSub: { color: '#0A0A0A', fontSize: 11, marginTop: 2 },
+  prevPrizeImg: { width: 64, height: 64, borderRadius: 12, backgroundColor: colors.surface },
+  prevPrizeLbl: { color: colors.onSurface, fontWeight: '700', fontSize: 12 },
+  prevPrizeName: { color: colors.onSurface, fontWeight: '900', fontSize: 18, marginTop: 2 },
+  prevPrizeSub: { color: colors.onSurface, fontSize: 11, marginTop: 2 },
   prevQA: { marginTop: 8 },
   prevQ: { color: 'white', fontWeight: '800', fontSize: 15, marginBottom: 10 },
   prevOpt: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 10, backgroundColor: '#2A2A2A', marginBottom: 8, borderWidth: 1, borderColor: '#2A2A2A' },
   prevOptCorrect: { backgroundColor: '#052E19', borderColor: '#10B981' },
   prevOptTxt: { color: 'white', fontSize: 14, flex: 1, textAlign: 'right' },
   prevInfoBox: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 10, backgroundColor: '#2E2404', marginTop: 8 },
-  prevInfoTxt: { color: '#F5C518', fontSize: 13, fontWeight: '600' },
+  prevInfoTxt: { color: colors.brand, fontSize: 13, fontWeight: '600' },
   prevChamber: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, padding: 10, borderRadius: 8, backgroundColor: '#052E19', borderWidth: 1, borderColor: '#10B981' },
   prevChamberTxt: { color: '#10B981', fontSize: 12, fontWeight: '700' },
-  modePill: { flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#F9FAFB', alignItems: 'center', marginTop: 6 },
-  modePillActive: { borderColor: '#F5C518', backgroundColor: '#FFF6E0' },
-  modePillText: { fontSize: 13, fontWeight: '700', color: '#52525B' },
+  modePill: { flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background, alignItems: 'center', marginTop: 6 },
+  modePillActive: { borderColor: colors.brand, backgroundColor: '#FFF6E0' },
+  modePillText: { fontSize: 13, fontWeight: '700', color: colors.onSurfaceSecondary },
   modePillTextActive: { color: '#8B7500' },
-  input: { backgroundColor: 'white', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', fontSize: 14 },
+  input: { backgroundColor: colors.surface, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, fontSize: 14 },
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  typeCard: { width: '48%', backgroundColor: 'white', padding: 12, borderRadius: 12, borderWidth: 2, borderColor: '#E5E7EB' },
-  typeCardActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
-  typeName: { fontSize: 13, fontWeight: '700', color: '#0A0A0A', marginTop: 6 },
-  typeDesc: { fontSize: 11, color: '#6B7280', marginTop: 2 },
+  typeCard: { width: '48%', backgroundColor: colors.surface, padding: 12, borderRadius: 12, borderWidth: 2, borderColor: colors.border },
+  typeCardActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  typeName: { fontSize: 13, fontWeight: '700', color: colors.onSurface, marginTop: 6 },
+  typeDesc: { fontSize: 11, color: colors.onSurfaceSecondary, marginTop: 2 },
   divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 20 },
   toggle: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF3C7', padding: 14, borderRadius: 12 },
   toggleLbl: { fontSize: 14, fontWeight: '700', color: '#92400E' },
   toggleHint: { fontSize: 11, color: '#78350F', marginTop: 2 },
-  smallBtn: { backgroundColor: '#8833FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  smallBtn: { backgroundColor: colors.brand, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
   smallBtnText: { color: 'white', fontSize: 12, fontWeight: '700' },
-  empChip: { backgroundColor: 'white', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', marginRight: 8, minWidth: 140 },
-  empChipActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
-  empName: { fontSize: 13, fontWeight: '700', color: '#0A0A0A' },
-  empPhone: { fontSize: 11, color: '#6B7280', marginTop: 2 },
-  submitBtn: { backgroundColor: '#8833FF', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
+  empChip: { backgroundColor: colors.surface, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border, marginRight: 8, minWidth: 140 },
+  empChipActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  empName: { fontSize: 13, fontWeight: '700', color: colors.onSurface },
+  empPhone: { fontSize: 11, color: colors.onSurfaceSecondary, marginTop: 2 },
+  submitBtn: { backgroundColor: colors.brand, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
   submitText: { color: 'white', fontWeight: '700', fontSize: 16 },
-});
+}));

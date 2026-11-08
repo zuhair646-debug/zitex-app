@@ -8,6 +8,7 @@ import ZitexMap from '../../src/components/MapView';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
+import { colors, themed } from '../../src/theme/tokens';
 
 type Zone = {
   name: string;
@@ -116,12 +117,12 @@ export default function DeliverySettings() {
     ]);
   };
 
-  if (loading || !data) return <View style={s.center}><ActivityIndicator size="large" color="#8833FF" /></View>;
+  if (loading || !data) return <View style={s.center}><ActivityIndicator size="large" color={colors.brand} /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <TX style={s.title}>إعدادات التوصيل</TX>
         <TouchableOpacity testID="ds-save" onPress={save} disabled={saving} style={s.saveTopBtn}>
           {saving ? <ActivityIndicator color="white" size="small" /> : <TX style={s.saveTopText}>حفظ</TX>}
@@ -237,9 +238,9 @@ export default function DeliverySettings() {
         <Modal visible={zoneModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setZoneModal(false)}>
           <SafeAreaView style={s.safe}>
             <View style={s.header}>
-              <TouchableOpacity onPress={() => setZoneModal(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setZoneModal(false)}><Ionicons name="close" size={24} color={colors.onSurface} /></TouchableOpacity>
               <Text style={s.title}>{editingZone.idx === -1 ? tSync('منطقة جديدة', curLang()) : tSync('تعديل المنطقة', curLang())}</Text>
-              <TouchableOpacity onPress={saveZone}><TX style={{ color: '#8833FF', fontWeight: '800', fontSize: 15 }}>تم</TX></TouchableOpacity>
+              <TouchableOpacity onPress={saveZone}><TX style={{ color: colors.brand, fontWeight: '800', fontSize: 15 }}>تم</TX></TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={{ padding: 12 }}>
               <TX style={s.label}>اسم المنطقة *</TX>
@@ -287,35 +288,35 @@ export default function DeliverySettings() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  backBtn: { padding: 4 }, title: { fontSize: 16, fontWeight: '800', color: '#0A0A0A' },
-  saveTopBtn: { backgroundColor: '#8833FF', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8, minWidth: 70, alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  backBtn: { padding: 4 }, title: { fontSize: 16, fontWeight: '800', color: colors.onSurface },
+  saveTopBtn: { backgroundColor: colors.brand, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8, minWidth: 70, alignItems: 'center' },
   saveTopText: { color: 'white', fontWeight: '800', fontSize: 13 },
-  tabs: { padding: 10, gap: 6, backgroundColor: 'white' },
-  tab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, backgroundColor: '#F3F4F6' },
-  tabActive: { backgroundColor: '#8833FF' },
-  tabText: { fontSize: 13, color: '#374151', fontWeight: '700' },
+  tabs: { padding: 10, gap: 6, backgroundColor: colors.surface },
+  tab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, backgroundColor: colors.surfaceSecondary },
+  tabActive: { backgroundColor: colors.brand },
+  tabText: { fontSize: 13, color: colors.onSurfaceSecondary, fontWeight: '700' },
   tabTextActive: { color: 'white' },
-  section: { fontSize: 14, fontWeight: '800', color: '#0A0A0A', marginTop: 8, marginBottom: 8 },
-  box: { backgroundColor: 'white', padding: 14, borderRadius: 12 },
-  toggleBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 8 },
-  label: { fontSize: 12, fontWeight: '600', color: '#374151', marginTop: 8, marginBottom: 4 },
-  hint: { fontSize: 11, color: '#9CA3AF', marginTop: 4, fontStyle: 'italic' },
-  input: { backgroundColor: 'white', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#E5E7EB', textAlign: 'right' },
-  addZoneBtn: { backgroundColor: '#8833FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  section: { fontSize: 14, fontWeight: '800', color: colors.onSurface, marginTop: 8, marginBottom: 8 },
+  box: { backgroundColor: colors.surface, padding: 14, borderRadius: 12 },
+  toggleBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.surface, padding: 14, borderRadius: 12, marginBottom: 8 },
+  label: { fontSize: 12, fontWeight: '600', color: colors.onSurfaceSecondary, marginTop: 8, marginBottom: 4 },
+  hint: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 4, fontStyle: 'italic' },
+  input: { backgroundColor: colors.surface, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: colors.border, textAlign: 'right' },
+  addZoneBtn: { backgroundColor: colors.brand, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
   addZoneText: { color: 'white', fontSize: 12, fontWeight: '700' },
   addSmall: { backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
   addSmallText: { color: 'white', fontSize: 12, fontWeight: '700' },
-  zoneCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 12, borderRadius: 12, marginBottom: 8 },
-  zoneName: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
-  zoneInfo: { fontSize: 11, color: '#6B7280', marginTop: 2 },
-  zonePrice: { fontSize: 12, fontWeight: '700', color: '#8833FF', marginTop: 2 },
+  zoneCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 12, borderRadius: 12, marginBottom: 8 },
+  zoneName: { fontSize: 14, fontWeight: '700', color: colors.onSurface },
+  zoneInfo: { fontSize: 11, color: colors.onSurfaceSecondary, marginTop: 2 },
+  zonePrice: { fontSize: 12, fontWeight: '700', color: colors.brand, marginTop: 2 },
   slotCard: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 8 },
-  opt: { backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8 },
-  optActive: { backgroundColor: '#8833FF', borderColor: '#8833FF' },
-  optText: { fontSize: 12, color: '#374151', fontWeight: '600' },
+  opt: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8 },
+  optActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  optText: { fontSize: 12, color: colors.onSurfaceSecondary, fontWeight: '600' },
   optTextActive: { color: 'white' },
-});
+}));

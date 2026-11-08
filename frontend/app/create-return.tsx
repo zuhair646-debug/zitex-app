@@ -8,6 +8,7 @@ import { useAuth } from './_layout';
 import { uploadMedia } from '../src/utils/upload';
 import { TX, tSync } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
+import { colors, themed } from '../src/theme/tokens';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -282,7 +283,7 @@ export default function CreateRMAScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
   back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
@@ -308,4 +309,4 @@ const s = StyleSheet.create({
   addMediaBtn: { width: 68, height: 68, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed', borderColor: GOLD, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
   submitBtn: { backgroundColor: GOLD, borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 20 },
   submitText: { color: BG, fontSize: 14, fontWeight: '900' },
-});
+}));

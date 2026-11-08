@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
+import { colors, themed } from '../../src/theme/tokens';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -346,7 +347,7 @@ export default function ShippingMatrixScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
   back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
@@ -374,4 +375,4 @@ const s = StyleSheet.create({
   chipText: { color: TEXT, fontSize: 11, fontWeight: '700' },
   saveBtn: { backgroundColor: GOLD, borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 20 },
   saveText: { color: BG, fontSize: 14, fontWeight: '900' },
-});
+}));

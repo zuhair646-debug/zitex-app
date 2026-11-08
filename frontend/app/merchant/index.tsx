@@ -13,7 +13,16 @@ import {
   StatCard, ActionCard, SectionHeader, PrimaryButton, EmptyState, SkeletonBox, Badge,
 } from '../../src/components/ui';
 
+import StaffDashboard from '../../src/components/staff/StaffDashboard';
+
 export default function MerchantHome() {
+  const { user } = useAuth();
+  const perms: string[] = (user as any)?.permissions || [];
+  if (user?.role === 'employee' && !perms.includes('all')) return <StaffDashboard />;
+  return <OwnerHome />;
+}
+
+function OwnerHome() {
   const { t, isRTL } = useT();
   const styles = useStylesStyles();
   const { isDark } = useTheme();

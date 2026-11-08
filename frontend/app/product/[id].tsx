@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import TranslatableName from '../../src/components/TranslatableName';
 import Translatable from '../../src/components/Translatable';
+import { colors, themed } from '../../src/theme/tokens';
 
 const { width } = Dimensions.get('window');
 
@@ -55,7 +56,7 @@ export default function ProductDetailScreen() {
     } finally { setAdding(false); }
   };
 
-  if (loading) return <View style={styles.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
+  if (loading) return <View style={styles.loadWrap}><ActivityIndicator size="large" color={colors.brand} /></View>;
   if (!product) return <View style={styles.loadWrap}><TX>المنتج غير موجود</TX></View>;
 
   const price = product.discount_price || product.price;
@@ -65,10 +66,10 @@ export default function ProductDetailScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.topBar}>
         <TouchableOpacity testID="back-button" style={styles.topBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
+          <Ionicons name="arrow-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
         <TouchableOpacity testID="share-button" style={styles.topBtn}>
-          <Ionicons name="share-outline" size={22} color="#0A0A0A" />
+          <Ionicons name="share-outline" size={22} color={colors.onSurface} />
         </TouchableOpacity>
       </View>
 
@@ -240,7 +241,7 @@ export default function ProductDetailScreen() {
               </View>
             ) : (
               <View style={styles.availItem}>
-                <Ionicons name="information-circle" size={20} color="#9CA3AF" />
+                <Ionicons name="information-circle" size={20} color={colors.onSurfaceTertiary} />
                 <TX style={styles.availText}>بدون ضمان</TX>
               </View>
             )}
@@ -257,7 +258,7 @@ export default function ProductDetailScreen() {
               <TX style={styles.shipText}>توصيل مجدول (اختر الوقت المناسب)</TX>
             </View>
             <View style={styles.shipItem}>
-              <Ionicons name="cube" size={18} color="#F5C518" />
+              <Ionicons name="cube" size={18} color={colors.brand} />
               <TX style={styles.shipText}>توصيل عادي (2-3 أيام)</TX>
             </View>
 
@@ -266,9 +267,9 @@ export default function ProductDetailScreen() {
             <TX style={styles.subTitle}>وسائل الدفع المتاحة</TX>
             <View style={styles.payRow}>
               <View style={styles.payBadge}><Ionicons name="cash" size={16} color="#10B981" /><TX style={styles.payText}>الدفع عند الاستلام</TX></View>
-              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="card" size={16} color="#6B7280" /><TX style={styles.payTextSoon}>بطاقة</TX></View>
-              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="logo-apple" size={16} color="#6B7280" /><TranslatableName text="Apple Pay" style={styles.payTextSoon} noToggle /></View>
-              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="time" size={16} color="#6B7280" /><TX style={styles.payTextSoon}>تمارا</TX></View>
+              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="card" size={16} color={colors.onSurfaceSecondary} /><TX style={styles.payTextSoon}>بطاقة</TX></View>
+              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="logo-apple" size={16} color={colors.onSurfaceSecondary} /><TranslatableName text="Apple Pay" style={styles.payTextSoon} noToggle /></View>
+              <View style={[styles.payBadge, styles.payBadgeSoon]}><Ionicons name="time" size={16} color={colors.onSurfaceSecondary} /><TX style={styles.payTextSoon}>تمارا</TX></View>
             </View>
           </View>
         </View>
@@ -287,94 +288,94 @@ export default function ProductDetailScreen() {
         </TouchableOpacity>
       </View>
       {isPreview && (
-        <View style={{ position: 'absolute', top: 60, right: 12, backgroundColor: '#F5C518', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={{ position: 'absolute', top: 60, right: 12, backgroundColor: colors.brand, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF4444' }} />
-          <TX style={{ color: '#0A0A0A', fontWeight: '900', fontSize: 12 }}>🔴 معاينة التاجر</TX>
+          <TX style={{ color: colors.onSurface, fontWeight: '900', fontSize: 12 }}>🔴 معاينة التاجر</TX>
         </View>
       )}
       {isPreview && (
         <TouchableOpacity
           testID="preview-analytics-fab"
           onPress={() => router.push(`/merchant/live-preview?analytics=${id}` as any)}
-          style={{ position: 'absolute', bottom: 90, left: 20, backgroundColor: '#0B0C10', borderWidth: 2, borderColor: '#F5C518', paddingHorizontal: 14, paddingVertical: 12, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 12 }}>
-          <Ionicons name="analytics" size={18} color="#F5C518" />
-          <TX style={{ color: '#F5C518', fontWeight: '900', fontSize: 13 }}>📊 إحصائيات المنتج</TX>
+          style={{ position: 'absolute', bottom: 90, left: 20, backgroundColor: '#0B0C10', borderWidth: 2, borderColor: colors.brand, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 12 }}>
+          <Ionicons name="analytics" size={18} color={colors.brand} />
+          <TX style={{ color: colors.brand, fontWeight: '900', fontSize: 13 }}>📊 إحصائيات المنتج</TX>
         </TouchableOpacity>
       )}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
-  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
+const styles = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.surface },
+  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 8, position: 'absolute', top: 50, left: 0, right: 0, zIndex: 10 },
   topBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
-  imageWrap: { width, height: width * 0.85, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
+  imageWrap: { width, height: width * 0.85, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
   productImage: { width: width * 0.7, height: width * 0.7 },
   condBadge: { position: 'absolute', top: 60, right: 20, backgroundColor: '#F59E0B', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   condText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
   content: { paddingHorizontal: 20, paddingTop: 20 },
-  productName: { fontSize: 22, fontWeight: '800', color: '#0A0A0A', lineHeight: 32, marginBottom: 10 },
+  productName: { fontSize: 22, fontWeight: '800', color: colors.onSurface, lineHeight: 32, marginBottom: 10 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
-  ratingVal: { fontSize: 15, fontWeight: '700', color: '#0A0A0A' },
-  reviewCount: { fontSize: 13, color: '#52525B' },
+  ratingVal: { fontSize: 15, fontWeight: '700', color: colors.onSurface },
+  reviewCount: { fontSize: 13, color: colors.onSurfaceSecondary },
   soldBadge: { backgroundColor: '#EFE6FF', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginStart: 8 },
-  soldText: { fontSize: 11, color: '#F5C518', fontWeight: '600' },
+  soldText: { fontSize: 11, color: colors.brand, fontWeight: '600' },
   priceSection: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
-  price: { fontSize: 28, fontWeight: '800', color: '#F5C518' },
-  oldPrice: { fontSize: 16, color: '#A1A1AA', textDecorationLine: 'line-through' },
+  price: { fontSize: 28, fontWeight: '800', color: colors.brand },
+  oldPrice: { fontSize: 16, color: colors.onSurfaceTertiary, textDecorationLine: 'line-through' },
   saveBadge: { backgroundColor: '#DCFCE7', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
   saveText: { fontSize: 12, color: '#10B981', fontWeight: '600' },
   optionSection: { marginBottom: 20 },
-  optionTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 10 },
+  optionTitle: { fontSize: 16, fontWeight: '700', color: colors.onSurface, marginBottom: 10 },
   optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  colorBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: '#E4E4E7', backgroundColor: '#FFF' },
-  colorSelected: { borderColor: '#F5C518', backgroundColor: '#EFE6FF' },
+  colorBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  colorSelected: { borderColor: colors.brand, backgroundColor: '#EFE6FF' },
   colorDot: { width: 20, height: 20, borderRadius: 10 },
-  colorLabel: { fontSize: 13, color: '#52525B', fontWeight: '500' },
-  colorLabelActive: { color: '#F5C518' },
-  colorSelectedName: { fontSize: 13, fontWeight: '700', color: '#F5C518' },
+  colorLabel: { fontSize: 13, color: colors.onSurfaceSecondary, fontWeight: '500' },
+  colorLabelActive: { color: colors.brand },
+  colorSelectedName: { fontSize: 13, fontWeight: '700', color: colors.brand },
   colorCircleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 8 },
   colorCircleWrap: { alignItems: 'center' },
   colorCircleOuter: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
-  colorCircleOuterActive: { borderColor: '#F5C518' },
+  colorCircleOuterActive: { borderColor: colors.brand },
   colorCircleInner: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)' },
   warrantyBlock: { gap: 10, marginTop: 6, marginBottom: 6 },
-  warrCard: { backgroundColor: '#FFF', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' },
+  warrCard: { backgroundColor: colors.surface, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.border },
   warrHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   warrBadge: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  warrTitle: { fontSize: 14, fontWeight: '800', color: '#0A0A0A', textAlign: 'right' },
-  warrSub: { fontSize: 12, color: '#6B7280', marginTop: 2, textAlign: 'right' },
+  warrTitle: { fontSize: 14, fontWeight: '800', color: colors.onSurface, textAlign: 'right' },
+  warrSub: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 2, textAlign: 'right' },
   warrChip: { backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   warrChipText: { fontSize: 10, color: '#166534', fontWeight: '800' },
-  warrTerms: { fontSize: 12, color: '#374151', marginTop: 8, lineHeight: 18, textAlign: 'right' },
+  warrTerms: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 8, lineHeight: 18, textAlign: 'right' },
   warrActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
   warrBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#DBEAFE', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
   warrBtnText: { fontSize: 12, color: '#1E40AF', fontWeight: '700' },
-  storageBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: '#E4E4E7', backgroundColor: '#FFF' },
-  storageSelected: { borderColor: '#F5C518', backgroundColor: '#EFE6FF' },
-  storageLabel: { fontSize: 14, fontWeight: '600', color: '#52525B' },
-  storageLabelActive: { color: '#F5C518' },
+  storageBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  storageSelected: { borderColor: colors.brand, backgroundColor: '#EFE6FF' },
+  storageLabel: { fontSize: 14, fontWeight: '600', color: colors.onSurfaceSecondary },
+  storageLabelActive: { color: colors.brand },
   descSection: { marginBottom: 20 },
-  descText: { fontSize: 14, color: '#52525B', lineHeight: 24 },
-  specsSection: { marginBottom: 20, backgroundColor: '#F9F9FB', borderRadius: 16, padding: 16 },
-  specRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F4F4F5' },
-  specKey: { fontSize: 13, color: '#52525B', fontWeight: '500' },
-  specVal: { fontSize: 13, color: '#0A0A0A', fontWeight: '600' },
-  availSection: { padding: 16, backgroundColor: '#F9F9FB', borderRadius: 16, marginBottom: 20 },
+  descText: { fontSize: 14, color: colors.onSurfaceSecondary, lineHeight: 24 },
+  specsSection: { marginBottom: 20, backgroundColor: colors.background, borderRadius: 16, padding: 16 },
+  specRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  specKey: { fontSize: 13, color: colors.onSurfaceSecondary, fontWeight: '500' },
+  specVal: { fontSize: 13, color: colors.onSurface, fontWeight: '600' },
+  availSection: { padding: 16, backgroundColor: colors.background, borderRadius: 16, marginBottom: 20 },
   availItem: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  availText: { fontSize: 13, color: '#0A0A0A', fontWeight: '600' },
-  subTitle: { fontSize: 13, fontWeight: '700', color: '#0A0A0A', marginTop: 4, marginBottom: 8 },
+  availText: { fontSize: 13, color: colors.onSurface, fontWeight: '600' },
+  subTitle: { fontSize: 13, fontWeight: '700', color: colors.onSurface, marginTop: 4, marginBottom: 8 },
   divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 12 },
   shipItem: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  shipText: { fontSize: 12, color: '#374151', fontWeight: '600' },
+  shipText: { fontSize: 12, color: colors.onSurfaceSecondary, fontWeight: '600' },
   payRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   payBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#D1FAE5', borderRadius: 14 },
-  payBadgeSoon: { backgroundColor: '#F3F4F6' },
+  payBadgeSoon: { backgroundColor: colors.surfaceSecondary },
   payText: { fontSize: 11, color: '#065F46', fontWeight: '700' },
-  payTextSoon: { fontSize: 11, color: '#6B7280', fontWeight: '600' },
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingBottom: 34, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F4F4F5' },
-  addToCartBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, gap: 10, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
+  payTextSoon: { fontSize: 11, color: colors.onSurfaceSecondary, fontWeight: '600' },
+  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingBottom: 34, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
+  addToCartBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 16, gap: 10, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
   addToCartText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
-});
+}));

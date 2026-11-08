@@ -1,5 +1,13 @@
 # Zitex — Product Requirements (Living Doc)
 
+## v1.40.0 — Support Tickets, Tasks Kanban, Specialist Staff Dashboards, Hiring/Offer posts
+- Backend module `staff_ops.py`: customer tickets (attachments, priority, thread), staff ticket board
+  (/api/merchant/tickets, status/priority/assignee), tasks Kanban (/api/merchant/tasks), staff directory,
+  /api/employee/dashboard (widgets per permission), /api/social/posts/{id}/apply (job → 'job' ticket). Idempotent seeds.
+- Frontend: merchant/tickets.tsx + merchant/tasks.tsx (Kanban), StaffDashboard for employees, support.tsx themed with "My tickets".
+- Social: new post types job + offer (composer + feed), feed filter chips, more demo competitions.
+- `themed()` helper in tokens.ts: module-level StyleSheets rebuild after theme change; ~38 legacy screens migrated to theme tokens.
+
 
 ## v1.17.0 — Dynamic Content Translation on Demand (2026-10-01)
 

@@ -9,6 +9,7 @@ import { useAuth } from './_layout';
 import { mediaUrlSync } from '../src/utils/upload';
 import { TX, tSync, tf } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
+import { colors, themed } from '../src/theme/tokens';
 
 const PURPLE = '#F5C518';
 
@@ -48,7 +49,7 @@ export default function MyServices() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <TX style={s.title}>خدماتي</TX>
         <View style={{ width: 22 }} />
       </View>
@@ -104,7 +105,7 @@ function BookingDetail({ booking, onClose, apiCall }: any) {
     <Modal visible transparent={false} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={s.safe}>
         <View style={s.header}>
-          <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+          <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={colors.onSurface} /></TouchableOpacity>
           <Text style={s.title}>{booking.service_name}</Text>
           <View style={{ width: 22 }} />
         </View>
@@ -175,7 +176,7 @@ function UpdateItem({ update, bookingId, apiCall }: any) {
           <View style={{ flexDirection: 'row', gap: 4, marginVertical: 6 }}>
             {[1,2,3,4,5].map(i => (
               <TouchableOpacity key={i} onPress={() => setStars(i)}>
-                <Ionicons name={i <= stars ? 'star' : 'star-outline'} size={28} color="#F5C518" />
+                <Ionicons name={i <= stars ? 'star' : 'star-outline'} size={28} color={colors.brand} />
               </TouchableOpacity>
             ))}
           </View>
@@ -212,7 +213,7 @@ function FinalRating({ bookingId, apiCall, existing }: any) {
       <View style={{ flexDirection: 'row', gap: 6, marginVertical: 8 }}>
         {[1,2,3,4,5].map(i => (
           <TouchableOpacity key={i} onPress={() => !saved && setStars(i)}>
-            <Ionicons name={i <= stars ? 'star' : 'star-outline'} size={32} color="#F5C518" />
+            <Ionicons name={i <= stars ? 'star' : 'star-outline'} size={32} color={colors.brand} />
           </TouchableOpacity>
         ))}
       </View>
@@ -227,47 +228,47 @@ function FinalRating({ bookingId, apiCall, existing }: any) {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   load: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   iconBtn: { padding: 4 },
-  title: { flex: 1, fontSize: 17, fontWeight: '800', color: '#0A0A0A', textAlign: 'center' },
+  title: { flex: 1, fontSize: 17, fontWeight: '800', color: colors.onSurface, textAlign: 'center' },
   empty: { alignItems: 'center', padding: 40, gap: 12 },
-  emptyText: { fontSize: 15, color: '#6B7280', fontWeight: '700' },
+  emptyText: { fontSize: 15, color: colors.onSurfaceSecondary, fontWeight: '700' },
   emptyBtn: { backgroundColor: PURPLE, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
   emptyBtnText: { color: 'white', fontWeight: '800' },
-  card: { backgroundColor: 'white', borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#E5E7EB' },
-  svcName: { fontSize: 15, fontWeight: '900', color: '#0A0A0A', flex: 1, textAlign: 'right' },
-  statusBadge: { backgroundColor: '#F4ECFF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  card: { backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
+  svcName: { fontSize: 15, fontWeight: '900', color: colors.onSurface, flex: 1, textAlign: 'right' },
+  statusBadge: { backgroundColor: colors.brandTertiary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   statusText: { fontSize: 11, color: PURPLE, fontWeight: '800' },
-  device: { fontSize: 12, color: '#6B7280', marginTop: 4, textAlign: 'right' },
-  issue: { fontSize: 12, color: '#4B5563', marginTop: 4, textAlign: 'right' },
+  device: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 4, textAlign: 'right' },
+  issue: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 4, textAlign: 'right' },
   timeline: { flexDirection: 'row', marginTop: 12, marginBottom: 6 },
   stepDot: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center' },
   stepDotActive: { backgroundColor: PURPLE },
   stepDotCurrent: { transform: [{ scale: 1.15 }] },
-  stepLabel: { fontSize: 9, color: '#9CA3AF', marginTop: 4, fontWeight: '600' },
+  stepLabel: { fontSize: 9, color: colors.onSurfaceTertiary, marginTop: 4, fontWeight: '600' },
   stepLabelActive: { color: PURPLE, fontWeight: '800' },
-  total: { fontSize: 13, color: '#0A0A0A', fontWeight: '800' },
+  total: { fontSize: 13, color: colors.onSurface, fontWeight: '800' },
   hint: { fontSize: 11, color: PURPLE, fontWeight: '700' },
-  infoBox: { backgroundColor: 'white', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 12 },
-  infoTitle: { fontSize: 14, fontWeight: '800', color: '#0A0A0A', marginBottom: 8, textAlign: 'right' },
+  infoBox: { backgroundColor: colors.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.border, marginBottom: 12 },
+  infoTitle: { fontSize: 14, fontWeight: '800', color: colors.onSurface, marginBottom: 8, textAlign: 'right' },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  rowLbl: { fontSize: 13, color: '#6B7280' },
-  rowVal: { fontSize: 13, color: '#0A0A0A', fontWeight: '700', maxWidth: '60%', textAlign: 'right' },
-  sec: { fontSize: 14, fontWeight: '800', color: '#0A0A0A', marginTop: 8, marginBottom: 8, textAlign: 'right' },
-  emptyBox: { alignItems: 'center', padding: 30, gap: 8, backgroundColor: 'white', borderRadius: 14, borderWidth: 1, borderColor: '#E5E7EB' },
-  emptySub: { fontSize: 12, color: '#9CA3AF' },
-  updateCard: { backgroundColor: 'white', borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 12 },
+  rowLbl: { fontSize: 13, color: colors.onSurfaceSecondary },
+  rowVal: { fontSize: 13, color: colors.onSurface, fontWeight: '700', maxWidth: '60%', textAlign: 'right' },
+  sec: { fontSize: 14, fontWeight: '800', color: colors.onSurface, marginTop: 8, marginBottom: 8, textAlign: 'right' },
+  emptyBox: { alignItems: 'center', padding: 30, gap: 8, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border },
+  emptySub: { fontSize: 12, color: colors.onSurfaceTertiary },
+  updateCard: { backgroundColor: colors.surface, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, marginBottom: 12 },
   updateVideo: { width: '100%', height: 220, backgroundColor: '#000' },
-  updateCap: { fontSize: 13, color: '#0A0A0A', padding: 12, textAlign: 'right' },
-  rateBox: { padding: 12, borderTopWidth: 1, borderTopColor: '#F4F4F5' },
-  rateTitle: { fontSize: 13, fontWeight: '700', color: '#0A0A0A', textAlign: 'right' },
-  rateInput: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#E5E7EB', fontSize: 13, textAlign: 'right' },
+  updateCap: { fontSize: 13, color: colors.onSurface, padding: 12, textAlign: 'right' },
+  rateBox: { padding: 12, borderTopWidth: 1, borderTopColor: colors.border },
+  rateTitle: { fontSize: 13, fontWeight: '700', color: colors.onSurface, textAlign: 'right' },
+  rateInput: { backgroundColor: colors.background, borderRadius: 8, padding: 10, borderWidth: 1, borderColor: colors.border, fontSize: 13, textAlign: 'right' },
   rateBtn: { backgroundColor: PURPLE, borderRadius: 10, padding: 10, alignItems: 'center', marginTop: 8 },
   rateBtnText: { color: 'white', fontWeight: '800' },
   thanks: { flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', padding: 10, backgroundColor: '#F0FDF4' },
   thanksText: { color: '#166534', fontSize: 12, fontWeight: '700' },
-  finalCard: { backgroundColor: 'white', borderRadius: 14, padding: 14, marginTop: 8, borderWidth: 1, borderColor: '#E5E7EB' },
-});
+  finalCard: { backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginTop: 8, borderWidth: 1, borderColor: colors.border },
+}));

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { useT } from '../src/i18n';
 import TranslatableName from '../src/components/TranslatableName';
+import { colors, themed } from '../src/theme/tokens';
 
 export default function FavoritesScreen() {
   const { lang } = useT();
@@ -23,17 +24,17 @@ export default function FavoritesScreen() {
     load();
   };
 
-  if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#F5C518" /></View>;
+  if (loading) return <View style={s.load}><ActivityIndicator size="large" color={colors.brand} /></View>;
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity testID="fav-back" style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity testID="fav-back" style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>{tSync('المفضلة', lang)}</Text>
         <Text style={s.count}>{favs.length} {tSync('منتج', lang)}</Text>
       </View>
       {favs.length === 0 ? (
-        <View style={s.empty}><Ionicons name="heart-outline" size={48} color="#A1A1AA" /><Text style={s.emptyTitle}>{tSync('ما أضفت أي مفضلة لحد الآن', lang)}</Text><Text style={s.emptyDesc}>{tSync('المنتجات اللي عجبتك تظهر هنا', lang)}</Text></View>
+        <View style={s.empty}><Ionicons name="heart-outline" size={48} color={colors.onSurfaceTertiary} /><Text style={s.emptyTitle}>{tSync('ما أضفت أي مفضلة لحد الآن', lang)}</Text><Text style={s.emptyDesc}>{tSync('المنتجات اللي عجبتك تظهر هنا', lang)}</Text></View>
       ) : (
         <ScrollView contentContainerStyle={s.list}>
           {favs.map(p => (
@@ -58,16 +59,16 @@ export default function FavoritesScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF' }, load: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.surface }, load: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
-  title: { flex: 1, fontSize: 22, fontWeight: '800', color: '#0A0A0A' }, count: { fontSize: 14, color: '#A1A1AA' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
+  title: { flex: 1, fontSize: 22, fontWeight: '800', color: colors.onSurface }, count: { fontSize: 14, color: colors.onSurfaceTertiary },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#0A0A0A' }, emptyDesc: { fontSize: 14, color: '#52525B' },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.onSurface }, emptyDesc: { fontSize: 14, color: colors.onSurfaceSecondary },
   list: { paddingHorizontal: 20, paddingBottom: 40 },
-  card: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#F9F9FB', borderRadius: 14, marginBottom: 10 },
-  img: { width: 60, height: 60, borderRadius: 10, backgroundColor: '#FFF', marginEnd: 12 },
-  info: { flex: 1 }, name: { fontSize: 14, fontWeight: '600', color: '#0A0A0A', marginBottom: 4 },
-  price: { fontSize: 15, fontWeight: '800', color: '#F5C518' },
-});
+  card: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: colors.background, borderRadius: 14, marginBottom: 10 },
+  img: { width: 60, height: 60, borderRadius: 10, backgroundColor: colors.surface, marginEnd: 12 },
+  info: { flex: 1 }, name: { fontSize: 14, fontWeight: '600', color: colors.onSurface, marginBottom: 4 },
+  price: { fontSize: 15, fontWeight: '800', color: colors.brand },
+}));

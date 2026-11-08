@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { LoyaltyWidget } from '../src/components/PaymentAndLoyalty';
 import { TX, tSync } from '../src/useAutoT';
+import { colors, themed } from '../src/theme/tokens';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -97,7 +98,7 @@ export default function LoyaltyHistoryScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
   back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
@@ -112,4 +113,4 @@ const s = StyleSheet.create({
   txDesc: { color: TEXT, fontSize: 12, fontWeight: '800', textAlign: 'right' },
   txMeta: { color: MUTED, fontSize: 10, textAlign: 'right', marginTop: 2 },
   txAmount: { fontSize: 15, fontWeight: '900' },
-});
+}));

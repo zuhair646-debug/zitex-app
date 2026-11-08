@@ -20,11 +20,14 @@ import re
 import os
 import hashlib
 import logging
+import asyncio
 from datetime import datetime
 from typing import Optional, Dict
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+# Cap concurrent LLM calls so bulk jobs never starve normal API traffic
+_BULK_SEM = asyncio.Semaphore(4)
 log = logging.getLogger(__name__)
 
 LANG_NAMES = {
@@ -385,6 +388,10 @@ def build_router(db=None, get_current_user=None):
             return (" Use this glossary: " + ", ".join(f"{k}={v}" for k, v in hits.items()) + ".") if hits else ''
 
         async def run_chunk(batch: list, tag: str) -> list:
+            async with _BULK_SEM:
+                return await _run_chunk(batch, tag)
+
+        async def _run_chunk(batch: list, tag: str) -> list:
             """Translate one chunk; returns the items that failed validation."""
             numbered = "\n".join(f"{j + 1}. {s}" for j, s in enumerate(batch))
             done = set()
@@ -421,6 +428,10 @@ def build_router(db=None, get_current_user=None):
         import asyncio as _asyncio
 
         async def one(raw: str):
+            async with _BULK_SEM:
+                await _one(raw)
+
+        async def _one(raw: str):
             """Multi-line texts (posts, descriptions) can't use the numbered-line format → single-text path."""
             try:
                 r = await translate(TranslateReq(text=raw.strip()[:5000], target_lang=req.target_lang, source_lang=req.source_lang))

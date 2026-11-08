@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import TranslatableName from '../../src/components/TranslatableName';
+import { colors, themed } from '../../src/theme/tokens';
 
 export default function MerchantBanners() {
   const { lang } = useT();
@@ -35,11 +36,11 @@ export default function MerchantBanners() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>{tSync('البانرات', lang)} ({banners.length})</Text>
         <TouchableOpacity testID="add-banner" onPress={() => setModalOpen(true)} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
+      {loading ? <ActivityIndicator size="large" color={colors.brand} style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
           {banners.map(b => (
             <View key={b.id} style={s.card}>
@@ -55,7 +56,7 @@ export default function MerchantBanners() {
       <Modal visible={modalOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModalOpen(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalOpen(false)}><Ionicons name="close" size={24} color={colors.onSurface} /></TouchableOpacity>
             <Text style={s.title}>{tSync('بانر جديد', lang)}</Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -75,18 +76,18 @@ export default function MerchantBanners() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   backBtn: { padding: 4 },
-  title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: '#0A0A0A' },
-  addBtn: { backgroundColor: '#8833FF', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  card: { backgroundColor: 'white', borderRadius: 12, marginBottom: 10, overflow: 'hidden' },
-  img: { width: '100%', height: 120, backgroundColor: '#F3F4F6' },
+  title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: colors.onSurface },
+  addBtn: { backgroundColor: colors.brand, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  card: { backgroundColor: colors.surface, borderRadius: 12, marginBottom: 10, overflow: 'hidden' },
+  img: { width: '100%', height: 120, backgroundColor: colors.surfaceSecondary },
   cardBody: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12 },
-  bTitle: { fontSize: 14, fontWeight: '600', color: '#0A0A0A', flex: 1 },
-  label: { fontSize: 13, fontWeight: '600', color: '#374151', marginTop: 12, marginBottom: 6 },
-  input: { backgroundColor: 'white', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB' },
-  saveBtn: { backgroundColor: '#8833FF', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
+  bTitle: { fontSize: 14, fontWeight: '600', color: colors.onSurface, flex: 1 },
+  label: { fontSize: 13, fontWeight: '600', color: colors.onSurfaceSecondary, marginTop: 12, marginBottom: 6 },
+  input: { backgroundColor: colors.surface, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
+  saveBtn: { backgroundColor: colors.brand, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
   saveText: { color: 'white', fontWeight: '700', fontSize: 16 },
-});
+}));

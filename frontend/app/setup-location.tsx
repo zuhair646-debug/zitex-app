@@ -8,6 +8,7 @@ import { useAuth } from './_layout';
 import ZitexMap from '../src/components/MapView';
 import { TX, tSync } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
+import { colors, themed } from '../src/theme/tokens';
 
 export default function SetupLocation() {
   const { lang } = useT();
@@ -57,7 +58,7 @@ export default function SetupLocation() {
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <TX style={s.headerTitle}>تحديد موقعك</TX>
         <View style={{ width: 22 }} />
       </View>
@@ -79,7 +80,7 @@ export default function SetupLocation() {
 
           {hasLocation && (
             <View style={s.coordBox}>
-              <Ionicons name="pin" size={16} color="#F5C518" />
+              <Ionicons name="pin" size={16} color={colors.brand} />
               <Text style={s.coordText}>{lat.toFixed(5)}, {lng.toFixed(5)}</Text>
             </View>
           )}
@@ -113,22 +114,22 @@ export default function SetupLocation() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  headerTitle: { fontSize: 16, fontWeight: '800', color: '#0A0A0A' },
-  hero: { backgroundColor: '#F5C518', padding: 20, alignItems: 'center' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTitle: { fontSize: 16, fontWeight: '800', color: colors.onSurface },
+  hero: { backgroundColor: colors.brand, padding: 20, alignItems: 'center' },
   heroTitle: { color: 'white', fontSize: 20, fontWeight: '900', marginTop: 8 },
   heroSub: { color: 'rgba(255,255,255,0.85)', fontSize: 12, textAlign: 'center', marginTop: 4 },
   gpsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#10B981', padding: 14, borderRadius: 12 },
   gpsBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
-  coordBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F3E8FF', padding: 10, borderRadius: 10, marginTop: 10, justifyContent: 'center' },
-  coordText: { fontSize: 12, color: '#F5C518', fontWeight: '700' },
-  label: { fontSize: 13, fontWeight: '700', color: '#374151', marginTop: 14, marginBottom: 6 },
-  input: { backgroundColor: 'white', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', textAlign: 'right' },
+  coordBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.brandTertiary, padding: 10, borderRadius: 10, marginTop: 10, justifyContent: 'center' },
+  coordText: { fontSize: 12, color: colors.brand, fontWeight: '700' },
+  label: { fontSize: 13, fontWeight: '700', color: colors.onSurfaceSecondary, marginTop: 14, marginBottom: 6 },
+  input: { backgroundColor: colors.surface, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, textAlign: 'right' },
   branchInfo: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#D1FAE5', padding: 12, borderRadius: 10, marginTop: 14 },
   branchName: { fontSize: 13, fontWeight: '700', color: '#065F46' },
   branchDist: { fontSize: 11, color: '#047857' },
-  saveBtn: { backgroundColor: '#F5C518', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 18 },
+  saveBtn: { backgroundColor: colors.brand, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 18 },
   saveText: { color: 'white', fontWeight: '800', fontSize: 15 },
-});
+}));

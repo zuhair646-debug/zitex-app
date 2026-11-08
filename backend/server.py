@@ -807,11 +807,6 @@ async def service_experiences(svc_id: str):
 
 
 # ─── Support Tickets ───
-class TicketInput(BaseModel):
-    subject: str
-    message: str
-    category: str = "general"
-
 class ReportInput(BaseModel):
     reason: str = "محتوى مخالف"
 
@@ -844,28 +839,7 @@ async def merchant_reported_posts(user=Depends(get_current_user)):
     ps = await db.social_posts.find({"reports.0": {"$exists": True}}).sort("created_at", -1).to_list(100)
     return [{**serialize_doc(p), "report_count": len(p.get("reported_by", []))} for p in ps]
 
-@api_router.get("/support/tickets")
-async def get_tickets(user=Depends(get_current_user)):
-    tickets = await db.support_tickets.find({"user_id": user["id"]}).sort("created_at", -1).to_list(50)
-    return [serialize_doc(t) for t in tickets]
-
-@api_router.post("/support/tickets")
-async def create_ticket(data: TicketInput, user=Depends(get_current_user)):
-    result = await db.support_tickets.insert_one({
-        "user_id": user["id"], "subject": data.subject, "message": data.message,
-        "category": data.category, "status": "open",
-        "replies": [], "created_at": datetime.now(timezone.utc).isoformat()
-    })
-    return {"id": str(result.inserted_id), "message": "Ticket created"}
-
-@api_router.post("/support/tickets/{ticket_id}/reply")
-async def reply_ticket(ticket_id: str, request: Request, user=Depends(get_current_user)):
-    body = await request.json()
-    await db.support_tickets.update_one({"_id": ObjectId(ticket_id)}, {"$push": {"replies": {
-        "user_id": user["id"], "user_name": user["name"], "message": body.get("message", ""),
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }}})
-    return {"message": "Reply sent"}
+# Support tickets / tasks / staff dashboards live in staff_ops.py
 
 # ─── Warranties ───
 @api_router.get("/warranties")
@@ -1332,9 +1306,9 @@ async def get_comments(post_id: str):
 @api_router.post("/social/posts/{post_id}/comments")
 async def add_comment(post_id: str, request: Request, user=Depends(get_current_user)):
     body = await request.json()
-    is_merchant = user.get("role") == "merchant"
+    is_merchant = is_social_staff(user)
     await db.social_comments.insert_one({
-        "post_id": post_id, "user_id": user["id"], "user_name": user["name"],
+        "post_id": post_id, "user_id": user["id"], "user_name": (await store_display_name(user)) if is_merchant else user["name"],
         "text": body.get("text", ""), "is_merchant_reply": is_merchant,
         "reply_to": body.get("reply_to"),  # optional parent comment id
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -1407,6 +1381,18 @@ def require_employee_perm(user, perm: str):
 def require_chamber(user):
     if user.get("role") != "chamber":
         raise HTTPException(status_code=403, detail="Chamber access only")
+
+def is_social_staff(user) -> bool:
+    """Owner or an employee allowed to speak for the store on social."""
+    return user.get("role") == "merchant" or (
+        user.get("role") == "employee" and bool({"all", "social"} & set(user.get("permissions", []))))
+
+async def store_display_name(user) -> str:
+    """Posts by employees are published under the store's name, not the employee's."""
+    if user.get("role") == "employee" and ObjectId.is_valid(user.get("merchant_id", "")):
+        m = await db.users.find_one({"_id": ObjectId(user["merchant_id"])}, {"name": 1, "store_name": 1})
+        if m: return m.get("store_name") or m.get("name") or "Store"
+    return user.get("store_name") or user.get("name") or "Store"
 
 # ─── Support / Store Contact Info (public) ───
 SUPPORT_DEFAULTS = {
@@ -1490,6 +1476,9 @@ async def list_roles(user=Depends(get_current_user)):
         {"id": "preset_marketing", "name": "مسؤول تسويق", "description": "سوشال + مسابقات + بانرات", "permissions": ["social", "competitions", "banners"], "color": "#EC4899", "is_preset": True, "employees_count": 0},
         {"id": "preset_inventory", "name": "أمين مخزون", "description": "المخزون فقط", "permissions": ["inventory", "products"], "color": "#10B981", "is_preset": True, "employees_count": 0},
         {"id": "preset_cashier", "name": "كاشير", "description": "نقاط البيع والفواتير", "permissions": ["pos", "invoices", "orders"], "color": "#F59E0B", "is_preset": True, "employees_count": 0},
+        {"id": "preset_services", "name": "مسؤول خدمات", "description": "الخدمات والحجوزات + التذاكر", "permissions": ["services", "tickets_reply"], "color": "#0EA5E9", "is_preset": True, "employees_count": 0},
+        {"id": "preset_support", "name": "دعم فني", "description": "تذاكر الدعم والعملاء", "permissions": ["support", "tickets_reply", "customers", "orders"], "color": "#EF4444", "is_preset": True, "employees_count": 0},
+        {"id": "preset_ops", "name": "مشرف عمليات", "description": "المهام والطلبات والتوصيل", "permissions": ["tasks", "orders", "delivery", "tickets_reply"], "color": "#14B8A6", "is_preset": True, "employees_count": 0},
         {"id": "preset_manager", "name": "مدير فرع", "description": "إدارة فرع كاملة", "permissions": ["orders", "products", "inventory", "customers", "invoices", "pos"], "color": "#8B5CF6", "is_preset": True, "employees_count": 0},
     ]
     for p in presets:
@@ -2108,6 +2097,19 @@ class SocialPostInput(BaseModel):
     question: str = ""  # for type=question
     event_date: str = ""  # ISO for type=event
     event_location: str = ""
+    # type=job (hiring ad)
+    job_title: str = ""
+    job_city: str = ""
+    job_type: str = ""
+    job_salary: str = ""
+    job_requirements: List[str] = []
+    # type=offer (promo ad)
+    offer_price: float = 0
+    offer_old_price: float = 0
+    cta_label: str = ""
+    cta_link: str = ""
+    valid_until: str = ""
+    badge: str = ""
 
 @api_router.post("/merchant/social/posts")
 async def merchant_create_post(data: SocialPostInput, user=Depends(get_current_user)):
@@ -2115,8 +2117,9 @@ async def merchant_create_post(data: SocialPostInput, user=Depends(get_current_u
     if not data.text and not data.image and not data.images and not data.video and data.type == "post":
         raise HTTPException(status_code=400, detail="المنشور يحتاج نص أو وسائط")
     doc = {
-        "author": user.get("name", "Store"),
-        "author_id": user["id"],
+        "author": await store_display_name(user),
+        "author_id": user.get("merchant_id") or user["id"],
+        "posted_by_staff": user.get("name", "") if user.get("role") == "employee" else "",
         "text": data.text,
         "image": data.image,
         "images": data.images or ([data.image] if data.image else []),
@@ -2136,6 +2139,14 @@ async def merchant_create_post(data: SocialPostInput, user=Depends(get_current_u
     if data.type == "event":
         doc["event_date"] = data.event_date
         doc["event_location"] = data.event_location
+    if data.type == "job":
+        if not data.job_title.strip():
+            raise HTTPException(status_code=400, detail="اكتب المسمى الوظيفي")
+        doc.update({"job_title": data.job_title.strip(), "job_city": data.job_city, "job_type": data.job_type,
+                    "job_salary": data.job_salary, "job_requirements": [x for x in data.job_requirements if x.strip()], "applicants": 0})
+    if data.type == "offer":
+        doc.update({"offer_price": data.offer_price, "offer_old_price": data.offer_old_price, "cta_label": data.cta_label,
+                    "cta_link": data.cta_link, "valid_until": data.valid_until, "badge": data.badge})
     if data.type == "story":
         # Stories expire after 24h
         doc["expires_at"] = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
@@ -2770,8 +2781,8 @@ async def reply_to_comment(post_id: str, comment_id: str, request: Request, user
         "post_id": post_id,
         "parent_comment_id": comment_id,
         "user_id": user["id"],
-        "user_name": user.get("name", ""),
-        "is_merchant": user.get("role") == "merchant",
+        "user_name": (await store_display_name(user)) if is_social_staff(user) else user.get("name", ""),
+        "is_merchant": is_social_staff(user),
         "text": body.get("text", ""),
         "created_at": datetime.now(timezone.utc).isoformat()
     })
@@ -4283,6 +4294,10 @@ _PERM_MAP = [
     ("/api/merchant/employees",     "_owner_only"),  # only owner
     ("/api/merchant/employee-perms","_owner_only"),
     ("/api/merchant/chamber-employees","_owner_only"),
+    # These routers enforce their own per-user rules (tickets / tasks / staff list)
+    ("/api/merchant/tickets",       "_endpoint"),
+    ("/api/merchant/tasks",         "_endpoint"),
+    ("/api/merchant/staff-directory", "_endpoint"),
 ]
 # Read-only lookups several roles need (e.g. the POS needs the branch list).
 _PERM_ALT = {("GET", "/api/merchant/branches"): {"pos", "inventory", "drivers", "delivery", "orders"},
@@ -4315,7 +4330,7 @@ async def enforce_employee_perms(request: Request, call_next):
             required = perm
             best_len = len(prefix)
     perms = user.get("permissions", [])
-    if "all" in perms:
+    if "all" in perms or required == "_endpoint":
         return await call_next(request)
     from fastapi.responses import JSONResponse
     if required == "_owner_only":
@@ -5582,7 +5597,7 @@ async def like_as_store(pid: str, user=Depends(get_current_user)):
 @api_router.post("/merchant/social/posts/{pid}/comments/{cid}/replies")
 async def reply_to_comment_as_store(pid: str, cid: str, request: Request, user=Depends(get_current_user)):
     """Store reply that appears as a threaded reply under a comment."""
-    if user.get("role") not in ("merchant", "chamber"):
+    if user.get("role") != "chamber" and not is_social_staff(user):
         raise HTTPException(403, "Merchants only")
     body = await request.json()
     text = (body.get("text") or "").strip()
@@ -5590,7 +5605,7 @@ async def reply_to_comment_as_store(pid: str, cid: str, request: Request, user=D
     reply = {
         "id": str(ObjectId()),
         "user_id": user.get("id"),
-        "user_name": f"🏪 {user.get('name', 'المتجر')}",
+        "user_name": f"🏪 {await store_display_name(user)}",
         "is_store": True,
         "text": text,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -5625,14 +5640,14 @@ async def send_abandoned_offer(user_id: str, request: Request, user=Depends(get_
 # ─── Social: merchant reply AS the store ────────────────────────────────
 @api_router.post("/social/posts/{pid}/comments/{cid}/store-reply")
 async def store_reply_to_comment(pid: str, cid: str, request: Request, user=Depends(get_current_user)):
-    if user.get("role") != "merchant":
+    if not is_social_staff(user):
         raise HTTPException(403, "المتاجر فقط")
     body = await request.json()
     text = (body.get("text") or "").strip()
     if not text: raise HTTPException(400, "النص مطلوب")
     reply = {
         "id": str(ObjectId()), "user_id": user["id"],
-        "user_name": user.get("store_name") or user.get("name") or "المتجر",
+        "user_name": await store_display_name(user),
         "text": text, "is_store": True, "verified": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -7001,9 +7016,20 @@ try:
 except Exception as _e:
     logger.error(f"Failed to mount translation router: {_e}")
 
+try:
+    import staff_ops
+    app.include_router(staff_ops.build_router(db, get_current_user, hash_password, create_notification))
+    logger.info("Staff ops (tickets/tasks/dashboards) router mounted")
+except Exception as _e:
+    logger.error(f"Failed to mount staff ops router: {_e}")
+
 @app.on_event("startup")
 async def startup():
     await seed_data()
+    try:
+        await staff_ops.seed(db, hash_password)
+    except Exception as _e:
+        logger.warning(f"staff ops seed: {_e}")
     # Backfill QA question/options onto competition feed posts created before they were copied
     try:
         async for _p in db.social_posts.find({"type": "competition", "question": {"$exists": False}}, {"linked_competition_id": 1}):

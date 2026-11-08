@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import { colors, themed } from '../../src/theme/tokens';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -216,7 +217,7 @@ export default function LoyaltyProgramsScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
   back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
@@ -244,4 +245,4 @@ const s = StyleSheet.create({
   legalItem: { color: TEXT, fontSize: 11, textAlign: 'right', marginTop: 3 },
   saveBtn: { backgroundColor: GOLD, borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 16 },
   saveText: { color: BG, fontSize: 14, fontWeight: '900' },
-});
+}));

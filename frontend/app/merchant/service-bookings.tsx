@@ -11,6 +11,7 @@ import { useAuth } from '../_layout';
 import { uploadMedia, mediaUrlSync } from '../../src/utils/upload';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
+import { colors, themed } from '../../src/theme/tokens';
 
 const GOLD = '#F5C518';
 const BG = '#0A0A0A';
@@ -323,7 +324,7 @@ function VideoComposer({ bookingId, apiCall, onDone, onCancel }: any) {
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   load: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: BG, borderBottomWidth: 1, borderBottomColor: BORDER },
@@ -369,4 +370,4 @@ const s = StyleSheet.create({
   input: { backgroundColor: CARD, color: TEXT, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: BORDER, fontSize: 14, textAlign: 'right' },
   saveBtn: { backgroundColor: GOLD, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
   saveText: { color: BG, fontWeight: '900', fontSize: 16 },
-});
+}));

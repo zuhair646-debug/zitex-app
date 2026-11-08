@@ -46,7 +46,7 @@ def has_arabic(s: str) -> bool:
 
 def extract_strings() -> list[str]:
     strings: set[str] = set()
-    for path in list(walk_source(os.path.join(FRONTEND, "app"))) + list(walk_source(os.path.join(FRONTEND, "src"))):
+    for path in list(walk_source(os.path.join(FRONTEND, "app"))) + list(walk_source(os.path.join(FRONTEND, "src"))) + ["/app/backend/staff_ops.py"]:
         try:
             with open(path, encoding="utf-8") as fp:
                 content = fp.read()

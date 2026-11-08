@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from './_layout';
 import { TX, tSync, tf } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
+import { colors, themed } from '../src/theme/tokens';
 
 export default function AffiliateApply() {
   const { lang } = useT();
@@ -70,7 +71,7 @@ export default function AffiliateApply() {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={s.header}>
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-            <Ionicons name="arrow-back" size={22} color="#F5C518" />
+            <Ionicons name="arrow-back" size={22} color={colors.brand} />
           </TouchableOpacity>
           <TX style={s.headerTitle}>انضم كمسوّق</TX>
           <View style={s.iconBtn} />
@@ -99,14 +100,14 @@ export default function AffiliateApply() {
           )}
 
           <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-            <Ionicons name="megaphone" size={40} color="#0A0A0A" />
+            <Ionicons name="megaphone" size={40} color={colors.onSurface} />
             <Text style={s.heroTitle}>{commission ? tf('اربح {0}% عمولة', lang, [commission]) : tSync('كن مسوّق Zenrex Store', lang)}</Text>
             <TX style={s.heroSubtitle}>من كل عملية شراء تتم عبر رابطك الفريد</TX>
           </LinearGradient>
 
           {!!merchant_name && (
             <View style={s.targetBox}>
-              <Ionicons name="business" size={18} color="#F5C518" />
+              <Ionicons name="business" size={18} color={colors.brand} />
               <Text style={s.targetText}>{tSync('التقديم لـ:', lang)} <Text style={{ fontWeight: '800' }}>{merchant_name}</Text></Text>
             </View>
           )}
@@ -128,7 +129,7 @@ export default function AffiliateApply() {
             {missing('full_name') && <TX style={s.missTag}>مطلوب</TX>}
           </View>
           <TextInput style={fieldStyle('full_name')} value={form.full_name}
-            placeholderTextColor="#6B7280"
+            placeholderTextColor={colors.onSurfaceTertiary}
             onChangeText={t => setForm({ ...form, full_name: t })} placeholder={tSync("اسمك الرباعي", lang)} />
 
           <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 12, marginBottom: 4 }}>
@@ -136,7 +137,7 @@ export default function AffiliateApply() {
             {missing('phone') && <TX style={s.missTag}>مطلوب</TX>}
           </View>
           <TextInput style={fieldStyle('phone')} value={form.phone} editable={false}
-            placeholderTextColor="#6B7280" placeholder={tSync("من حسابك", lang)} />
+            placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("من حسابك", lang)} />
 
           <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 12, marginBottom: 4 }}>
             <TX style={s.label}>المدينة</TX>
@@ -144,27 +145,27 @@ export default function AffiliateApply() {
           </View>
           <TextInput style={fieldStyle('city')} value={form.city}
             onChangeText={t => setForm({ ...form, city: t })}
-            placeholderTextColor="#6B7280" placeholder={tSync("الرياض", lang)} />
+            placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("الرياض", lang)} />
 
           <TX style={[s.label, { marginTop: 12 }]}>حساب السوشال (اختياري)</TX>
           <TextInput testID="apply-social-input" style={s.input} value={form.social_handle}
             onChangeText={t => setForm({ ...form, social_handle: t })}
-            placeholderTextColor="#6B7280" placeholder={tSync("@username على انستقرام أو تويتر", lang)} autoCapitalize="none" />
+            placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("@username على انستقرام أو تويتر", lang)} autoCapitalize="none" />
 
           <TX style={[s.label, { marginTop: 12 }]}>حجم الجمهور (متابع)</TX>
           <TextInput testID="apply-audience-input" style={s.input} value={form.audience_size} keyboardType="numeric"
             onChangeText={t => setForm({ ...form, audience_size: t })}
-            placeholderTextColor="#6B7280" placeholder="5000" />
+            placeholderTextColor={colors.onSurfaceTertiary} placeholder="5000" />
 
           <TX style={[s.label, { marginTop: 12 }]}>لماذا تريد الانضمام؟ (اختياري)</TX>
           <TextInput style={[s.input, { height: 90, textAlignVertical: 'top' }]} multiline
             value={form.note} onChangeText={t => setForm({ ...form, note: t })}
-            placeholderTextColor="#6B7280" placeholder={tSync("أشارك أخبار التقنية مع متابعيني...", lang)} />
+            placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync("أشارك أخبار التقنية مع متابعيني...", lang)} />
 
           <TouchableOpacity testID="apply-submit-btn" onPress={submit} disabled={saving} style={s.submitBtn}>
             <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.submitInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-              {saving ? <ActivityIndicator color="#0A0A0A" /> : <>
-                <Ionicons name="send" size={18} color="#0A0A0A" />
+              {saving ? <ActivityIndicator color={colors.onSurface} /> : <>
+                <Ionicons name="send" size={18} color={colors.onSurface} />
                 <TX style={s.submitText}>إرسال الطلب</TX>
               </>}
             </LinearGradient>
@@ -177,36 +178,36 @@ export default function AffiliateApply() {
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0A0A0A' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2A2A2A' },
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '800', color: 'white' },
   hero: { alignItems: 'center', padding: 24, borderRadius: 16, marginBottom: 12 },
-  heroTitle: { fontSize: 22, fontWeight: '900', color: '#0A0A0A', marginTop: 8 },
-  heroSubtitle: { fontSize: 13, color: '#0A0A0A', marginTop: 4, textAlign: 'center' },
+  heroTitle: { fontSize: 22, fontWeight: '900', color: colors.onSurface, marginTop: 8 },
+  heroSubtitle: { fontSize: 13, color: colors.onSurface, marginTop: 4, textAlign: 'center' },
   targetBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1F1F1F', padding: 12, borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: '#2E2404' },
-  targetText: { color: '#F5C518', fontSize: 13 },
+  targetText: { color: colors.brand, fontSize: 13 },
   warnBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#432104', padding: 10, borderRadius: 10, marginTop: 8, borderWidth: 1, borderColor: '#F59E0B' },
   warnText: { color: '#F59E0B', fontSize: 12, fontWeight: '700' },
   autofillBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#052E19', padding: 8, borderRadius: 8, marginTop: 10, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#10B981' },
   autofillText: { color: '#10B981', fontSize: 11, fontWeight: '700' },
-  label: { fontSize: 12, fontWeight: '700', color: '#F5C518' },
+  label: { fontSize: 12, fontWeight: '700', color: colors.brand },
   missTag: { fontSize: 10, color: '#F59E0B', fontWeight: '700' },
   input: { backgroundColor: '#151515', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#2A2A2A', fontSize: 14, color: 'white', textAlign: 'right' },
   inputMissing: { borderColor: '#F59E0B', backgroundColor: '#241505' },
   submitBtn: { marginTop: 24, borderRadius: 12, overflow: 'hidden' },
   submitInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
-  submitText: { color: '#0A0A0A', fontSize: 15, fontWeight: '800' },
-  notice: { textAlign: 'center', fontSize: 11, color: '#6B7280', marginTop: 12, fontStyle: 'italic' },
-  myCard: { backgroundColor: '#151515', borderRadius: 12, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#F5C518' },
-  myTitle: { fontSize: 13, fontWeight: '800', color: '#F5C518', marginBottom: 10 },
+  submitText: { color: colors.onSurface, fontSize: 15, fontWeight: '800' },
+  notice: { textAlign: 'center', fontSize: 11, color: colors.onSurfaceSecondary, marginTop: 12, fontStyle: 'italic' },
+  myCard: { backgroundColor: '#151515', borderRadius: 12, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.brand },
+  myTitle: { fontSize: 13, fontWeight: '800', color: colors.brand, marginBottom: 10 },
   myRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#2A2A2A' },
   myName: { fontSize: 13, color: 'white', fontWeight: '600' },
   codeBox: { alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4, backgroundColor: '#2E2404', marginTop: 3 },
-  codeBoxText: { color: '#F5C518', fontFamily: 'monospace', fontSize: 11, fontWeight: '800' },
-  myEarn: { color: '#F5C518', fontSize: 14, fontWeight: '900' },
-  myConv: { color: '#9CA3AF', fontSize: 10 },
+  codeBoxText: { color: colors.brand, fontFamily: 'monospace', fontSize: 11, fontWeight: '800' },
+  myEarn: { color: colors.brand, fontSize: 14, fontWeight: '900' },
+  myConv: { color: colors.onSurfaceTertiary, fontSize: 10 },
   dashLink: { marginTop: 8, alignSelf: 'flex-end' },
-  dashLinkText: { color: '#F5C518', fontSize: 12, fontWeight: '800' },
-});
+  dashLinkText: { color: colors.brand, fontSize: 12, fontWeight: '800' },
+}));

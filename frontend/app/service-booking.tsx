@@ -7,6 +7,7 @@ import * as Location from 'expo-location';
 import { useAuth } from './_layout';
 import { TX, tSync, tf } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
+import { colors, themed } from '../src/theme/tokens';
 
 const PURPLE = '#F5C518';
 
@@ -83,7 +84,7 @@ export default function ServiceBooking() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>{tSync('حجز', lang)} {(lang === 'ar' ? (svc.name_ar || svc.name) : (svc.name || svc.name_ar))}</Text>
         <View style={{ width: 22 }} />
       </View>
@@ -171,35 +172,35 @@ export default function ServiceBooking() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   load: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   iconBtn: { padding: 4 },
-  title: { flex: 1, fontSize: 17, fontWeight: '800', color: '#0A0A0A', textAlign: 'center' },
-  svcCard: { backgroundColor: '#F4ECFF', padding: 14, borderRadius: 14, marginBottom: 12 },
+  title: { flex: 1, fontSize: 17, fontWeight: '800', color: colors.onSurface, textAlign: 'center' },
+  svcCard: { backgroundColor: colors.brandTertiary, padding: 14, borderRadius: 14, marginBottom: 12 },
   svcName: { fontSize: 16, fontWeight: '900', color: PURPLE, textAlign: 'right' },
   svcRow: { flexDirection: 'row', gap: 10, marginTop: 6, flexWrap: 'wrap' },
   svcMeta: { fontSize: 12, color: '#4B1A99', fontWeight: '600' },
-  label: { fontSize: 13, fontWeight: '700', color: '#374151', marginTop: 14, marginBottom: 6, textAlign: 'right' },
-  input: { backgroundColor: 'white', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', fontSize: 14, textAlign: 'right' },
-  optCard: { flex: 1, backgroundColor: 'white', padding: 14, borderRadius: 12, alignItems: 'center', gap: 4, borderWidth: 1.5, borderColor: '#E5E7EB' },
-  optCardActive: { borderColor: PURPLE, backgroundColor: '#F4ECFF' },
-  optTitle: { fontSize: 13, fontWeight: '800', color: '#6B7280' },
+  label: { fontSize: 13, fontWeight: '700', color: colors.onSurfaceSecondary, marginTop: 14, marginBottom: 6, textAlign: 'right' },
+  input: { backgroundColor: colors.surface, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, fontSize: 14, textAlign: 'right' },
+  optCard: { flex: 1, backgroundColor: colors.surface, padding: 14, borderRadius: 12, alignItems: 'center', gap: 4, borderWidth: 1.5, borderColor: colors.border },
+  optCardActive: { borderColor: PURPLE, backgroundColor: colors.brandTertiary },
+  optTitle: { fontSize: 13, fontWeight: '800', color: colors.onSurfaceSecondary },
   optTitleActive: { color: PURPLE },
-  optHint: { fontSize: 11, color: '#9CA3AF' },
+  optHint: { fontSize: 11, color: colors.onSurfaceTertiary },
   locBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: PURPLE, padding: 12, borderRadius: 10, marginTop: 10 },
   locBtnText: { color: 'white', fontWeight: '700', fontSize: 13 },
   quoteBox: { backgroundColor: '#F0F9FF', borderRadius: 10, padding: 12, marginTop: 10, borderWidth: 1, borderColor: '#BFDBFE' },
   quoteLine: { fontSize: 13, color: '#1E40AF', marginBottom: 4, textAlign: 'right' },
   quoteVal: { fontWeight: '900' },
-  summaryCard: { backgroundColor: 'white', borderRadius: 14, padding: 14, marginTop: 20, borderWidth: 1, borderColor: '#E5E7EB' },
+  summaryCard: { backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginTop: 20, borderWidth: 1, borderColor: colors.border },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  summaryLbl: { fontSize: 13, color: '#6B7280' },
-  summaryVal: { fontSize: 13, fontWeight: '700', color: '#0A0A0A' },
-  totalLbl: { fontSize: 15, fontWeight: '900', color: '#0A0A0A' },
+  summaryLbl: { fontSize: 13, color: colors.onSurfaceSecondary },
+  summaryVal: { fontSize: 13, fontWeight: '700', color: colors.onSurface },
+  totalLbl: { fontSize: 15, fontWeight: '900', color: colors.onSurface },
   totalVal: { fontSize: 20, fontWeight: '900', color: PURPLE },
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 30, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#E5E7EB' },
+  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 30, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
   submitBtn: { backgroundColor: PURPLE, padding: 16, borderRadius: 12, alignItems: 'center' },
   submitText: { color: 'white', fontSize: 15, fontWeight: '800' },
-});
+}));

@@ -11,6 +11,7 @@ import { useAuth } from '../_layout';
 import { useThemeMode } from '../../src/theme/mode';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { useT, LANGUAGES } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 
 export default function MerchantMore() {
   const styles = useStylesStyles();
@@ -62,6 +63,8 @@ export default function MerchantMore() {
     { icon: 'people-circle',     titleKey: 'mo.employees.title', subKey: 'mo.employees.sub', route: '/merchant/employees' },
     { icon: 'shield-checkmark',  titleKey: 'mo.roles.title',     subKey: 'mo.roles.sub',     route: '/merchant/roles' },
     { icon: 'pulse',             titleKey: 'mo.team.title',      subKey: 'mo.team.sub',      route: '/merchant/team' },
+    { icon: 'headset',           titleKey: 'تذاكر الدعم',          subKey: 'لوحة كانبان لتذاكر العملاء وطلبات التوظيف', route: '/merchant/tickets' },
+    { icon: 'clipboard',         titleKey: 'لوحة المهام',          subKey: 'وزّع المهام على الموظفين وتابع التنفيذ', route: '/merchant/tasks' },
     { icon: 'headset',           titleKey: 'mo.support.title',   subKey: 'mo.support.sub',   route: '/merchant/support-settings' },
     ...(user?.role === 'merchant' ? [{ icon: 'language', titleKey: 'mo.aiProvider.title', subKey: 'mo.aiProvider.sub', route: '/merchant/ai-provider' }] : []),
   ] as const;
@@ -76,12 +79,14 @@ export default function MerchantMore() {
     '/merchant/shipping-matrix': 'delivery', '/merchant/returns': 'orders', '/merchant/loyalty-programs': 'settings',
     '/merchant/services-catalog': 'settings', '/merchant/customers': 'customers', '/merchant/employees': '_owner',
     '/merchant/roles': 'roles_manage', '/merchant/team': 'roles_manage', '/merchant/support-settings': 'support',
+    '/merchant/tickets': 'tickets_reply|support', '/merchant/tasks': '_staff',
   };
   const perms: string[] = (user as any)?.permissions || [];
   const allowed = (route: string) => {
     if (user?.role !== 'employee' || perms.includes('all')) return true;
     const p = ROUTE_PERM[route];
-    return !!p && p !== '_owner' && perms.includes(p);
+    if (p === '_staff') return true;
+    return !!p && p !== '_owner' && p.split('|').some(x => perms.includes(x));
   };
 
   const Section = ({ label, items: all }: { label: string; items: readonly any[] }) => {
@@ -95,8 +100,8 @@ export default function MerchantMore() {
           <ListItem
             key={it.route}
             icon={it.icon as any}
-            title={t(it.titleKey)}
-            subtitle={t(it.subKey)}
+            title={tSync(t(it.titleKey), lang)}
+            subtitle={tSync(t(it.subKey), lang)}
             onPress={() => router.push(it.route as any)}
           />
         ))}

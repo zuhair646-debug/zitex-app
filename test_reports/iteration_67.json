@@ -1,0 +1,62 @@
+{
+  "summary": "v1.40.0 staff-ops batch tested (backend + Expo web, 390x844). Backend: 27/27 pytest pass after 1 fix by tester (employee social comments returned 500). Covered: customer tickets CRUD/reply/reopen, staff board with permission checks, tasks Kanban scoping, staff-directory, per-role dashboard widgets, job/offer posts, job apply with duplicate guard, and the 10 seeded competitions. Frontend: logins for support/ops/social/inventory/services specialists show StaffDashboard with the right widgets. Bottom tabs hide Orders/Products by permission. More screen is filtered by permission. Tickets Kanban works: move next/prev, thread, status change, reply with auto-assign. Tasks Kanban works: ops adds a task through the header + button, then moves it. Customer /support works: create ticket, open thread, reply. Social feed works: filter chips, job apply sheet (applicant count goes up), offer CTA. Merchant composer works: the job/offer types and fields publish. Marketer lands on /my-affiliate. Arabic/RTL renders. Main remaining problems: mixed Arabic/English in English mode on the new screens, search ignores ?q= from offer CTAs, low-contrast hardcoded colors in light mode, and employee-authored posts showing the employee's name instead of the store's. Deprecated packages: none detected (no expo-av / expo-barcode-scanner / expo-background-fetch).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/social/posts/{id}/comments", "issue": "FIXED BY TESTER: returned 500 for ANY employee. `is_merchant = role=='merchant' or (role=='employee' and {'all','social'} & set(perms))` evaluates to a Python set, and BSON cannot encode a set (bson.errors.InvalidDocument). Wrapped it in bool(). Social specialist comments now save with is_merchant_reply=true; other employees get false.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/merchant/social/posts (employee author)", "issue": "author is set to user.name, so posts by the social specialist show 'Noura, Social Media Specialist' in the customer feed instead of the store name ('Zenrex Store'). Use the merchant's name and keep the employee in a created_by field."},
+      {"endpoint": "POST /api/social/posts/{pid}/comments/{cid}/reply (server.py ~2765) & POST /api/merchant/social/posts/{pid}/comments/{cid}/replies (~5585)", "issue": "Only role=='merchant' (or chamber) counts as a store reply. The social specialist employee is rejected or not flagged on the dedicated reply endpoints, which is inconsistent with add_comment."},
+      {"endpoint": "PUT /api/merchant/tickets/{id}, PUT /api/merchant/tasks/{id}", "issue": "An invalid ObjectId assignee_id gives 404 'Not found' from _oid() instead of 400. DELETE /merchant/tasks/{id} returns 200 even when nothing was deleted."},
+      {"endpoint": "GET /api/merchant/tickets 403 detail", "issue": "The 403 message is Arabic only ('يتطلب صلاحية: الرد على التذاكر') and shows as-is in English mode."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "search.tsx offer CTA deep link", "issue": "Offer CTAs link to /search?q=AirPods and /search?q=Galaxy, but search.tsx only reads category, categoryName and condition from useLocalSearchParams (line 18). The query box stays empty and all 40 products are listed. Read params.q into the initial query.", "testID": "offer-cta-<id>", "priority": "HIGH"},
+      {"component": "Translations (tSync auto-translate)", "issue": "In English mode the new screens show mixed Arabic and English on first render, because tSync warms its cache in the background and nothing re-renders. Affected: StaffDashboard stat labels from the backend, ticket toggles 'كل التذاكر/المسندة إليّ', priorities 'عادية/عالية/عاجلة', 'غير مسندة', 'بدون رد', the new-ticket sheet (title, priorities, 'مشكلة تقنية', attach label, submit), the task form save button 'إضافة المهمة', composer types 'إعلان توظيف/إعلان عرض' and job field labels, feed chips 'العروض/الوظائف/تجارب العملاء', and the More item 'لوحة المهام' (t() with a raw Arabic key). Add static en entries for these strings.", "testID": "staff-widget-*, tickets-filter-*, post-type-job", "priority": "HIGH"},
+      {"component": "Bad machine translations", "issue": "'عالية' (high priority) is shown as 'Alia', like a person's name, on ticket and task cards and in the priority pickers. 'غير مسندة' is shown as 'Unsupported' (should be 'Unassigned'). The apply button 'إرسال الطلب' is shown as 'Send order' (should be 'Submit application'). Pin these in the static dictionary.", "testID": "ticket-card-*, task-card-*", "priority": "MEDIUM"},
+      {"component": "merchant/employees permission chips", "issue": "PERM_AR (employees.tsx:12) has no labels for tickets_reply, tasks or roles_manage, so the raw key 'tickets_reply' appears as a chip. Specialists also show department 'General' even though department is social_media/service/support.", "testID": "", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Merchant social publish (job)", "issue": "The job post published from the composer (no body text) saved correctly (API confirmed), but it did not appear at the top of the merchant Social management list right after publishing. Check the list refresh and how job posts without text are rendered there.", "affected_testIDs": ["social-publish"]}
+    ],
+    "design_issues": [
+      {"screen": "Light theme – wallet.tsx", "issues": ["Transaction amounts are hardcoded '#F5C518' (wallet.tsx:57,63) on white: contrast ratio 1.63, nearly unreadable"]},
+      {"screen": "Light theme – checkout / my-services / social / support", "issues": ["checkout 'Supported Payment Methods' and 'Test mode': ratio about 1.6–2.1", "my-services 'Browse Services' button text: ratio 1.63", "social timestamps and 'WhatsApp' chip: ratio about 2.0", "support 'Resolved' badge: ratio 2.1"]},
+      {"screen": "Merchant tab bar (light theme)", "issues": ["BlurView tint='dark' is hardcoded (merchant/_layout.tsx:56). In light mode the bar is dark grey and the grey inactive labels are hard to read. Derive the tint from isDark."]},
+      {"screen": "merchant/social (dark theme)", "issues": ["Post cards in the management list are white/light while the rest of the screen is dark, so the theme is inconsistent"]},
+      {"screen": "Tickets board for an employee without permission (inventory 0530000008)", "issues": ["The 'All tickets/Assigned to me' toggles still render above the 403 error. Hide them, or show a friendly no-access state."]},
+      {"screen": "Arabic text in web preview", "issues": ["Arabic glyphs render unjoined/letter-spaced in headless Chromium (login, names). This is probably a font/env artifact; verify on device."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_staff_ops_v1_40.py", "/app/test_reports/pytest/iter67_staff_ops.xml"],
+  "action_items": [
+    "search.tsx: read the `q` search param so offer CTA deep links (/search?q=AirPods) prefilter results",
+    "Add static English translations for every new v1.40 Arabic string (tickets, tasks, support sheet, staff dashboard stat labels, composer job/offer labels, feed chips, More 'لوحة المهام'). Fix 'Alia', 'Unsupported' and 'Send order'. Or make tSync trigger a re-render when the cache warms.",
+    "Translate or localize backend dashboard stat labels and the 403 detail (or return keys)",
+    "Light theme: replace hardcoded #F5C518/gold text in wallet.tsx and the low-contrast texts in checkout, my-services, social and support with themed tokens. Make the merchant tab bar BlurView tint follow the theme.",
+    "merchant_create_post: when an employee is the author, use the store/merchant name as author",
+    "Allow employees with the social perm on the store reply endpoints (/social/posts/{pid}/comments/{cid}/reply and /merchant/social/posts/{pid}/comments/{cid}/replies)",
+    "employees.tsx PERM_AR: add labels for tickets_reply, tasks and roles_manage",
+    "Check that the merchant social list refreshes after publishing and renders job/offer posts"
+  ],
+  "critical_code_review_comments": [
+    "server.py add_comment: the set-vs-bool bug caused a 500 for every employee comment (fixed)",
+    "staff_ops board_tickets is not scoped by merchant_id. That is fine for a single-store app but would leak across tenants if multi-merchant.",
+    "staff_ops.seed and the legacy server.py support_tickets seed both exist. The legacy docs lack priority/assignee/user_name fields, but the UI handles them.",
+    "Kanban COL_W uses Dimensions at module load and will not react to rotation or resize"
+  ],
+  "updated_files": [
+    "/app/backend/server.py (add_comment: bool() around is_merchant)",
+    "/app/frontend/src/components/ui/index.tsx (testID header-back-btn / header-right-btn on ScreenHeader)",
+    "/app/frontend/app/merchant/social.tsx (testIDs post-type-<id>, social-compose-open, social-publish)"
+  ],
+  "success_rate": {"backend": "100% (27/27 after fix; 25/27 before)", "frontend": "~85% (all flows functional; i18n, light-contrast and search ?q issues)"},
+  "seed_data_creation": "Created only TEST_-prefixed tickets, tasks and posts. The TEST tasks and posts were deleted. TEST tickets (no delete endpoint) were set to resolved. 1 TEST_UI job application ticket was set to resolved.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run: EXPO_PUBLIC_BACKEND_URL=<url> pytest /app/backend/tests/test_staff_ops_v1_40.py. The frontend env var is EXPO_PUBLIC_BACKEND_URL. Language is stored in localStorage 'app_lang'. The browser tool rewrites screenshot paths textually, so use literal paths, not f-strings. Ticket/task thread modals need a ~2s animation wait before clicking the bottom buttons. Brute-force lockout returns 429 on the 6th failed login. Hashes are bcrypt $2b$.",
+  "rca_of_issue": "Employee comment 500: Python `A or (B and C)`, where C is a set intersection, returns the set itself instead of a bool. Motor/BSON raises InvalidDocument: cannot encode object {'social'} / set(). Reproduce: log in as 0530000006, POST /api/social/posts/{id}/comments -> 500. Mitigation applied: bool(...)."
+}

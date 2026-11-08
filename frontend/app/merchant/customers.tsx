@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
+import { colors, themed } from '../../src/theme/tokens';
 
 export default function MerchantCustomers() {
   const { lang } = useT();
@@ -25,10 +26,10 @@ export default function MerchantCustomers() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>{tSync('العملاء (', lang)}{customers.length})</Text>
       </View>
-      {loading ? <ActivityIndicator size="large" color="#8833FF" style={{ marginTop: 40 }} /> :
+      {loading ? <ActivityIndicator size="large" color={colors.brand} style={{ marginTop: 40 }} /> :
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />} contentContainerStyle={{ padding: 16 }}>
           {customers.map(c => (
             <View key={c.id} style={s.card}>
@@ -54,18 +55,18 @@ export default function MerchantCustomers() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   backBtn: { padding: 4 },
-  title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: '#0A0A0A' },
-  card: { flexDirection: 'row', backgroundColor: 'white', padding: 12, borderRadius: 12, marginBottom: 10, alignItems: 'center' },
-  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#8833FF', alignItems: 'center', justifyContent: 'center' },
+  title: { flex: 1, fontSize: 18, fontWeight: '700', marginLeft: 12, color: colors.onSurface },
+  card: { flexDirection: 'row', backgroundColor: colors.surface, padding: 12, borderRadius: 12, marginBottom: 10, alignItems: 'center' },
+  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: 'white', fontSize: 20, fontWeight: '700' },
-  name: { fontSize: 14, fontWeight: '600', color: '#0A0A0A' },
-  phone: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  email: { fontSize: 11, color: '#9CA3AF', marginTop: 1 },
+  name: { fontSize: 14, fontWeight: '600', color: colors.onSurface },
+  phone: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 2 },
+  email: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 1 },
   statsBox: { alignItems: 'center', backgroundColor: '#EFE6FF', borderRadius: 10, padding: 8, minWidth: 50 },
-  statsVal: { fontSize: 18, fontWeight: '800', color: '#8833FF' },
-  statsLbl: { fontSize: 10, color: '#6B7280' },
-});
+  statsVal: { fontSize: 18, fontWeight: '800', color: colors.brand },
+  statsLbl: { fontSize: 10, color: colors.onSurfaceSecondary },
+}));

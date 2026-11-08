@@ -16,7 +16,7 @@ import TranslatableName, { NameInitial } from '../../src/components/Translatable
 
 
 type Tab = 'posts' | 'comments';
-type PostType = 'post' | 'story' | 'poll' | 'question' | 'event';
+type PostType = 'post' | 'story' | 'poll' | 'question' | 'event' | 'job' | 'offer';
 type MediaItem = { kind: 'image' | 'video'; path: string };
 
 const POST_TYPES: { id: PostType; label: string; icon: any; desc: string }[] = [
@@ -25,6 +25,8 @@ const POST_TYPES: { id: PostType; label: string; icon: any; desc: string }[] = [
   { id: 'poll',     label: 'استطلاع', icon: 'bar-chart',     desc: 'صوّت بين خيارات' },
   { id: 'question', label: 'سؤال',    icon: 'help-circle',   desc: 'سؤال للجمهور' },
   { id: 'event',    label: 'فعالية',  icon: 'calendar',      desc: 'تاريخ ومكان' },
+  { id: 'job',      label: 'إعلان توظيف', icon: 'briefcase', desc: 'وظيفة + تقديم مباشر' },
+  { id: 'offer',    label: 'إعلان عرض', icon: 'pricetag',    desc: 'سعر + زر شراء' },
 ];
 
 export default function MerchantSocial() {
@@ -50,6 +52,8 @@ export default function MerchantSocial() {
   const [locationTag, setLocationTag] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
   const [publishing, setPublishing] = useState(false);
+  const [job, setJob] = useState({ job_title: '', job_city: '', job_type: '', job_salary: '', job_requirements: '' });
+  const [offer, setOffer] = useState({ offer_price: '', offer_old_price: '', cta_label: '', cta_link: '', valid_until: '', badge: '' });
 
   // comment thread modal
   const [replyPostId, setReplyPostId] = useState<string | null>(null);
@@ -138,7 +142,9 @@ export default function MerchantSocial() {
   const addPollOption = () => pollOptions.length < 6 && setPollOptions([...pollOptions, '']);
   const removePollOption = (i: number) => pollOptions.length > 2 && setPollOptions(pollOptions.filter((_, idx) => idx !== i));
 
-  const resetComposer = () => { setText(''); setMedia([]); setPollOptions(['', '']); setEventDate(''); setEventLocation(''); setLocationTag(''); setScheduledAt(''); setPostType('post'); };
+  const resetComposer = () => { setText(''); setMedia([]); setPollOptions(['', '']); setEventDate(''); setEventLocation(''); setLocationTag(''); setScheduledAt(''); setPostType('post');
+    setJob({ job_title: '', job_city: '', job_type: '', job_salary: '', job_requirements: '' });
+    setOffer({ offer_price: '', offer_old_price: '', cta_label: '', cta_link: '', valid_until: '', badge: '' }); };
 
   const publish = async () => {
     // Validation per type
@@ -154,6 +160,8 @@ export default function MerchantSocial() {
       if (!text.trim()) { Alert.alert(tSync('مطلوب', lang), tSync('اكتب اسم الفعالية', curLang())); return; }
       if (!eventDate.trim()) { Alert.alert(tSync('مطلوب', lang), tSync('حدد تاريخ الفعالية', curLang())); return; }
     }
+    if (postType === 'job' && !job.job_title.trim()) { Alert.alert(tSync('مطلوب', lang), tSync('اكتب المسمى الوظيفي', curLang())); return; }
+    if (postType === 'offer' && (!text.trim() || !Number(offer.offer_price))) { Alert.alert(tSync('مطلوب', lang), tSync('اكتب نص العرض والسعر', curLang())); return; }
 
     setPublishing(true);
     try {
@@ -171,6 +179,8 @@ export default function MerchantSocial() {
       if (postType === 'poll') body.poll_options = pollOptions.filter(o => o.trim()).map(o => ({ text: o.trim(), votes: 0 }));
       if (postType === 'question') body.question = text.trim();
       if (postType === 'event') { body.event_date = eventDate; body.event_location = eventLocation; }
+      if (postType === 'job') Object.assign(body, { ...job, job_requirements: job.job_requirements.split('\n').map(x => x.trim()).filter(Boolean) });
+      if (postType === 'offer') Object.assign(body, { ...offer, offer_price: Number(offer.offer_price) || 0, offer_old_price: Number(offer.offer_old_price) || 0 });
 
       await apiCall('/api/merchant/social/posts', { method: 'POST', body: JSON.stringify(body) });
       resetComposer();
@@ -211,7 +221,7 @@ export default function MerchantSocial() {
 
   const typeIcon = (t?: string) => {
     const found = POST_TYPES.find(x => x.id === t);
-    return found ? { name: found.icon, color: found.color, label: found.label } : { name: 'document-text', color: '#8833FF', label: 'منشور' };
+    return found ? { name: found.icon, color: found.color, label: found.label } : { name: 'document-text', color: colors.brand, label: 'منشور' };
   };
 
   return (
@@ -219,7 +229,7 @@ export default function MerchantSocial() {
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
         <TX style={s.title}>إدارة السوشال ميديا</TX>
-        <TouchableOpacity onPress={() => { resetComposer(); setComposerOpen(true); }} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
+        <TouchableOpacity testID="social-compose-open" onPress={() => { resetComposer(); setComposerOpen(true); }} style={s.addBtn}><Ionicons name="add" size={22} color="white" /></TouchableOpacity>
       </View>
 
       <View style={s.tabs}>
@@ -319,7 +329,7 @@ export default function MerchantSocial() {
                 <Ionicons name="close" size={24} color={colors.brand} />
               </TouchableOpacity>
               <TX style={s.composerTitle}>محتوى جديد</TX>
-              <TouchableOpacity onPress={publish} disabled={publishing || uploading} style={s.publishTopBtn}>
+              <TouchableOpacity testID="social-publish" onPress={publish} disabled={publishing || uploading} style={s.publishTopBtn}>
                 <LinearGradient colors={['#F5C518', '#D4AF37']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.publishTopInner}>
                   {publishing ? <ActivityIndicator size="small" color={colors.onBrandPrimary} /> : <TX style={s.publishTopText}>نشر</TX>}
                 </LinearGradient>
@@ -332,7 +342,7 @@ export default function MerchantSocial() {
                 {POST_TYPES.map(t => {
                   const active = postType === t.id;
                   return (
-                    <TouchableOpacity key={t.id} style={[s.typeCardGold, active && s.typeCardGoldActive]} onPress={() => setPostType(t.id)}>
+                    <TouchableOpacity key={t.id} testID={`post-type-${t.id}`} style={[s.typeCardGold, active && s.typeCardGoldActive]} onPress={() => setPostType(t.id)}>
                       <View style={[s.typeIconBoxGold, active && { backgroundColor: colors.brand }]}>
                         <Ionicons name={t.icon} size={20} color={active ? colors.onBrandPrimary : colors.brand} />
                       </View>
@@ -359,7 +369,7 @@ export default function MerchantSocial() {
               )}
 
               {/* Media (Images + Video) */}
-              {(postType === 'post' || postType === 'story') && (
+              {(postType === 'post' || postType === 'story' || postType === 'job' || postType === 'offer') && (
                 <>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md }}>
                     <Text style={[s.goldLabel, { marginTop: 0, flex: 1 }]}>{postType === 'story' ? tSync('وسائط الحالة *', curLang()) : tSync('الوسائط (صور + فيديو، حتى 8)', curLang())}</Text>
@@ -439,6 +449,34 @@ export default function MerchantSocial() {
                 </>
               )}
 
+              {postType === 'job' && (
+                <>
+                  {([['job_title', 'المسمى الوظيفي *', 'أخصائي سوشال ميديا'], ['job_city', 'المدينة', 'الرياض'], ['job_type', 'نوع الدوام', 'دوام كامل'], ['job_salary', 'الراتب', '6,000 – 8,000 ر.س']] as const).map(([k, label, ph]) => (
+                    <View key={k}>
+                      <Text style={s.goldLabel}>{tSync(label, lang)}</Text>
+                      <TextInput testID={`job-${k}`} style={s.goldInput} value={(job as any)[k]} onChangeText={v => setJob({ ...job, [k]: v })}
+                        placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync(ph, lang)} />
+                    </View>
+                  ))}
+                  <TX style={s.goldLabel}>المتطلبات (سطر لكل متطلب)</TX>
+                  <TextInput style={[s.goldInput, { minHeight: 80, textAlignVertical: 'top' }]} multiline value={job.job_requirements} onChangeText={v => setJob({ ...job, job_requirements: v })}
+                    placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync('خبرة سنة\nإجادة التصوير', lang)} />
+                  <TX style={s.hintGold}>💡 طلبات التقديم تصلك كتذاكر في لوحة التذاكر</TX>
+                </>
+              )}
+              {postType === 'offer' && (
+                <>
+                  {([['offer_price', 'سعر العرض (ر.س) *', '799'], ['offer_old_price', 'السعر قبل الخصم', '999'], ['badge', 'شارة الإعلان', 'وصل حديثاً'], ['cta_label', 'نص الزر', 'تسوّق الآن'], ['cta_link', 'رابط الزر', '/search?q=AirPods'], ['valid_until', 'ينتهي في', '2026-12-31']] as const).map(([k, label, ph]) => (
+                    <View key={k}>
+                      <Text style={s.goldLabel}>{tSync(label, lang)}</Text>
+                      <TextInput testID={`offer-${k}`} style={s.goldInput} value={(offer as any)[k]} onChangeText={v => setOffer({ ...offer, [k]: v })}
+                        keyboardType={k.includes('price') ? 'numeric' : 'default'}
+                        placeholderTextColor={colors.onSurfaceTertiary} placeholder={tSync(ph, lang)} />
+                    </View>
+                  ))}
+                </>
+              )}
+
               {/* Optional: Location tag + Schedule */}
               {(postType === 'post' || postType === 'story') && (
                 <>
@@ -483,7 +521,7 @@ export default function MerchantSocial() {
                 <TranslatableName text={c.text} style={s.cmtText} inline={false} />
                 {!c.is_merchant_reply && (
                   <TouchableOpacity onPress={() => setReplyParent(c)} style={{ marginTop: 4 }}>
-                    <TX style={{ color: '#8833FF', fontSize: 11, fontWeight: '700' }}>الرد ↩</TX>
+                    <TX style={{ color: colors.brand, fontSize: 11, fontWeight: '700' }}>الرد ↩</TX>
                   </TouchableOpacity>
                 )}
               </View>
@@ -512,66 +550,66 @@ export default function MerchantSocial() {
 function useSStyles() {
   const { themeKey } = useTheme();
   return useMemo(() => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   backBtn: { padding: 4 },
-  title: { flex: 1, fontSize: 16, fontWeight: '800', marginHorizontal: 10, color: '#0A0A0A', textAlign: 'center' },
-  addBtn: { backgroundColor: '#8833FF', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  publishTopBtn: { backgroundColor: '#8833FF', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, minWidth: 70, alignItems: 'center' },
+  title: { flex: 1, fontSize: 16, fontWeight: '800', marginHorizontal: 10, color: colors.onSurface, textAlign: 'center' },
+  addBtn: { backgroundColor: colors.brand, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  publishTopBtn: { backgroundColor: colors.brand, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, minWidth: 70, alignItems: 'center' },
   publishTopText: { color: 'white', fontWeight: '800', fontSize: 13 },
-  tabs: { flexDirection: 'row', backgroundColor: 'white', padding: 8, gap: 8 },
-  tab: { flex: 1, padding: 10, borderRadius: 8, backgroundColor: '#F3F4F6', alignItems: 'center' },
-  tabActive: { backgroundColor: '#8833FF' },
-  tabText: { fontSize: 12, color: '#374151', fontWeight: '700' },
+  tabs: { flexDirection: 'row', backgroundColor: colors.surface, padding: 8, gap: 8 },
+  tab: { flex: 1, padding: 10, borderRadius: 8, backgroundColor: colors.surfaceSecondary, alignItems: 'center' },
+  tabActive: { backgroundColor: colors.brand },
+  tabText: { fontSize: 12, color: colors.onSurfaceSecondary, fontWeight: '700' },
   tabTextActive: { color: 'white' },
-  card: { backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 10 },
+  card: { backgroundColor: colors.surface, padding: 14, borderRadius: 12, marginBottom: 10 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8 },
   typePill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
   typePillText: { fontSize: 11, fontWeight: '800' },
-  author: { flex: 1, fontSize: 13, fontWeight: '700', color: '#0A0A0A', textAlign: 'right' },
-  text: { fontSize: 13, color: '#374151', marginBottom: 8 },
-  img: { width: '100%', height: 180, borderRadius: 8, backgroundColor: '#F3F4F6' },
+  author: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.onSurface, textAlign: 'right' },
+  text: { fontSize: 13, color: colors.onSurfaceSecondary, marginBottom: 8 },
+  img: { width: '100%', height: 180, borderRadius: 8, backgroundColor: colors.surfaceSecondary },
   statsRow: { flexDirection: 'row', gap: 12, marginTop: 8, alignItems: 'center' },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  statText: { fontSize: 12, color: '#6B7280' },
-  commentsBtn: { flexDirection: 'row', gap: 4, alignItems: 'center', backgroundColor: '#EFF6FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14 },
+  statText: { fontSize: 12, color: colors.onSurfaceSecondary },
+  commentsBtn: { flexDirection: 'row', gap: 4, alignItems: 'center', backgroundColor: colors.infoSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14 },
   commentsBtnText: { color: '#3B82F6', fontSize: 12, fontWeight: '700' },
-  pollRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 8, padding: 8, marginVertical: 3, overflow: 'hidden' },
+  pollRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceSecondary, borderRadius: 8, padding: 8, marginVertical: 3, overflow: 'hidden' },
   pollBar: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: '#EFE6FF' },
-  pollText: { flex: 1, fontSize: 12, color: '#0A0A0A', fontWeight: '600', zIndex: 1 },
-  pollVotes: { fontSize: 11, color: '#8833FF', fontWeight: '700', zIndex: 1 },
+  pollText: { flex: 1, fontSize: 12, color: colors.onSurface, fontWeight: '600', zIndex: 1 },
+  pollVotes: { fontSize: 11, color: colors.brand, fontWeight: '700', zIndex: 1 },
   eventBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#D1FAE5', padding: 8, borderRadius: 8, marginTop: 6 },
   eventText: { fontSize: 12, color: '#065F46', fontWeight: '600' },
   expiry: { fontSize: 11, color: '#EC4899', marginTop: 6, fontWeight: '600' },
-  label: { fontSize: 13, fontWeight: '700', color: '#374151', marginTop: 14, marginBottom: 6 },
-  hint: { fontSize: 11, color: '#9CA3AF', marginTop: 8, fontStyle: 'italic', textAlign: 'center' },
-  input: { backgroundColor: 'white', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', fontSize: 14, textAlign: 'right' },
-  typeCard: { width: 110, alignItems: 'center', padding: 10, borderRadius: 12, borderWidth: 2, borderColor: '#E5E7EB', backgroundColor: 'white' },
+  label: { fontSize: 13, fontWeight: '700', color: colors.onSurfaceSecondary, marginTop: 14, marginBottom: 6 },
+  hint: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 8, fontStyle: 'italic', textAlign: 'center' },
+  input: { backgroundColor: colors.surface, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, fontSize: 14, textAlign: 'right' },
+  typeCard: { width: 110, alignItems: 'center', padding: 10, borderRadius: 12, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface },
   typeIconBox: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  typeLabel: { fontSize: 13, fontWeight: '800', color: '#0A0A0A' },
-  typeDesc: { fontSize: 10, color: '#9CA3AF', marginTop: 2, textAlign: 'center' },
+  typeLabel: { fontSize: 13, fontWeight: '800', color: colors.onSurface },
+  typeDesc: { fontSize: 10, color: colors.onSurfaceTertiary, marginTop: 2, textAlign: 'center' },
   imgPreview: { width: 80, height: 80, borderRadius: 10, overflow: 'hidden', position: 'relative' },
   imgPreviewImg: { width: '100%', height: '100%' },
   removeImgBtn: { position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
-  addImgBtn: { width: 80, height: 80, borderRadius: 10, borderWidth: 2, borderColor: '#8833FF', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3E8FF' },
-  addImgText: { fontSize: 10, color: '#8833FF', fontWeight: '700', marginTop: 2 },
+  addImgBtn: { width: 80, height: 80, borderRadius: 10, borderWidth: 2, borderColor: colors.brand, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brandTertiary },
+  addImgText: { fontSize: 10, color: colors.brand, fontWeight: '700', marginTop: 2 },
   removeOptBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  addOptBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10, borderRadius: 8, backgroundColor: '#F3E8FF', alignSelf: 'flex-start' },
-  addOptText: { color: '#8833FF', fontWeight: '700', fontSize: 13 },
-  commentCard: { flexDirection: 'row', backgroundColor: 'white', padding: 12, borderRadius: 12, marginBottom: 8 },
-  cmtAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#8833FF', alignItems: 'center', justifyContent: 'center' },
+  addOptBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10, borderRadius: 8, backgroundColor: colors.brandTertiary, alignSelf: 'flex-start' },
+  addOptText: { color: colors.brand, fontWeight: '700', fontSize: 13 },
+  commentCard: { flexDirection: 'row', backgroundColor: colors.surface, padding: 12, borderRadius: 12, marginBottom: 8 },
+  cmtAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
   cmtAvText: { color: 'white', fontWeight: '800' },
-  cmtName: { fontSize: 13, fontWeight: '700', color: '#0A0A0A' },
-  cmtText: { fontSize: 13, color: '#374151', marginTop: 3 },
-  cmtPost: { fontSize: 11, color: '#9CA3AF', marginTop: 4, fontStyle: 'italic' },
-  cmtThread: { backgroundColor: 'white', padding: 12, borderRadius: 10, marginBottom: 6 },
-  cmtMerchant: { backgroundColor: '#F3E8FF', borderLeftWidth: 3, borderLeftColor: '#8833FF' },
-  youTag: { color: '#8833FF', fontSize: 11, fontWeight: '700' },
-  replyBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingBottom: Platform.OS === 'ios' ? 28 : 12 },
-  replyTo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F3F4F6', padding: 6, borderRadius: 6, marginBottom: 6 },
-  replyToText: { fontSize: 11, color: '#6B7280', fontWeight: '600' },
-  sendBtn: { backgroundColor: '#8833FF', width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40, fontSize: 13 },
+  cmtName: { fontSize: 13, fontWeight: '700', color: colors.onSurface },
+  cmtText: { fontSize: 13, color: colors.onSurfaceSecondary, marginTop: 3 },
+  cmtPost: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 4, fontStyle: 'italic' },
+  cmtThread: { backgroundColor: colors.surface, padding: 12, borderRadius: 10, marginBottom: 6 },
+  cmtMerchant: { backgroundColor: colors.brandTertiary, borderLeftWidth: 3, borderLeftColor: colors.brand },
+  youTag: { color: colors.brand, fontSize: 11, fontWeight: '700' },
+  replyBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, paddingBottom: Platform.OS === 'ios' ? 28 : 12 },
+  replyTo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surfaceSecondary, padding: 6, borderRadius: 6, marginBottom: 6 },
+  replyToText: { fontSize: 11, color: colors.onSurfaceSecondary, fontWeight: '600' },
+  sendBtn: { backgroundColor: colors.brand, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  empty: { textAlign: 'center', color: colors.onSurfaceTertiary, marginTop: 40, fontSize: 13 },
 
   // ─── Composer (Tech Cyber Gold) ───
   composerRoot: { flex: 1, backgroundColor: colors.surface },

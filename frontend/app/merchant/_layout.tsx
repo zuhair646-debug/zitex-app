@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { useAuth } from '../_layout';
 
 /* ─── Custom tab bar with big center "Live Preview" FAB ─────────────────── */
 function MerchantTabBar({ state, descriptors, navigation }: any) {
@@ -14,10 +15,14 @@ function MerchantTabBar({ state, descriptors, navigation }: any) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useT();
+  const { user } = useAuth();
+  const { isDark } = useTheme();
   const bottomOffset = Math.max(insets.bottom, spacing.md);
-  // Filter routes we want visible in the bar (custom order + center FAB slot)
-  const leftKeys = ['index', 'orders'];         // left side
-  const rightKeys = ['products', 'more'];        // right side
+  // Employees only see the tabs their permissions allow
+  const perms: string[] = (user as any)?.permissions || [];
+  const can = (p: string[]) => user?.role !== 'employee' || perms.includes('all') || p.some(x => perms.includes(x));
+  const leftKeys = ['index', ...(can(['orders', 'pos']) ? ['orders'] : [])];
+  const rightKeys = [...(can(['products', 'inventory']) ? ['products'] : []), 'more'];
   const buildBtn = (routeName: string) => {
     const route = state.routes.find((r: any) => r.name === routeName);
     if (!route) return null;
@@ -49,7 +54,7 @@ function MerchantTabBar({ state, descriptors, navigation }: any) {
       {/* Solid backdrop scrim so nothing peeks under the bar (like Snapchat) */}
       <View pointerEvents="none" style={[s.scrim, { height: 72 + bottomOffset + 24 }]} />
       <View style={[s.wrap, { bottom: bottomOffset }]} pointerEvents="box-none">
-      <BlurView tint="dark" intensity={Platform.OS === 'ios' ? 90 : 100} style={StyleSheet.absoluteFill} />
+      <BlurView tint={isDark ? 'dark' : 'light'} intensity={Platform.OS === 'ios' ? 90 : 100} style={StyleSheet.absoluteFill} />
       <View style={s.bar}>
         {leftKeys.map(buildBtn)}
         {/* Spacer for the FAB */}
@@ -91,7 +96,7 @@ export default function MerchantLayout() {
         'product-form','social','competitions','competition-form','services','service-bookings',
         'bookings','customers','banners','branches','drivers','delivery-settings','employees',
         'support-settings','ai-provider','business-profile','roles','team','pos','invoices','marketing','marketer-stats',
-        'live-preview',
+        'live-preview','tickets','tasks',
       ].map(n => (
         <Tabs.Screen key={n} name={n} options={{ href: null }} />
       ))}

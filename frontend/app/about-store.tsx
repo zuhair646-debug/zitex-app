@@ -5,6 +5,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'r
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, themed } from '../src/theme/tokens';
 
 export default function AboutStoreScreen() {
   const { lang } = useT();
@@ -20,7 +21,7 @@ export default function AboutStoreScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <TouchableOpacity testID="about-back" style={s.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
+          <Ionicons name="arrow-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
         <Text style={s.title}>{tSync('عن المتجر', lang)}</Text>
       </View>
@@ -36,27 +37,27 @@ export default function AboutStoreScreen() {
         </View>
 
         <View style={s.logoSection}>
-          <View style={s.logoCircle}><Ionicons name="phone-portrait-outline" size={40} color="#F5C518" /></View>
+          <View style={s.logoCircle}><Ionicons name="phone-portrait-outline" size={40} color={colors.brand} /></View>
           <Text style={s.storeName}>Zenrex Store</Text>
           <Text style={s.storeDesc}>{tSync('متجر تقني للجوالات والإكسسوارات', lang)}</Text>
         </View>
 
         <View style={s.infoCard}>
           <View style={s.infoRow}>
-            <Ionicons name="call" size={20} color="#F5C518" />
+            <Ionicons name="call" size={20} color={colors.brand} />
             <Text style={s.infoText}>{store.phone}</Text>
-            <TouchableOpacity onPress={() => Linking.openURL(`tel:${store.phone}`)}><Ionicons name="copy" size={18} color="#A1A1AA" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => Linking.openURL(`tel:${store.phone}`)}><Ionicons name="copy" size={18} color={colors.onSurfaceTertiary} /></TouchableOpacity>
           </View>
           <View style={s.divider} />
           <View style={s.infoRow}>
-            <Ionicons name="location" size={20} color="#F5C518" />
+            <Ionicons name="location" size={20} color={colors.brand} />
             <TranslatableName text={store.address} style={s.infoText} />
-            <TouchableOpacity><Ionicons name="open-outline" size={18} color="#A1A1AA" /></TouchableOpacity>
+            <TouchableOpacity><Ionicons name="open-outline" size={18} color={colors.onSurfaceTertiary} /></TouchableOpacity>
           </View>
         </View>
 
         <View style={s.mapPlaceholder}>
-          <Ionicons name="map" size={40} color="#A1A1AA" />
+          <Ionicons name="map" size={40} color={colors.onSurfaceTertiary} />
           <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}><Text style={s.mapText}>{tSync('الخريطة', lang)} · </Text><TranslatableName text={store.name || ''} style={s.mapText} /></View>
           <TranslatableName text={store.address} style={s.mapAddr} />
         </View>
@@ -76,30 +77,30 @@ export default function AboutStoreScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
-  title: { fontSize: 22, fontWeight: '800', color: '#0A0A0A' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
+  title: { fontSize: 22, fontWeight: '800', color: colors.onSurface },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   storeSelector: { flexDirection: 'row', gap: 10, marginBottom: 24 },
-  storePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7' },
-  storePillActive: { backgroundColor: '#F5C518', borderColor: '#F5C518' },
-  storePillText: { fontSize: 13, fontWeight: '600', color: '#52525B' },
+  storePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border },
+  storePillActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  storePillText: { fontSize: 13, fontWeight: '600', color: colors.onSurfaceSecondary },
   storePillTextActive: { color: '#FFF' },
   logoSection: { alignItems: 'center', marginBottom: 24 },
-  logoCircle: { width: 80, height: 80, borderRadius: 24, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  storeName: { fontSize: 22, fontWeight: '800', color: '#0A0A0A', marginBottom: 4 },
-  storeDesc: { fontSize: 14, color: '#52525B' },
-  infoCard: { backgroundColor: '#F9F9FB', borderRadius: 16, padding: 16, marginBottom: 20 },
+  logoCircle: { width: 80, height: 80, borderRadius: 24, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  storeName: { fontSize: 22, fontWeight: '800', color: colors.onSurface, marginBottom: 4 },
+  storeDesc: { fontSize: 14, color: colors.onSurfaceSecondary },
+  infoCard: { backgroundColor: colors.background, borderRadius: 16, padding: 16, marginBottom: 20 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  infoText: { flex: 1, fontSize: 14, color: '#0A0A0A' },
+  infoText: { flex: 1, fontSize: 14, color: colors.onSurface },
   divider: { height: 1, backgroundColor: '#E4E4E7', marginVertical: 12 },
-  mapPlaceholder: { height: 200, backgroundColor: '#F9F9FB', borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 24, gap: 8 },
-  mapText: { fontSize: 16, fontWeight: '600', color: '#0A0A0A' },
-  mapAddr: { fontSize: 13, color: '#52525B' },
+  mapPlaceholder: { height: 200, backgroundColor: colors.background, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 24, gap: 8 },
+  mapText: { fontSize: 16, fontWeight: '600', color: colors.onSurface },
+  mapAddr: { fontSize: 13, color: colors.onSurfaceSecondary },
   socialSection: { marginBottom: 20 },
-  socialTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 12 },
+  socialTitle: { fontSize: 16, fontWeight: '700', color: colors.onSurface, marginBottom: 12 },
   socialRow: { flexDirection: 'row', gap: 12 },
   socialBtn: { width: 50, height: 50, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-});
+}));

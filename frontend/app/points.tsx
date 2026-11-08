@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { useT, curLang } from '../src/i18n';
 import { TX, tSync } from '../src/useAutoT';
+import { colors, themed } from '../src/theme/tokens';
 
 export default function PointsScreen() {
   const router = useRouter();
@@ -36,14 +37,14 @@ export default function PointsScreen() {
     finally { setRedeeming(false); }
   };
 
-  if (loading || !data) return <View style={s.center}><ActivityIndicator size="large" color="#F5C518" /></View>;
+  if (loading || !data) return <View style={s.center}><ActivityIndicator size="large" color={colors.brand} /></View>;
 
   const tierColor = data.tier === 'ذهبي' || data.tier === 'Gold' ? '#FFD700' : data.tier === 'فضي' || data.tier === 'Silver' ? '#C0C0C0' : '#CD7F32';
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <Text style={s.title}>🎖️ {t('points.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
@@ -97,33 +98,33 @@ export default function PointsScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: 'white' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: colors.surface },
   title: { fontSize: 17, fontWeight: '800' },
-  hero: { backgroundColor: '#F5C518', padding: 24, borderRadius: 20, alignItems: 'center' },
+  hero: { backgroundColor: colors.brand, padding: 24, borderRadius: 20, alignItems: 'center' },
   heroLabel: { color: 'rgba(255,255,255,0.85)', fontSize: 13 },
   heroValue: { color: 'white', fontSize: 56, fontWeight: '900', marginTop: 6 },
   tierBadge: { paddingHorizontal: 18, paddingVertical: 6, borderRadius: 16, marginTop: 8 },
-  tierText: { color: '#0A0A0A', fontSize: 14, fontWeight: '800' },
+  tierText: { color: colors.onSurface, fontSize: 14, fontWeight: '800' },
   heroSub: { color: 'rgba(255,255,255,0.95)', fontSize: 12, marginTop: 8, fontWeight: '600' },
   redeemBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#10B981', padding: 14, borderRadius: 12, marginTop: 14 },
   redeemText: { color: 'white', fontWeight: '800', fontSize: 15 },
   section: { fontSize: 15, fontWeight: '800', marginTop: 20, marginBottom: 10 },
-  empty: { color: '#9CA3AF', textAlign: 'center' },
-  historyItem: { flexDirection: 'row', backgroundColor: 'white', padding: 12, borderRadius: 10, marginBottom: 6, alignItems: 'center' },
+  empty: { color: colors.onSurfaceTertiary, textAlign: 'center' },
+  historyItem: { flexDirection: 'row', backgroundColor: colors.surface, padding: 12, borderRadius: 10, marginBottom: 6, alignItems: 'center' },
   histReason: { fontSize: 13, fontWeight: '600' },
-  histDate: { fontSize: 11, color: '#9CA3AF', marginTop: 2 },
+  histDate: { fontSize: 11, color: colors.onSurfaceTertiary, marginTop: 2 },
   histDelta: { fontSize: 16, fontWeight: '800' },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalCard: { backgroundColor: 'white', padding: 20, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  modalCard: { backgroundColor: colors.surface, padding: 20, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
   modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 6 },
-  modalHint: { fontSize: 12, color: '#6B7280', marginBottom: 14 },
-  modalInput: { backgroundColor: '#F3F4F6', padding: 14, borderRadius: 10, fontSize: 18, textAlign: 'center', fontWeight: '700' },
+  modalHint: { fontSize: 12, color: colors.onSurfaceSecondary, marginBottom: 14 },
+  modalInput: { backgroundColor: colors.surfaceSecondary, padding: 14, borderRadius: 10, fontSize: 18, textAlign: 'center', fontWeight: '700' },
   modalCalc: { textAlign: 'center', color: '#10B981', fontSize: 16, fontWeight: '800', marginVertical: 12 },
   modalBtn: { flex: 1, padding: 14, borderRadius: 10, alignItems: 'center' },
-  modalCancel: { backgroundColor: '#F3F4F6' },
-  modalConfirm: { backgroundColor: '#F5C518' },
+  modalCancel: { backgroundColor: colors.surfaceSecondary },
+  modalConfirm: { backgroundColor: colors.brand },
   modalBtnText: { fontWeight: '800' },
-});
+}));

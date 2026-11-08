@@ -7,6 +7,7 @@ import { useAuth } from './_layout';
 import { TX, tSync } from '../src/useAutoT';
 import { useT } from '../src/i18n';
 import TranslatableName from '../src/components/TranslatableName';
+import { colors, themed } from '../src/theme/tokens';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 56) / 2;
@@ -14,9 +15,9 @@ const CARD_W = (width - 56) / 2;
 export default function SearchScreen() {
   const { lang } = useT();
   const router = useRouter();
-  const params = useLocalSearchParams<{ category?: string; categoryName?: string; condition?: string }>();
+  const params = useLocalSearchParams<{ category?: string; categoryName?: string; condition?: string; q?: string }>();
   const { apiCall } = useAuth();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(params.q || '');
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCat, setSelectedCat] = useState(params.category || '');
@@ -58,22 +59,22 @@ export default function SearchScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity testID="search-back-btn" style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
+          <Ionicons name="arrow-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
         <View style={styles.searchWrap}>
-          <Ionicons name="search" size={20} color="#A1A1AA" />
-          <TextInput testID="search-input" style={styles.searchInput} placeholder={tSync('ابحث عن المنتجات...', lang)} placeholderTextColor="#A1A1AA"
+          <Ionicons name="search" size={20} color={colors.onSurfaceTertiary} />
+          <TextInput testID="search-input" style={styles.searchInput} placeholder={tSync('ابحث عن المنتجات...', lang)} placeholderTextColor={colors.onSurfaceTertiary}
             value={query} onChangeText={setQuery} onSubmitEditing={() => searchProducts()} returnKeyType="search" />
           {query ? (
             <TouchableOpacity testID="clear-search-btn" onPress={() => { setQuery(''); searchProducts(); }}>
-              <Ionicons name="close-circle" size={20} color="#A1A1AA" />
+              <Ionicons name="close-circle" size={20} color={colors.onSurfaceTertiary} />
             </TouchableOpacity>
           ) : null}
         </View>
       </View>
 
       {/* Categories Filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catScroll}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.catScroll}>
         <TouchableOpacity testID="filter-all" style={[styles.catPill, !selectedCat && styles.catPillActive]} onPress={() => selectCategory('')}>
           <Text style={[styles.catPillText, !selectedCat && styles.catPillTextActive]}>{tSync('الكل', lang)}</Text>
         </TouchableOpacity>
@@ -88,10 +89,10 @@ export default function SearchScreen() {
       <Text style={styles.resultCount}>{total} {tSync('نتيجة', lang)}</Text>
 
       {loading ? (
-        <View style={styles.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>
+        <View style={styles.loadWrap}><ActivityIndicator size="large" color={colors.brand} /></View>
       ) : products.length === 0 ? (
         <View style={styles.emptyWrap}>
-          <Ionicons name="search" size={48} color="#A1A1AA" />
+          <Ionicons name="search" size={48} color={colors.onSurfaceTertiary} />
           <Text style={styles.emptyText}>{tSync('ما في نتائج', lang)}</Text>
         </View>
       ) : (
@@ -123,31 +124,31 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+const styles = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10, gap: 10 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
-  searchWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 14, height: 44, gap: 8 },
-  searchInput: { flex: 1, fontSize: 15, color: '#0A0A0A' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
+  searchWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background, borderRadius: 12, paddingHorizontal: 14, height: 44, gap: 8 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.onSurface },
   catScroll: { paddingHorizontal: 20, paddingVertical: 8, gap: 8 },
-  catPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7' },
-  catPillActive: { backgroundColor: '#F5C518', borderColor: '#F5C518' },
-  catPillText: { fontSize: 13, fontWeight: '600', color: '#52525B' },
+  catPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border },
+  catPillActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  catPillText: { fontSize: 13, fontWeight: '600', color: colors.onSurfaceSecondary },
   catPillTextActive: { color: '#FFFFFF' },
-  resultCount: { paddingHorizontal: 20, paddingVertical: 6, fontSize: 13, color: '#A1A1AA' },
+  resultCount: { paddingHorizontal: 20, paddingVertical: 6, fontSize: 13, color: colors.onSurfaceTertiary },
   loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  emptyText: { fontSize: 16, color: '#52525B' },
+  emptyText: { fontSize: 16, color: colors.onSurfaceSecondary },
   grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 16, paddingBottom: 32 },
-  productCard: { width: CARD_W, backgroundColor: '#FFF', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#F4F4F5' },
-  productImg: { width: '100%', height: CARD_W - 24, borderRadius: 12, backgroundColor: '#F9F9FB', marginBottom: 8 },
+  productCard: { width: CARD_W, backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: colors.border },
+  productImg: { width: '100%', height: CARD_W - 24, borderRadius: 12, backgroundColor: colors.background, marginBottom: 8 },
   discBadge: { position: 'absolute', top: 16, left: 16, backgroundColor: '#EF4444', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
   discText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
   usedBadge: { position: 'absolute', top: 16, right: 16, backgroundColor: '#F59E0B', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
   usedText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
-  productName: { fontSize: 13, fontWeight: '600', color: '#0A0A0A', marginBottom: 4, lineHeight: 20 },
+  productName: { fontSize: 13, fontWeight: '600', color: colors.onSurface, marginBottom: 4, lineHeight: 20 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
-  ratingVal: { fontSize: 12, fontWeight: '600', color: '#0A0A0A' },
-  price: { fontSize: 15, fontWeight: '800', color: '#F5C518' },
-  oldPrice: { fontSize: 11, color: '#A1A1AA', textDecorationLine: 'line-through' },
-});
+  ratingVal: { fontSize: 12, fontWeight: '600', color: colors.onSurface },
+  price: { fontSize: 15, fontWeight: '800', color: colors.brand },
+  oldPrice: { fontSize: 11, color: colors.onSurfaceTertiary, textDecorationLine: 'line-through' },
+}));

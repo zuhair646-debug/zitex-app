@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
+import { colors, themed } from '../../src/theme/tokens';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -140,7 +141,7 @@ export default function ServicesCatalogScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
   back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
@@ -161,4 +162,4 @@ const s = StyleSheet.create({
   tipBox: { backgroundColor: '#8B5CF615', borderColor: '#8B5CF6', borderWidth: 1, borderRadius: 12, padding: 12, marginTop: 8 },
   tipTitle: { color: '#A78BFA', fontSize: 12, fontWeight: '900', textAlign: 'right' },
   tipText: { color: TEXT, fontSize: 11, textAlign: 'right', marginTop: 4, lineHeight: 16 },
-});
+}));

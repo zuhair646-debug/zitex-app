@@ -265,7 +265,7 @@ export function ScreenHeader({ title, onBack, rightIcon, onRight, subtitle }: {
   return (
     <View style={styles.screenHeader}>
       {onBack ? (
-        <TouchableOpacity onPress={onBack} style={styles.hBtn} activeOpacity={0.6}>
+        <TouchableOpacity testID="header-back-btn" onPress={onBack} style={styles.hBtn} activeOpacity={0.6}>
           <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
       ) : <View style={styles.hBtn} />}
@@ -286,7 +286,7 @@ export function ScreenHeader({ title, onBack, rightIcon, onRight, subtitle }: {
         )}
       </View>
       {rightIcon && onRight ? (
-        <TouchableOpacity onPress={onRight} style={styles.hBtn} activeOpacity={0.6}>
+        <TouchableOpacity testID="header-right-btn" onPress={onRight} style={styles.hBtn} activeOpacity={0.6}>
           <Ionicons name={rightIcon} size={22} color={colors.brand} />
         </TouchableOpacity>
       ) : <View style={styles.hBtn} />}

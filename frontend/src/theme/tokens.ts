@@ -100,6 +100,7 @@ export const PALETTES = { dark: DARK, light: LIGHT };
 // Current active mode
 export type Mode = 'dark' | 'light' | 'custom';
 let CURRENT_MODE: Mode = 'dark';
+let THEME_VERSION = 0;
 
 // Live-mutable colors object. All screens import { colors } from here.
 export const colors: any = { ...DARK };
@@ -166,6 +167,7 @@ export function setColorsMode(mode: Mode, custom?: CustomOverrides): void {
   }
   for (const k of Object.keys(colors)) delete colors[k];
   Object.assign(colors, base);
+  THEME_VERSION++;
   updateGradients(mode, custom);
 }
 
@@ -262,3 +264,18 @@ function shade(hex: string, percent: number): string {
 
 export const theme = { colors, spacing, radius, typography, shadows, gradients };
 export default theme;
+
+/**
+ * Module-level StyleSheet that rebuilds itself after a theme change.
+ *   const s = themed(() => StyleSheet.create({ card: { backgroundColor: colors.surface } }));
+ */
+export function themed<T extends object>(factory: () => T): T {
+  let built = -1;
+  let cache: any = null;
+  return new Proxy({} as T, {
+    get(_t, prop) {
+      if (built !== THEME_VERSION || !cache) { cache = factory(); built = THEME_VERSION; }
+      return cache[prop as any];
+    },
+  });
+}

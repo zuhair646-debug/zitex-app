@@ -12,6 +12,7 @@ import ShippingOptionsPicker from '../src/components/ShippingOptionsPicker';
 import LoyaltyRedeemPicker from '../src/components/LoyaltyRedeemPicker';
 import { TX, tSync, tf } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
+import { colors, themed } from '../src/theme/tokens';
 
 export default function CheckoutScreen() {
   const { lang } = useT();
@@ -162,7 +163,7 @@ export default function CheckoutScreen() {
   const loyaltyOff = loyaltyDiscount?.amount || 0;
   const total = Math.max(0, subtotal + tax + deliveryCost - couponDiscount - loyaltyOff);
 
-  if (loading) return <View style={s.load}><ActivityIndicator size="large" color="#F5C518" /></View>;
+  if (loading) return <View style={s.load}><ActivityIndicator size="large" color={colors.brand} /></View>;
 
   const payMethods = [
     { id: 'cash_on_delivery', label: 'الدفع عند الاستلام', icon: 'cash' },
@@ -183,7 +184,7 @@ export default function CheckoutScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.onSurface} /></TouchableOpacity>
         <TX style={s.title}>إتمام الطلب</TX>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
@@ -195,7 +196,7 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
         )}
         {addresses.length === 0 ? (
-          <TouchableOpacity style={s.addAddrBtn} onPress={() => router.push('/addresses')}><Ionicons name="add" size={20} color="#F5C518" /><TX style={s.addAddrText}>إضافة عنوان</TX></TouchableOpacity>
+          <TouchableOpacity style={s.addAddrBtn} onPress={() => router.push('/addresses')}><Ionicons name="add" size={20} color={colors.brand} /><TX style={s.addAddrText}>إضافة عنوان</TX></TouchableOpacity>
         ) : addresses.map((a, i) => (
           <TouchableOpacity key={a.id} style={[s.addrCard, selectedAddr === i && s.addrActive]} onPress={() => setSelectedAddr(i)}>
             <Ionicons name={selectedAddr === i ? 'radio-button-on' : 'radio-button-off'} size={20} color={selectedAddr === i ? '#F5C518' : '#A1A1AA'} />
@@ -205,7 +206,7 @@ export default function CheckoutScreen() {
 
         {quote?.branch && (
           <View style={s.branchBox}>
-            <Ionicons name="storefront" size={18} color="#F5C518" />
+            <Ionicons name="storefront" size={18} color={colors.brand} />
             <View style={{ flex: 1, marginLeft: 8 }}>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}><Text style={s.branchName}>{tSync('الفرع:', lang)} </Text><TranslatableName text={quote.branch.name} style={s.branchName} /></View>
               <Text style={s.branchDist}>{quote.branch.distance_km} {tSync('كم', lang)} {quote.fee?.in_zone ? tf('• ضمن منطقة "{0}"', lang, [quote.fee.zone_name]) : ''}</Text>
@@ -218,7 +219,7 @@ export default function CheckoutScreen() {
           {deliveryOpts.map(opt => (
             <TouchableOpacity key={opt.id} testID={`delivery-opt-${outOfRange ? 'shipping' : opt.id}`} style={[s.shipCard, deliveryType === opt.id && s.shipActive]} onPress={() => setDeliveryType(opt.id)}>
               <Ionicons name={deliveryType === opt.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={deliveryType === opt.id ? '#F5C518' : '#A1A1AA'} />
-              <Ionicons name={opt.icon as any} size={20} color="#52525B" />
+              <Ionicons name={opt.icon as any} size={20} color={colors.onSurfaceSecondary} />
               <View style={s.shipInfo}><Text style={s.shipLabel}>{tSync(opt.label, lang)}</Text><Text style={s.shipTime}>{tSync(opt.time, lang)}</Text></View>
               {deliveryType === opt.id && <Text style={s.shipPrice}>{deliveryFee} {tSync('ر.س', lang)}</Text>}
             </TouchableOpacity>
@@ -237,7 +238,7 @@ export default function CheckoutScreen() {
             </ScrollView>
           ) : null}
           <TouchableOpacity testID="slot-picker-btn" style={s.slotBtn} onPress={() => setSlotModalOpen(true)}>
-            <Ionicons name="time" size={18} color="#F5C518" />
+            <Ionicons name="time" size={18} color={colors.brand} />
             <Text style={s.slotBtnText}>{scheduledSlot ? `${tSync('الفترة', lang)}: ${tSync(scheduledSlot.label, lang)} (${scheduledSlot.start} – ${scheduledSlot.end})` : tSync('اختر فترة التوصيل', curLang())}</Text>
           </TouchableOpacity>
         </>)}
@@ -246,7 +247,7 @@ export default function CheckoutScreen() {
         {payMethods.map(pm => (
           <TouchableOpacity key={pm.id} style={[s.payCard, paymentMethod === pm.id && s.payActive]} onPress={() => setPaymentMethod(pm.id)}>
             <Ionicons name={paymentMethod === pm.id ? 'radio-button-on' : 'radio-button-off'} size={18} color={paymentMethod === pm.id ? '#F5C518' : '#A1A1AA'} />
-            <Ionicons name={pm.icon as any} size={20} color="#52525B" />
+            <Ionicons name={pm.icon as any} size={20} color={colors.onSurfaceSecondary} />
             <TranslatableName text={pm.label} style={s.payLabel} noToggle />
             {!!pm.tag && <View style={s.payTag}><Text style={s.payTagText}>{tSync(pm.tag, lang)}</Text></View>}
           </TouchableOpacity>
@@ -268,7 +269,7 @@ export default function CheckoutScreen() {
 
         {/* Location auto-detect chip */}
         <TouchableOpacity onPress={autoDetectLocation} style={s.locBtn} disabled={locating}>
-          {locating ? <ActivityIndicator color="#F5C518" size="small" /> : (
+          {locating ? <ActivityIndicator color={colors.brand} size="small" /> : (
             <Ionicons name={userLat ? 'checkmark-circle' : 'locate'} size={16} color={userLat ? '#10B981' : '#F5C518'} />
           )}
           <Text style={[s.locText, userLat && { color: '#10B981' }]}>
@@ -276,7 +277,7 @@ export default function CheckoutScreen() {
               ? 'تم تحديد موقعك — استخدم موقعاً آخر؟'
               : 'تحديد موقعي تلقائياً لعرض خيارات الشحن المناسبة', lang)}
           </Text>
-          <Ionicons name="refresh" size={14} color="#9CA3AF" />
+          <Ionicons name="refresh" size={14} color={colors.onSurfaceTertiary} />
         </TouchableOpacity>
 
         {/* External shipping picker (KSA carriers) */}
@@ -312,7 +313,7 @@ export default function CheckoutScreen() {
       <PaymentMethodsRibbon apiCall={apiCall} />
 
       {/* Loyalty redeem picker */}
-      <View style={{ paddingHorizontal: 12, backgroundColor: '#FFF' }}>
+      <View style={{ paddingHorizontal: 12, backgroundColor: colors.surface }}>
         <LoyaltyRedeemPicker
           apiCall={apiCall}
           cartTotal={total + loyaltyOff}
@@ -333,11 +334,11 @@ export default function CheckoutScreen() {
       <Modal visible={slotModalOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSlotModalOpen(false)}>
         <SafeAreaView style={s.safe}>
           <View style={s.header}>
-            <TouchableOpacity onPress={() => setSlotModalOpen(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setSlotModalOpen(false)}><Ionicons name="close" size={24} color={colors.onSurface} /></TouchableOpacity>
             <TX style={s.title}>اختر الفترة</TX>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            {daySlots.length === 0 && <TX style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 40 }}>لا توجد فترات متاحة</TX>}
+            {daySlots.length === 0 && <TX style={{ textAlign: 'center', color: colors.onSurfaceTertiary, marginTop: 40 }}>لا توجد فترات متاحة</TX>}
             {daySlots.map((sl: any, i: number) => (
               <TouchableOpacity key={i} testID={`slot-item-${i}`} disabled={sl.full} style={[s.slotItem, scheduledSlot?.label === sl.label && s.slotItemActive, sl.full && { opacity: 0.4 }]} onPress={() => { setScheduledSlot(sl); setSlotModalOpen(false); }}>
                 <Ionicons name="time-outline" size={20} color={scheduledSlot?.label === sl.label ? 'white' : '#F5C518'} />
@@ -354,53 +355,53 @@ export default function CheckoutScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF' }, load: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+const s = themed(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.surface }, load: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
-  title: { fontSize: 20, fontWeight: '800', color: '#0A0A0A' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', marginEnd: 14 },
+  title: { fontSize: 20, fontWeight: '800', color: colors.onSurface },
   content: { paddingHorizontal: 20, paddingBottom: 120 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginTop: 16, marginBottom: 10, textAlign: 'auto' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.onSurface, marginTop: 16, marginBottom: 10, textAlign: 'auto' },
   warnBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FEF3C7', padding: 12, borderRadius: 10, marginBottom: 8 },
   warnText: { flex: 1, color: '#92400E', fontSize: 12, fontWeight: '600' },
-  addAddrBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: '#F5C518', borderStyle: 'dashed' },
-  addAddrText: { fontSize: 14, color: '#F5C518', fontWeight: '600' },
-  addrCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, backgroundColor: '#F9F9FB', marginBottom: 8, borderWidth: 1.5, borderColor: 'transparent' },
-  addrActive: { borderColor: '#F5C518', backgroundColor: '#FFF7DA' },
-  addrInfo: { flex: 1 }, addrLabel: { fontSize: 14, fontWeight: '600', color: '#0A0A0A' }, addrText: { fontSize: 12, color: '#52525B' },
-  branchBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3E8FF', padding: 12, borderRadius: 10, marginTop: 6 },
+  addAddrBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: colors.brand, borderStyle: 'dashed' },
+  addAddrText: { fontSize: 14, color: colors.brand, fontWeight: '600' },
+  addrCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, backgroundColor: colors.background, marginBottom: 8, borderWidth: 1.5, borderColor: 'transparent' },
+  addrActive: { borderColor: colors.brand, backgroundColor: colors.brandTertiary },
+  addrInfo: { flex: 1 }, addrLabel: { fontSize: 14, fontWeight: '600', color: colors.onSurface }, addrText: { fontSize: 12, color: colors.onSurfaceSecondary },
+  branchBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.brandTertiary, padding: 12, borderRadius: 10, marginTop: 6 },
   branchName: { fontSize: 13, fontWeight: '700', color: '#5B21B6' },
-  branchDist: { fontSize: 11, color: '#7C3AED' },
-  shipCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, backgroundColor: '#F9F9FB', borderWidth: 1.5, borderColor: 'transparent' },
-  shipActive: { borderColor: '#F5C518', backgroundColor: '#FFF7DA' },
-  shipInfo: { flex: 1 }, shipLabel: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' }, shipTime: { fontSize: 12, color: '#52525B' },
-  shipPrice: { fontSize: 14, fontWeight: '700', color: '#F5C518' },
-  slotBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F3E8FF', padding: 12, borderRadius: 10, marginTop: 8 },
+  branchDist: { fontSize: 11, color: colors.brand },
+  shipCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1.5, borderColor: 'transparent' },
+  shipActive: { borderColor: colors.brand, backgroundColor: colors.brandTertiary },
+  shipInfo: { flex: 1 }, shipLabel: { fontSize: 14, fontWeight: '700', color: colors.onSurface }, shipTime: { fontSize: 12, color: colors.onSurfaceSecondary },
+  shipPrice: { fontSize: 14, fontWeight: '700', color: colors.brand },
+  slotBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.brandTertiary, padding: 12, borderRadius: 10, marginTop: 8 },
   slotBtnText: { flex: 1, color: '#5B21B6', fontWeight: '700', fontSize: 13 },
-  slotItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: '#E5E7EB' },
-  slotItemActive: { backgroundColor: '#F5C518', borderColor: '#F5C518' },
-  slotLabel: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
-  slotTime: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  payCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, backgroundColor: '#F9F9FB', marginBottom: 8, borderWidth: 1.5, borderColor: 'transparent' },
-  payActive: { borderColor: '#F5C518', backgroundColor: '#FFF7DA' },
-  payLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: '#0A0A0A' },
+  slotItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
+  slotItemActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  slotLabel: { fontSize: 14, fontWeight: '700', color: colors.onSurface },
+  slotTime: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 2 },
+  payCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, backgroundColor: colors.background, marginBottom: 8, borderWidth: 1.5, borderColor: 'transparent' },
+  payActive: { borderColor: colors.brand, backgroundColor: colors.brandTertiary },
+  payLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.onSurface },
   payTag: { backgroundColor: '#FEF3C7', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   payTagText: { fontSize: 10, color: '#92400E', fontWeight: '600' },
   couponRow: { flexDirection: 'row', gap: 8 },
-  couponInput: { flex: 1, backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, borderWidth: 1, borderColor: '#E4E4E7' },
-  couponBtn: { backgroundColor: '#F5C518', borderRadius: 12, paddingHorizontal: 20, justifyContent: 'center' },
+  couponInput: { flex: 1, backgroundColor: colors.background, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, borderWidth: 1, borderColor: colors.border },
+  couponBtn: { backgroundColor: colors.brand, borderRadius: 12, paddingHorizontal: 20, justifyContent: 'center' },
   couponBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
   couponApplied: { fontSize: 13, color: '#10B981', fontWeight: '600', marginTop: 6 },
-  notesInput: { backgroundColor: '#F9F9FB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, marginTop: 16, borderWidth: 1, borderColor: '#E4E4E7', height: 60, textAlign: 'auto' },
-  locBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F9F9FB', borderWidth: 1, borderColor: '#E4E4E7', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginTop: 10 },
-  locText: { flex: 1, textAlign: 'auto', color: '#0A0A0A', fontSize: 12, fontWeight: '700' },
-  summaryCard: { backgroundColor: '#F9F9FB', borderRadius: 16, padding: 16, marginTop: 16 },
-  summaryTitle: { fontSize: 16, fontWeight: '700', color: '#0A0A0A', marginBottom: 12, textAlign: 'auto' },
+  notesInput: { backgroundColor: colors.background, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, marginTop: 16, borderWidth: 1, borderColor: colors.border, height: 60, textAlign: 'auto' },
+  locBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginTop: 10 },
+  locText: { flex: 1, textAlign: 'auto', color: colors.onSurface, fontSize: 12, fontWeight: '700' },
+  summaryCard: { backgroundColor: colors.background, borderRadius: 16, padding: 16, marginTop: 16 },
+  summaryTitle: { fontSize: 16, fontWeight: '700', color: colors.onSurface, marginBottom: 12, textAlign: 'auto' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  sLabel: { fontSize: 13, color: '#52525B' }, sVal: { fontSize: 13, color: '#0A0A0A', fontWeight: '600' },
-  totalRow: { borderTopWidth: 1, borderTopColor: '#E4E4E7', paddingTop: 10, marginTop: 4 },
-  totalLabel: { fontSize: 16, fontWeight: '700', color: '#0A0A0A' }, totalVal: { fontSize: 20, fontWeight: '900', color: '#F5C518' },
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingBottom: 34, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F4F4F5' },
-  buyBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
+  sLabel: { fontSize: 13, color: colors.onSurfaceSecondary }, sVal: { fontSize: 13, color: colors.onSurface, fontWeight: '600' },
+  totalRow: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10, marginTop: 4 },
+  totalLabel: { fontSize: 16, fontWeight: '700', color: colors.onSurface }, totalVal: { fontSize: 20, fontWeight: '900', color: colors.brand },
+  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingBottom: 34, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
+  buyBtn: { backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
   buyText: { color: '#FFF', fontSize: 17, fontWeight: '800' },
-});
+}));

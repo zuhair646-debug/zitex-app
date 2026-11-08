@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
+import { colors, themed } from '../../src/theme/tokens';
 const pName = (p: any, lang: string) => (lang === 'ar' ? (p?.name_ar || p?.name) : (p?.name_en || p?.name || p?.name_ar)) || '';
 
 const GOLD = '#F5C518';
@@ -719,7 +720,7 @@ const FunnelStage = ({ label, value, pct, color }: any) => (
   </View>
 );
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER, gap: 8 },
   back: { width: 34, height: 34, borderRadius: 17, backgroundColor: CARD, alignItems: 'center', justifyContent: 'center' },
@@ -777,4 +778,4 @@ const s = StyleSheet.create({
   compareImg: { width: 30, height: 30, borderRadius: 6, backgroundColor: BG },
   compareName: { color: TEXT, fontSize: 10, fontWeight: '700', flex: 1, textAlign: 'right' },
   compareVal: { color: TEXT, fontSize: 12, fontWeight: '900', flex: 1, textAlign: 'center' },
-});
+}));
