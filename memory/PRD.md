@@ -760,3 +760,5 @@ Customer ↔ Competitions/Chamber linkage:
 - Orders: "تتبع الطلب والسائق على الخريطة" button → /track-order/{id}.
 - Settings: join as driver / marketer, my affiliate dashboard, competitions links.
 - PENDING (user request, next): review original design PDFs (Tach-Store-Zuhair.pdf, Smart-App, Dashboard-SmartAppPhones) for forgotten features; apply merchant dashboard settings (colors/languages) to each section (driver, chamber, customer); social media "not activated" — clarify; full cross-dashboard linkage review with engineer.
+- v1.38.0 released (commit 7de0a72): service detail themed, orders track for all delivery statuses + processing filter, services 12 distinct photos + working search/book buttons, categories cache invalidation + 404s + partial PUT, header truncation. Tests: iteration_64/65.
+- Lesson: when moving module-level `s` into useSStyles(), every sub-component using `s` needs its own `const s = useSStyles();`.
