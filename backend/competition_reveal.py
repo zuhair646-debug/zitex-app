@@ -77,6 +77,9 @@ async def create_competition_post(db, comp: dict, author: dict):
            "image": comp.get("cover_image") or comp.get("prize_image") or "",
            "images": [x for x in (comp.get("cover_image"), comp.get("prize_image")) if x],
            "video": "", "badge": f"{ptype} • {by}", "linked_competition_id": str(comp["_id"]),
+           "question": comp.get("question", "") if comp.get("competition_type") == "qa" else "",
+           "options": (comp.get("options") or []) if comp.get("competition_type") == "qa" else [],
+           "ends_at": comp.get("end_date", ""),
            "likes": 0, "comments": 0, "views": 0, "created_at": now().isoformat()}
     r = await db.social_posts.insert_one(doc)
     await db.competitions.update_one({"_id": comp["_id"]}, {"$set": {"social_post_id": str(r.inserted_id)}})

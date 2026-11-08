@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, Modal, RefreshControl, Share, StatusBar } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import { useTheme } from '../src/theme/ThemeContext';
+import { colors } from '../src/theme/tokens';
 import { useAuth } from './_layout';
 import { uploadMedia, mediaUrlSync } from '../src/utils/upload';
 import { TX, tSync, tf } from '../src/useAutoT';
@@ -13,6 +15,7 @@ import { useT, curLang } from '../src/i18n';
 import TranslatableName, { NameInitial } from '../src/components/TranslatableName';
 
 export default function UGCContest() {
+  const s = useSStyles();
   const { lang } = useT();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -105,7 +108,7 @@ export default function UGCContest() {
     } catch {}
   };
 
-  if (loading) return <View style={s.root}><ActivityIndicator color="#F5C518" style={{ marginTop: 100 }} /></View>;
+  if (loading) return <View style={s.root}><ActivityIndicator color={colors.brand} style={{ marginTop: 100 }} /></View>;
 
   const timeLeft = comp?.end_date ? Math.max(0, new Date(comp.end_date).getTime() - Date.now()) : 0;
   const hours = Math.floor(timeLeft / 3600000);
@@ -117,7 +120,7 @@ export default function UGCContest() {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={s.header}>
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-            <Ionicons name="arrow-back" size={22} color="#F5C518" />
+            <Ionicons name="arrow-back" size={22} color={colors.brand} />
           </TouchableOpacity>
           <Text style={s.headerTitle} numberOfLines={1}>{comp?.title || tSync('مسابقة الفيديو', curLang())}</Text>
           <View style={s.iconBtn} />
@@ -140,7 +143,7 @@ export default function UGCContest() {
           <View style={s.actionBar}>
             <TouchableOpacity onPress={() => setSubmitOpen(true)} style={s.submitBtn} disabled={timeLeft === 0}>
               <LinearGradient colors={['#F5C518', '#D4AF37']} style={s.submitInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                <Ionicons name="videocam" size={18} color="#0A0A0A" />
+                <Ionicons name="videocam" size={18} color={colors.onSurface} />
                 <TX style={s.submitText}>إنشاء فيديو</TX>
               </LinearGradient>
             </TouchableOpacity>
@@ -175,7 +178,7 @@ export default function UGCContest() {
                     <Image source={{ uri: mediaUrlSync(v.thumbnail) }} style={s.videoThumb} contentFit="cover" />
                   ) : (
                     <View style={s.videoPlaceholder}>
-                      <Ionicons name="play-circle" size={54} color="#F5C518" />
+                      <Ionicons name="play-circle" size={54} color={colors.brand} />
                     </View>
                   )}
                 </View>
@@ -221,7 +224,7 @@ export default function UGCContest() {
           <SafeAreaView edges={['top']} style={{ flex: 1 }}>
             <View style={s.header}>
               <TouchableOpacity onPress={() => setSubmitOpen(false)} style={s.iconBtn}>
-                <Ionicons name="close" size={24} color="#F5C518" />
+                <Ionicons name="close" size={24} color={colors.brand} />
               </TouchableOpacity>
               <TX style={s.headerTitle}>فيديو المسابقة</TX>
               <TouchableOpacity onPress={submitVideo} disabled={!videoPath || uploading} style={s.iconBtn}>
@@ -233,9 +236,9 @@ export default function UGCContest() {
             <ScrollView contentContainerStyle={{ padding: 16 }}>
               {!videoPath ? (
                 <TouchableOpacity style={s.videoPick} onPress={pickVideo} disabled={uploading}>
-                  {uploading ? <ActivityIndicator color="#F5C518" size="large" /> : (
+                  {uploading ? <ActivityIndicator color={colors.brand} size="large" /> : (
                     <>
-                      <Ionicons name="videocam" size={54} color="#F5C518" />
+                      <Ionicons name="videocam" size={54} color={colors.brand} />
                       <TX style={s.videoPickText}>اختر فيديو من المعرض</TX>
                       <TX style={s.videoPickHint}>حتى 60 ثانية</TX>
                     </>
@@ -258,7 +261,7 @@ export default function UGCContest() {
                 placeholderTextColor="#6B7280" placeholder={tSync("زايتكس مسابقة أيفون", lang)} />
               {!!comp?.ugc_hashtag && (
                 <View style={s.forceTag}>
-                  <Ionicons name="pricetag" size={14} color="#F5C518" />
+                  <Ionicons name="pricetag" size={14} color={colors.brand} />
                   <Text style={s.forceTagText}>{tSync('هاشتاق المسابقة: #', lang)}{comp.ugc_hashtag}</Text>
                 </View>
               )}
@@ -273,7 +276,7 @@ export default function UGCContest() {
           <SafeAreaView edges={['top']} style={{ flex: 1 }}>
             <View style={s.header}>
               <TouchableOpacity onPress={() => setCommentsFor(null)} style={s.iconBtn}>
-                <Ionicons name="close" size={24} color="#F5C518" />
+                <Ionicons name="close" size={24} color={colors.brand} />
               </TouchableOpacity>
               <Text style={s.headerTitle}>{tSync('التعليقات (', lang)}{comments.length})</Text>
               <View style={s.iconBtn} />
@@ -295,7 +298,7 @@ export default function UGCContest() {
               <TextInput style={s.commentInput} value={newComment} onChangeText={setNewComment}
                 placeholderTextColor="#6B7280" placeholder={tSync("اكتب تعليقاً...", lang)} />
               <TouchableOpacity onPress={sendComment} style={s.sendBtn}>
-                <Ionicons name="send" size={18} color="#0A0A0A" />
+                <Ionicons name="send" size={18} color={colors.onSurface} />
               </TouchableOpacity>
             </View>
           </SafeAreaView>
@@ -305,65 +308,69 @@ export default function UGCContest() {
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0A0A0A' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2A2A2A' },
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '800', color: 'white' },
+  headerTitle: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '800', color: colors.onSurface },
   hero: { margin: 16, padding: 24, borderRadius: 16, alignItems: 'center' },
-  heroLabel: { color: '#0A0A0A', fontWeight: '700', fontSize: 13 },
-  heroPrize: { color: '#0A0A0A', fontSize: 24, fontWeight: '900', marginTop: 4, textAlign: 'center' },
-  heroCountdown: { color: '#0A0A0A', fontSize: 14, marginTop: 8, fontWeight: '700' },
-  desc: { color: '#D0D0D0', fontSize: 13, marginHorizontal: 16, marginBottom: 8, lineHeight: 20 },
+  heroLabel: { color: colors.onBrandPrimary, fontWeight: '700', fontSize: 13 },
+  heroPrize: { color: colors.onBrandPrimary, fontSize: 24, fontWeight: '900', marginTop: 4, textAlign: 'center' },
+  heroCountdown: { color: colors.onBrandPrimary, fontSize: 14, marginTop: 8, fontWeight: '700' },
+  desc: { color: colors.onSurfaceSecondary, fontSize: 13, marginHorizontal: 16, marginBottom: 8, lineHeight: 20 },
   actionBar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, marginBottom: 16 },
   submitBtn: { flex: 1, borderRadius: 12, overflow: 'hidden' },
   submitInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
-  submitText: { color: '#0A0A0A', fontWeight: '900', fontSize: 15 },
-  leaderCount: { backgroundColor: '#1F1F1F', borderWidth: 1, borderColor: '#F5C518', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, alignItems: 'center' },
-  leaderCountNum: { color: '#F5C518', fontSize: 20, fontWeight: '900' },
-  leaderCountLbl: { color: '#9CA3AF', fontSize: 10 },
-  sectionTitle: { color: 'white', fontSize: 15, fontWeight: '800', marginHorizontal: 16, marginBottom: 12 },
+  submitText: { color: colors.onBrandPrimary, fontWeight: '900', fontSize: 15 },
+  leaderCount: { backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.brand, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, alignItems: 'center' },
+  leaderCountNum: { color: colors.brand, fontSize: 20, fontWeight: '900' },
+  leaderCountLbl: { color: colors.onSurfaceSecondary, fontSize: 10 },
+  sectionTitle: { color: colors.onSurface, fontSize: 15, fontWeight: '800', marginHorizontal: 16, marginBottom: 12 },
   emptyBox: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 30 },
-  emptyTitle: { color: 'white', fontSize: 16, fontWeight: '800', marginTop: 12 },
-  emptyDesc: { color: '#9CA3AF', fontSize: 13, marginTop: 6, textAlign: 'center', lineHeight: 20 },
-  videoCard: { marginHorizontal: 16, marginBottom: 16, backgroundColor: '#151515', borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2A2A' },
-  videoCardTop: { borderColor: '#F5C518', borderWidth: 1.5 },
-  rankBadge: { position: 'absolute', top: 10, left: 10, zIndex: 2, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: '#F5C518' },
-  rank1: { backgroundColor: '#F5C518' },
+  emptyTitle: { color: colors.onSurface, fontSize: 16, fontWeight: '800', marginTop: 12 },
+  emptyDesc: { color: colors.onSurfaceSecondary, fontSize: 13, marginTop: 6, textAlign: 'center', lineHeight: 20 },
+  videoCard: { marginHorizontal: 16, marginBottom: 16, backgroundColor: colors.surface, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
+  videoCardTop: { borderColor: colors.brand, borderWidth: 1.5 },
+  rankBadge: { position: 'absolute', top: 10, left: 10, zIndex: 2, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: colors.brand },
+  rank1: { backgroundColor: colors.brand },
   rank2: { backgroundColor: '#C0C0C0' },
   rank3: { backgroundColor: '#CD7F32' },
-  rankText: { color: '#0A0A0A', fontWeight: '900', fontSize: 12 },
+  rankText: { color: colors.onSurface, fontWeight: '900', fontSize: 12 },
   rankPlain: { position: 'absolute', top: 10, left: 10, zIndex: 2, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.7)' },
-  rankPlainText: { color: 'white', fontWeight: '800', fontSize: 11 },
+  rankPlainText: { color: colors.onSurface, fontWeight: '800', fontSize: 11 },
   videoBox: { width: '100%', height: 260, backgroundColor: '#000' },
   videoThumb: { width: '100%', height: '100%' },
-  videoPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1F1F1F' },
-  avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#2E2404', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#F5C518', fontWeight: '900' },
-  userName: { color: 'white', fontWeight: '700', fontSize: 13 },
-  dateText: { color: '#6B7280', fontSize: 11 },
-  caption: { color: '#D0D0D0', fontSize: 13, marginTop: 8, lineHeight: 20 },
-  hashtags: { color: '#F5C518', fontSize: 12, marginTop: 4 },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 12, borderTopWidth: 1, borderTopColor: '#2A2A2A', paddingTop: 10 },
+  videoPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceSecondary },
+  avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(245,197,24,0.14)', alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: colors.brand, fontWeight: '900' },
+  userName: { color: colors.onSurface, fontWeight: '700', fontSize: 13 },
+  dateText: { color: colors.onSurfaceSecondary, fontSize: 11 },
+  caption: { color: colors.onSurfaceSecondary, fontSize: 13, marginTop: 8, lineHeight: 20 },
+  hashtags: { color: colors.brand, fontSize: 12, marginTop: 4 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 12, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10 },
   actBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  actText: { color: '#9CA3AF', fontSize: 13, fontWeight: '600' },
+  actText: { color: colors.onSurfaceSecondary, fontSize: 13, fontWeight: '600' },
   viewsBadge: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4 },
-  viewsText: { color: '#6B7280', fontSize: 11 },
+  viewsText: { color: colors.onSurfaceSecondary, fontSize: 11 },
   // Submit
-  videoPick: { alignItems: 'center', justifyContent: 'center', paddingVertical: 50, borderRadius: 14, borderWidth: 2, borderColor: '#F5C518', borderStyle: 'dashed', backgroundColor: '#151515' },
-  videoPickText: { color: '#F5C518', fontSize: 15, fontWeight: '800', marginTop: 10 },
-  videoPickHint: { color: '#9CA3AF', fontSize: 11, marginTop: 4 },
+  videoPick: { alignItems: 'center', justifyContent: 'center', paddingVertical: 50, borderRadius: 14, borderWidth: 2, borderColor: colors.brand, borderStyle: 'dashed', backgroundColor: colors.surface },
+  videoPickText: { color: colors.brand, fontSize: 15, fontWeight: '800', marginTop: 10 },
+  videoPickHint: { color: colors.onSurfaceSecondary, fontSize: 11, marginTop: 4 },
   videoPicked: { alignItems: 'center', padding: 30, backgroundColor: '#052E19', borderRadius: 14, borderWidth: 1, borderColor: '#10B981' },
   videoPickedText: { color: '#10B981', fontWeight: '800', marginTop: 8 },
-  label: { color: '#F5C518', fontSize: 12, fontWeight: '700', marginTop: 16, marginBottom: 6 },
-  input: { backgroundColor: '#151515', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#2A2A2A', color: 'white', textAlign: 'right' },
-  forceTag: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, padding: 10, borderRadius: 8, backgroundColor: '#2E2404' },
-  forceTagText: { color: '#F5C518', fontSize: 12, fontWeight: '700' },
+  label: { color: colors.brand, fontSize: 12, fontWeight: '700', marginTop: 16, marginBottom: 6 },
+  input: { backgroundColor: colors.surface, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, color: colors.onSurface, textAlign: 'right' },
+  forceTag: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, padding: 10, borderRadius: 8, backgroundColor: 'rgba(245,197,24,0.14)' },
+  forceTagText: { color: colors.brand, fontSize: 12, fontWeight: '700' },
   // Comments
-  emptyC: { textAlign: 'center', color: '#6B7280', marginTop: 40 },
-  commentRow: { flexDirection: 'row', gap: 10, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2A2A2A' },
-  commentText: { color: '#D0D0D0', fontSize: 13, marginTop: 4, lineHeight: 20 },
-  commentBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 8, padding: 12, backgroundColor: '#151515', borderTopWidth: 1, borderTopColor: '#2A2A2A' },
-  commentInput: { flex: 1, backgroundColor: '#0A0A0A', padding: 10, borderRadius: 999, borderWidth: 1, borderColor: '#2A2A2A', color: 'white', textAlign: 'right' },
-  sendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F5C518', alignItems: 'center', justifyContent: 'center' },
-});
+  emptyC: { textAlign: 'center', color: colors.onSurfaceSecondary, marginTop: 40 },
+  commentRow: { flexDirection: 'row', gap: 10, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
+  commentText: { color: colors.onSurfaceSecondary, fontSize: 13, marginTop: 4, lineHeight: 20 },
+  commentBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 8, padding: 12, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
+  commentInput: { flex: 1, backgroundColor: colors.background, padding: 10, borderRadius: 999, borderWidth: 1, borderColor: colors.border, color: colors.onSurface, textAlign: 'right' },
+  sendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
+}), [themeKey]); // eslint-disable-line react-hooks/exhaustive-deps -- colors are mutable
+}
+

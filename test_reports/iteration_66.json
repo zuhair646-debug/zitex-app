@@ -1,0 +1,54 @@
+{
+  "summary": "Tested community reports, the experience crosspost, service experiences/reviews, and theme across Social, Competitions (current/past), /competition/{id} and /ugc-contest at 375x667 in dark, light and custom (Midnight Blue). Backend: test_social_policy_crosspost_iter66.py passed 13/13. Reports are idempotent (already:true on repeat). A post stays visible after 2 reports and is hidden after 3 distinct users (customer, merchant, chamber); I restored it afterwards. Experience crosspost creates exactly 1 'experience' post with linked_service_id, including after 3 PUTs in a row and 5 concurrent PUTs. Frontend: the policy bar, policy sheet (ok closes it) and report sheet (confirm shows the 'تم استلام البلاغ' alert and saves the report in the DB) work. post-service opens /service/{id}. The service page shows the Experiences tab (new video listed) and the Ratings tab (16 reviews, low stars included, no delete in UI). There were no 's is not defined' crashes or page errors. FAILURES: (1) The seeded QA post 'سؤال وجواب: بطارية آيفون' has no question/options in the social_posts doc, so post-qa-{id} never renders (0 in feed). (2) /ugc-contest is fully hard-coded dark (#0A0A0A, #151515, white text) and does not follow light or custom. No deprecated Expo packages detected.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/social/posts (QA competition posts)", "issue": "Posts created before the question/options fields were added (all 3 seeded qa posts, e.g. 6af018c3c9fe5efc70ae5a96 -> comp 6af018c3c9fe5efc70ae5a78) have question=None and options=None. The competition doc has question 'كم سعة البطارية...' and 3 options, but the post doc does not, so the QA block never shows. Backfill on startup, or join from competitions at read time when linked_competition_id is set and competition_type=='qa'. Multi-question comps ('questions' array) are not handled either.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "GET /api/social/posts", "issue": "serialize_doc returns reported_by (reporter user ids) and reports[] (reasons and times) to anyone, without auth. This is a privacy leak: the post author can see who reported them. Strip reported_by and reports from public feed responses (verified in code; my feed-leak test passed only because no live post had reports at the time)."},
+      {"endpoint": "Community reports (no review endpoint)", "issue": "Posts auto-hidden after 3 reports have no merchant review/unhide endpoint or UI, even though the sheet promises 'until the store reviews it'. Hidden posts stay hidden forever."},
+      {"endpoint": "DELETE /api/services/updates/{uid}", "issue": "This deletes all service_reviews for that update, including low-star ones. A merchant can remove negative per-video reviews by deleting the video, which goes against the transparency policy. It also leaves the crossposted social post (service_update_id) orphaned."},
+      {"endpoint": "PUT/DELETE /api/services/updates/{uid}", "issue": "There is no ownership check (any merchant or chamber can edit or crosspost any update). An invalid uid gives a 500 from ObjectId(), and an unknown uid returns 200 'Updated'."},
+      {"endpoint": "_crosspost_experience", "issue": "Check-then-insert is not atomic. My 5-way concurrent test produced 1 post, but a race is still possible. Claim atomically with find_one_and_update({social_post_id: {$exists: false}}, {$set: {social_post_id: 'pending'}})."},
+      {"endpoint": "services.rating/review_count", "issue": "Service 6ab6206a71b6ad54069c12cc shows 4.7 (134), but only 16 final reviews exist (Ratings tab shows 16). The seeded aggregate is stale or inflated, which is a transparency issue."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ugc-contest.tsx", "issue": "Ignores the theme entirely. root #0A0A0A, header/sectionTitle/emptyTitle/userName 'white', cards/input/commentBar #151515/#2A2A2A, leaderCount #1F1F1F, desc #D0D0D0, gradient #F5C518 hard-coded. In light and custom modes the whole page stays black and gold. Reference: /app/frontend/app/ugc-contest.tsx:314-372", "testID": "n/a", "priority": "HIGH"},
+      {"component": "ugc-contest hero/submit", "issue": "heroLabel, heroCountdown and submitText use colors.onSurface (light text in dark/custom) on the gold gradient, so 'Create video' and 'Expires in...' have low contrast. Reference: ugc-contest.tsx:319-326", "testID": "n/a", "priority": "MEDIUM"},
+      {"component": "QA post block", "issue": "post-qa-{id} is never rendered because the API has no question/options (see backend critical)", "testID": "post-qa-{id}", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "competition/[id] (dark/custom)", "issues": ["prizeCard, winnerRow, winnerBadge and hiddenNote use hard #FEF3C7, and statusBadge uses #DCFCE7/#F3F4F6/#DBEAFE. These show as bright pastel blocks in dark mode (lines 99, 274, 281, 297, 300).", "participantRow borderBottomColor #F4F4F5 draws bright white divider lines in dark mode (line 291)", "In light mode the countdown box stays hard dark brown"]},
+      {"screen": "Social (light)", "issues": ["campaignCard #0A0A0A, campaignImage #1F1F1F, campaignBadge #2A2A2A and campaignTitle 'white' stay black in light (social.tsx:483-492)", "The post-competition badge has hard #2E2404 bg and #F5C518 text and ignores the custom brand (social.tsx:237-239)", "contactBar border #F4F4F5, commentInput #F3F4F6, cmtMerchantStyle #F3E8FF and qBadge #FEF3C7 are hard light in dark (social.tsx:497, 526, 540, 547)"]},
+      {"screen": "Social", "issues": ["The report button post-report-{id} is 19x24px, below the 44x44 touch target", "Mixed language in English UI: the policy bar, the post badges ('تجربة عميل حقيقية'), the report-success alert and the policy sheet text stay Arabic while the buttons are English ('Close')", "A second report by the same user shows the same 'thanks' alert instead of 'already reported'"]},
+      {"screen": "service/[id]", "issues": ["Merchant replies (merchant_reply) on service reviews are never displayed, although the policy says 'المتجر يرد ولا يحذف'"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_social_policy_crosspost_iter66.py", "/app/backend/tests/ui_seed_iter66.py", "/app/test_reports/pytest/iter66.xml"],
+  "action_items": [
+    "HIGH: Backfill question/options on existing qa competition social posts (or enrich in GET /api/social/posts from the linked competition), and support the 'questions' array",
+    "HIGH: Theme /app/frontend/app/ugc-contest.tsx with colors.* (background, surface, onSurface, border, brand), use a brand-based gradient, and use dark text on gold",
+    "Replace the hard pastel/light colors in competition/[id].tsx (prizeCard, winnerRow, statusBadge, participantRow border) and the hard black campaignCard/competition badge in social.tsx with theme tokens",
+    "Strip reported_by and reports from the public GET /api/social/posts response",
+    "Add a merchant review/unhide flow for report-hidden posts",
+    "Stop DELETE /services/updates from removing customer reviews (or block deletion when reviews exist), and delete or flag the linked social post",
+    "Add an ownership check and ObjectId validation (404) on PUT/DELETE /services/updates/{uid}; make the crosspost claim atomic",
+    "Make post-report-{id} at least 44x44; show merchant replies on service reviews; fix the stale service rating/review_count"
+  ],
+  "critical_code_review_comments": [
+    "server.py is 7018 lines and should be split into routers (social, services, competitions)",
+    "report_social_post: authors and merchants can report their own posts; consider excluding the author",
+    "create_service_update notifies booking.user_id. Seeded bookings use fake ids (svc_user_N), which is harmless"
+  ],
+  "updated_files": ["/app/frontend/app/service/[id].tsx (added testID svc-tab-{about|experiences|reviews})"],
+  "success_rate": {"backend": "100% (13/13 tests); 1 data issue (QA post fields)", "frontend": "~75% (report/policy/service crosspost/service tabs/competitions themed OK; ugc-contest unthemed, QA block missing)"},
+  "seed_data_creation": "Created and cleaned up by id: 1 TEST_ social post for the report tests, 4 TEST_iter66 service_updates and their crossposted posts (pytest + UI). Final check: 0 TEST_iter66 docs, 0 reported or hidden posts. No seeded data was modified.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Theme key: localStorage '@zenrex_theme_mode_v2' (dark|light|custom); custom palette: '@zenrex_theme_custom_v2' JSON {base,bg,surface,surfaceElevated,text,textSecondary,gold,border}. QA comp 6af018c3c9fe5efc70ae5a78 has social post 6af018c3c9fe5efc70ae5a96. UGC comp 6af018c3c9fe5efc70ae5ab8. Past comp with winners 6af018c3c9fe5efc70ae5b37. Service 6ab6206a71b6ad54069c12cc has 16 reviews (1 low). Use 'python tests/ui_seed_iter66.py create' to get an experience post, then 'clean <uid>'. notify() on web uses window.alert, so catch it with page.on('dialog'). The frontend env key is EXPO_PUBLIC_BACKEND_URL.",
+  "rca_of_issue": "The QA block is missing because competition_reveal.create_competition_post only recently started copying question/options. The seeded posts were inserted earlier, and seed is idempotent and skips existing posts, so the old docs were never updated. ugc-contest.tsx moved its styles into useSStyles() but kept the literal dark hex values instead of colors.* tokens."
+}

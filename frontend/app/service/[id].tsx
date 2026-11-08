@@ -111,7 +111,7 @@ export default function ServiceDetail() {
             { id: 'experiences', name: tf('تجارب ({0})', lang, [experiences.length]), icon: 'videocam' },
             { id: 'reviews', name: tf('تقييمات ({0})', lang, [reviews.length]), icon: 'star' },
           ].map(t => (
-            <TouchableOpacity key={t.id} onPress={() => setTab(t.id as Tab)} style={[s.tabItem, tab === t.id && s.tabItemActive]}>
+            <TouchableOpacity key={t.id} testID={`svc-tab-${t.id}`} onPress={() => setTab(t.id as Tab)} style={[s.tabItem, tab === t.id && s.tabItemActive]}>
               <Ionicons name={t.icon as any} size={16} color={tab === t.id ? PURPLE : '#6B7280'} />
               <Text style={[s.tabText, tab === t.id && s.tabTextActive]}>{tSync(t.name, lang)}</Text>
             </TouchableOpacity>

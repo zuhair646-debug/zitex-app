@@ -762,3 +762,10 @@ Customer ↔ Competitions/Chamber linkage:
 - PENDING (user request, next): review original design PDFs (Tach-Store-Zuhair.pdf, Smart-App, Dashboard-SmartAppPhones) for forgotten features; apply merchant dashboard settings (colors/languages) to each section (driver, chamber, customer); social media "not activated" — clarify; full cross-dashboard linkage review with engineer.
 - v1.38.0 released (commit 7de0a72): service detail themed, orders track for all delivery statuses + processing filter, services 12 distinct photos + working search/book buttons, categories cache invalidation + 404s + partial PUT, header truncation. Tests: iteration_64/65.
 - Lesson: when moving module-level `s` into useSStyles(), every sub-component using `s` needs its own `const s = useSStyles();`.
+
+## v1.39.0 — Social + theme everywhere (in progress)
+- Theme applied: social tab, competitions tab, competition/[id], ugc-contest (hookify+themify /tmp/theme2.py pattern).
+- Social: community policy bar + sheet (transparency: honest negative reviews allowed, merchant replies not deletes); report post (POST /api/social/posts/{pid}/report, 3 distinct reports → hidden; feed excludes hidden); QA competition posts show question+options → competition page; experience posts (type experience) link to service page.
+- Service experiences: _crosspost_experience() creates feed post once (on create or when merchant toggles crosspost_to_social later), stores social_post_id.
+- iter66 fixes: feed hides reported_by/reports; QA backfill at startup; ugc-contest themed; report btn 44px; merchant unhide + reported list (POST /api/merchant/social/posts/{pid}/unhide, GET /api/merchant/social/reported — no UI yet); service updates owner-scoped + 404; deleting a video keeps customer reviews (moved to general) and removes its post; atomic one-post crosspost.
+- Remaining backlog: merchant UI for reported posts; show store replies under service reviews; English static strings for social policy/badges; service rating count mismatch (seeded aggregate); original design PDFs review.

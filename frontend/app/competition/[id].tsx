@@ -1,16 +1,19 @@
 import { useT, curLang } from '../../src/i18n';
 import { tSync, tf } from '../../src/useAutoT';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { colors } from '../../src/theme/tokens';
 import { useAuth } from '../_layout';
 import DrawProof from '../../src/components/draw/DrawProof';
 import Countdown from '../../src/components/Countdown';
 
 export default function CompetitionDetailScreen() {
+  const s = useSStyles();
   useT(); // re-render when language or on-demand translations change
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -68,7 +71,7 @@ export default function CompetitionDetailScreen() {
 
   const performDraw = () => router.push({ pathname: '/draw-studio', params: { id: String(id) } } as any);
 
-  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
+  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color={colors.brand} /></View>;
   if (!comp) return <View style={s.loadWrap}><Text>{tSync('غير موجود', curLang())}</Text></View>;
 
   // entry_open comes from the server (status + start/end dates + running draw)
@@ -82,9 +85,9 @@ export default function CompetitionDetailScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.topBar}>
         <TouchableOpacity testID="back-btn" style={s.topBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0A0A0A" />
+          <Ionicons name="arrow-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
-        <TouchableOpacity style={s.topBtn}><Ionicons name="share-outline" size={22} color="#0A0A0A" /></TouchableOpacity>
+        <TouchableOpacity style={s.topBtn}><Ionicons name="share-outline" size={22} color={colors.onSurface} /></TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -102,7 +105,7 @@ export default function CompetitionDetailScreen() {
 
           {(isOpen || notStarted || comp.result_hidden || (comp.reveal_at && !comp.winners?.length && !comp.revealed_at)) && comp.competition_type !== 'ugc_video' ? (
             <View style={s.timerBox} testID="comp-countdown">
-              <Ionicons name="time" size={18} color="#F5C518" />
+              <Ionicons name="time" size={18} color={colors.brand} />
               <Text style={s.timerLbl}>{tSync(comp.result_hidden || !isOpen && !notStarted ? 'إعلان الفائزين بعد' : notStarted ? 'تبدأ بعد' : 'تنتهي المشاركة بعد', curLang())}</Text>
               <Countdown style={s.timerVal} dayLabel={tSync('ي', curLang())} onDone={load}
                 to={comp.result_hidden || (!isOpen && !notStarted) ? (comp.reveal_at || comp.draw_opens_at) : notStarted ? comp.start_date : (String(comp.end_date || '').length === 10 ? `${comp.end_date}T23:59:59+03:00` : comp.end_date)} />
@@ -210,7 +213,7 @@ export default function CompetitionDetailScreen() {
           <View style={s.quizModal}>
             <View style={s.quizHeader}>
               <Text style={s.quizTitle}>{tSync('أجب على الأسئلة', curLang())}</Text>
-              <TouchableOpacity onPress={() => setShowQuiz(false)}><Ionicons name="close" size={24} color="#0A0A0A" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowQuiz(false)}><Ionicons name="close" size={24} color={colors.onSurface} /></TouchableOpacity>
             </View>
             <Text style={s.quizInfo}>{tSync('أجب على 70% من الأسئلة للانضمام', curLang())}</Text>
             <Text style={s.qNumber}>{currentQ + 1}/{comp.questions?.length || 0}</Text>
@@ -252,43 +255,45 @@ export default function CompetitionDetailScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF' },
-  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
+function useSStyles() {
+  const { themeKey } = useTheme();
+  return useMemo(() => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 8 },
-  topBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
+  topBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
   heroWrap: { height: 200, marginHorizontal: 20, borderRadius: 20, overflow: 'hidden', marginBottom: 20 },
-  heroBg: { flex: 1, backgroundColor: '#F5C518', alignItems: 'center', justifyContent: 'center' },
+  heroBg: { flex: 1, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20 },
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginBottom: 12 },
   statusText: { fontSize: 13, fontWeight: '600' },
-  byLine: { color: '#6B7280', fontSize: 12, fontWeight: '700', marginBottom: 8 },
+  byLine: { color: colors.onSurfaceSecondary, fontSize: 12, fontWeight: '700', marginBottom: 8 },
   timerBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1A1405', borderRadius: 14, padding: 12, marginBottom: 12 },
   timerLbl: { color: '#E8C778', fontSize: 13, fontWeight: '700', flex: 1 },
-  timerVal: { color: '#F5C518', fontSize: 18, fontWeight: '900' },
+  timerVal: { color: colors.brand, fontSize: 18, fontWeight: '900' },
   hiddenNote: { color: '#92400E', backgroundColor: '#FEF3C7', borderRadius: 12, padding: 12, fontSize: 13, fontWeight: '600', marginBottom: 12, lineHeight: 20 },
-  compTitle: { fontSize: 22, fontWeight: '800', color: '#0A0A0A', marginBottom: 8 },
-  compDesc: { fontSize: 14, color: '#52525B', lineHeight: 22, marginBottom: 16 },
+  compTitle: { fontSize: 22, fontWeight: '800', color: colors.onSurface, marginBottom: 8 },
+  compDesc: { fontSize: 14, color: colors.onSurfaceSecondary, lineHeight: 22, marginBottom: 16 },
   infoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 },
-  infoItem: { width: '47%', backgroundColor: '#F9F9FB', borderRadius: 12, padding: 12 },
-  infoLabel: { fontSize: 11, color: '#6B7280', fontWeight: '600', marginBottom: 4 },
-  infoVal: { fontSize: 14, fontWeight: '600', color: '#0A0A0A' },
+  infoItem: { width: '47%', backgroundColor: colors.surfaceSecondary, borderRadius: 12, padding: 12 },
+  infoLabel: { fontSize: 11, color: colors.onSurfaceSecondary, fontWeight: '600', marginBottom: 4 },
+  infoVal: { fontSize: 14, fontWeight: '600', color: colors.onSurface },
   prizeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#FEF3C7', borderRadius: 16, padding: 16, marginBottom: 20 },
   prizeInfo: { flex: 1 },
   prizeLabel: { fontSize: 12, color: '#92400E' },
   prizeText: { fontSize: 16, fontWeight: '700', color: '#92400E' },
   entrySection: { marginBottom: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#0A0A0A', marginBottom: 8 },
-  entryDesc: { fontSize: 13, color: '#52525B', marginBottom: 12 },
-  quizBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 20, alignSelf: 'flex-start' },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.onSurface, marginBottom: 8 },
+  entryDesc: { fontSize: 13, color: colors.onSurfaceSecondary, marginBottom: 12 },
+  quizBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 20, alignSelf: 'flex-start' },
   quizBtnText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
   participantsSection: { marginBottom: 20 },
   participantRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F4F4F5' },
   participantAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EFE6FF', alignItems: 'center', justifyContent: 'center', marginEnd: 12 },
-  avatarText: { fontSize: 16, fontWeight: '700', color: '#F5C518' },
+  avatarText: { fontSize: 16, fontWeight: '700', color: colors.brand },
   participantInfo: { flex: 1 },
-  participantName: { fontSize: 14, fontWeight: '600', color: '#0A0A0A' },
-  participantPhone: { fontSize: 12, color: '#A1A1AA' },
+  participantName: { fontSize: 14, fontWeight: '600', color: colors.onSurface },
+  participantPhone: { fontSize: 12, color: colors.onSurfaceTertiary },
   winnerBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FEF3C7', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   winnerText: { fontSize: 11, color: '#92400E', fontWeight: '600' },
   winnersSection: { marginBottom: 20 },
@@ -296,34 +301,36 @@ const s = StyleSheet.create({
   winnerRank: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F59E0B', alignItems: 'center', justifyContent: 'center', marginEnd: 12 },
   rankText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
   winnerInfo: { flex: 1 },
-  winnerName: { fontSize: 15, fontWeight: '600', color: '#0A0A0A' },
-  winnerPhone: { fontSize: 12, color: '#52525B' },
+  winnerName: { fontSize: 15, fontWeight: '600', color: colors.onSurface },
+  winnerPhone: { fontSize: 12, color: colors.onSurfaceSecondary },
   giftBtn: { backgroundColor: '#10B981', borderRadius: 10, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' },
   giftBtnText: { color: '#FFF', fontSize: 12, fontWeight: '600' },
-  drawLockedNote: { textAlign: 'center', color: '#6B7280', fontSize: 13, fontWeight: '600', paddingVertical: 12, marginBottom: 16 },
-  drawBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#F5C518', borderRadius: 16, paddingVertical: 18, marginBottom: 20 },
+  drawLockedNote: { textAlign: 'center', color: colors.onSurfaceSecondary, fontSize: 13, fontWeight: '600', paddingVertical: 12, marginBottom: 16 },
+  drawBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: colors.brand, borderRadius: 16, paddingVertical: 18, marginBottom: 20 },
   drawBtnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  quizModal: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80%' },
+  quizModal: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80%' },
   quizHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  quizTitle: { fontSize: 20, fontWeight: '700', color: '#0A0A0A' },
-  quizInfo: { fontSize: 13, color: '#52525B', marginBottom: 16 },
-  qNumber: { fontSize: 14, fontWeight: '600', color: '#F5C518', marginBottom: 8 },
-  question: { fontSize: 16, fontWeight: '600', color: '#0A0A0A', marginBottom: 20, lineHeight: 24 },
-  optionBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: '#E4E4E7', marginBottom: 10 },
-  optionSelected: { borderColor: '#F5C518', backgroundColor: '#EFE6FF' },
-  radioCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#E4E4E7' },
-  radioSelected: { borderColor: '#F5C518', backgroundColor: '#F5C518' },
-  optionText: { fontSize: 14, color: '#52525B' },
-  optionTextSelected: { color: '#F5C518', fontWeight: '600' },
-  nextBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 10 },
+  quizTitle: { fontSize: 20, fontWeight: '700', color: colors.onSurface },
+  quizInfo: { fontSize: 13, color: colors.onSurfaceSecondary, marginBottom: 16 },
+  qNumber: { fontSize: 14, fontWeight: '600', color: colors.brand, marginBottom: 8 },
+  question: { fontSize: 16, fontWeight: '600', color: colors.onSurface, marginBottom: 20, lineHeight: 24 },
+  optionBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, marginBottom: 10 },
+  optionSelected: { borderColor: colors.brand, backgroundColor: '#EFE6FF' },
+  radioCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.border },
+  radioSelected: { borderColor: colors.brand, backgroundColor: colors.brand },
+  optionText: { fontSize: 14, color: colors.onSurfaceSecondary },
+  optionTextSelected: { color: colors.brand, fontWeight: '600' },
+  nextBtn: { backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 10 },
   nextBtnDisabled: { opacity: 0.5 },
   nextBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-  drawModal: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 32, alignItems: 'center' },
-  drawTitle: { fontSize: 22, fontWeight: '800', color: '#0A0A0A', marginTop: 12, marginBottom: 20 },
+  drawModal: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 32, alignItems: 'center' },
+  drawTitle: { fontSize: 22, fontWeight: '800', color: colors.onSurface, marginTop: 12, marginBottom: 20 },
   drawWinner: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, width: '100%' },
   drawRank: { fontSize: 18, fontWeight: '800', color: '#F59E0B' },
-  drawName: { fontSize: 16, fontWeight: '600', color: '#0A0A0A' },
-  closeDrawBtn: { backgroundColor: '#F5C518', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 40, marginTop: 20 },
+  drawName: { fontSize: 16, fontWeight: '600', color: colors.onSurface },
+  closeDrawBtn: { backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 40, marginTop: 20 },
   closeDrawText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-});
+}), [themeKey]); // eslint-disable-line react-hooks/exhaustive-deps -- colors are mutable
+}
+

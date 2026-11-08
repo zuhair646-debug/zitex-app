@@ -682,21 +682,34 @@ async def create_service_update(data: ServiceUpdateInput, user=Depends(get_curre
                                        data.caption or "شاهد تحديث الصيانة",
                                        {"type": "service_update", "booking_id": data.booking_id, "update_id": uid})
         except Exception: pass
-    # cross-post to social if requested
     if data.crosspost_to_social and data.video_url:
-        try:
-            svc_name = b.get("service_name", "خدمة صيانة")
-            await db.social_posts.insert_one({
-                "user_id": user["id"], "author_name": user.get("name",""), "author_role": "merchant",
-                "text": f"🛠️ {svc_name}\n{data.caption}".strip(),
-                "images": [], "video": data.video_url,
-                "badge": "خدمة صيانة", "linked_service_id": b.get("service_id",""),
-                "likes": 0, "liked_by": [], "comments": [], "views": 0,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            })
-        except Exception as e:
-            logger.warning(f"cross-post failed: {e}")
+        await _crosspost_experience(uid, user)
     return {"id": uid, "message": "Update posted"}
+
+
+async def _crosspost_experience(uid: str, user: dict):
+    """Customer experience (service video) → social feed post, once. Likes/comments live on the post."""
+    # atomic claim → exactly one post even under concurrent edits
+    up = await db.service_updates.find_one_and_update(
+        {"_id": ObjectId(uid), "social_post_id": {"$in": [None, ""]}, "video_url": {"$nin": [None, ""]}},
+        {"$set": {"social_post_id": "pending"}})
+    if not up:
+        return
+    b = await db.service_bookings.find_one({"_id": ObjectId(up["booking_id"])}) if ObjectId.is_valid(up.get("booking_id", "")) else {}
+    svc = await db.services.find_one({"_id": ObjectId(up["service_id"])}) if ObjectId.is_valid(up.get("service_id", "")) else None
+    svc_name = (svc or {}).get("name_ar") or (b or {}).get("service_name") or "خدمة صيانة"
+    first = ((b or {}).get("user_name") or "").split(" ")[0]
+    try:
+        r = await db.social_posts.insert_one({
+            "author": user.get("name", "Zenrex Store"), "author_id": user["id"], "type": "experience",
+            "text": f"🛠️ تجربة عميل — {svc_name}" + (f" ({first})" if first else "") + (f"\n{up.get('caption')}" if up.get("caption") else ""),
+            "image": up.get("image_url", ""), "images": [], "video": up["video_url"],
+            "badge": "تجربة عميل حقيقية", "linked_service_id": up.get("service_id", ""), "service_update_id": uid,
+            "likes": 0, "comments": 0, "views": 0, "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        await db.service_updates.update_one({"_id": up["_id"]}, {"$set": {"social_post_id": str(r.inserted_id)}})
+    except Exception as e:
+        logger.warning(f"cross-post failed: {e}")
 
 @api_router.put("/services/updates/{uid}")
 async def edit_service_update(uid: str, request: Request, user=Depends(get_current_user)):
@@ -704,14 +717,24 @@ async def edit_service_update(uid: str, request: Request, user=Depends(get_curre
     body = await request.json()
     allow = {k: v for k, v in body.items() if k in {"caption","is_public_experience","crosspost_to_social"}}
     if not allow: raise HTTPException(status_code=400, detail="Nothing to update")
-    await db.service_updates.update_one({"_id": ObjectId(uid)}, {"$set": allow})
+    if not ObjectId.is_valid(uid): raise HTTPException(status_code=404, detail="Update not found")
+    q = {"_id": ObjectId(uid)} if user.get("role") == "chamber" else {"_id": ObjectId(uid), "merchant_id": user["id"]}
+    r = await db.service_updates.update_one(q, {"$set": allow})
+    if not r.matched_count: raise HTTPException(status_code=404, detail="Update not found")
+    if allow.get("crosspost_to_social"):
+        await _crosspost_experience(uid, user)
     return {"message": "Updated"}
 
 @api_router.delete("/services/updates/{uid}")
 async def delete_service_update(uid: str, user=Depends(get_current_user)):
     if user.get("role") not in ("merchant","chamber"): raise HTTPException(status_code=403, detail="Merchants only")
-    await db.service_updates.delete_one({"_id": ObjectId(uid)})
-    await db.service_reviews.delete_many({"update_id": uid})
+    if not ObjectId.is_valid(uid): raise HTTPException(status_code=404, detail="Update not found")
+    up = await db.service_updates.find_one_and_delete({"_id": ObjectId(uid), **({} if user.get("role") == "chamber" else {"merchant_id": user["id"]})})
+    if not up: raise HTTPException(status_code=404, detail="Update not found")
+    # Transparency: customer reviews are kept (they move to the service's general reviews); the shared post goes away
+    await db.service_reviews.update_many({"update_id": uid}, {"$set": {"update_id": "", "from_removed_video": True}})
+    if up.get("social_post_id") and ObjectId.is_valid(up["social_post_id"]):
+        await db.social_posts.delete_one({"_id": ObjectId(up["social_post_id"])})
     return {"message": "Deleted"}
 
 # ─── Service reviews (customer ratings on videos + final rating) ───
@@ -788,6 +811,38 @@ class TicketInput(BaseModel):
     subject: str
     message: str
     category: str = "general"
+
+class ReportInput(BaseModel):
+    reason: str = "محتوى مخالف"
+
+@api_router.post("/social/posts/{pid}/report")
+async def report_social_post(pid: str, data: ReportInput, user=Depends(get_current_user)):
+    """Community policy: anyone can report; 3 distinct reports auto-hide the post until the merchant reviews it.
+    Honest negative opinions are allowed — only abuse, spam, fraud or private data are reportable."""
+    if not ObjectId.is_valid(pid):
+        raise HTTPException(404, "Post not found")
+    r = await db.social_posts.find_one_and_update({"_id": ObjectId(pid), "reported_by": {"$ne": user["id"]}},
+        {"$addToSet": {"reported_by": user["id"]}, "$push": {"reports": {"by": user["id"], "reason": data.reason[:200], "at": datetime.now(timezone.utc).isoformat()}}},
+        return_document=True)
+    if not r:
+        return {"ok": True, "already": True}
+    if len(r.get("reported_by", [])) >= 3 and not r.get("hidden"):
+        await db.social_posts.update_one({"_id": r["_id"]}, {"$set": {"hidden": True}})
+    return {"ok": True}
+
+@api_router.post("/merchant/social/posts/{pid}/unhide")
+async def merchant_unhide_post(pid: str, user=Depends(get_current_user)):
+    require_merchant(user)
+    if not ObjectId.is_valid(pid): raise HTTPException(404, "Post not found")
+    r = await db.social_posts.update_one({"_id": ObjectId(pid)}, {"$set": {"hidden": False, "reviewed_at": datetime.now(timezone.utc).isoformat()}, "$unset": {"reported_by": "", "reports": ""}})
+    if not r.matched_count: raise HTTPException(404, "Post not found")
+    return {"ok": True}
+
+@api_router.get("/merchant/social/reported")
+async def merchant_reported_posts(user=Depends(get_current_user)):
+    require_merchant(user)
+    ps = await db.social_posts.find({"reports.0": {"$exists": True}}).sort("created_at", -1).to_list(100)
+    return [{**serialize_doc(p), "report_count": len(p.get("reported_by", []))} for p in ps]
 
 @api_router.get("/support/tickets")
 async def get_tickets(user=Depends(get_current_user)):
@@ -1254,7 +1309,8 @@ async def get_social_posts(limit: int = 100, skip: int = 0):
         {"type": {"$ne": "story"}},
         {"type": "story", "$or": [{"expires_at": {"$gt": now}}, {"expires_at": {"$exists": False}}]}
     ]}
-    posts = await db.social_posts.find(query).sort("created_at", -1).skip(s).limit(n).to_list(n)
+    query = {**query, "hidden": {"$ne": True}}  # posts hidden by community reports
+    posts = await db.social_posts.find(query, {"reported_by": 0, "reports": 0}).sort("created_at", -1).skip(s).limit(n).to_list(n)
     return [serialize_doc(p) for p in posts]
 
 @api_router.post("/social/posts/{post_id}/like")
@@ -6948,6 +7004,14 @@ except Exception as _e:
 @app.on_event("startup")
 async def startup():
     await seed_data()
+    # Backfill QA question/options onto competition feed posts created before they were copied
+    try:
+        async for _p in db.social_posts.find({"type": "competition", "question": {"$exists": False}}, {"linked_competition_id": 1}):
+            _c = await db.competitions.find_one({"_id": ObjectId(_p["linked_competition_id"])}) if ObjectId.is_valid(_p.get("linked_competition_id", "")) else None
+            _qa = bool(_c and _c.get("competition_type") == "qa")
+            await db.social_posts.update_one({"_id": _p["_id"]}, {"$set": {"question": (_c or {}).get("question", "") if _qa else "", "options": (_c or {}).get("options", []) if _qa else []}})
+    except Exception as _e:
+        logger.warning(f"qa backfill: {_e}")
     # Real default photos for category tiles (only where the merchant hasn't set a photo yet)
     try:
         _cat_photos = {
