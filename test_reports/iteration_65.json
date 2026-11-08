@@ -1,0 +1,47 @@
+{
+  "summary": "Retested the iteration 64 fixes on backend and frontend (375x667, dark, custom and en/ar). Backend: test_categories_theme_iter64.py passes 11/11 and the new test_categories_cache_iter65.py passes 7/7. POST and DELETE now clear the cache right away, PUT on an unknown or invalid id returns 404, and a partial PUT keeps the other fields. CRITICAL, fixed by tester: /service/{id} crashed with a red screen 'ReferenceError: s is not defined'. The Feature and ExperienceCard sub-components used `s`, which had been moved inside ServiceDetail. I added `const s = useSStyles()` to both. After the fix the detail page follows dark and custom mode and the hero gradient uses theme colors. Orders: the track button shows for processing and ready_for_pickup, and it opens /track-order/{id}. The label 'Ready for Pickup' / 'جاهز للاستلام' is correct in EN and AR. I only checked assigned and picked_up in the code, because they need a driver assigned. Services: 12 cards with 12 different photos, all URLs return 200. service-search-btn opens /search and book-service-btn opens the first service detail. Home: the accent icons follow the custom brand pink. Remaining issues: the Home header store selector overlaps the search button at 375px. On the service detail page the meta chips, the accent color and the Book button are still hardcoded, and the hero shows an icon instead of the photo. Regression: Home dark mode, Settings links and Orders theme all work. Deprecated packages: none in these files (expo-video and expo-image are used).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "DELETE /api/merchant/categories/{cid}", "issue": "An id that does not exist (000000000000000000000000) returns 200 'Deleted'. It should check deleted_count and return 404. An invalid id returns 404, which is fine. Reference: server.py:1863-1868"},
+      {"endpoint": "PUT /api/merchant/categories/{cid}", "issue": "A partial PUT must still include name_ar: a body with only image returns 422, because CategoryInput.name_ar is required. Other fields are kept correctly (exclude_unset works). A Partial model with all-optional fields would allow true partial updates."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "service/[id].tsx Feature/ExperienceCard", "issue": "FIXED BY TESTER: red screen 'Uncaught Error: s is not defined' at Feature (line 199/201). useSStyles() was only called inside ServiceDetail, so tapping any service crashed the app. Added `const s = useSStyles();` to Feature and ExperienceCard.", "testID": "book-svc-btn", "priority": "CRITICAL"},
+      {"component": "Home header", "issue": "The store selector overlaps the search button at 375px: search-btn spans x=62-102 and store-selector starts at x=85, so about 17px of the search icon is covered in dark and custom mode. The text 'Riyadh branch' also wraps to 2 lines (46px tall) instead of truncating. Cause: headerLeft has flexShrink:1, so it shrinks below its 86px content. Fix: headerLeft flexShrink:0; storeSelector flex:1, minWidth:0; storeName numberOfLines={1}. Reference: app/(tabs)/index.tsx:155-158,372,374", "testID": "store-selector", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Service detail (dark/custom)", "issues": [
+        "metaChip backgroundColor is hardcoded '#F4ECFF' (light lavender), so the price, duration and rating chips show as bright pills with gold text: low contrast and not themed. Reference: service/[id].tsx:274",
+        "PURPLE='#F5C518' is hardcoded for accents, tabs, price and the bookBtn background, so the custom brand color (pink) is ignored on this page while Home and Orders use colors.brand. Reference: service/[id].tsx:18,275,278,302,303",
+        "bookText and the arrow are 'white' on gold #F5C518, which is low contrast (about 1.7:1). Use colors.onBrandPrimary.",
+        "The hero still shows the Ionicon when svc.images is empty. The Services list shows the SVC_PHOTOS photo, so the two screens don't match. Reuse the same fallback map in the hero.",
+        "warrantyCard is hardcoded '#F0FDF4'/'#BBF7D0' (light green) and the review card name is '#0A0A0A'. Both will look wrong in dark mode. Reference: service/[id].tsx:239,288"
+      ]},
+      {"screen": "Orders", "issues": ["The 'Under Execution' filter only matches status==='processing', so orders that are ready_for_pickup, assigned or picked_up appear only under 'All'", "The ActivityIndicator is still hardcoded '#F5C518' (orders.tsx:47)"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_categories_theme_iter64.py", "/app/backend/tests/test_categories_cache_iter65.py", "/app/test_reports/pytest/pytest_iter65.xml", "/app/test_reports/pytest/pytest_iter65b.xml"],
+  "action_items": [
+    "Keep the tester fix in app/service/[id].tsx (useSStyles in Feature and ExperienceCard). Check other files where styles were moved into useSStyles for sub-components that still use `s`",
+    "Home header: stop the store selector overlapping the search button at 375px (headerLeft flexShrink:0; storeName numberOfLines=1)",
+    "service/[id].tsx: replace PURPLE and '#F4ECFF' with colors.brand and colors.surfaceSecondary, give bookText colors.onBrandPrimary, theme the warranty and review cards, and use the SVC_PHOTOS fallback photo in the hero",
+    "Orders: include ready_for_pickup, assigned and picked_up in the 'processing' filter; use colors.brand for the loader",
+    "Backend: DELETE an unknown category should return 404; consider an all-optional model for partial PUT"
+  ],
+  "critical_code_review_comments": [
+    "The move to a per-component useSStyles() hook breaks sub-components in the same file that still use `s`. This only fails at runtime, so tsc/lint should be run",
+    "server.py is still about 6988 lines",
+    "The categories cache is an in-memory TTLCache, so invalidation only works with a single worker"
+  ],
+  "updated_files": ["/app/frontend/app/service/[id].tsx (added const s = useSStyles() in Feature and ExperienceCard to fix the red screen crash)"],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "85% (service detail crash fixed by tester; header overlap and detail accent theming remain)"},
+  "seed_data_creation": "Created TEST order 6af02c3d2e012dd69e413afa for customer 0500000000 (ui_seed_iter64.py), moved it to processing and then ready_for_pickup for the UI test, then cancelled it. The new pytest created and deleted TEST_cat65/TEST_del65 categories; there are 7 categories now, the same as before.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Theme key is localStorage '@zenrex_theme_mode_v2'; the custom palette is '@zenrex_theme_custom_v2'; the language key is 'app_lang' (en/ar). Export EXPO_BACKEND_URL from EXPO_PUBLIC_BACKEND_URL for pytest. Setting assigned or picked_up via PUT /api/merchant/orders/{id}/status needs order.driver_id. Service ids start with 6ab6206a71b6ad54069c12cc."
+}

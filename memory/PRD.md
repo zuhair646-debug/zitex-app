@@ -752,3 +752,11 @@ Customer ↔ Competitions/Chamber linkage:
 - Frontend: (tabs)/competitions Current/Past tabs + countdowns; competition/[id] countdown, by-line, hidden note; draw-studio reveal card + void UI; chamber detail void/reveal notes; social posts link to competition; form reveal_at + presenter.
 - Seed: backend/seed_demo_competitions.py (tag demo_mix, 10 comps: every type × store/chamber × open/soon/ready/past).
 - Tests: tests/test_reveal_iter63.py (5) — 92 pass total.
+
+## v1.38.0 — Customer linkage round 1 (in progress)
+- Theme (dark/light/custom) now applied on Home, Services tab, Orders (themify script /tmp/themify.py pattern: useSStyles + useTheme themeKey).
+- Category tiles show real photos (startup migration sets Unsplash photos where image is emoji); merchant can change via /merchant/categories (Dashboard › More › الأقسام وصورها; GET /api/merchant/categories; PUT invalidates cache).
+- Services tab redesigned: large photo cards (svc.images[0] or default per icon); merchant replaces via services catalog images.
+- Orders: "تتبع الطلب والسائق على الخريطة" button → /track-order/{id}.
+- Settings: join as driver / marketer, my affiliate dashboard, competitions links.
+- PENDING (user request, next): review original design PDFs (Tach-Store-Zuhair.pdf, Smart-App, Dashboard-SmartAppPhones) for forgotten features; apply merchant dashboard settings (colors/languages) to each section (driver, chamber, customer); social media "not activated" — clarify; full cross-dashboard linkage review with engineer.

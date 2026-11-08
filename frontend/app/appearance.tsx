@@ -132,6 +132,7 @@ export default function AppearanceScreen() {
             label={tSync('ليلي', lang)}
             selected={mode === 'dark'}
             onPress={() => handlePickMode('dark')}
+            testID="mode-dark"
             colors={colors}
             fontFamily={fontFamily}
           />
@@ -140,6 +141,7 @@ export default function AppearanceScreen() {
             label={tSync('نهاري', lang)}
             selected={mode === 'light'}
             onPress={() => handlePickMode('light')}
+            testID="mode-light"
             colors={colors}
             fontFamily={fontFamily}
           />
@@ -148,6 +150,7 @@ export default function AppearanceScreen() {
             label={tSync('مخصص', lang)}
             selected={mode === 'custom'}
             onPress={() => handlePickMode('custom')}
+            testID="mode-custom"
             colors={colors}
             fontFamily={fontFamily}
           />
@@ -346,10 +349,10 @@ export default function AppearanceScreen() {
 }
 
 // ── Sub-components ──────────────────────────────────────────
-function ModeCard({ icon, label, selected, onPress, colors, fontFamily }: any) {
+function ModeCard({ icon, label, selected, onPress, colors, fontFamily, testID }: any) {
   const S = createStyles(colors, fontFamily);
   return (
-    <TouchableOpacity style={[S.modeCard, selected && S.modeCardSelected]} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity testID={testID} style={[S.modeCard, selected && S.modeCardSelected]} onPress={onPress} activeOpacity={0.85}>
       <View style={[S.modeIcon, selected && { backgroundColor: colors.goldSoft }]}>
         <Ionicons name={icon} size={24} color={selected ? colors.gold : colors.textSecondary} />
       </View>

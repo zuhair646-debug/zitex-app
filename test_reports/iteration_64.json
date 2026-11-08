@@ -1,0 +1,51 @@
+{
+  "summary": "Tested theme on all customer screens, category/service photos, orders tracking, new settings links and merchant category photos, on backend and frontend (375x667 web preview). Backend: tests/test_categories_theme_iter64.py passes 10 of 11. What works: /api/categories returns 7 of 7 categories with Unsplash photo URLs; GET /api/merchant/categories works for the merchant, returns 403 for a customer and 401/403 without login; a customer PUT returns 403; a merchant PUT of the image shows up in /api/categories right away (cache cleared). Failed: PUT on an id that does not exist returns 200. Also found: POST and DELETE on merchant categories do not clear the cache, so a new category stays hidden and a deleted one stays visible for up to 120s. Frontend: Home in dark mode has no white areas, cards and text follow the theme, and the category tiles show the real photos. Light mode is readable. A custom green/pink palette applies to Home, Services and the tab bar. Services shows 12 large photo cards (335x234) in theme colors, and tapping one opens /service/{id}. Orders follows the theme; a processing order shows track-order-{id}, which opens /track-order/{id} with the map, a progress bar and the address. Settings links work: driver-apply, affiliate-apply, my-affiliate and the competitions tab. As merchant, More > 'الأقسام وصورها' opens /merchant/categories with 7 cat-edit-{id} cards with photos. Remaining issues: the service detail page /service/[id] is hardcoded white in dark mode and shows an icon instead of the photo; Orders hides the track button and shows the raw status for the real dispatch statuses (ready_for_pickup, assigned, picked_up); 6 of 12 services use the same fallback photo and the 'Screen Repair' photo is a PC; Orders has a hardcoded light border in dark mode. Deprecated packages: none checked in these files. Auth: password hashes use bcrypt $2b$, lockout returns 429 after 5 failed logins, login uses a Bearer token (no app httpOnly cookie), and CORS is allow_origins=['*'] with credentials.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PUT /api/merchant/categories/{cid}", "issue": "An id that does not exist (000000000000000000000000) returns 200 'Updated'. It should check matched_count and return 404. Reference: server.py:1844-1853"},
+      {"endpoint": "POST/DELETE /api/merchant/categories", "issue": "Neither clears the 'categories:v1' cache. Verified: a TEST category created by the merchant was missing from /api/categories, and after DELETE it was still listed. Only PUT clears the cache. Reference: server.py:1838-1859"},
+      {"endpoint": "PUT /api/merchant/categories/{cid}", "issue": "The body is the full CategoryInput model with defaults, so a partial body (for example only image) resets color1/color2/order/published to their defaults. The frontend sends the full object so it works today, but the API is fragile. Better: exclude_unset or a partial model."},
+      {"endpoint": "CORS", "issue": "allow_origins=['*'] with allow_credentials=True (server.py:4174). This existed before this change."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "service/[id].tsx", "issue": "Not themed: safe bg '#FFF', tabsBar '#FFF', expCard '#FFF', borders '#E5E7EB', hero LinearGradient ['#F4ECFF','#E7D6FF']. In dark/custom mode, tapping a service opens a white page. The hero also shows the icon instead of the service photo used on the Services list. Reference: app/service/[id].tsx:74,253,270,291", "testID": "service-{id}", "priority": "HIGH"},
+      {"component": "orders.tsx track button", "issue": "Trackable statuses are ['ready','in_transit','out_for_delivery','shipped','processing'], but the real dispatch flow (delivery.py / server.py:1959) uses ready_for_pickup -> assigned -> picked_up. The track button disappears exactly when a driver is assigned or picks up the order, and the status bar shows the raw English key because these statuses are not in the label map. Reference: app/orders.tsx:57,64", "testID": "track-order-{id}", "priority": "HIGH"},
+      {"component": "services.tsx photos", "issue": "SVC_PHOTOS has no entries for icons flash, camera, cloud-download, volume-high, hardware-chip, home, so 6 of 12 services show the same 'construct' fallback photo. The 'phone-portrait' photo used for Screen Repair (photo-1597872200969) is a gaming PC with water cooling, not a phone screen. No service has images[] in the DB. Reference: app/(tabs)/services.tsx:14-22", "testID": "service-{id}", "priority": "MEDIUM"},
+      {"component": "services.tsx buttons", "issue": "service-search-btn and book-service-btn have no onPress and do nothing when tapped. Reference: app/(tabs)/services.tsx:49,59", "testID": "book-service-btn", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Orders (dark)", "issues": ["totalRow and returnBtn borderTopColor are hardcoded '#E4E4E7', which shows as a bright white line above Total in dark mode (orders.tsx:112,115)", "The loading ActivityIndicator is hardcoded '#F5C518' instead of colors.brand"]},
+      {"screen": "Services", "issues": ["The loading View (services.tsx:42) has no backgroundColor, so it flashes white in dark mode"]},
+      {"screen": "Home", "issues": ["The header row overflows at 375px: the cart button past 'My home' is cut off at the right edge", "Accent icons are hardcoded '#F5C518' (index.tsx:93,156,177,291,307,318,332,344) and ignore the custom brand color", "One trending product (Huawei Mate 60 Pro) has an empty image"]},
+      {"screen": "Merchant categories", "issues": ["The back icon is 'chevron-forward' and points the wrong way in LTR (English) (merchant/categories.tsx:51)", "Category names always use name_ar even when lang=en", "The title and hint show Arabic before tSync resolves", "Arabic glyphs rendered disconnected in headless Chromium; this is probably a font issue in the test environment, not confirmed on device"]},
+      {"screen": "Driver apply", "issues": ["A logged-in customer must type name and phone again (affiliate-apply prefills them)", "An empty bordered placeholder box sits in the top-right of the header"]},
+      {"screen": "My affiliate", "issues": ["The empty-state text still says to apply from the 'Social' tab; it should point to the new 'Join as marketer' item in Settings"]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_categories_theme_iter64.py", "/app/backend/tests/ui_seed_iter64.py", "/app/test_reports/pytest/pytest_iter64.xml"],
+  "action_items": [
+    "Theme app/service/[id].tsx with useTheme/colors (bg, tabs, cards, borders, hero gradient) and use the service photo (images[0] or the SVC_PHOTOS fallback) in the hero",
+    "orders.tsx: add ready_for_pickup, assigned, picked_up (and confirmed/preparing) to the trackable list and the status label map",
+    "services.tsx: add real photos for flash/camera/cloud-download/volume-high/hardware-chip/home and replace the phone-portrait photo with a real phone-screen repair image; consider seeding services.images; wire service-search-btn and book-service-btn",
+    "orders.tsx: replace '#E4E4E7' borders with colors.border; give the services.tsx loading View colors.background",
+    "Backend: clear the categories:v1 cache in POST and DELETE /merchant/categories; return 404 when PUT/DELETE match nothing; catch invalid ObjectId",
+    "Home header: fix the overflow at 375px width",
+    "merchant/categories.tsx: use a back chevron that follows RTL/LTR and show names by language"
+  ],
+  "critical_code_review_comments": [
+    "server.py is 6978 lines; it should be split into modules",
+    "merchant_update_category ignores update_one().matched_count",
+    "The cache only works because there is 1 uvicorn worker (in-memory TTLCache); with more workers, invalidation would need a shared store"
+  ],
+  "updated_files": ["/app/frontend/app/appearance.tsx (added testIDs mode-dark/mode-light/mode-custom to ModeCard)"],
+  "success_rate": {"backend": "91% (10/11)", "frontend": "85%"},
+  "seed_data_creation": "Created TEST order 6af02a6ef09bdd241eb754c2 for customer 0500000000 (Apple Watch Ultra 2 x1, notes TEST_iter64), set it to processing for the UI test, then cancelled it. Created and deleted one TEST_cat category. The PUT test changed the image of the first category and restored it (verified).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Theme key is localStorage '@zenrex_theme_mode_v2' (dark/light/custom); the custom palette is in '@zenrex_theme_custom_v2' as JSON {base,bg,surface,surfaceElevated,text,textSecondary,gold,border}. The app language is en (app_lang). Settings menu testIDs are settings-{icon}: settings-car, settings-megaphone, settings-stats-chart, settings-trophy, settings-color-palette. Customer 0500000000 had no orders; use tests/ui_seed_iter64.py to create one. EXPO_BACKEND_URL is not in frontend/.env; the key is EXPO_PUBLIC_BACKEND_URL, so export EXPO_BACKEND_URL manually for pytest."
+}

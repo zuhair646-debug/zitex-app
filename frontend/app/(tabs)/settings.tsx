@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { useRouter } from 'expo-router';
 import { useT, LANGUAGES } from '../../src/i18n';
+import { tSync } from '../../src/useAutoT';
 import { useThemeMode } from '../../src/theme/mode';
 import { useTheme } from '../../src/theme/ThemeContext';
 import TranslatableName from '../../src/components/TranslatableName';
@@ -101,6 +102,13 @@ export default function SettingsScreen() {
           <MenuItem icon="location"          label={t('pf.addresses')}   onPress={() => router.push('/addresses')} />
           <MenuItem icon="receipt"           label={t('pf.invoices')}    onPress={() => router.push('/invoices')} />
           <MenuItem icon="wallet"            label={t('pf.wallet')}      onPress={() => router.push('/wallet')} />
+        </View>
+
+        <View style={styles.menuSection}>
+          <MenuItem icon="car"        label={tSync('انضم كسائق توصيل', lang)}      color="#0EA5E9" onPress={() => router.push('/driver-apply' as any)} />
+          <MenuItem icon="megaphone"  label={tSync('انضم كمسوّق واكسب عمولة', lang)} color="#EC4899" onPress={() => router.push('/affiliate-apply' as any)} />
+          <MenuItem icon="stats-chart" label={tSync('لوحة التسويق الخاصة بي', lang)} color="#8B5CF6" onPress={() => router.push('/my-affiliate' as any)} />
+          <MenuItem icon="trophy"     label={tSync('المسابقات والسحوبات', lang)}    color="#F59E0B" onPress={() => router.push('/(tabs)/competitions' as any)} />
         </View>
 
         <View style={styles.menuSection}>

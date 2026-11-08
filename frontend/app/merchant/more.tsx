@@ -37,6 +37,7 @@ export default function MerchantMore() {
     { icon: 'trophy',    titleKey: 'mo.competitions.title', subKey: 'mo.competitions.sub', route: '/merchant/competitions' },
     { icon: 'shield-checkmark', titleKey: 'mo.chamberHub.title', subKey: 'mo.chamberHub.sub', route: '/merchant/chamber-hub' },
     { icon: 'image',     titleKey: 'mo.banners.title',      subKey: 'mo.banners.sub',      route: '/merchant/banners' },
+    { icon: 'grid',      titleKey: 'الأقسام وصورها',          subKey: 'غيّر صور أقسام الصفحة الرئيسية', route: '/merchant/categories' },
   ] as const;
 
   const operations = [

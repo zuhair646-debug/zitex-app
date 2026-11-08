@@ -4,10 +4,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { colors } from '../../src/theme/tokens';
 import { useAuth } from '../_layout';
 import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
+import { mediaUrlSync } from '../../src/utils/upload';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 60) / 2;
@@ -87,7 +90,7 @@ export default function HomeScreen() {
   useEffect(() => { loadData(); }, []);
   const onRefresh = useCallback(async () => { setRefreshing(true); await loadData(); setRefreshing(false); }, []);
 
-  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color="#F5C518" /></View>;
+  if (loading) return <View style={s.loadWrap}><ActivityIndicator size="large" color={colors.brand} /></View>;
 
   const catImages: Record<string, string> = {
     'Phones': 'phone-portrait', 'Tablets': 'tablet-portrait', 'Laptops': 'laptop',
@@ -137,31 +140,31 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F5C518" />} showsVerticalScrollIndicator={false}>
+      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />} showsVerticalScrollIndicator={false}>
 
         {/* ─── Header ─── */}
         <View style={s.header}>
           <View style={s.headerLeft}>
             <TouchableOpacity testID="notifications-btn" style={s.headerIconBtn} onPress={() => router.push('/notifications')}>
-              <Ionicons name="notifications-outline" size={22} color="#0A0A0A" />
+              <Ionicons name="notifications-outline" size={22} color={colors.onSurface} />
             </TouchableOpacity>
             <TouchableOpacity testID="search-btn" style={s.headerIconBtn} onPress={() => router.push('/search')}>
-              <Ionicons name="search-outline" size={22} color="#0A0A0A" />
+              <Ionicons name="search-outline" size={22} color={colors.onSurface} />
             </TouchableOpacity>
           </View>
           <TouchableOpacity testID="store-selector" style={s.storeSelector}>
-            <Ionicons name="storefront-outline" size={18} color="#F5C518" />
-            <Text style={s.storeName}>{tSync('فرع الرياض', lang)}</Text>
-            <Ionicons name="chevron-down" size={14} color="#52525B" />
+            <Ionicons name="storefront-outline" size={18} color={colors.brand} />
+            <Text style={s.storeName} numberOfLines={1}>{tSync('فرع الرياض', lang)}</Text>
+            <Ionicons name="chevron-down" size={14} color={colors.onSurfaceSecondary} />
           </TouchableOpacity>
           <View style={s.headerRight}>
             <TouchableOpacity testID="location-btn" style={s.locationBtn}>
-              <Ionicons name="location-outline" size={16} color="#52525B" />
+              <Ionicons name="location-outline" size={16} color={colors.onSurfaceSecondary} />
               <Text style={s.locationText}>{tSync('بيتي', lang)}</Text>
-              <Ionicons name="chevron-down" size={12} color="#52525B" />
+              <Ionicons name="chevron-down" size={12} color={colors.onSurfaceSecondary} />
             </TouchableOpacity>
             <TouchableOpacity testID="cart-btn" style={s.cartBtn} onPress={() => router.push('/cart')}>
-              <Ionicons name="bag-outline" size={22} color="#0A0A0A" />
+              <Ionicons name="bag-outline" size={22} color={colors.onSurface} />
               <View style={s.cartBadge}><Text style={s.cartBadgeText}>3</Text></View>
             </TouchableOpacity>
           </View>
@@ -171,7 +174,7 @@ export default function HomeScreen() {
         {affiliateCount > 0 && (
           <View style={s.tglWrap}>
             <View style={s.tglOn}>
-              <Ionicons name="storefront" size={14} color="#F5C518" />
+              <Ionicons name="storefront" size={14} color={colors.brand} />
               <TX style={s.tglOnText}>🛍 المتجر</TX>
             </View>
             <TouchableOpacity onPress={() => router.push('/my-affiliate')} style={s.tglOff}>
@@ -209,7 +212,9 @@ export default function HomeScreen() {
               <TouchableOpacity testID={`cat-${cat.id}`} key={cat.id} style={s.catCard}
                 onPress={() => router.push({ pathname: '/search', params: { category: cat.id, categoryName: cat.name_en } })}>
                 <View style={[s.catIconWrap, { backgroundColor: cat.color1 + '18' }]}>
-                  <Ionicons name={(catImages[cat.name_en] || 'grid') as any} size={28} color={cat.color1} />
+                  {/^(https?:|\/api\/)/.test(cat.image || '')
+                    ? <Image source={{ uri: mediaUrlSync(cat.image) }} style={s.catPhoto} />
+                    : <Ionicons name={(catImages[cat.name_en] || 'grid') as any} size={28} color={cat.color1} />}
                 </View>
                 <TranslatableName
                   text={lang === 'ar' ? (cat.name_ar || cat.name_en) : (cat.name_en || cat.name_ar)}
@@ -225,12 +230,12 @@ export default function HomeScreen() {
 
         {/* ─── Quick Access: Group Buy + Loyalty Points ─── */}
         <View style={s.quickRow}>
-          <TouchableOpacity style={[s.quickCard, { backgroundColor: '#FCE7F3' }]} onPress={() => router.push('/group-buys' as any)}>
+          <TouchableOpacity style={[s.quickCard, { backgroundColor: 'rgba(236,72,153,0.14)' }]} onPress={() => router.push('/group-buys' as any)}>
             <Ionicons name="people" size={26} color="#EC4899" />
             <TX style={s.quickTitle}>التسوق الجماعي</TX>
             <TX style={s.quickSub}>وفّر أكثر بالمجموعة 👥</TX>
           </TouchableOpacity>
-          <TouchableOpacity style={[s.quickCard, { backgroundColor: '#FEF3C7' }]} onPress={() => router.push('/points' as any)}>
+          <TouchableOpacity style={[s.quickCard, { backgroundColor: 'rgba(245,158,11,0.14)' }]} onPress={() => router.push('/points' as any)}>
             <Ionicons name="medal" size={26} color="#F59E0B" />
             <TX style={s.quickTitle}>نقاط الولاء</TX>
             <TX style={s.quickSub}>اكسب وامنح خصومات 🎖️</TX>
@@ -283,7 +288,7 @@ export default function HomeScreen() {
         <View style={s.section}>
           <View style={s.sectionHeader}>
             <View style={s.sectionTitleRow}>
-              <Ionicons name="pricetag" size={20} color="#F5C518" />
+              <Ionicons name="pricetag" size={20} color={colors.brand} />
               <Text style={s.sectionTitle}>{tSync('أفضل العروض', lang)}</Text>
             </View>
             <TouchableOpacity testID="see-all-deals" onPress={() => router.push('/search')}>
@@ -299,7 +304,7 @@ export default function HomeScreen() {
         {activeBooking && (
           <TouchableOpacity testID="active-service-banner" activeOpacity={0.85} style={s.svcBanner} onPress={() => router.push('/my-services')}>
             <View style={s.svcIconWrap}>
-              <Ionicons name="construct" size={26} color="#F5C518" />
+              <Ionicons name="construct" size={26} color={colors.brand} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={s.svcBannerTitle}>🛠️ {activeBooking.service_name}</Text>
@@ -310,7 +315,7 @@ export default function HomeScreen() {
                 activeBooking.status === 'ready' ? 'جاهز للاستلام' : activeBooking.status
               }</Text>
             </View>
-            <Ionicons name="chevron-back" size={22} color="#F5C518" />
+            <Ionicons name="chevron-back" size={22} color={colors.brand} />
           </TouchableOpacity>
         )}
 
@@ -324,7 +329,7 @@ export default function HomeScreen() {
             <TouchableOpacity activeOpacity={0.85} style={s.competitionBanner} onPress={() => router.push(`/competition/${topCompetition.id || topCompetition._id}` as any)}>
               <View style={s.competitionLeft}>
                 <View style={s.trophyWrap}>
-                  <Ionicons name="trophy" size={28} color="#F5C518" />
+                  <Ionicons name="trophy" size={28} color={colors.brand} />
                   {daysLeft != null && daysLeft <= 30 && <View style={s.trophyBadge}><Text style={s.trophyBadgeText}>{daysLeft}d</Text></View>}
                 </View>
               </View>
@@ -336,7 +341,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={s.progressText}>{joined}/{max} {tSync('مشارك', lang)}</Text>
-                  <TX style={[s.progressText, { color: '#F5C518', fontWeight: '700' }]}>اضغط للتفاصيل ←</TX>
+                  <TX style={[s.progressText, { color: colors.brand, fontWeight: '700' }]}>اضغط للتفاصيل ←</TX>
                 </View>
               </View>
             </TouchableOpacity>
@@ -350,28 +355,29 @@ export default function HomeScreen() {
 }
 
 function useSStyles() {
+  const { themeKey } = useTheme();
   return useMemo(() => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
-  tglWrap: { flexDirection: 'row', marginHorizontal: 16, marginTop: 4, marginBottom: 12, backgroundColor: '#F1F1F5', borderRadius: 999, padding: 4 },
-  tglOn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 999, backgroundColor: 'white' },
-  tglOnText: { color: '#F5C518', fontWeight: '800', fontSize: 13 },
+  safe: { flex: 1, backgroundColor: colors.background },
+  tglWrap: { flexDirection: 'row', marginHorizontal: 16, marginTop: 4, marginBottom: 12, backgroundColor: colors.surfaceSecondary, borderRadius: 999, padding: 4 },
+  tglOn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface },
+  tglOnText: { color: colors.brand, fontWeight: '800', fontSize: 13 },
   tglOff: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 999, backgroundColor: 'transparent' },
-  tglOffText: { color: '#52525B', fontWeight: '700', fontSize: 13 },
-  tglBadge: { backgroundColor: '#F5C518', paddingHorizontal: 6, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  tglOffText: { color: colors.onSurfaceSecondary, fontWeight: '700', fontSize: 13 },
+  tglBadge: { backgroundColor: colors.brand, paddingHorizontal: 6, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   tglBadgeText: { color: '#0A0A0A', fontWeight: '900', fontSize: 10 },
-  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
+  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
 
   // Header
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-  headerLeft: { flexDirection: 'row', gap: 6 },
-  headerIconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
-  storeSelector: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F9F9FB', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
-  storeName: { fontSize: 13, fontWeight: '600', color: '#0A0A0A' },
+  headerLeft: { flexDirection: 'row', gap: 6, flexShrink: 0 },
+  headerIconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
+  storeSelector: { flex: 1, minWidth: 0, flexShrink: 1, marginHorizontal: 6, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surfaceSecondary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
+  storeName: { flexShrink: 1, fontSize: 13, fontWeight: '600', color: colors.onSurface },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  locationBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 12, backgroundColor: '#F9F9FB' },
-  locationText: { fontSize: 11, color: '#52525B', fontWeight: '500' },
-  cartBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
-  cartBadge: { position: 'absolute', top: 2, right: 2, backgroundColor: '#F5C518', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  locationBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 12, backgroundColor: colors.surfaceSecondary },
+  locationText: { fontSize: 11, color: colors.onSurfaceSecondary, fontWeight: '500' },
+  cartBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
+  cartBadge: { position: 'absolute', top: 2, right: 2, backgroundColor: colors.brand, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   cartBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
 
   // Banner
@@ -379,42 +385,43 @@ function useSStyles() {
   bannerSlide: { width: width - 40, height: 180, borderRadius: 16, overflow: 'hidden', marginEnd: 12 },
   bannerImage: { width: '100%', height: '100%' },
   dotsRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 10, gap: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E4E4E7' },
-  dotActive: { backgroundColor: '#F5C518', width: 24 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.border },
+  dotActive: { backgroundColor: colors.brand, width: 24 },
 
   // Sections
   section: { marginBottom: 20 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 12 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#0A0A0A' },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.onSurface },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  seeAll: { fontSize: 13, color: '#F5C518', fontWeight: '600' },
+  seeAll: { fontSize: 13, color: colors.brand, fontWeight: '600' },
 
   // Categories
   catScroll: { paddingHorizontal: 16, gap: 12 },
-  catCard: { alignItems: 'center', width: 72 },
-  catIconWrap: { width: 60, height: 60, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  catLabel: { fontSize: 11, fontWeight: '500', color: '#52525B', textAlign: 'center' },
+  catCard: { alignItems: 'center', width: 76 },
+  catIconWrap: { width: 64, height: 64, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden' },
+  catPhoto: { width: '100%', height: '100%' },
+  catLabel: { fontSize: 11, fontWeight: '500', color: colors.onSurfaceSecondary, textAlign: 'center' },
   quickRow: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginBottom: 16 },
   quickCard: { flex: 1, padding: 14, borderRadius: 14, alignItems: 'center' },
-  quickTitle: { fontSize: 13, fontWeight: '800', color: '#0A0A0A', marginTop: 6 },
-  quickSub: { fontSize: 10, color: '#374151', marginTop: 2, textAlign: 'center' },
+  quickTitle: { fontSize: 13, fontWeight: '800', color: colors.onSurface, marginTop: 6 },
+  quickSub: { fontSize: 10, color: colors.onSurfaceSecondary, marginTop: 2, textAlign: 'center' },
 
   // Used Devices Banner
-  usedDevicesBanner: { marginHorizontal: 20, borderRadius: 20, backgroundColor: '#F3F0FF', flexDirection: 'row', padding: 20, marginBottom: 20, overflow: 'hidden' },
+  usedDevicesBanner: { marginHorizontal: 20, borderRadius: 20, backgroundColor: colors.surfaceSecondary, flexDirection: 'row', padding: 20, marginBottom: 20, overflow: 'hidden' },
   usedDevicesLeft: { flex: 1 },
   offBadge: { backgroundColor: '#EF4444', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 8 },
   offBadgeText: { color: '#FFF', fontSize: 12, fontWeight: '800' },
-  usedDevicesTitle: { fontSize: 20, fontWeight: '800', color: '#0A0A0A', marginBottom: 4 },
-  usedDevicesDesc: { fontSize: 13, color: '#52525B', lineHeight: 20, marginBottom: 12 },
-  checkNowBtn: { backgroundColor: '#F5C518', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
-  checkNowText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
+  usedDevicesTitle: { fontSize: 20, fontWeight: '800', color: colors.onSurface, marginBottom: 4 },
+  usedDevicesDesc: { fontSize: 13, color: colors.onSurfaceSecondary, lineHeight: 20, marginBottom: 12 },
+  checkNowBtn: { backgroundColor: colors.brand, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
+  checkNowText: { color: colors.onBrandPrimary, fontSize: 13, fontWeight: '700' },
   usedDevicesRight: { width: 100, alignItems: 'center', justifyContent: 'center' },
   usedDevicesImg: { width: 90, height: 120, borderRadius: 12 },
 
   // Product Cards
   productScroll: { paddingHorizontal: 16, gap: 12 },
-  productCard: { width: CARD_W, backgroundColor: '#FFF', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#F4F4F5' },
-  productImgWrap: { width: '100%', height: CARD_W, backgroundColor: '#F9F9FB', alignItems: 'center', justifyContent: 'center' },
+  productCard: { width: CARD_W, backgroundColor: colors.surface, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
+  productImgWrap: { width: '100%', height: CARD_W, backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
   productImg: { width: '80%', height: '80%' },
   discountBadge: { position: 'absolute', top: 8, left: 8, backgroundColor: '#EF4444', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
   discountText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
@@ -424,37 +431,37 @@ function useSStyles() {
   usedBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
   productInfo: { padding: 12 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 4 },
-  ratingText: { fontSize: 12, fontWeight: '600', color: '#0A0A0A' },
-  productName: { fontSize: 13, fontWeight: '600', color: '#0A0A0A', marginBottom: 4 },
-  soldText: { fontSize: 11, color: '#A1A1AA', marginBottom: 6, fontWeight: '500' },
+  ratingText: { fontSize: 12, fontWeight: '600', color: colors.onSurface },
+  productName: { fontSize: 13, fontWeight: '600', color: colors.onSurface, marginBottom: 4 },
+  soldText: { fontSize: 11, color: colors.onSurfaceTertiary, marginBottom: 6, fontWeight: '500' },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  price: { fontSize: 16, fontWeight: '800', color: '#F5C518' },
-  oldPrice: { fontSize: 12, color: '#A1A1AA', textDecorationLine: 'line-through' },
+  price: { fontSize: 16, fontWeight: '800', color: colors.brand },
+  oldPrice: { fontSize: 12, color: colors.onSurfaceTertiary, textDecorationLine: 'line-through' },
 
   // Featured Banner
   featuredBanner: { marginHorizontal: 20, borderRadius: 20, backgroundColor: '#1A1A2E', flexDirection: 'row', padding: 24, marginBottom: 20, overflow: 'hidden' },
   featuredContent: { flex: 1, justifyContent: 'center' },
   featuredTitle: { fontSize: 28, fontWeight: '800', color: '#FFFFFF', marginBottom: 12 },
-  checkOutBtn: { backgroundColor: '#F5C518', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
-  checkOutText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
+  checkOutBtn: { backgroundColor: colors.brand, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18, alignSelf: 'flex-start' },
+  checkOutText: { color: colors.onBrandPrimary, fontSize: 13, fontWeight: '700' },
   featuredImg: { width: 100, height: 130, borderRadius: 12 },
 
   // Competition
-  competitionBanner: { marginHorizontal: 20, borderRadius: 16, backgroundColor: '#F9F9FB', flexDirection: 'row', padding: 16, alignItems: 'center', marginBottom: 10 },
-  svcBanner: { marginHorizontal: 20, borderRadius: 16, backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#F5C518', flexDirection: 'row', padding: 14, alignItems: 'center', gap: 12, marginBottom: 10 },
+  competitionBanner: { marginHorizontal: 20, borderRadius: 16, backgroundColor: colors.surfaceSecondary, flexDirection: 'row', padding: 16, alignItems: 'center', marginBottom: 10 },
+  svcBanner: { marginHorizontal: 20, borderRadius: 16, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.brand, flexDirection: 'row', padding: 14, alignItems: 'center', gap: 12, marginBottom: 10 },
   svcIconWrap: { width: 46, height: 46, borderRadius: 12, backgroundColor: 'rgba(245,197,24,0.15)', alignItems: 'center', justifyContent: 'center' },
-  svcBannerTitle: { fontSize: 14, fontWeight: '900', color: '#0A0A0A', textAlign: 'right' },
-  svcBannerSub: { fontSize: 12, color: '#6B7280', marginTop: 2, textAlign: 'right' },
+  svcBannerTitle: { fontSize: 14, fontWeight: '900', color: colors.onSurface, textAlign: 'right' },
+  svcBannerSub: { fontSize: 12, color: colors.onSurfaceSecondary, marginTop: 2, textAlign: 'right' },
   competitionLeft: { marginEnd: 14 },
-  trophyWrap: { width: 50, height: 50, borderRadius: 14, backgroundColor: '#FFF7DA', alignItems: 'center', justifyContent: 'center' },
+  trophyWrap: { width: 50, height: 50, borderRadius: 14, backgroundColor: 'rgba(245,197,24,0.15)', alignItems: 'center', justifyContent: 'center' },
   trophyBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   trophyBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
   competitionContent: { flex: 1 },
-  competitionText: { fontSize: 13, fontWeight: '700', color: '#0A0A0A', marginBottom: 2 },
-  competitionPrize: { fontSize: 11, color: '#F5C518', marginBottom: 6, fontWeight: '600' },
-  progressBar: { height: 8, backgroundColor: '#E4E4E7', borderRadius: 4, marginBottom: 4 },
-  progressFill: { height: '100%', backgroundColor: '#F5C518', borderRadius: 4 },
-  progressText: { fontSize: 12, color: '#52525B', fontWeight: '600', textAlign: 'right' },
-}), []);
+  competitionText: { fontSize: 13, fontWeight: '700', color: colors.onSurface, marginBottom: 2 },
+  competitionPrize: { fontSize: 11, color: colors.brand, marginBottom: 6, fontWeight: '600' },
+  progressBar: { height: 8, backgroundColor: colors.border, borderRadius: 4, marginBottom: 4 },
+  progressFill: { height: '100%', backgroundColor: colors.brand, borderRadius: 4 },
+  progressText: { fontSize: 12, color: colors.onSurfaceSecondary, fontWeight: '600', textAlign: 'right' },
+}), [themeKey]); // eslint-disable-line react-hooks/exhaustive-deps -- colors are mutable
 }
 

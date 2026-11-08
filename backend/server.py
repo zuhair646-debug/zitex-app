@@ -1821,6 +1821,13 @@ async def merchant_list_products(user=Depends(get_current_user)):
     return [serialize_doc(p) for p in products]
 
 # ─── Merchant: Categories CRUD ───
+async def _invalidate_categories():
+    try:
+        from perf import cache
+        await cache().invalidate("categories:v1")
+    except Exception:
+        pass
+
 class CategoryInput(BaseModel):
     name_ar: str
     name_en: str = ""
@@ -1830,22 +1837,34 @@ class CategoryInput(BaseModel):
     published: bool = True
     order: int = 100
 
+@api_router.get("/merchant/categories")
+async def merchant_list_categories(user=Depends(get_current_user)):
+    require_merchant(user)
+    return [serialize_doc(c) for c in await db.categories.find({}).to_list(200)]
+
 @api_router.post("/merchant/categories")
 async def merchant_create_category(data: CategoryInput, user=Depends(get_current_user)):
     require_merchant(user)
     r = await db.categories.insert_one(data.model_dump())
+    await _invalidate_categories()
     return {"id": str(r.inserted_id), "message": "Category created"}
 
 @api_router.put("/merchant/categories/{cid}")
 async def merchant_update_category(cid: str, data: CategoryInput, user=Depends(get_current_user)):
     require_merchant(user)
-    await db.categories.update_one({"_id": ObjectId(cid)}, {"$set": data.model_dump()})
+    if not ObjectId.is_valid(cid):
+        raise HTTPException(404, "Category not found")
+    r = await db.categories.update_one({"_id": ObjectId(cid)}, {"$set": data.model_dump(exclude_unset=True)})
+    if not r.matched_count:
+        raise HTTPException(404, "Category not found")
+    await _invalidate_categories()
     return {"message": "Updated"}
 
 @api_router.delete("/merchant/categories/{cid}")
 async def merchant_delete_category(cid: str, user=Depends(get_current_user)):
     require_merchant(user)
     await db.categories.delete_one({"_id": ObjectId(cid)})
+    await _invalidate_categories()
     return {"message": "Deleted"}
 
 # ─── Merchant: Banners CRUD ───
@@ -6929,6 +6948,21 @@ except Exception as _e:
 @app.on_event("startup")
 async def startup():
     await seed_data()
+    # Real default photos for category tiles (only where the merchant hasn't set a photo yet)
+    try:
+        _cat_photos = {
+            "Phones": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
+            "Tablets": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400",
+            "Laptops": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
+            "Accessories": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+            "Smartwatches": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400",
+            "Gaming": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400",
+            "Watches": "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400",
+        }
+        for _n, _u in _cat_photos.items():
+            await db.categories.update_many({"name_en": _n, "image": {"$not": {"$regex": "^(https?:|/api/)"}}}, {"$set": {"image": _u}})
+    except Exception as _e:
+        logger.warning(f"category photos: {_e}")
     # ─── Comprehensive DB indexes (Phase 2 performance) ───
     try:
         from perf import ensure_indexes
