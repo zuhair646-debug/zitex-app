@@ -144,7 +144,7 @@ export default function DriverProfile() {
 
         <AccountPrefs testPrefix="drv" />
 
-        <SecondaryButton label={tSync('تسجيل الخروج', lang)} icon="log-out" onPress={async () => { await stopBeacon(); logout(); }} />
+        <SecondaryButton testID="driver-logout" label={tSync('تسجيل الخروج', lang)} icon="log-out" onPress={async () => { await stopBeacon(); logout(); }} />
       </ScrollView>
 
     </SafeAreaView>

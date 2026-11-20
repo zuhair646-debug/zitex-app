@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Modal, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
@@ -28,6 +28,11 @@ export default function SettingsScreen() {
   const modeLabel = mode === 'dark' ? t('pf.modeDark') : mode === 'light' ? t('pf.modeLight') : t('pf.modeCustom');
 
   const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      // Multi-button Alert is a no-op on web
+      if (window.confirm(t('auth.logout') + '?')) logout();
+      return;
+    }
     Alert.alert(t('auth.logout'), '', [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('common.confirm'), style: 'destructive', onPress: async () => { await logout(); router.replace('/login'); } },

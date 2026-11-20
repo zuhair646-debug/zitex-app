@@ -97,7 +97,7 @@ function OwnerHome() {
             <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications')} activeOpacity={0.7}>
               <Ionicons name="notifications-outline" size={22} color={colors.onSurface} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconBtn} onPress={logout} activeOpacity={0.7}>
+            <TouchableOpacity testID="merchant-header-logout" style={styles.iconBtn} onPress={logout} activeOpacity={0.7}>
               <Ionicons name="log-out-outline" size={22} color={colors.onSurface} />
             </TouchableOpacity>
           </View>
