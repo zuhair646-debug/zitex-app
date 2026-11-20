@@ -7,8 +7,10 @@ import { useAuth } from './_layout';
 import { useT, curLang } from '../src/i18n';
 import { TX, tSync } from '../src/useAutoT';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 export default function PointsScreen() {
+  useTheme(); // re-render when the app theme changes
   const router = useRouter();
   const { apiCall } = useAuth();
   const { t, lang } = useT();

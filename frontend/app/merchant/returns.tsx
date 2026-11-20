@@ -9,6 +9,7 @@ import { TX, tSync } from '../../src/useAutoT';
 import { FilterTabs } from '../../src/components/ui/FilterTabs';
 import { useT, curLang } from '../../src/i18n';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -33,6 +34,7 @@ const STATE_META: Record<string, { label: string; color: string; icon: string }>
 };
 
 export default function MerchantReturnsScreen() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

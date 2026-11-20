@@ -8,11 +8,13 @@ import { TX, tSync } from '../src/useAutoT';
 import { useT } from '../src/i18n';
 import TranslatableName from '../src/components/TranslatableName';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 56) / 2;
 
 export default function SearchScreen() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string; categoryName?: string; condition?: string; q?: string }>();

@@ -8,8 +8,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import TranslatableName, { NameInitial } from '../../src/components/TranslatableName';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function MerchantCustomers() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
 
   const router = useRouter();

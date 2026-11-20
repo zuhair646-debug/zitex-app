@@ -9,6 +9,7 @@ import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 type Zone = {
   name: string;
@@ -29,6 +30,7 @@ const TAB_LABELS: Record<typeof TABS[number], string> = {
 };
 
 export default function DeliverySettings() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

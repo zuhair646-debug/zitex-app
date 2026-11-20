@@ -8,10 +8,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import TranslatableName from '../../src/components/TranslatableName';
 import { useAuth } from '../_layout';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const APPROVAL_COLORS: any = { pending: '#F59E0B', approved: '#10B981', auto_approved: '#8833FF', rejected: '#EF4444' };
 
 export default function MerchantCompetitions() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
 
   const router = useRouter();

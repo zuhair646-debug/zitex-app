@@ -8,10 +8,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { openInvoicePrint } from '../src/utils/invoicePrint';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 const TYPE_LABEL: Record<string, string> = { simplified: 'فاتورة ضريبية مبسطة', standard: 'فاتورة ضريبية', credit_note: 'إشعار دائن' };
 
 export default function InvoicesScreen() {
+  useTheme(); // re-render when the app theme changes
   const { lang, isRTL } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

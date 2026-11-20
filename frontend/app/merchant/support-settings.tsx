@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../_layout';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const FIELDS: { key: string; label: string; placeholder: string; icon: any; color: string; sub?: string }[] = [
   { key: 'whatsapp', label: 'WhatsApp (مع كود الدولة)', placeholder: '966500000000', icon: 'logo-whatsapp', color: '#25D366', sub: 'بدون + أو 00' },
@@ -23,6 +24,7 @@ const FIELDS: { key: string; label: string; placeholder: string; icon: any; colo
 ];
 
 export default function SupportSettings() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
 
   const router = useRouter();

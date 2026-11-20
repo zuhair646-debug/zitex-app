@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -50,6 +51,7 @@ type Rule = {
 };
 
 export default function ShippingMatrixScreen() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
 
   const router = useRouter();

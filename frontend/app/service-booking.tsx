@@ -8,10 +8,12 @@ import { useAuth } from './_layout';
 import { TX, tSync, tf } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 const PURPLE = '#F5C518';
 
 export default function ServiceBooking() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const { service_id } = useLocalSearchParams<{ service_id: string }>();
   const router = useRouter();

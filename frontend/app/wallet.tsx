@@ -9,8 +9,10 @@ import { useAuth } from './_layout';
 import { LoyaltyWidget } from '../src/components/PaymentAndLoyalty';
 import TranslatableName from '../src/components/TranslatableName';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 export default function WalletScreen() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { apiCall, user } = useAuth();

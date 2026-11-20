@@ -13,6 +13,7 @@ import { notify } from '../../src/utils/notify';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const TYPES = [
   { id: 'general', name: 'سحب عام', icon: 'people', desc: 'أي مستخدم مسجّل يمكنه الانضمام' },
@@ -23,6 +24,7 @@ const TYPES = [
 ];
 
 export default function CompetitionForm() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { id: editId } = useLocalSearchParams<{ id?: string }>();

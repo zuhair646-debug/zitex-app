@@ -9,10 +9,12 @@ import { useAuth } from '../_layout';
 import TranslatableName from '../../src/components/TranslatableName';
 import Translatable from '../../src/components/Translatable';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export default function ProductDetailScreen() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
 
   const { id, preview } = useLocalSearchParams<{ id: string; preview?: string }>();

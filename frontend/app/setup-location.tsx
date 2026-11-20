@@ -9,8 +9,10 @@ import ZitexMap from '../src/components/MapView';
 import { TX, tSync } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 export default function SetupLocation() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

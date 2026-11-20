@@ -9,6 +9,7 @@ import { useAuth } from './_layout';
 import { LoyaltyWidget } from '../src/components/PaymentAndLoyalty';
 import { TX, tSync } from '../src/useAutoT';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -29,6 +30,7 @@ const SOURCE_LABEL: any = {
 };
 
 export default function LoyaltyHistoryScreen() {
+  useTheme(); // re-render when the app theme changes
   const router = useRouter();
   const { apiCall } = useAuth();
   const [txs, setTxs] = useState<any[]>([]);

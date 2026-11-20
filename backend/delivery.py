@@ -224,7 +224,7 @@ def build_router(db, get_current_user, require_merchant, hash_password, jwt_secr
             "items_count": sum(int(i.get("quantity", 1)) for i in items),
             "store": {"name": b.get("name_ar") or b.get("name") or "Zenrex Store", "address": b.get("address_ar") or b.get("address", ""),
                       "phone": b.get("phone", ""), "lat": o.get("branch_lat") or b.get("lat"), "lng": o.get("branch_lng") or b.get("lng")},
-            "customer": {"name": (cust or {}).get("name", ""), "phone": o.get("phone") or (cust or {}).get("phone", ""),
+            "customer": {"name": o.get("customer_name") or (cust or {}).get("name", ""), "phone": o.get("phone") or (cust or {}).get("phone", ""),
                          "address": o.get("address", ""), "lat": o.get("dest_lat") or o.get("delivery_lat"), "lng": o.get("dest_lng") or o.get("delivery_lng"),
                          "notes": o.get("notes", "")},
             "created_at": o.get("created_at"), "accepted_at": o.get("accepted_at"), "delivered_at": o.get("delivered_at"),

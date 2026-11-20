@@ -13,8 +13,10 @@ import LoyaltyRedeemPicker from '../src/components/LoyaltyRedeemPicker';
 import { TX, tSync, tf } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 export default function CheckoutScreen() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

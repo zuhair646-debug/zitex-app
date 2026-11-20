@@ -8,6 +8,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../_layout';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 const pName = (p: any, lang: string) => (lang === 'ar' ? (p?.name_ar || p?.name) : (p?.name_en || p?.name || p?.name_ar)) || '';
 
 const GOLD = '#F5C518';
@@ -29,6 +30,7 @@ const PLATFORM_COLORS: Record<string, string> = {
 };
 
 export default function ProductAnalyticsScreen({ kind = 'product', id: idProp = '' }: { kind?: 'product' | 'service' | 'competition' | 'post'; id?: string } = {} as any) {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
 
   const router = useRouter();

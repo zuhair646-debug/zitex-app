@@ -93,10 +93,12 @@ export default function RootLayout() {
   };
 
   const logout = async () => {
-    live.close(); // drop the realtime socket of the previous account
-    await AsyncStorage.removeItem('token');
+    try { live.close(); } catch {} // drop the realtime socket of the previous account
+    await AsyncStorage.removeItem('token').catch(() => {});
     setToken(null);
     setUser(null);
+    // Always leave the role area — every logout button in the app lands on the login screen
+    setTimeout(() => { try { router.replace('/login'); } catch {} }, 0);
   };
 
   const refreshUser = async () => {

@@ -8,6 +8,7 @@ import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -19,6 +20,7 @@ const OK = '#10B981';
 const AMBER = '#F59E0B';
 
 export default function LoyaltyProgramsScreen() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

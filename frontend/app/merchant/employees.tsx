@@ -8,6 +8,7 @@ import { useAuth } from '../_layout';
 import { TX, tSync } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const PERM_AR: Record<string, string> = { tickets_reply: 'الرد على التذاكر', tasks: 'المهام', roles_manage: 'إدارة الأدوار', banners: 'البانرات', branches: 'الفروع', drivers: 'السائقون', analytics: 'التقارير المالية', all: 'كل الصلاحيات', pos: 'نقطة البيع', inventory: 'المخزون', invoices: 'الفواتير', orders: 'الطلبات', products: 'المنتجات', customers: 'العملاء', reports: 'التقارير', settings: 'الإعدادات', marketing: 'التسويق', employees: 'الموظفون', delivery: 'التوصيل', services: 'الخدمات', social: 'التواصل الاجتماعي', competitions: 'المسابقات', returns: 'المرتجعات', support: 'الدعم' };
 
@@ -22,6 +23,7 @@ const DEPARTMENTS = [
 ];
 
 export default function MerchantEmployees() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

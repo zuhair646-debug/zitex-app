@@ -12,6 +12,7 @@ import { TX, tSync, tf } from '../../src/useAutoT';
 import { useT, curLang } from '../../src/i18n';
 import TranslatableName from '../../src/components/TranslatableName';
 import { colors, themed } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const GOLD = '#F5C518';
 const BG = '#0A0A0A';
@@ -42,6 +43,7 @@ const DEFAULT_FORM = {
 };
 
 export default function MerchantServices() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

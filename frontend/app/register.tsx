@@ -6,8 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import { useT } from '../src/i18n';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 export default function RegisterScreen() {
+  useTheme(); // re-render when the app theme changes
   const { t, isRTL } = useT();
   const router = useRouter();
   const { register } = useAuth();
@@ -100,14 +102,14 @@ const styles = themed(() => StyleSheet.create({
   logoCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.brandTertiary, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   title: { fontSize: 22, fontWeight: '800', color: colors.onSurface, marginBottom: 8, textAlign: 'center' },
   subtitle: { fontSize: 14, color: colors.onSurfaceSecondary, textAlign: 'center' },
-  errorBox: { backgroundColor: '#FEF2F2', borderRadius: 12, padding: 12, marginBottom: 16 },
-  errorText: { color: '#EF4444', textAlign: 'center', fontSize: 14 },
+  errorBox: { backgroundColor: colors.errorSoft, borderRadius: 12, padding: 12, marginBottom: 16 },
+  errorText: { color: colors.error, textAlign: 'center', fontSize: 14 },
   inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 16, marginBottom: 14, height: 52 },
   inputIcon: { marginEnd: 12 },
   input: { flex: 1, fontSize: 16, color: colors.onSurface },
   eyeBtn: { padding: 4 },
   btn: { backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, shadowColor: '#F5C518', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 3 },
-  btnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
+  btnText: { color: colors.onBrandPrimary, fontSize: 18, fontWeight: '700' },
   bottomRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, gap: 6, marginBottom: 32, flexWrap: 'wrap' },
   bottomText: { fontSize: 14, color: colors.onSurfaceSecondary },
   linkText: { fontSize: 14, color: colors.brand, fontWeight: '600' },

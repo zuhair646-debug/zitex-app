@@ -9,6 +9,7 @@ import { uploadMedia } from '../src/utils/upload';
 import { TX, tSync } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 const GOLD = '#F5C518';
 const BG = '#0B0C10';
@@ -28,6 +29,7 @@ const RESOLUTIONS = [
 ];
 
 export default function CreateRMAScreen() {
+  useTheme(); // re-render when the app theme changes
   const { lang, isRTL } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

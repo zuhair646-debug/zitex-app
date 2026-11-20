@@ -10,6 +10,7 @@ import { mediaUrlSync } from '../src/utils/upload';
 import { TX, tSync, tf } from '../src/useAutoT';
 import { useT, curLang } from '../src/i18n';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 const PURPLE = '#F5C518';
 
@@ -22,6 +23,7 @@ const STEPS = [
 ];
 
 export default function MyServices() {
+  useTheme(); // re-render when the app theme changes
   const { lang } = useT();
   const router = useRouter();
   const { apiCall } = useAuth();

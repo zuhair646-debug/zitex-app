@@ -8,8 +8,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './_layout';
 import TranslatableName from '../src/components/TranslatableName';
 import { colors, themed } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
 
 export default function WarrantiesScreen() {
+  useTheme(); // re-render when the app theme changes
   useT(); // re-render when language or on-demand translations change
   const router = useRouter();
   const { apiCall } = useAuth();
